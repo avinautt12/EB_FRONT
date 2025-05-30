@@ -1,0 +1,42 @@
+<div class="monitor-container">
+  <h2>Monitor de Facturas</h2>
+
+  <div class="acciones-monitor">
+    <input type="text" placeholder="Buscar..." />
+    <button>Importar</button>
+    <button>Exportar</button>
+  </div>
+
+  <div *ngIf="cargando" class="cargando">Cargando datos...</div>
+
+  <div *ngIf="!cargando">
+    <table class="tabla-facturas">
+      <thead>
+        <tr>
+          <th>Número de Factura</th>
+          <th>Producto</th>
+          <th>Cantidad</th>
+          <th>Categoría</th>
+          <th>Contacto</th>
+          <th>Costo</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th>Referencia interna</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let factura of facturas | slice:0:20">
+          <td>{{ factura.numero_factura }}</td>
+          <td>{{ factura.nombre_producto }}</td>
+          <td>{{ factura.cantidad }} x ${{ factura.precio_unitario }}</td>
+          <td>{{ factura.categoria_producto }}</td>
+          <td>{{ factura.contacto_nombre }} ({{ factura.contacto_referencia }})</td>
+          <td>${{ factura.costo_producto }}</td>
+          <td>{{ factura.estado_factura }}</td>
+          <td>{{ factura.fecha_factura }}</td>
+          <td>{{ factura.referencia_interna }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

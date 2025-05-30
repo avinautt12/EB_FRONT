@@ -1,0 +1,49 @@
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #252422;
+  padding: 1rem 2rem;
+  color: #FFFCF2;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #EB5E28;
+}
+
+.icons {
+  display: flex;
+  align-items: center;
+}
+
+.icons a {
+  display: flex;
+  align-items: center;
+  color: #FFFCF2;
+  font-size: 1.1rem;
+  text-decoration: none;
+  transition: color 0.5s ease, transform 0.3s ease;
+  padding: 0.5rem;
+  gap: 1rem;
+}
+
+.icons a:hover {
+  color: #EB5E28;
+  transform: scale(1.05);
+}
+
+.login-text {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 500;
+}
+
+/* Ícono perfil más grande y centrado verticalmente */
+.profile-icon {
+  font-size: 1.6rem; /* más grande que el texto */
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
