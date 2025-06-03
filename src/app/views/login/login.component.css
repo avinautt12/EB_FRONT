@@ -85,11 +85,9 @@ button:hover {
   transform: scale(1.04);
 }
 
-/* Al hacer clic */
 button:active {
-  transform: scale(0.98); /* pequeño rebote */
+  transform: scale(0.98); 
 }
-
 
 @keyframes fadeSlideIn {
   0% {
@@ -100,4 +98,31 @@ button:active {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  border: 2px solid #fff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-message {
+  margin-top: 1rem;
+  color: #ff4d4d;
+  font-weight: 500;
+  background-color: rgba(255, 77, 77, 0.1);
+  padding: 0.8rem;
+  border-radius: 8px;
 }

@@ -45,10 +45,10 @@ button:hover {
   transform: scale(1.05);
 }
 
-.btn-agregar {
+.btn{
   background-color: #555555;
 }
 
-.btn-agregar:hover {
+.btn:hover {
   background-color: #EB5E28;
 }
