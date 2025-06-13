@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -10,5 +10,11 @@ import { CommonModule } from '@angular/common';
   styleUrl: './home-bar.component.css'
 })
 export class HomeBarComponent {
+  constructor(private router: Router) {}
 
+  logout() {
+    localStorage.removeItem('token');
+
+    this.router.navigate(['/login']);
+  }
 }

@@ -1,4 +1,4 @@
-.login-container {
+.verificar-codigo-container {
   max-width: 400px;
   margin: 4rem auto;
   padding: 2rem;
@@ -12,10 +12,17 @@
   opacity: 0;
 }
 
-.login-container h2 {
+.verificar-codigo-container h2 {
   margin-bottom: 1.5rem;
   font-weight: 600;
   color: #EB5E28;
+}
+
+.codigo-info {
+  font-size: 0.95rem;
+  color: #aaa;
+  text-align: left;
+  margin-bottom: 1rem;
 }
 
 form {
@@ -30,7 +37,7 @@ label {
   font-size: 1rem;
 }
 
-input[type="email"] {
+input[type="password"] {
   padding: 0.8rem 1rem;
   font-size: 1rem;
   border-radius: 6px;
@@ -41,43 +48,8 @@ input[type="email"] {
   transition: background-color 0.3s ease;
 }
 
-.password-input {
-  width: 100%;
-  padding: 0.8rem 2.8rem 0.8rem 0.8rem; 
-  font-size: 1rem;
-  border-radius: 6px;
-  border: none;
-  outline: none;
-  background-color: #3a3a37;
-  color: #FFFCF2;
-  transition: background-color 0.3s ease;
-}
-
-.input-icon-wrapper {
-  display: flex;
-  align-items: center;
-}
-
-input[type="email"]:focus,
 input[type="password"]:focus {
   background-color: #4e4e4a;
-}
-
-.forgot-password {
-  display: block;
-  text-align: center;
-  font-size: 0.9rem;
-  color: #EB5E28;
-  cursor: pointer;
-  text-decoration: none;
-  font-family: 'Segoe UI', sans-serif;
-  margin-top: -0.5rem;
-  transition: color 0.3s ease;
-}
-
-.forgot-password:hover {
-  color: #ff6b2c;
-  text-decoration: underline;
 }
 
 button {
@@ -94,7 +66,6 @@ button {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* Al pasar el mouse */
 button:hover {
   background-color: #EB5E28;
   transform: scale(1.04);
@@ -102,18 +73,6 @@ button:hover {
 
 button:active {
   transform: scale(0.98);
-}
-
-@keyframes fadeSlideIn {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .spinner {
@@ -128,10 +87,30 @@ button:active {
   vertical-align: middle;
 }
 
+@keyframes fadeSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
+}
+
+.success-message {
+  margin-top: 1rem;
+  color: #45ff85;
+  font-weight: 500;
+  background-color: rgba(69, 255, 133, 0.1);
+  padding: 0.8rem;
+  border-radius: 8px;
 }
 
 .error-message {
@@ -145,6 +124,20 @@ button:active {
 
 .input-icon-wrapper {
   position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input {
+  width: 100%;
+  padding: 0.8rem 2.8rem 0.8rem 0.8rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: none;
+  outline: none;
+  background-color: #3a3a37;
+  color: #FFFCF2;
+  transition: background-color 0.3s ease;
 }
 
 .password-input:focus {

@@ -1,0 +1,329 @@
+/* Contenedor principal */
+.usuarios-container {
+  max-width: 800px;
+  margin: 1rem auto;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #252422 0%, #1e1d1b 100%);
+  color: #FFFCF2;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+h1,
+h2 {
+  color: #EB5E28;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Estilos para botones */
+.btn {
+  background-color: #EB5E28;
+  color: #FFFCF2;
+  border: none;
+  padding: 0.4rem 1rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.btn:hover {
+  background-color: #ff6b2c;
+}
+
+.btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.small-btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.secondary {
+  background-color: #6c757d;
+}
+
+.secondary:hover {
+  background-color: #5a6268;
+}
+
+.botones-acciones {
+  display: flex;
+  justify-content: center;
+  margin-bottom: rem;
+}
+
+.acciones-celda {
+  display: flex;
+  gap: 10px;
+  /* Aumenta este valor para más separación */
+  justify-content: center;
+}
+
+/* Formularios compactos */
+.compact-form {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+  background-color: #403d39;
+  border-radius: 6px;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+  color: #FFFCF2;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #FFFCF2;
+  color: #252422;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.checkbox-group label {
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+/* Tabla de usuarios */
+.tabla-usuarios {
+  width: 100%;
+  margin: 1rem 0;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tabla-usuarios th {
+  background-color: #a7a49b;
+  color: #252422;
+  padding: 0.6rem;
+  text-align: center;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.tabla-usuarios td {
+  padding: 0.6rem;
+  text-align: center;
+  background-color: #ffffff;
+  color: #252422;
+  border-bottom: 1px solid #ddd;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.tabla-usuarios tr:nth-child(even) td {
+  background-color: #f5f5f5;
+}
+
+.btn-accion {
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-accion:hover {
+  transform: scale(1.1);
+}
+
+.btn-accion.azul {
+  background-color: #007BFF;
+  color: white;
+}
+
+.btn-accion.rojo {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Paginación */
+.paginador {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.paginador span {
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Diálogo de confirmación */
+.confirmacion-dialogo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.confirmacion-contenido {
+  background-color: #403d39;
+  padding: 1.5rem;
+  border-radius: 8px;
+  max-width: 350px;
+  width: 90%;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.confirmacion-contenido p {
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.confirmacion-botones {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+/* Spinner de carga */
+.loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.loader-container p {
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #EB5E28;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mensaje sin usuarios */
+.usuarios-container p {
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .usuarios-container {
+    padding: 1rem;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tabla-usuarios {
+    font-size: 0.8rem;
+  }
+
+  .tabla-usuarios th,
+  .tabla-usuarios td {
+    padding: 0.4rem;
+  }
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: transparent;
+  justify-content: space-between;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.filtros input,
+.filtros select {
+  flex: 1 1 48%;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit; /* Hereda del contenedor */
+}
+
+.filtros input:focus,
+.filtros select:focus {
+  border-color: #1a73e8;
+  outline: none;
+  box-shadow: 0 0 3px rgba(26, 115, 232, 0.3);
+}
+
+

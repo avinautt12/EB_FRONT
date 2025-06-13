@@ -1,0 +1,25 @@
+<app-top-bar></app-top-bar>
+
+<div class="enviar-correo-container">
+  <h2>Enviar Código</h2>
+  <p class="correo-info">Ingresa tu correo electrónico para enviarte un código de verificación.</p>
+
+  <app-alerta *ngIf="mensajeAlerta" [mensaje]="mensajeAlerta" [tipo]="tipoAlerta"></app-alerta>
+
+  <form (submit)="enviarCodigo()" class="formulario-correo">
+    <label for="correo">Correo electrónico</label>
+    <input
+      id="correo"
+      type="email"
+      [(ngModel)]="correo"
+      name="correo"
+      placeholder="Ingresa tu correo"
+      required
+    />
+
+    <button class="btn small-btn" type="submit" [disabled]="loading">
+      <span *ngIf="loading" class="spinner"></span>
+      {{ loading ? 'Enviando...' : 'Enviar Código' }}
+    </button>
+  </form>
+</div>

@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router'; 
 import { MonitorOdooService } from '../../services/monitor-odoo.service';
-import { HomeBarComponent } from '../../home-bar/home-bar.component';
+import { HomeBarComponent } from '../../components/home-bar/home-bar.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, HomeBarComponent],
+  imports: [CommonModule, HomeBarComponent, RouterModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
@@ -26,4 +27,5 @@ export class HomeComponent {
       }
     });
   }
+  
 }

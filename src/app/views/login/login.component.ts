@@ -17,6 +17,7 @@ export class LoginComponent {
   password: string = '';
   loading: boolean = false;
   error: string = '';
+  verPassword = false;
 
   constructor(private authService: AuthService, private router: Router) {}
 
@@ -32,6 +33,7 @@ export class LoginComponent {
     this.authService.login(credentials).subscribe({
       next: (response) => {
         localStorage.setItem('token', response.token);
+        console.log('Token guardado en localStorage:', response.token);
         this.router.navigate(['/home']);
       },
       error: (err) => {

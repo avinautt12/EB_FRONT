@@ -1,0 +1,25 @@
+<app-top-bar></app-top-bar>
+
+<div class="verificar-codigo-container">
+  <h2>Verificar Código</h2>
+  <p class="codigo-info">Ingresa el código que fue enviado a tu correo electrónico.</p>
+
+  <app-alerta *ngIf="mensajeAlerta" [mensaje]="mensajeAlerta" [tipo]="tipoAlerta"></app-alerta>
+
+  <form (submit)="verificar()" class="formulario-codigo">
+    <label for="codigo">Código de verificación</label>
+    <input
+      id="codigo"
+      type="text"
+      [(ngModel)]="codigo"
+      name="codigo"
+      placeholder="Ingresa el código"
+      required
+    />
+
+    <button class="btn small-btn" type="submit" [disabled]="loading">
+      <span *ngIf="loading" class="spinner"></span>
+      {{ loading ? 'Verificando...' : 'Verificar Código' }}
+    </button>
+  </form>
+</div>

@@ -1,8 +1,10 @@
 .monitor-container {
   max-width: 95%;
   margin: 2rem auto;
+  padding-bottom: 1.5rem;
   font-family: 'Segoe UI', sans-serif;
   color: #FFFCF2;
+  min-height: calc(100vh - 10rem);
 }
 
 h2 {
@@ -11,49 +13,71 @@ h2 {
   margin-bottom: 1rem;
 }
 
+/* Acciones */
 .acciones-monitor {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  gap: 0.5rem;
-}
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
 
-.acciones-monitor input {
-  flex: 1;
-  padding: 0.5rem;
-  border-radius: 20px;
-  border: none;
 }
 
 .acciones-monitor button {
+  padding: 0.6rem 1.2rem;
   background-color: #EB5E28;
-  color: #FFFCF2;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: bold;
   cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  font-family: 'Segoe UI', sans-serif;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: scale(1);
 }
 
 .acciones-monitor button:hover {
   background-color: #ff6b2c;
+  transform: scale(1.08);
+}
+
+/* Tabla */
+.tabla-contenedor {
+  position: relative;
+  width: 100%;
+  overflow-x: auto;
 }
 
 .tabla-facturas {
   width: 100%;
   border-collapse: collapse;
+  /* Elimina display: block y max-height del table principal */
 }
 
-.tabla-facturas th,
-.tabla-facturas td {
+.tabla-facturas thead {
+  background-color: #3a3a37;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  /* Aumenta el z-index del thead */
+}
+
+.tabla-facturas thead th {
+  position: sticky;
+  top: 0;
+  background-color: #3a3a37;
+  color: #EB5E28;
   border: 1px solid #444;
   padding: 0.6rem;
   text-align: left;
+  white-space: nowrap;
+  /* Añade position: relative para establecer un nuevo contexto de apilamiento */
+  position: relative;
 }
 
-.tabla-facturas th {
-  background-color: #3a3a37;
-  color: #EB5E28;
+.tabla-facturas tbody tr {
+  background-color: #1e1e1c;
 }
 
 .tabla-facturas tbody tr:nth-child(even) {
@@ -61,11 +85,442 @@ h2 {
 }
 
 .tabla-facturas tbody tr:hover {
-  background-color: #444;
+  background-color: #555;
 }
 
+.tabla-facturas td {
+  border: 1px solid #444;
+  padding: 0.6rem;
+  text-align: left;
+  color: #fff;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  max-width: none;
+  word-break: break-word;
+}
+
+/* Mensaje de carga */
 .cargando {
   text-align: center;
   font-style: italic;
   color: #ccc;
+}
+
+.paginador {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  color: #fff;
+}
+
+.paginador-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.paginador-info input {
+  width: 60px;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+.paginador button {
+  background-color: #EB5E28;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.paginador button:hover:not(:disabled) {
+  background-color: #ff6b2c;
+}
+
+.paginador button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+.cargando-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.spinner {
+  border: 6px solid #ccc;
+  border-top: 6px solid #EB5E28;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: girar 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes girar {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.sin-datos {
+  text-align: center;
+  color: #ccc;
+  margin-top: 2rem;
+  font-size: 1.2rem;
+  font-style: italic;
+}
+
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.filtro-columna {
+  position: relative;
+  display: inline-block;
+  z-index: 20;
+}
+
+.filtro-columna button {
+  background-color: transparent;
+  border: none;
+  color: #EB5E28;
+  cursor: pointer;
+  margin-left: 5px;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.filtro-columna button:hover {
+  background-color: rgba(235, 94, 40, 0.1);
+}
+
+.filtro-columna button::after {
+  content: "⏷";
+  /* Flechita hacia abajo */
+  font-size: 0.7rem;
+}
+
+.dropdown-filtro {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #2a2a28;
+  border: 1px solid #EB5E28;
+  padding: 0.75rem;
+  z-index: 1000;
+  /* Muy alto para asegurar que esté encima */
+  min-width: 200px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.2s ease-in-out;
+  /* Añade esto para que no se desborde */
+  overflow: visible !important;
+  transform: translateZ(0);
+  /* Forzar aceleración hardware */
+}
+
+.dropdown-filtro input {
+  width: 90%;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  color: #000;
+  font-size: 0.9rem;
+}
+
+.monitor-container {
+  overflow-x: hidden;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filtro-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.filtro-dropdown-box {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #2a2a28;
+  padding: 0.25rem;
+  border: 1px solid #444;
+  border-radius: 4px;
+  z-index: 99;
+  width: 180px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.filtro-dropdown-box input[type="text"],
+.filtro-dropdown-box input[type="date"] {
+  width: 100%;
+  padding: 0.3rem;
+  font-size: 0.85rem;
+  border: 1px solid #666;
+  border-radius: 3px;
+  background-color: #1e1e1c;
+  color: white;
+}
+
+.filtro-dropdown-box label {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: white;
+  font-size: 0.75rem;
+}
+
+.filtro-dropdown-wrapper button {
+  background: transparent;
+  border: 1px solid #EB5E28;
+  color: #EB5E28;
+  border-radius: 4px;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background-color 0.2s ease;
+}
+
+.filtro-dropdown-wrapper button:hover {
+  background-color: #EB5E28;
+  color: white;
+}
+
+/* Contenedor principal */
+.compact-date-filter {
+  position: relative;
+  display: inline-block;
+  margin-left: 8px;
+}
+
+/* Botón principal compacto */
+.compact-date-btn {
+  background: rgba(235, 94, 40, 0.1);
+  border: 1px solid #EB5E28;
+  border-radius: 4px;
+  padding: 2px 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.compact-date-btn:hover {
+  background: rgba(235, 94, 40, 0.2);
+}
+
+.sort-icon {
+  font-size: 12px;
+  color: #EB5E28;
+}
+
+.filter-icon {
+  background-color: transparent;
+  border: none;
+  color: #EB5E28;
+  cursor: pointer;
+  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.filter-icon:hover {
+  background-color: rgba(235, 94, 40, 0.1);
+}
+
+/* Panel flotante */
+.compact-date-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #2a2a28;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 10px;
+  z-index: 1000;
+  width: 180px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.date-range-controls {
+  margin-bottom: 10px;
+}
+
+.date-input-group {
+  margin-bottom: 8px;
+}
+
+.date-input-group label {
+  display: block;
+  font-size: 11px;
+  color: #ccc;
+  margin-bottom: 2px;
+}
+
+.compact-date-input {
+  width: 92%;
+  padding: 4px 6px;
+  border: 1px solid #555;
+  border-radius: 3px;
+  background: #1e1e1c;
+  color: white;
+  font-size: 12px;
+}
+
+.date-sort-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.date-sort-controls button {
+  flex: 1;
+  padding: 4px 6px;
+  font-size: 11px;
+  background: #1e1e1c;
+  border: 1px solid #555;
+  color: #ccc;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.date-sort-controls button.active {
+  border-color: #EB5E28;
+  color: #EB5E28;
+  font-weight: bold;
+}
+
+/* Contenedor compacto similar al filtro de fecha */
+.compact-filter-container {
+  position: relative;
+  display: inline-block;
+}
+
+.compact-filter-btn {
+  background: transparent;
+  border: none;
+  color: #EB5E28;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 0.2rem;
+}
+
+.compact-filter-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #2a2a28;
+  border: 1px solid #444;
+  padding: 0.5rem;
+  z-index: 20;
+  min-width: 150px;
+  border-radius: 6px;
+  max-height: 250px;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Checkbox dentro del filtro */
+.checkbox-group label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin-right: 0.4rem;
+}
+
+.compact-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.compact-dropdown-btn {
+  background-color: transparent;
+  border: none;
+  color: #EB5E28;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.compact-dropdown-panel {
+  position: absolute;
+  background-color: #2a2a28;
+  border: 1px solid #444;
+  padding: 0.5rem;
+  z-index: 100;
+  max-height: 200px;
+  overflow-y: auto;
+  width: 220px;
+  color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.9rem;
+}
+
+.dropdown-actions button {
+  background-color: #EB5E28;
+  color: #fff;
+  border: none;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.dropdown-search {
+  width: 150%;
+  margin-bottom: 0.5rem;
+  padding: 0.3rem;
+  border-radius: 5px;
+  border: none;
+}
+
+.dropdown-opciones label {
+  display: block;
+  margin: 0.25rem 0;
+  font-size: 0.7rem;
 }

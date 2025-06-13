@@ -1,0 +1,32 @@
+<app-top-bar></app-top-bar>
+
+<div class="verificar-codigo-container">
+  <app-alerta *ngIf="mensajeAlerta" [mensaje]="mensajeAlerta" [tipo]="tipoAlerta"></app-alerta>
+
+  <h2>Restablecer Contraseña</h2>
+  <p class="codigo-info">Ingresa tu nueva contraseña para actualizarla.</p>
+
+  <form (ngSubmit)="onSubmit()" *ngIf="!loading" #form="ngForm">
+    <label for="password">Nueva contraseña</label>
+    
+    <div class="input-icon-wrapper">
+      <input
+        [type]="verPassword ? 'text' : 'password'"
+        id="password"
+        name="password"
+        required
+        [(ngModel)]="nuevaContrasena"
+        class="password-input"
+      />
+      <i class="toggle-password fas" 
+         [ngClass]="verPassword ? 'fa-eye' : 'fa-eye-slash'" 
+         (click)="verPassword = !verPassword">
+      </i>
+    </div>
+
+    <button type="submit" [disabled]="form.invalid || loading">
+      <span *ngIf="loading" class="spinner"></span>
+      Cambiar Contraseña
+    </button>
+  </form>
+</div>

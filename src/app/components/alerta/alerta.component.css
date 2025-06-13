@@ -1,0 +1,42 @@
+.alerta {
+  position: fixed;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 16px 24px;
+  border-radius: 8px;
+  font-weight: bold;
+  z-index: 9999;
+  opacity: 0.95;
+  color: white;
+  animation: slideIn 0.3s ease-out, slideOut 0.5s ease-in 2.5s forwards;
+}
+
+/* Colores según el tipo */
+.exito {
+  background-color: #4caf50;
+}
+
+.error {
+  background-color: #f44336;
+}
+
+/* Animación de entrada */
+@keyframes slideIn {
+  from {
+    transform: translateX(-50%) translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Animación de salida */
+@keyframes slideOut {
+  to {
+    transform: translateX(-50%) translateY(-40px);
+    opacity: 0;
+  }
+}

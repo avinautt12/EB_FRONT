@@ -24,4 +24,18 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/logout`, {});
   }
 
+  enviarCodigoActivacion(correo: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/enviar_codigo_activacion`, { correo });
+  }
+
+  verificarCodigo(codigo: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/verificar_codigo`, { codigo });
+  }
+
+  cambiarContrasena(token: string, nuevaContrasena: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/cambiar_contrasena`, {
+      token,
+      nueva_contrasena: nuevaContrasena
+    });
+  }
 }

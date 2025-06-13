@@ -1,4 +1,4 @@
-.login-container {
+.enviar-correo-container {
   max-width: 400px;
   margin: 4rem auto;
   padding: 2rem;
@@ -12,7 +12,7 @@
   opacity: 0;
 }
 
-.login-container h2 {
+.enviar-correo-container h2 {
   margin-bottom: 1.5rem;
   font-weight: 600;
   color: #EB5E28;
@@ -41,43 +41,8 @@ input[type="email"] {
   transition: background-color 0.3s ease;
 }
 
-.password-input {
-  width: 100%;
-  padding: 0.8rem 2.8rem 0.8rem 0.8rem; 
-  font-size: 1rem;
-  border-radius: 6px;
-  border: none;
-  outline: none;
-  background-color: #3a3a37;
-  color: #FFFCF2;
-  transition: background-color 0.3s ease;
-}
-
-.input-icon-wrapper {
-  display: flex;
-  align-items: center;
-}
-
-input[type="email"]:focus,
-input[type="password"]:focus {
+input[type="email"]:focus {
   background-color: #4e4e4a;
-}
-
-.forgot-password {
-  display: block;
-  text-align: center;
-  font-size: 0.9rem;
-  color: #EB5E28;
-  cursor: pointer;
-  text-decoration: none;
-  font-family: 'Segoe UI', sans-serif;
-  margin-top: -0.5rem;
-  transition: color 0.3s ease;
-}
-
-.forgot-password:hover {
-  color: #ff6b2c;
-  text-decoration: underline;
 }
 
 button {
@@ -94,7 +59,6 @@ button {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* Al pasar el mouse */
 button:hover {
   background-color: #EB5E28;
   transform: scale(1.04);
@@ -109,7 +73,6 @@ button:active {
     opacity: 0;
     transform: translateY(20px);
   }
-
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -134,6 +97,15 @@ button:active {
   }
 }
 
+.success-message {
+  margin-top: 1rem;
+  color: #45ff85;
+  font-weight: 500;
+  background-color: rgba(69, 255, 133, 0.1);
+  padding: 0.8rem;
+  border-radius: 8px;
+}
+
 .error-message {
   margin-top: 1rem;
   color: #ff4d4d;
@@ -143,25 +115,8 @@ button:active {
   border-radius: 8px;
 }
 
-.input-icon-wrapper {
-  position: relative;
-}
-
-.password-input:focus {
-  background-color: #4e4e4a;
-}
-
-.toggle-password {
-  position: absolute;
-  top: 50%;
-  right: 0.9rem;
-  transform: translateY(-50%);
-  cursor: pointer;
-  color: #FFFCF2;
-  font-size: 1.1rem;
-  transition: color 0.3s ease;
-}
-
-.toggle-password:hover {
-  color: #EB5E28;
+.correo-info {
+  font-size: 0.95rem;
+  color: #888;
+  text-align: left;
 }
