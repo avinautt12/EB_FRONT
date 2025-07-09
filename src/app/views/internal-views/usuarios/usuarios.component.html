@@ -1,170 +1,268 @@
 <app-home-bar></app-home-bar>
 
-<div class="usuarios-container">
-    <h1>Gestión de Usuarios</h1>
+<div class="usuarios-fullscreen">
+    <!-- Encabezado de Gestión -->
+    <div class="encabezado-gestion">
+        <h2>Gestión de Usuarios</h2>
 
-    <div class="botones-acciones">
-        <button class="btn small-btn" (click)="mostrarFormularioRegistro()">Agregar Usuario</button>
-    </div>
+        <button class="btn agregar-btn" *ngIf="!mostrarFormularioRegistroVisible && !mostrarFormularioEdicion"
+            (click)="mostrarFormularioRegistro()">
+            + Agregar Usuario
+        </button>
 
-    <app-alerta *ngIf="mensajeAlerta" [mensaje]="mensajeAlerta" [tipo]="tipoAlerta"></app-alerta>
+        <app-alerta *ngIf="mensajeAlerta" [mensaje]="mensajeAlerta" [tipo]="tipoAlerta"></app-alerta>
 
-    <!-- Formulario de Registro -->
-    <div *ngIf="mostrarFormularioRegistroVisible">
-        <h2>Nuevo Usuario</h2>
-        <form (submit)="agregarUsuario()" class="formulario-usuario compact-form" #formRegistro="ngForm">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre completo</label>
-                    <input type="text" [(ngModel)]="nuevoUsuario.nombre" name="nombre" required />
-                </div>
-                <div class="form-group">
-                    <label>Correo electrónico</label>
-                    <input type="email" [(ngModel)]="nuevoUsuario.correo" name="correo" required />
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre de usuario</label>
-                    <input type="text" [(ngModel)]="nuevoUsuario.usuario" name="usuario" required />
-                </div>
-                <div class="form-group">
-                    <label>Contraseña</label>
-                    <input type="password" [(ngModel)]="nuevoUsuario.contrasena" name="contrasena" required />
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Rol</label>
-                    <select [(ngModel)]="nuevoUsuario.rol" name="rol" required>
-                        <option [value]="ROLES.ADMIN.backendValue">{{ROLES.ADMIN.display}}</option>
-                        <option [value]="ROLES.USUARIO.backendValue">{{ROLES.USUARIO.display}}</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-buttons">
-                <button class="btn small-btn" type="submit" [disabled]="formRegistro.invalid">Registrar</button>
-                <button class="btn small-btn secondary" type="button" (click)="volverALista()">Volver</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Formulario de Actualización -->
-    <div *ngIf="mostrarFormularioEdicion">
-        <h2>Editar Usuario</h2>
-        <form (submit)="actualizarUsuario()" class="formulario-usuario compact-form" #formEdicion="ngForm">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre completo</label>
-                    <input type="text" [(ngModel)]="nuevoUsuario.nombre" name="nombre" required />
-                </div>
-                <div class="form-group">
-                    <label>Correo electrónico</label>
-                    <input type="email" [(ngModel)]="nuevoUsuario.correo" name="correo" required />
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre de usuario</label>
-                    <input type="text" [(ngModel)]="nuevoUsuario.usuario" name="usuario" required />
-                </div>
-                <div class="form-group">
-                    <label>Contraseña</label>
-                    <input type="password" [(ngModel)]="nuevoUsuario.contrasena" name="contrasena"
-                        placeholder="Dejar vacío para no cambiar" />
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Rol</label>
-                    <select [(ngModel)]="nuevoUsuario.rol" name="rol_id" required>
-                        <option [value]="ROLES.ADMIN.backendValue">{{ROLES.ADMIN.display}}</option>
-                        <option [value]="ROLES.USUARIO.backendValue">{{ROLES.USUARIO.display}}</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-buttons">
-                <button class="btn small-btn" type="submit" [disabled]="formEdicion.invalid">Actualizar</button>
-                <button class="btn small-btn secondary" type="button" (click)="volverALista()">Volver</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Lista de Usuarios -->
-    <div *ngIf="!mostrarFormularioRegistroVisible && !mostrarFormularioEdicion">
-        <h2>Lista de Usuarios</h2>
-
-        <div *ngIf="cargandoUsuarios" class="loader-container">
+        <div *ngIf="cargandoUsuarios" class="cargando-spinner">
             <div class="spinner"></div>
-            <p>Cargando usuarios...</p>
+            <p>Cargando...</p>
         </div>
 
-        <div class="filtros">
-            <input type="text" placeholder="Buscar por correo" [(ngModel)]="filtroCorreo" />
-            <input type="text" placeholder="Buscar por usuario" [(ngModel)]="filtroUsuario" />
-            <input type="text" placeholder="Buscar por clave" [(ngModel)]="filtroClave" />
-            <select [(ngModel)]="filtroRol">
-                <option value="">Todos</option>
-                <option [value]="ROLES.ADMIN.backendValue">{{ ROLES.ADMIN.display }}</option>
-                <option [value]="ROLES.USUARIO.backendValue">{{ ROLES.USUARIO.display }}</option>
-            </select>
+        <div *ngIf="!cargandoUsuarios && usuariosPaginados().length === 0" class="sin-datos">
+            <p>No se pudieron cargar los datos o no hay usuarios disponibles.</p>
         </div>
 
-        <table class="tabla-usuarios" *ngIf="!cargandoUsuarios && usuarios.length > 0">
-            <thead>
-                <tr>
-                    <th>Clave</th>
-                    <th>Nombre</th>
-                    <th>Correo</th>
-                    <th>Usuario</th>
-                    <th>Rol</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let u of usuariosPaginados()">
-                    <td>{{ u.id }}</td>
-                    <td>{{ u.nombre }}</td>
-                    <td>{{ u.correo }}</td>
-                    <td>{{ u.usuario }}</td>
-                    <td>{{ u.rol === ROLES.ADMIN.backendValue ? ROLES.ADMIN.display : ROLES.USUARIO.display }}</td>
-                    <td>
-                        <div class="acciones-celda">
-                            <button class="btn btn-accion azul" (click)="editarUsuario(u)" title="Editar">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-accion rojo" (click)="confirmarEliminacion(u)" title="Eliminar">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <p *ngIf="!cargandoUsuarios && usuarios.length === 0">No hay usuarios registrados.</p>
-        
-        <div class="paginador" *ngIf="usuarios.length > 0">
-            <button class="btn small-btn" (click)="paginaAnterior()" [disabled]="paginaActual === 1">Anterior</button>
-            <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
-            <button class="btn small-btn" (click)="paginaSiguiente()"
-                [disabled]="paginaActual === totalPaginas">Siguiente</button>
-        </div>
-    </div>
+        <!-- Formulario de Registro -->
+        <div *ngIf="mostrarFormularioRegistroVisible" class="formulario-section">
+            <h2>Nuevo Usuario</h2>
+            <form (submit)="agregarUsuario()" class="formulario-usuario" #formRegistro="ngForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre completo</label>
+                        <input type="text" [(ngModel)]="nuevoUsuario.nombre" name="nombre" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Correo electrónico</label>
+                        <input type="email" [(ngModel)]="nuevoUsuario.correo" name="correo" required />
+                    </div>
+                </div>
 
-    <!-- Diálogo de Confirmación -->
-    <div *ngIf="mostrarConfirmacion" class="confirmacion-dialogo">
-        <div class="confirmacion-contenido">
-            <p>¿Estás seguro de que deseas eliminar al usuario <strong>{{ usuarioAEliminar?.nombre }}</strong>?</p>
-            <div class="confirmacion-botones">
-                <button class="btn small-btn" (click)="eliminarUsuario()">Sí, eliminar</button>
-                <button class="btn small-btn secondary" (click)="cancelarEliminacion()">Cancelar</button>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre de usuario</label>
+                        <input type="text" [(ngModel)]="nuevoUsuario.usuario" name="usuario" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="password" [(ngModel)]="nuevoUsuario.contrasena" name="contrasena" required />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Rol</label>
+                        <select [(ngModel)]="nuevoUsuario.rol" name="rol" required>
+                            <option [value]="ROLES.ADMIN.backendValue">{{ROLES.ADMIN.display}}</option>
+                            <option [value]="ROLES.USUARIO.backendValue">{{ROLES.USUARIO.display}}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" [(ngModel)]="asociarCliente" name="asociarCliente" />
+                            Asociar cliente
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Campos de cliente si está activado -->
+                <div class="form-row" *ngIf="asociarCliente">
+                    <div class="form-group" style="position: relative;">
+                        <label>Buscar cliente</label>
+                        <input type="text" [(ngModel)]="clienteBusqueda" (input)="clienteSeleccionadoId = null"
+                            name="clienteBusqueda" placeholder="Nombre o clave" autocomplete="off" />
+                        <ul class="sugerencias" *ngIf="clienteBusqueda && !clienteSeleccionadoId">
+                            <li *ngFor="let cliente of filtrarClientes()" (click)="seleccionarCliente(cliente)">
+                                {{ cliente.nombre_cliente }} ({{ cliente.clave }})
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-buttons">
+                    <button class="btn small-btn" type="submit" [disabled]="formRegistro.invalid">Registrar</button>
+                    <button class="btn small-btn secondary" type="button" (click)="volverALista()">Volver</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Formulario de Edición -->
+        <div *ngIf="mostrarFormularioEdicion" class="formulario-section">
+            <h2>Editar Usuario</h2>
+            <form (submit)="actualizarUsuario()" class="formulario-usuario" #formEdicion="ngForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre completo</label>
+                        <input type="text" [(ngModel)]="nuevoUsuario.nombre" name="nombre" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Correo electrónico</label>
+                        <input type="email" [(ngModel)]="nuevoUsuario.correo" name="correo" required />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre de usuario</label>
+                        <input type="text" [(ngModel)]="nuevoUsuario.usuario" name="usuario" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="password" [(ngModel)]="nuevoUsuario.contrasena" name="contrasena"
+                            placeholder="Dejar vacío para no cambiar" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Rol</label>
+                        <select [(ngModel)]="nuevoUsuario.rol" name="rol_id" required>
+                            <option [value]="ROLES.ADMIN.backendValue">{{ROLES.ADMIN.display}}</option>
+                            <option [value]="ROLES.USUARIO.backendValue">{{ROLES.USUARIO.display}}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Checkbox para asociar cliente -->
+                <div class="form-row">
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" [(ngModel)]="asociarCliente" name="asociarClienteEditar" />
+                            Asociar cliente
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Campos de cliente si está activado -->
+                <div class="form-row" *ngIf="asociarCliente">
+                    <div class="form-group" style="position: relative;">
+                        <label>Buscar cliente</label>
+                        <input type="text" [(ngModel)]="clienteBusqueda" (input)="clienteSeleccionadoId = null"
+                            name="clienteBusqueda" placeholder="Nombre o clave" autocomplete="off" />
+                        <ul class="sugerencias" *ngIf="clienteBusqueda && !clienteSeleccionadoId">
+                            <li *ngFor="let cliente of filtrarClientes()" (click)="seleccionarCliente(cliente)">
+                                {{ cliente.nombre_cliente }} ({{ cliente.clave }})
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-buttons">
+                    <button class="btn small-btn actualizar" type="submit"
+                        [disabled]="formEdicion.invalid">Actualizar</button>
+                    <button class="btn small-btn secondary" type="button" (click)="volverALista()">Volver</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista de Usuarios -->
+        <div class="tabla-con-boton">
+            <div *ngIf="!mostrarFormularioRegistroVisible && !mostrarFormularioEdicion" class="usuarios-lista">
+                <table class="tabla-usuarios" *ngIf="!cargandoUsuarios && usuarios.length > 0">
+                    <thead>
+                        <tr>
+                            <th class="columna-clave">
+                                Clave
+                                <div class="filtro-columna">
+                                    <button (click)="toggleFiltro('clave')"></button>
+                                    <div class="dropdown-filtro" [ngClass]="{ 'mostrar': filtroAbierto === 'clave' }">
+                                        <input type="text" [(ngModel)]="filtros.clave" (input)="filtrarUsuarios()"
+                                            placeholder="Filtrar por clave..." />
+                                    </div>
+                                </div>
+                            </th>
+                            <th class="columna-nombre">
+                                Nombre
+                                <div class="filtro-columna">
+                                    <button (click)="toggleFiltro('nombre')"></button>
+                                    <div class="dropdown-filtro" [ngClass]="{ 'mostrar': filtroAbierto === 'nombre' }">
+                                        <input type="text" [(ngModel)]="filtros.nombre" (input)="filtrarUsuarios()"
+                                            placeholder="Filtrar por nombre..." />
+                                    </div>
+                                </div>
+                            </th>
+                            <th class="columna-correo">
+                                Correo
+                                <div class="filtro-columna">
+                                    <button (click)="toggleFiltro('correo')"></button>
+                                    <div class="dropdown-filtro" [ngClass]="{ 'mostrar': filtroAbierto === 'correo' }">
+                                        <input type="text" [(ngModel)]="filtros.correo" (input)="filtrarUsuarios()"
+                                            placeholder="Filtrar por correo..." />
+                                    </div>
+                                </div>
+                            </th>
+                            <th class="columna-usuario">
+                                Usuario
+                                <div class="filtro-columna">
+                                    <button (click)="toggleFiltro('usuario')"></button>
+                                    <div class="dropdown-filtro" [ngClass]="{ 'mostrar': filtroAbierto === 'usuario' }">
+                                        <input type="text" [(ngModel)]="filtros.usuario" (input)="filtrarUsuarios()"
+                                            placeholder="Filtrar por usuario..." />
+                                    </div>
+                                </div>
+                            </th>
+                            <th class="columna-rol">
+                                Rol
+                                <div class="filtro-columna">
+                                    <button (click)="toggleFiltro('rol')"></button>
+                                    <div class="dropdown-filtro" [ngClass]="{ 'mostrar': filtroAbierto === 'rol' }">
+                                        <select [(ngModel)]="filtros.rol" (change)="filtrarUsuarios()">
+                                            <option value="">Todos</option>
+                                            <option [value]="ROLES.ADMIN.backendValue">{{ ROLES.ADMIN.display }}
+                                            </option>
+                                            <option [value]="ROLES.USUARIO.backendValue">{{ ROLES.USUARIO.display }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let u of usuariosPaginados()">
+                            <td>{{ u.id }}</td>
+                            <td>{{ u.nombre }}</td>
+                            <td>{{ u.correo }}</td>
+                            <td>{{ u.usuario }}</td>
+                            <td>{{ u.rol === ROLES.ADMIN.backendValue ? ROLES.ADMIN.display : ROLES.USUARIO.display }}
+                            </td>
+                            <td>
+                                <div class="acciones-celda">
+                                    <button class="btn btn-accion azul" (click)="editarUsuario(u)" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-accion rojo" (click)="confirmarEliminacion(u)"
+                                        title="Eliminar">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p *ngIf="!cargandoUsuarios && usuarios.length === 0">No hay usuarios registrados.</p>
+
+                <div class="paginador" *ngIf="usuarios.length > 0">
+                    <button class="btn small-btn" (click)="paginaAnterior()"
+                        [disabled]="paginaActual === 1">Anterior</button>
+                    <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
+                    <button class="btn small-btn" (click)="paginaSiguiente()"
+                        [disabled]="paginaActual === totalPaginas">Siguiente</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmación -->
+        <div *ngIf="mostrarConfirmacion" class="confirmacion-dialogo">
+            <div class="confirmacion-contenido">
+                <p>¿Estás seguro de que deseas eliminar al usuario <strong>{{ usuarioAEliminar?.nombre }}</strong>?</p>
+                <div class="confirmacion-botones">
+                    <button class="btn small-btn confirmacion" (click)="eliminarUsuario()">Sí, eliminar</button>
+                    <button class="btn small-btn secondary" (click)="cancelarEliminacion()">Cancelar</button>
+                </div>
             </div>
         </div>
     </div>
-</div>

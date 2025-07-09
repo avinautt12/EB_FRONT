@@ -1,4 +1,4 @@
-.home-container {
+.dashboard-container {
   max-width: 1000px;
   margin: 2rem auto;
   padding: 2rem;
@@ -10,7 +10,7 @@
   text-align: center;
 }
 
-.home-container h1 {
+.dashboard-container h1 {
   color: #EB5E28;
   font-size: 2rem;
   margin-bottom: 0.3rem;
@@ -22,13 +22,13 @@
   color: #ccc;
 }
 
-.tarjetas-acciones {
+.secciones {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2rem;
 }
 
-.tarjeta {
+.seccion {
   background-color: #1e1d1b;
   border-radius: 10px;
   padding: 1.5rem;
@@ -36,24 +36,24 @@
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.tarjeta:hover {
+.seccion:hover {
   transform: translateY(-4px);
   box-shadow: 0 10px 20px rgba(255, 94, 40, 0.4);
 }
 
-.tarjeta h2 {
+.seccion h2 {
   font-size: 1.4rem;
   color: #EB5E28;
   margin-bottom: 0.5rem;
 }
 
-.tarjeta p {
+.seccion p {
   font-size: 1rem;
   margin-bottom: 1.2rem;
   color: #FFFCF2;
 }
 
-.tarjeta button {
+.seccion button {
   background-color: #EB5E28;
   color: #FFFCF2;
   border: none;
@@ -66,7 +66,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.tarjeta button:hover {
+.seccion button:hover {
   background-color: #ff6b2c;
   transform: scale(1.05);
 }

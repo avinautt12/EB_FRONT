@@ -1,26 +1,43 @@
 import { CanActivateFn, Router, ActivatedRouteSnapshot } from '@angular/router';
 import { inject } from '@angular/core';
+import { jwtDecode } from 'jwt-decode';
 
 export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const router = inject(Router);
   const token = localStorage.getItem('token');
   const ruta = route.routeConfig?.path || '';
 
-  const rutasPublicas = ['', 'login']; // rutas a las que puede ir si NO está logeado
+  const rutasPublicas = ['', 'login', 
+    'recuperacion/enviar-correo', 
+    'recuperacion/verificar-codigo', 
+    'recuperacion/restablecer-contrasena'];
 
   if (token) {
-    // Si ya está logeado y quiere entrar a login o '', lo mandamos a /home
+    // Si quiere entrar a una ruta pública estando logueado
     if (rutasPublicas.includes(ruta)) {
-      router.navigate(['/home']);
-      return false;
+      try {
+        const decoded: any = jwtDecode(token);
+        if (decoded.rol === 1) {
+          router.navigate(['/home']);
+        } else if (decoded.rol === 2) {
+          router.navigate(['/usuarios/dashboard']);
+        } else {
+          router.navigate(['/login']);
+        }
+        return false;
+      } catch (e) {
+        router.navigate(['/login']);
+        return false;
+      }
     }
-    return true; // puede acceder a cualquier ruta protegida
+
+    return true; // puede acceder a rutas protegidas
   } else {
-    // Si no está logeado y trata de entrar a rutas públicas, lo dejamos
+    // No está logueado
     if (rutasPublicas.includes(ruta)) {
       return true;
     }
-    // Cualquier otra ruta requiere login
+
     router.navigate(['/login']);
     return false;
   }

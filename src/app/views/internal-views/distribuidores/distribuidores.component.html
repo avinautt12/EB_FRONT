@@ -1,0 +1,124 @@
+<app-home-bar></app-home-bar>
+
+<div *ngIf="mensajeAlerta" class="alerta" [ngClass]="tipoAlerta">
+    {{ mensajeAlerta }}
+</div>
+
+<div class="distribuidores-container">
+    <h1>Gestión de Distribuidores</h1>
+    <p>Busca un cliente por clave o nombre, edita o elimina los datos o agrega uno nuevo.</p>
+
+    <button class="distribuidores-btn" [routerLink]="['/previo']">
+        <i class="fas fa-arrow-left"></i> Previo
+    </button>
+
+    <!-- BOTÓN PARA MOSTRAR FORMULARIO DE AGREGAR -->
+    <button class="distribuidores-btn" (click)="mostrarFormulario = !mostrarFormulario">
+        {{ mostrarFormulario ? 'Volver' : 'Agregar Nuevo Cliente' }}
+    </button>
+
+    <!-- FORMULARIO DE AGREGAR CLIENTE -->
+    <div *ngIf="mostrarFormulario">
+        <h3 class="titulo-agg">Agregar nuevo cliente</h3>
+
+        <label class="distribuidores-label">Clave:</label>
+        <input class="distribuidores-input" type="text" [(ngModel)]="nuevoCliente.clave" />
+
+        <label class="distribuidores-label">Zona:</label>
+        <select class="distribuidores-input" [(ngModel)]="nuevoCliente.zona">
+            <option value="" disabled selected>Selecciona una zona</option>
+            <option value="Centro">Centro</option>
+            <option value="Sur">Sur</option>
+            <option value="Norte">Norte</option>
+        </select>
+
+        <label class="distribuidores-label">Nombre Cliente:</label>
+        <input class="distribuidores-input" type="text" [(ngModel)]="nuevoCliente.nombre_cliente" />
+
+        <label class="distribuidores-label">Nivel:</label>
+        <select class="distribuidores-input" [(ngModel)]="nuevoCliente.nivel">
+            <option *ngFor="let m of nivelesDisponibles" [value]="m.nivel">{{ m.nivel }}</option>
+        </select>
+
+        <div class="distribuidores-botones">
+            <button class="distribuidores-btn" (click)="agregarCliente()">Agregar</button>
+        </div>
+    </div>
+
+    <!-- BUSCADOR CON BOTÓN Y SUGERENCIAS -->
+    <div class="distribuidores-busqueda" *ngIf="!mostrarFormulario">
+        <input class="distribuidores-input" type="text" placeholder="Buscar por clave o nombre..."
+            [(ngModel)]="busqueda" (input)="filtrarSugerencias()" />
+
+        <button class="distribuidores-btn" (click)="buscarCliente()" [disabled]="cargando">
+            <ng-container *ngIf="!cargando">Buscar</ng-container>
+            <ng-container *ngIf="cargando">
+                <span class="spinner-btn"></span> Buscando...
+            </ng-container>
+        </button>
+
+        <!-- SUGERENCIAS -->
+        <ul class="distribuidores-sugerencias" *ngIf="sugerencias.length > 0">
+            <li *ngFor="let sugerencia of sugerencias" (click)="seleccionarSugerencia(sugerencia)">
+                {{ sugerencia }}
+            </li>
+        </ul>
+    </div>
+
+    <!-- Mensaje si no se encontró -->
+    <p *ngIf="!cargando && cliente === null && intentoBusqueda" class="mensaje-no-encontrado">
+        No se encontró ningún cliente con esa clave o nombre.
+    </p>
+
+    <!-- INFO DE CLIENTE SI SE ENCUENTRA -->
+    <div *ngIf="cliente">
+        <h3>Información del Cliente</h3>
+
+        <label class="distribuidores-label">Clave:</label>
+        <input class="distribuidores-input" type="text" [(ngModel)]="cliente.clave" />
+
+        <label class="distribuidores-label">Zona:</label>
+        <select class="distribuidores-input" [(ngModel)]="cliente.zona">
+            <option value="Norte">Norte</option>
+            <option value="Sur">Sur</option>
+            <option value="Centro">Centro</option>
+        </select>
+
+        <label class="distribuidores-label">Nombre Cliente:</label>
+        <input class="distribuidores-input" type="text" [(ngModel)]="cliente.nombre_cliente" />
+
+        <label class="distribuidores-label">Nivel:</label>
+        <select class="distribuidores-input" [(ngModel)]="cliente.nivel">
+            <option *ngFor="let m of nivelesDisponibles" [value]="m.nivel">{{ m.nivel }}</option>
+        </select>
+
+        <div class="distribuidores-botones">
+            <button class="distribuidores-btn" [disabled]="!hayCambios()" (click)="confirmacionVisible = true">
+                Aceptar
+            </button>
+            <button class="distribuidores-btn distribuidor-btn-secundario eliminar" (click)="confirmacionEliminarVisible = true">
+                Eliminar
+            </button>
+        </div>
+
+        <div *ngIf="confirmacionVisible" class="confirmacion-dialogo">
+            <div class="confirmacion-contenido">
+                <p>¿Estás seguro que deseas editar a <strong>{{ cliente?.nombre_cliente }}</strong>?</p>
+                <div class="confirmacion-botones">
+                    <button class="confirmacion" (click)="confirmarEdicion()">Sí, editar</button>
+                    <button class="secondary" (click)="cancelarEdicion()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="confirmacionEliminarVisible" class="confirmacion-dialogo">
+            <div class="confirmacion-contenido">
+                <p>¿Estás seguro que deseas eliminar a <strong>{{ cliente?.nombre_cliente }}</strong>?</p>
+                <div class="confirmacion-botones">
+                    <button class="confirmacion" (click)="confirmarEliminacion()">Sí, eliminar</button>
+                    <button class="secondary" (click)="cancelarEliminacion()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

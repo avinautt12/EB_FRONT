@@ -1,9 +1,11 @@
-// app.component.ts
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AlertaComponent } from './components/alerta/alerta.component';
 import { AlertaService } from './services/alerta.service';
+import { AuthService } from './services/auth.service';
+import { Router } from '@angular/router';
+import { OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -24,12 +26,18 @@ export class AppComponent {
   tipo: 'exito' | 'error' = 'exito';
   mensajeVisible = false;
 
-  constructor(private alerta: AlertaService) {
+  constructor(private alerta: AlertaService, private authService: AuthService, private router: Router) {
     this.alerta.alerta$.subscribe(data => {
       this.mensaje = data.mensaje;
       this.tipo = data.tipo;
       this.mensajeVisible = true;
       setTimeout(() => this.mensajeVisible = false, 3000);
     });
+  }
+  ngOnInit() {
+    if (!this.authService.isLoggedIn()) {
+      this.authService.clearToken();
+      this.router.navigate(['/']);
+    }
   }
 }

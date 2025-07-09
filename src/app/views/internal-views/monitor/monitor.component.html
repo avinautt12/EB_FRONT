@@ -4,12 +4,29 @@
   <h2>Monitor de Facturas</h2>
 
   <div class="acciones-monitor">
-    <button><i class="fas fa-file-import"></i> Importar</button>
-    <button><i class="fas fa-file-export"></i> Exportar</button>
-    <button><i class="fas fa-folder-open"></i> Caratulas</button>
-    <button><i class="fas fa-file-alt"></i> Reportes</button>
-    <button><i class="fas fa-chart-bar"></i> Gráficas</button>
+    <button [routerLink]="['/previo']">
+      <i class="fas fa-arrow-left"></i> Previo
+    </button>
+    <button (click)="seleccionarArchivo()">
+      <i class="fas fa-file-import"></i> Importar
+    </button>
+    <input #inputArchivo type="file" (change)="importarArchivo($event)" hidden />
+    <button (click)="abrirDialogoExportar()"><i class="fas fa-file-export"></i> Exportar</button>
   </div>
+
+  <dialog #dialogoExportar class="dialogo-exportar">
+    <h3>Selecciona columnas a exportar</h3>
+    <div *ngFor="let col of columnasDisponibles">
+      <label>
+        <input type="checkbox" [(ngModel)]="col.seleccionado" />
+        {{ col.etiqueta }}
+      </label>
+    </div>
+    <div class="botones-dialogo">
+      <button class="boton-login" (click)="exportarExcel()">Exportar</button>
+      <button class="boton-cancelar" (click)="cerrarDialogoExportar()">Cancelar</button>
+    </div>
+  </dialog>
 
   <div *ngIf="cargando" class="cargando-spinner">
     <div class="spinner"></div>
@@ -64,7 +81,6 @@
               </div>
             </div>
           </th>
-
           <th class="columna-contacto-nom">
             Nombre Contacto
             <div class="filtro-columna">
@@ -83,7 +99,6 @@
                 <span class="sort-icon">{{ordenFechaAscendente ? '↑' : '↓'}}</span>
                 <span class="filter-icon">⏷</span>
               </button>
-
               <!-- Panel de filtro flotante -->
               <div class="compact-date-panel" *ngIf="filtroFechaAbierto">
                 <div class="date-range-controls">
@@ -109,17 +124,87 @@
           <th class="columna-precio">Precio Unitario</th>
           <th class="columna-cantidad">Cantidad</th>
           <th class="columna-venta-total">Venta Total</th>
-          <th class="columna-marca">Marca</th>
-          <th class="columna-subcategoria">Subcategoría</th>
-          <th class="columna-eride">ERIDE</th>
-          <th class="columna-apparel">APPAREL</th>
-          <th class="columna-categoria">
-            Categoría
-            <div class="compact-dropdown">
-              <button class="compact-dropdown-btn" (click)="toggleFiltroCategoria()">
+          <th class="columna-marca">
+            Marca
+            <div class="compact-filter-container">
+              <button class="compact-filter-btn" (click)="toggleFiltro('marca')">
                 <span class="filter-icon">⏷</span>
               </button>
-              <div class="compact-dropdown-panel" *ngIf="filtroCategoriaAbierto">
+              <div class="compact-filter-panel" *ngIf="filtroAbierto === 'marca'">
+                <div class="filter-actions">
+                  <button class="mini-btn" (click)="seleccionarTodasMarcas()">Seleccionar todas</button>
+                  <button class="mini-btn" (click)="borrarSeleccionMarcas()">Borrar</button>
+                </div>
+                <div class="checkbox-group">
+                  <label *ngFor="let marca of marcasUnicas">
+                    <input type="checkbox" [checked]="filtrosCheckbox.marcasSeleccionadas.has(marca)"
+                      (change)="toggleMarca(marca, $event)" />
+                    {{ marca }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </th>
+          <th class="columna-subcategoria">
+            Subcategoría
+            <div class="compact-filter-container">
+              <button class="compact-filter-btn" (click)="toggleFiltro('subcategoria')">
+                <span class="filter-icon">⏷</span>
+              </button>
+              <div class="compact-filter-panel" *ngIf="filtroAbierto === 'subcategoria'">
+                <div class="filter-actions">
+                  <button class="mini-btn" (click)="seleccionarTodasSubcategorias()">Seleccionar todas</button>
+                  <button class="mini-btn" (click)="borrarSeleccionSubcategorias()">Borrar</button>
+                </div>
+                <div class="checkbox-group">
+                  <label *ngFor="let sub of subcategoriasUnicas">
+                    <input type="checkbox" [checked]="filtrosCheckbox.subcategoriasSeleccionadas.has(sub)"
+                      (change)="toggleSubcategoria(sub, $event)" />
+                    {{ sub }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </th>
+          <th class="columna-eride">
+            ERIDE
+            <div class="filtro-columna">
+              <button class="compact-filter-btn" (click)="toggleFiltro('eride')">
+              </button>
+              <div class="compact-filter-panel" *ngIf="filtroAbierto === 'eride'">
+                <div class="checkbox-group">
+                  <label *ngFor="let valor of erideUnicos">
+                    <input type="checkbox" [checked]="filtrosCheckbox.erideSeleccionados.has(valor)"
+                      (change)="toggleERIDE(valor, $event)" />
+                    {{ valor }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </th>
+          <th class="columna-apparel">
+            APPAREL
+            <div class="filtro-columna">
+              <button class="compact-filter-btn" (click)="toggleFiltro('apparel')">
+              </button>
+              <div class="compact-filter-panel" *ngIf="filtroAbierto === 'apparel'">
+                <div class="checkbox-group">
+                  <label *ngFor="let valor of apparelUnicos">
+                    <input type="checkbox" [checked]="filtrosCheckbox.apparelSeleccionados.has(valor)"
+                      (change)="toggleAPPAREL(valor, $event)" />
+                    {{ valor }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </th>
+          <th class="columna-categoria with-dropdown">
+            Categoría
+            <div class="compact-dropdown">
+              <button class="compact-dropdown-btn" (click)="toggleFiltro('categoria')">
+                <span class="filter-icon">⏷</span>
+              </button>
+              <div class="compact-dropdown-panel left-aligned" *ngIf="filtroAbierto === 'categoria'">
                 <div class="dropdown-actions">
                   <button (click)="seleccionarTodasCategorias()">Seleccionar todo</button>
                   <button (click)="borrarSeleccionCategorias()">Borrar</button>
@@ -138,8 +223,9 @@
           <th class="columna-estado">
             Estado
             <div class="compact-filter-container">
-              <button class="compact-filter-btn" (click)="toggleFiltro('estado')"><span
-                  class="filter-icon">⏷</span></button>
+              <button class="compact-filter-btn" (click)="toggleFiltro('estado')">
+                <span class="filter-icon">⏷</span>
+              </button>
               <div class="compact-filter-panel" *ngIf="filtroAbierto === 'estado'">
                 <div class="checkbox-group">
                   <label *ngFor="let estado of estadosUnicos">
@@ -166,32 +252,45 @@
           <td>{{ factura.cantidad }}</td>
           <td>
             {{
-            calcularVentaTotal(factura.precio_unitario, factura.cantidad, factura.estado_factura)
-            | currency:'USD':'symbol'
+            factura.venta_total != null
+            ? (factura.venta_total | currency:'USD':'symbol')
+            : (calcularVentaTotal(factura.precio_unitario, factura.cantidad, factura.estado_factura) |
+            currency:'USD':'symbol')
             }}
           </td>
-          <td>{{ extraerPrimeraParte(factura.categoria_producto) }}</td>
-          <td>{{ obtenerSegundaParte(factura.categoria_producto) }}</td>
-          <td>{{ contieneERIDE(factura.categoria_producto) }}</td>
-          <td>{{ contieneAPPAREL(factura.categoria_producto) }}</td>
+          <td>
+            {{
+            factura.marca != null
+            ? factura.marca
+            : extraerPrimeraParte(factura.categoria_producto)
+            }}
+          </td>
+          <td>
+            {{
+            factura.subcategoria != null
+            ? factura.subcategoria
+            : obtenerSegundaParte(factura.categoria_producto)
+            }}
+          </td>
+          <td>{{ factura.eride != null ? factura.eride : contieneERIDE(factura.categoria_producto) }}</td>
+          <td>{{ factura.apparel != null ? factura.apparel : contieneAPPAREL(factura.categoria_producto) }}</td>
           <td>{{ factura.categoria_producto }}</td>
           <td>{{ factura.estado_factura }}</td>
           <td>${{ factura.costo_producto }}</td>
         </tr>
       </tbody>
     </table>
-
-    <div class="paginador">
-      <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1">« Primera</button>
-      <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">‹ Anterior</button>
-      <span class="paginador-info">
-        Página
-        <input type="number" min="1" [max]="totalPaginas" [(ngModel)]="paginaActualTemp"
-          (keyup.enter)="cambiarPagina(paginaActualTemp)" />
-        de {{ totalPaginas }}
-      </span>
-      <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">Siguiente ›</button>
-      <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">Última »</button>
-    </div>
+  </div>
+  <div class="paginador">
+    <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1">« Primera</button>
+    <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">‹ Anterior</button>
+    <span class="paginador-info">
+      Página
+      <input type="number" min="1" [max]="totalPaginas" [(ngModel)]="paginaActualTemp"
+        (keyup.enter)="cambiarPagina(paginaActualTemp)" />
+      de {{ totalPaginas }}
+    </span>
+    <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">Siguiente ›</button>
+    <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">Última »</button>
   </div>
 </div>

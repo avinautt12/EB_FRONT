@@ -1,0 +1,253 @@
+<app-home-bar></app-home-bar>
+
+<div class="monitor-container">
+  <h2>Monitor Previo de Facturas</h2>
+
+  <div class="acciones-monitor">
+    <button class="btn" [routerLink]="['/monitor']"><i class="fas fa-folder-open"></i> Monitor</button>
+    <button class="btn" [routerLink]="['/distribuidores']"><i class="fas fa-file-alt"></i> Distribuidores</button>
+    <button class="btn" [routerLink]="['/metas']"><i class="fas fa-bullseye"></i> Metas</button>
+    <button class="btn" [routerLink]="['/graficas']"><i class="fas fa-chart-bar"></i> Gráficas</button>
+    <button class="btn" [routerLink]="['/caratulas']"><i class="fas fa-book"></i> Carátulas</button>
+  </div>
+
+  <div *ngIf="cargando" class="cargando-spinner">
+    <div class="spinner"></div>
+    <p>Cargando...</p>
+  </div>
+
+  <div *ngIf="!cargando && clientesPaginados.length === 0" class="sin-datos">
+    <table class="tabla-previo">
+      <thead>
+        <tr>
+          <th>
+            <div class="sticky-th">
+              Clave
+              <div class="filtro-columna">
+                <button (click)="toggleFiltro('clave')"></button>
+                <div class="dropdown-filtro" *ngIf="filtroAbierto === 'clave'">
+                  <input type="text" [(ngModel)]="filtros.clave" (input)="aplicarFiltros()"
+                    placeholder="Filtrar por clave..." />
+                </div>
+              </div>
+            </div>
+          </th>
+          <th class="columna-zona">
+            Zona
+            <div class="compact-filter-container">
+              <button class="compact-filter-btn" (click)="toggleFiltro('zona')">
+                <span class="filtro-columna-zona"></span>
+              </button>
+              <div class="compact-filter-panel" *ngIf="filtroAbierto === 'zona'">
+                <div class="filter-actions">
+                  <button class="mini-btn" (click)="seleccionarTodasZonas()">Seleccionar todas</button>
+                  <button class="mini-btn" (click)="borrarSeleccionZonas()">Borrar</button>
+                </div>
+                <div class="checkbox-group">
+                  <label *ngFor="let zona of zonasUnicas">
+                    <input type="checkbox" [checked]="filtrosCheckbox.zonasSeleccionadas.has(zona)"
+                      (change)="toggleZona(zona, $event)" />
+                    {{ zona }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </th>
+          <th>
+            <div class="sticky-th">
+              <div class="header-content">
+                Cliente - Razón Social
+                <div class="filtro-columna">
+                  <button (click)="toggleFiltro('nombre_cliente')"></button>
+                  <div class="dropdown-filtro" *ngIf="filtroAbierto === 'nombre_cliente'"
+                    [style.z-index]="filtroAbierto === 'nombre_cliente' ? 1000 : 'auto'">
+                    <input type="text" [(ngModel)]="filtros.nombre_cliente" (input)="aplicarFiltros()"
+                      placeholder="Filtrar por nombre..." />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </th>
+          <th>Acumulado Compra Anticipada</th>
+          <th class="columna-nivel">
+            Decisión Nivel
+            <div class="compact-filter-container">
+              <button class="compact-filter-btn" (click)="toggleFiltro('nivel')">
+                <span class="filtro-columna-nivel"></span>
+              </button>
+              <div class="compact-filter-panel" *ngIf="filtroAbierto === 'nivel'">
+                <div class="filter-actions">
+                  <button class="mini-btn" (click)="seleccionarTodosNiveles()">Seleccionar todos</button>
+                  <button class="mini-btn" (click)="borrarSeleccionNiveles()">Borrar</button>
+                </div>
+                <div class="checkbox-group">
+                  <label *ngFor="let nivel of nivelesUnicos">
+                    <input type="checkbox" [checked]="filtrosCheckbox.nivelesSeleccionados.has(nivel)"
+                      (change)="toggleNivel(nivel, $event)" />
+                    {{ nivel }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </th>
+          <th>Compra Mínima ANUAL</th>
+          <th>%</th>
+          <th>Compra Mínima INICIAL</th>
+          <th>Avance GLOBAL</th>
+          <th>%</th>
+          <th>Compromiso SCOTT</th>
+          <th>Avance GLOBAL</th>
+          <th>%</th>
+          <th>Compromiso SYNCROS</th>
+          <th>Avance GLOBAL</th>
+          <th>%</th>
+          <th>Compromiso APPAREL</th>
+          <th>Avance GLOBAL</th>
+          <th>%</th>
+          <th>Compromiso VITTORIA</th>
+          <th>Avance GLOBAL</th>
+          <th>%</th>
+          <th>BOLD Acumulado</th>
+        </tr>
+      </thead>
+    </table>
+    <p>No se pudieron cargar los datos o no hay clientes disponibles.</p>
+  </div>
+
+  <div class="tabla-contenedor" *ngIf="!cargando && clientesPaginados.length > 0">
+    <table class="tabla-previo">
+      <thead>
+        <tr>
+          <th>
+            <div class="sticky-th">
+              Clave
+              <div class="filtro-columna">
+                <button (click)="toggleFiltro('clave')"></button>
+                <div class="dropdown-filtro" *ngIf="filtroAbierto === 'clave'">
+                  <input type="text" [(ngModel)]="filtros.clave" (input)="aplicarFiltros()"
+                    placeholder="Filtrar por clave..." />
+                </div>
+              </div>
+            </div>
+          </th>
+          <th class="columna-zona">
+            Zona
+            <div class="compact-filter-container">
+              <button class="compact-filter-btn" (click)="toggleFiltro('zona')">
+                <span class="filtro-columna-zona"></span>
+              </button>
+              <div class="compact-filter-panel" *ngIf="filtroAbierto === 'zona'">
+                <div class="filter-actions">
+                  <button class="mini-btn" (click)="seleccionarTodasZonas()">Seleccionar todas</button>
+                  <button class="mini-btn" (click)="borrarSeleccionZonas()">Borrar</button>
+                </div>
+                <div class="checkbox-group">
+                  <label *ngFor="let zona of zonasUnicas">
+                    <input type="checkbox" [checked]="filtrosCheckbox.zonasSeleccionadas.has(zona)"
+                      (change)="toggleZona(zona, $event)" />
+                    {{ zona }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </th>
+          <th>
+            <div class="sticky-th">
+              <div class="header-content">
+                Cliente - Razón Social
+                <div class="filtro-columna">
+                  <button (click)="toggleFiltro('nombre_cliente')"></button>
+                  <div class="dropdown-filtro" *ngIf="filtroAbierto === 'nombre_cliente'"
+                    [style.z-index]="filtroAbierto === 'nombre_cliente' ? 1000 : 'auto'">
+                    <input type="text" [(ngModel)]="filtros.nombre_cliente" (input)="aplicarFiltros()"
+                      placeholder="Filtrar por nombre..." />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </th>
+          <th>Acumulado Compra Anticipada</th>
+          <th class="columna-nivel">
+            Decisión Nivel
+            <div class="compact-filter-container">
+              <button class="compact-filter-btn" (click)="toggleFiltro('nivel')">
+                <span class="filtro-columna-nivel"></span>
+              </button>
+              <div class="compact-filter-panel" *ngIf="filtroAbierto === 'nivel'">
+                <div class="filter-actions">
+                  <button class="mini-btn" (click)="seleccionarTodosNiveles()">Seleccionar todos</button>
+                  <button class="mini-btn" (click)="borrarSeleccionNiveles()">Borrar</button>
+                </div>
+                <div class="checkbox-group">
+                  <label *ngFor="let nivel of nivelesUnicos">
+                    <input type="checkbox" [checked]="filtrosCheckbox.nivelesSeleccionados.has(nivel)"
+                      (change)="toggleNivel(nivel, $event)" />
+                    {{ nivel }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </th>
+          <th>Compra Mínima ANUAL</th>
+          <th>%</th>
+          <th>Compra Mínima INICIAL</th>
+          <th>Avance GLOBAL</th>
+          <th>%</th>
+          <th>Compromiso SCOTT</th>
+          <th>Avance GLOBAL</th>
+          <th>%</th>
+          <th>Compromiso SYNCROS</th>
+          <th>Avance GLOBAL</th>
+          <th>%</th>
+          <th>Compromiso APPAREL</th>
+          <th>Avance GLOBAL</th>
+          <th>%</th>
+          <th>Compromiso VITTORIA</th>
+          <th>Avance GLOBAL</th>
+          <th>%</th>
+          <th>BOLD Acumulado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let cliente of clientesPaginados">
+          <td>{{ cliente.clave }}</td>
+          <td>{{ cliente.zona }}</td>
+          <td>{{ cliente.nombre_cliente }}</td>
+          <td>{{ cliente.acumulado_anticipado | currency }}</td>
+          <td>{{ cliente.nivel }}</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+          <td>{{ cliente.compromiso_scott | currency }}</td>
+          <td>—</td>
+          <td>—</td>
+          <td>{{ cliente.compromiso_syncros | currency }}</td>
+          <td>—</td>
+          <td>—</td>
+          <td>{{ cliente.compromiso_apparel | currency }}</td>
+          <td>—</td>
+          <td>—</td>
+          <td>{{ cliente.compromiso_vittoria | currency }}</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="paginador" *ngIf="totalPaginas > 1">
+    <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1">« Primera</button>
+    <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">‹ Anterior</button>
+    <span class="paginador-info">
+      Página
+      <input type="number" min="1" [max]="totalPaginas" [(ngModel)]="paginaActualTemp"
+        (keyup.enter)="cambiarPagina(paginaActualTemp)" />
+      de {{ totalPaginas }}
+    </span>
+    <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">Siguiente ›</button>
+    <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">Última »</button>
+  </div>
+</div>

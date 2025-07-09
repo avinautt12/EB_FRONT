@@ -1,14 +1,33 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MonitorOdooService } from '../../../services/monitor-odoo.service';
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
 import { FiltroPorTextoPipe } from '../../../pipes/filtro-por-texto.pipe';
+import { ViewChild, ElementRef, } from '@angular/core';
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
+import { AlertaService } from '../../../services/alerta.service';
+
+interface Factura {
+  numero_factura: string;
+  referencia_interna: string;
+  nombre_producto: string;
+  contacto_referencia: string;
+  contacto_nombre: string;
+  fecha_factura: string;
+  precio_unitario: number;
+  cantidad: number;
+  categoria_producto: string;
+  estado_factura: string;
+  costo_producto: number;
+}
 
 @Component({
   selector: 'app-monitor',
   standalone: true,
-  imports: [CommonModule, HomeBarComponent, FormsModule, FiltroPorTextoPipe],
+  imports: [CommonModule, HomeBarComponent, FormsModule, FiltroPorTextoPipe, RouterModule],
   templateUrl: './monitor.component.html',
   styleUrl: './monitor.component.css',
   providers: [MonitorOdooService]
@@ -16,6 +35,9 @@ import { FiltroPorTextoPipe } from '../../../pipes/filtro-por-texto.pipe';
 export class MonitorComponent {
   facturas: any[] = [];
   cargando: boolean = false;
+
+  @ViewChild('inputArchivo') inputArchivo!: ElementRef<HTMLInputElement>;
+  @ViewChild('dialogoExportar') dialogoExportar!: ElementRef;
 
   paginaActual: number = 1;
   paginaActualTemp: number = 1;
@@ -46,9 +68,14 @@ export class MonitorComponent {
 
   categoriasUnicas: string[] = [];
   estadosUnicos: string[] = [];
+
   filtrosCheckbox = {
     categoriasSeleccionadas: new Set<string>(),
-    estadosSeleccionados: new Set<string>()
+    estadosSeleccionados: new Set<string>(),
+    marcasSeleccionadas: new Set<string>(),
+    subcategoriasSeleccionadas: new Set<string>(),
+    erideSeleccionados: new Set<string>(),
+    apparelSeleccionados: new Set<string>()
   };
 
   filtroCategoriaAbierto: boolean = false;
@@ -56,7 +83,31 @@ export class MonitorComponent {
 
   totalPaginas: number = 1;
 
-  constructor(private monitorService: MonitorOdooService) { }
+  marcasUnicas: string[] = [];
+  subcategoriasUnicas: string[] = [];
+  erideUnicos: string[] = ['SI', 'NO'];
+  apparelUnicos: string[] = ['SI', 'NO'];
+
+  columnasDisponibles = [
+    { nombre: 'numero_factura', etiqueta: 'Líneas de factura/Número', seleccionado: true },
+    { nombre: 'referencia_interna', etiqueta: 'Líneas de factura/Producto/Referencia interna', seleccionado: true },
+    { nombre: 'nombre_producto', etiqueta: 'Líneas de factura/Producto/Nombre', seleccionado: true },
+    { nombre: 'contacto_referencia', etiqueta: 'Líneas de factura/Contacto/Referencia', seleccionado: true },
+    { nombre: 'contacto_nombre', etiqueta: 'Líneas de factura/Contacto/Nombre', seleccionado: true },
+    { nombre: 'fecha_factura', etiqueta: 'Líneas de factura/Fecha de factura', seleccionado: true },
+    { nombre: 'precio_unitario', etiqueta: 'Líneas de factura/Precio unitario', seleccionado: true },
+    { nombre: 'cantidad', etiqueta: 'Líneas de factura/Cantidad', seleccionado: true },
+    { nombre: 'venta_total', etiqueta: 'Líneas de factura/Venta Total', seleccionado: true },
+    { nombre: 'marca', etiqueta: 'Líneas de factura/Marca', seleccionado: true },
+    { nombre: 'subcategoria', etiqueta: 'Líneas de factura/Subcategoría', seleccionado: true },
+    { nombre: 'eride', etiqueta: 'Líneas de factura/ERIDE', seleccionado: true },
+    { nombre: 'apparel', etiqueta: 'Líneas de factura/APPAREL', seleccionado: true },
+    { nombre: 'categoria_producto', etiqueta: 'Líneas de factura/Producto/Categoría del producto', seleccionado: true },
+    { nombre: 'estado_factura', etiqueta: 'Líneas de factura/Estado', seleccionado: true },
+    { nombre: 'costo_producto', etiqueta: 'Líneas de factura/Producto/Costo', seleccionado: true }
+  ];
+
+  constructor(private monitorService: MonitorOdooService, private alertaService: AlertaService) { }
 
   ngOnInit() {
     this.obtenerFacturas();
@@ -65,14 +116,33 @@ export class MonitorComponent {
   obtenerFacturas() {
     this.cargando = true;
     this.monitorService.getFacturas().subscribe({
-      next: (data) => {
-        this.facturas = data;
+      next: (data: Factura[]) => {
+        this.facturas = data.filter(f =>
+          f.numero_factura && f.numero_factura !== '/' &&
+          f.fecha_factura && f.fecha_factura !== '0001-01-01 00:00:00'
+        );
+
         this.categoriasUnicas = [...new Set(
           this.facturas
             .map(f => f.categoria_producto)
             .filter(c => c && c.toUpperCase().trim() !== 'SERVICIOS')
         )];
-        this.estadosUnicos = [...new Set(this.facturas.map(f => f.estado_factura).filter(Boolean))];
+        this.estadosUnicos = [...new Set(
+          this.facturas
+            .map(f => f.estado_factura)
+            .filter(e => e && e !== '0001-01-01 00:00:00')
+        )];
+        this.marcasUnicas = [...new Set(
+          this.facturas
+            .map(f => this.extraerPrimeraParte(f.categoria_producto))
+            .filter(m => m && m.trim() !== '' && m !== '0001-01-01 00:00:00')
+        )];
+        this.subcategoriasUnicas = [...new Set(
+          this.facturas
+            .map(f => this.obtenerSegundaParte(f.categoria_producto))
+            .filter(sub => sub && sub.trim() !== '' && sub !== '0001-01-01 00:00:00')
+        )];
+
         this.totalPaginas = Math.ceil(this.facturas.length / this.elementosPorPagina);
         this.actualizarFacturasPaginadas();
         this.filtrarFacturas();
@@ -83,6 +153,124 @@ export class MonitorComponent {
         this.cargando = false;
       }
     });
+  }
+
+  seleccionarArchivo() {
+    this.inputArchivo.nativeElement.click();
+  }
+
+  importarArchivo(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const archivo = input.files[0];
+      const formData = new FormData();
+      formData.append('file', archivo);
+
+      this.cargando = true;
+      this.monitorService.importarFacturas(formData).subscribe({
+        next: (res: any) => {
+          this.alertaService.mostrarExito(res.message);
+          this.obtenerFacturas();
+          this.cargando = false;
+        },
+        error: err => {
+          if (err.status === 400) {
+            this.alertaService.mostrarError(err.error?.error || 'Error de validación en archivo');
+          } else if (err.status === 500) {
+            this.alertaService.mostrarError('Error interno del servidor. Intenta más tarde.');
+          } else {
+            this.alertaService.mostrarError('Error desconocido al importar');
+          }
+          console.error(err);
+          this.cargando = false;
+        }
+      });
+    }
+  }
+
+  abrirDialogoExportar() {
+    this.dialogoExportar.nativeElement.showModal();
+  }
+
+  cerrarDialogoExportar() {
+    this.dialogoExportar.nativeElement.close();
+  }
+
+  formatearFecha(fechaStr: string): string {
+    const [anio, mes, dia] = fechaStr.split('-');
+    return `${dia}/${mes}/${anio}`;
+  }
+
+  exportarExcel() {
+    const columnasSeleccionadas = this.columnasDisponibles
+      .filter(c => c.seleccionado)
+      .map(c => c.nombre);
+
+    const datosFiltrados = this.facturasFiltradas.map(factura => {
+      const fila: any = {};
+      let filaValida = true;
+
+      columnasSeleccionadas.forEach(col => {
+        // Manejo especial para columnas calculadas
+        switch (col) {
+          case 'venta_total':
+            fila[col] = this.calcularVentaTotal(factura.precio_unitario, factura.cantidad, factura.estado_factura);
+            break;
+          case 'marca':
+            fila[col] = this.extraerPrimeraParte(factura.categoria_producto);
+            break;
+          case 'subcategoria':
+            fila[col] = this.obtenerSegundaParte(factura.categoria_producto);
+            break;
+          case 'eride':
+            fila[col] = this.contieneERIDE(factura.categoria_producto);
+            break;
+          case 'apparel':
+            fila[col] = this.contieneAPPAREL(factura.categoria_producto);
+            break;
+          default:
+            // Para las columnas normales
+            const valor = factura[col];
+            if (
+              valor === '/' ||
+              valor === '0001-01-01 00:00:00' ||
+              valor === null ||
+              valor === undefined ||
+              valor === ''
+            ) {
+              fila[col] = '';
+            } else if (col.toLowerCase().includes('fecha') && valor) {
+              fila[col] = this.formatearFecha(valor);
+            } else {
+              fila[col] = valor;
+            }
+        }
+      });
+      return fila;
+    });
+
+    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(datosFiltrados);
+
+    // Ajuste automático del ancho de columnas
+    const columnWidths = columnasSeleccionadas.map(col => {
+      const maxLength = Math.max(
+        col.length,
+        ...datosFiltrados.map(f => (f[col] ? f[col].toString().length : 0))
+      );
+      return { wch: maxLength + 5 };
+    });
+    worksheet['!cols'] = columnWidths;
+
+    const workbook: XLSX.WorkBook = {
+      Sheets: { 'Facturas': worksheet },
+      SheetNames: ['Facturas']
+    };
+
+    const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob: Blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    FileSaver.saveAs(blob, 'facturas_exportadas.xlsx');
+
+    this.cerrarDialogoExportar();
   }
 
   cambiarPagina(numero: number) {
@@ -140,6 +328,30 @@ export class MonitorComponent {
       facturasFiltradas = facturasFiltradas.filter(f => this.filtrosCheckbox.estadosSeleccionados.has(f.estado_factura));
     }
 
+    if (this.filtrosCheckbox.marcasSeleccionadas.size > 0) {
+      facturasFiltradas = facturasFiltradas.filter(f =>
+        this.filtrosCheckbox.marcasSeleccionadas.has(this.extraerPrimeraParte(f.categoria_producto))
+      );
+    }
+
+    if (this.filtrosCheckbox.subcategoriasSeleccionadas.size > 0) {
+      facturasFiltradas = facturasFiltradas.filter(f =>
+        this.filtrosCheckbox.subcategoriasSeleccionadas.has(this.obtenerSegundaParte(f.categoria_producto))
+      );
+    }
+
+    if (this.filtrosCheckbox.erideSeleccionados.size > 0) {
+      facturasFiltradas = facturasFiltradas.filter(f =>
+        this.filtrosCheckbox.erideSeleccionados.has(this.contieneERIDE(f.nombre_producto))
+      );
+    }
+
+    if (this.filtrosCheckbox.apparelSeleccionados.size > 0) {
+      facturasFiltradas = facturasFiltradas.filter(f =>
+        this.filtrosCheckbox.apparelSeleccionados.has(this.contieneAPPAREL(f.nombre_producto))
+      );
+    }
+
     // Filtros genéricos para otros campos
     Object.keys(this.filtros).forEach(campo => {
       if (
@@ -171,8 +383,12 @@ export class MonitorComponent {
     this.cambiarPagina(1);
   }
 
-  toggleFiltro(campo: string) {
-    this.filtroAbierto = this.filtroAbierto === campo ? null : campo;
+  toggleFiltro(filtro: string) {
+    if (this.filtroAbierto === filtro) {
+      this.filtroAbierto = null;
+    } else {
+      this.filtroAbierto = filtro;
+    }
   }
 
   actualizarFacturasPaginadas() {
@@ -271,5 +487,67 @@ export class MonitorComponent {
     if (!texto) return 'NO';
     return texto.includes('APPAREL') ? 'SI' : 'NO';
   }
+
+  toggleMarca(marca: string, event: Event) {
+    const checked = (event.target as HTMLInputElement).checked;
+    if (checked) {
+      this.filtrosCheckbox.marcasSeleccionadas.add(marca);
+    } else {
+      this.filtrosCheckbox.marcasSeleccionadas.delete(marca);
+    }
+    this.filtrarFacturas();
+  }
+
+  toggleSubcategoria(sub: string, event: Event) {
+    const checked = (event.target as HTMLInputElement).checked;
+    if (checked) {
+      this.filtrosCheckbox.subcategoriasSeleccionadas.add(sub);
+    } else {
+      this.filtrosCheckbox.subcategoriasSeleccionadas.delete(sub);
+    }
+    this.filtrarFacturas();
+  }
+
+  toggleERIDE(valor: string, event: Event) {
+    const checked = (event.target as HTMLInputElement).checked;
+    if (checked) {
+      this.filtrosCheckbox.erideSeleccionados.add(valor);
+    } else {
+      this.filtrosCheckbox.erideSeleccionados.delete(valor);
+    }
+    this.filtrarFacturas();
+  }
+
+  toggleAPPAREL(valor: string, event: Event) {
+    const checked = (event.target as HTMLInputElement).checked;
+    if (checked) {
+      this.filtrosCheckbox.apparelSeleccionados.add(valor);
+    } else {
+      this.filtrosCheckbox.apparelSeleccionados.delete(valor);
+    }
+    this.filtrarFacturas();
+  }
+
+  seleccionarTodasMarcas() {
+    this.marcasUnicas.forEach(m => this.filtrosCheckbox.marcasSeleccionadas.add(m));
+    this.filtrarFacturas();
+  }
+
+  borrarSeleccionMarcas() {
+    this.filtrosCheckbox.marcasSeleccionadas.clear();
+    this.filtrarFacturas();
+  }
+
+  seleccionarTodasSubcategorias() {
+    this.subcategoriasUnicas.forEach(s => this.filtrosCheckbox.subcategoriasSeleccionadas.add(s));
+    this.filtrarFacturas();
+  }
+
+  borrarSeleccionSubcategorias() {
+    this.filtrosCheckbox.subcategoriasSeleccionadas.clear();
+    this.filtrarFacturas();
+  }
+
+
 
 }

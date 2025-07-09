@@ -1,0 +1,132 @@
+<app-home-bar></app-home-bar>
+
+<div class="monitor-container">
+    <h2>Monitor Previo de Facturas</h2>
+
+    <div class="acciones-monitor">
+        <button class="btn" [routerLink]="['/previo']">
+            <i class="fas fa-arrow-left"></i> Previo
+        </button>
+        <button class="btn">
+            <i class="fas fa-file-pdf"></i> Generar PDF
+        </button>
+    </div>
+
+    <div class="contenedor-principal">
+        <!-- Cuadro derecho con buscador y datos del partner -->
+        <div class="cuadro-buscador">
+            <div class="buscador-container">
+                <input type="text" placeholder="Ingrese clave..." class="buscador-input">
+                <button class="btn buscador-btn">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+            </div>
+
+            <!-- Contenedor de datos del partner -->
+            <div class="partner-data-container">
+                <div class="partner-header">
+                    <div class="partner-info">
+                        <div><strong>Clave:</strong> F4271</div>
+                        <div><strong>Zona:</strong> Norte</div>
+                        <div><strong>Razón Social:</strong> Juan Manuel Ruscho Rangel</div>
+                    </div>
+                    <div class="partner-tier">
+                        <h3>Partner Elite Plus</h3>
+                    </div>
+                </div>
+
+                <div class="compromiso-section">
+                    <h4>Compromiso ANUAL</h4>
+                    <div class="compromiso-total">$5,920,000</div>
+                </div>
+
+                <div class="compromiso-lineas">
+                    <h4>a) Compromiso por Línea</h4>
+                    <table class="lineas-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>SCOTT</th>
+                                <th>APPAREL</th>
+                                <th>SYNCROS</th>
+                                <th>VITTORIA</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Meta</td>
+                                <td>$5,250,000.00</td>
+                                <td>$340,000.00</td>
+                                <td>$200,000.00</td>
+                                <td>$180,000.00</td>
+                            </tr>
+                            <tr>
+                                <td>Avance</td>
+                                <td>$2,494,366.62</td>
+                                <td>$283,206.24</td>
+                                <td>$195,149.46</td>
+                                <td>$121,036.79</td>
+                            </tr>
+                            <tr>
+                                <td>%</td>
+                                <td>11%</td>
+                                <td>7%</td>
+                                <td>9%</td>
+                                <td>9%</td>
+                            </tr>
+                            <tr>
+                                <td>Importe Faltante</td>
+                                <td>$-1,014,366.62</td>
+                                <td>$101,793.76</td>
+                                <td>$4,950.54</td>
+                                <td>$8,963.21</td>
+                            </tr>
+                            <tr class="estatus-row">
+                                <td>Estatus</td>
+                                <td class="cumplida">Cumplida</td>
+                                <td class="faltante">Faltante</td>
+                                <td class="faltante">Faltante</td>
+                                <td class="faltante">Faltante</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="faltante-acumulado">
+                        <strong>Importe faltante acumulado:</strong> $115,607.51
+                    </div>
+                </div>
+
+                <div class="compra-minima">
+                    <h4>b) Compra Mínima ANUAL</h4>
+                    <table class="minima-table">
+                        <tr>
+                            <th>Meta</th>
+                            <th>Avance</th>
+                        </tr>
+                        <tr>
+                            <td>$5,920,000</td>
+                            <td>$6,818,759</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="porcentaje">115%</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="transito-section">
+                    <h4>c) Mercancía en TRÁNSITO</h4>
+                    <table class="transito-table">
+                        <tr>
+                            <th>Productos</th>
+                            <td>#N/A</td>
+                        </tr>
+                        <tr>
+                            <th>Total</th>
+                            <td>#N/A</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

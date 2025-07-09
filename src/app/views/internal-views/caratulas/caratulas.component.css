@@ -1,0 +1,228 @@
+/* Estilos base */
+.monitor-container {
+  min-height: 80vh;
+  padding: 2rem;
+  box-sizing: border-box;
+  background-color: #252422;
+  color: #FFFCF2;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h2 {
+  color: #EB5E28;
+  margin-bottom: 1.8rem;
+  font-size: 2rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Acciones - Botones mejorados */
+.acciones-monitor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.acciones-monitor .btn {
+  padding: 0.6rem 1.2rem;
+  background-color: #474646;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  font-family: 'Segoe UI', sans-serif;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: scale(1);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.acciones-monitor .btn:hover {
+  background-color: #ff6b2c;
+  transform: scale(1.08);
+}
+
+.acciones-monitor .btn i {
+  font-size: 0.9rem;
+}
+
+/* Layout principal */
+.contenedor-principal {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Cuadro de búsqueda */
+.cuadro-buscador {
+  background-color: #403d39;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.buscador-container {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.buscador-input {
+  flex: 1;
+  padding: 0.8rem;
+  border-radius: 6px;
+  border: none;
+  background: #FFFCF2;
+  color: #252422;
+  font-size: 1rem;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.buscador-btn {
+  background-color: #EB5E28;
+  color: white;
+  padding: 0 1.5rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.buscador-btn:hover {
+  background-color: #ff6b2c;
+}
+
+/* Datos del partner */
+.partner-data-container {
+  background-color: #2A2A28;
+  border-radius: 10px;
+  padding: 1.5rem;
+  color: #FFFCF2;
+}
+
+.partner-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #403d39;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.partner-info div {
+  margin-bottom: 0.5rem;
+  font-size: 1.05rem;
+}
+
+.partner-tier h3 {
+  color: #EB5E28;
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.compromiso-section {
+  text-align: center;
+  margin: 2rem 0;
+  padding: 1.2rem;
+  background-color: #403d39;
+  border-radius: 8px;
+}
+
+.compromiso-total {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #EB5E28;
+  margin-top: 0.5rem;
+}
+
+/* Tablas mejoradas */
+.lineas-table, .minima-table, .transito-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+.lineas-table th, .lineas-table td,
+.minima-table th, .minima-table td,
+.transito-table th, .transito-table td {
+  padding: 0.8rem;
+  text-align: center;
+  border: 1px solid #403d39;
+}
+
+.lineas-table th {
+  background-color: #403d39;
+  color: #EB5E28;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+
+.estatus-row td {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.cumplida {
+  color: #28a745;
+  background-color: rgba(40, 167, 69, 0.1);
+}
+
+.faltante {
+  color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.faltante-acumulado {
+  text-align: center;
+  margin: 1.5rem 0;
+  padding: 0.8rem;
+  background-color: #403d39;
+  border-radius: 6px;
+  font-size: 1.3rem;
+}
+
+.porcentaje {
+  font-weight: bold;
+  color: #28a745;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.transito-table th {
+  text-align: left;
+  width: 30%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .monitor-container {
+    padding: 1.5rem;
+  }
+  
+  .partner-header {
+    flex-direction: column;
+  }
+  
+  .lineas-table {
+    display: block;
+    overflow-x: auto;
+  }
+  
+  .buscador-container {
+    flex-direction: column;
+  }
+  
+  .buscador-btn {
+    width: 100%;
+    padding: 0.8rem;
+  }
+}

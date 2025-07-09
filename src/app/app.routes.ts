@@ -7,17 +7,31 @@ import { UsuariosComponent } from './views/internal-views/usuarios/usuarios.comp
 import { EnviarCorreoComponent } from './views/recuperacion/enviar-correo/enviar-correo.component';
 import { VerificarCodigoComponent } from './views/recuperacion/verificar-codigo/verificar-codigo.component';
 import { RestablecerContrasenaComponent } from './views/recuperacion/restablecer-contrasena/restablecer-contrasena.component';
+import { PrevioComponent } from './views/internal-views/previo/previo.component';
+import { CaratulasComponent } from './views/internal-views/caratulas/caratulas.component';
+import { MetasComponent } from './views/internal-views/metas/metas.component';
+import { DistribuidoresComponent } from './views/internal-views/distribuidores/distribuidores.component';
+import { DashboardComponent } from './views/usuarios/dashboard/dashboard.component';
+import { ProyeccionComponent } from './views/internal-views/proyeccion/proyeccion.component';
 
 import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
+import { usuarioGuard } from './guards/usuario.guard';
 
 export const routes: Routes = [
   { path: '', component: InicioComponent, canActivate: [authGuard] },
   { path: 'login', component: LoginComponent, canActivate: [authGuard] },
   { path: 'home', component: HomeComponent, canActivate: [authGuard] },
   { path: 'monitor', component: MonitorComponent, canActivate: [authGuard] },
+  { path: 'previo', component: PrevioComponent, canActivate: [authGuard] },
+  { path: 'metas', component: MetasComponent, canActivate: [authGuard] },
+  { path: 'distribuidores', component: DistribuidoresComponent, canActivate: [authGuard] },
+  { path: 'caratulas', component: CaratulasComponent, canActivate: [authGuard] },
   { path: 'usuarios', component: UsuariosComponent, canActivate: [authGuard] },
+  { path: 'proyeccion', component: ProyeccionComponent, canActivate: [authGuard] },
   { path: 'recuperacion/enviar-correo', component: EnviarCorreoComponent},
   { path: 'recuperacion/verificar-codigo', component: VerificarCodigoComponent},
   { path: 'recuperacion/restablecer-contrasena', component: RestablecerContrasenaComponent},
+  { path: 'usuarios/dashboard', component: DashboardComponent, canActivate: [usuarioGuard] },
   { path: '**', redirectTo: '' }
 ];

@@ -6,16 +6,12 @@ import { environment } from '../../environments/environment';
 @Injectable({
   providedIn: 'root'
 })
-export class MonitorOdooService {
+export class PrevioService {
   private apiUrl = `${environment.apiUrl}`;
 
   constructor(private http: HttpClient) { }
 
-  getFacturas(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/monitor_odoo`);
-  }
-
-  importarFacturas(formData: FormData): Observable<any> {
-    return this.http.post(`${this.apiUrl}/importar_facturas`, formData);
+  getFacturasCalculadas(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/monitor_odoo_calculado`);
   }
 }

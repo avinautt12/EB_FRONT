@@ -1,15 +1,16 @@
-import { Component } from '@angular/core';
-import { RouterModule, Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
-  selector: 'app-home-bar',
+  selector: 'app-top-bar-usuarios',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './home-bar.component.html',
-  styleUrl: './home-bar.component.css'
+  templateUrl: './top-bar-usuarios.component.html',
+  styleUrl: './top-bar-usuarios.component.css'
 })
-export class HomeBarComponent {
+export class TopBarUsuariosComponent implements OnInit {
   nombreUsuario: string = '';
 
   constructor(private router: Router) { }

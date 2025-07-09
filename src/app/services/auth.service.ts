@@ -38,4 +38,34 @@ export class AuthService {
       nueva_contrasena: nuevaContrasena
     });
   }
+
+  isTokenValid(): boolean {
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const exp = payload.exp;
+      const now = Math.floor(Date.now() / 1000);
+      return exp > now;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  isLoggedIn(): boolean {
+    return this.isTokenValid();
+  }
+
+  setToken(token: string): void {
+    localStorage.setItem('token', token);
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
+
+  clearToken(): void {
+    localStorage.removeItem('token');
+  }
 }

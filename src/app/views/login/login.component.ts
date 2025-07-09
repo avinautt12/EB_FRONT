@@ -4,6 +4,7 @@ import { TopBarComponent } from '../../components/top-bar/top-bar.component';
 import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { jwtDecode } from 'jwt-decode';
 
 @Component({
   selector: 'app-login',
@@ -19,7 +20,7 @@ export class LoginComponent {
   error: string = '';
   verPassword = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router) { }
 
   iniciarSesion() {
     this.loading = true;
@@ -34,7 +35,17 @@ export class LoginComponent {
       next: (response) => {
         localStorage.setItem('token', response.token);
         console.log('Token guardado en localStorage:', response.token);
-        this.router.navigate(['/home']);
+
+        const decodedToken: any = jwtDecode(response.token);
+        console.log('Token decodificado:', decodedToken);
+
+        if (decodedToken.rol === 1) {
+          this.router.navigate(['/home']);
+        } else if (decodedToken.rol === 2) {
+          this.router.navigate(['/usuarios/dashboard']);
+        } else {
+          this.router.navigate(['/login']);
+        }
       },
       error: (err) => {
         this.error = err.error?.error || 'Error en el servidor';

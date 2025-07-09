@@ -1,12 +1,33 @@
 <app-home-bar></app-home-bar>
 
 <div class="home-container">
-  <h1>Página Principal</h1>
-  <p>Bienvenido a tu panel de control.</p>
+  <h1>Panel Principal</h1>
+  <p class="subtexto">Bienvenido a tu panel de control</p>
 
-  <div class="botones-acciones">
-    <button type="button" class="btn" [routerLink]="['/monitor']">Ver Monitor</button>
-    <button class="btn">Ejecutar Acción</button>
-    <button type="button" class="btn" [routerLink]="['/usuarios']">Agregar Usuarios</button>
+  <div class="tarjetas-acciones">
+    <div class="tarjeta">
+      <h2>📄 Previo</h2>
+      <p>Consulta tus datos previos y genera reportes importantes.</p>
+      <button [routerLink]="['/previo']">Ir a Previo</button>
+    </div>
+
+    <div class="tarjeta">
+      <h2>💰 Flujo de Efectivo</h2>
+      <p>Revisa tus ingresos y egresos para un control financiero.</p>
+      <button [routerLink]="['/flujo-efectivo']">Ver Flujo</button>
+    </div>
+
+    <div class="tarjeta">
+      <h2>👥 Usuarios</h2>
+      <p>Gestiona los usuarios del sistema y sus roles asignados.</p>
+      <button [routerLink]="['/usuarios']">Administrar Usuarios</button>
+    </div>
+
+    <div class="tarjeta">
+      <h2>🛒 Proyección de Compra Inicial</h2>
+      <p>Consulta o planifica tu compra estimada con base en tus necesidades.</p>
+      <button type="button" [routerLink]="['/proyeccion']">Ir a Proyección</button>
+    </div>
+
   </div>
 </div>

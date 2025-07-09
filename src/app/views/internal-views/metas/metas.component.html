@@ -1,0 +1,161 @@
+<app-home-bar></app-home-bar>
+
+<div *ngIf="mensajeAlerta" class="alerta" [ngClass]="tipoAlerta">
+  {{ mensajeAlerta }}
+</div>
+
+<div class="metas-container">
+  <h1>Gestión de Metas</h1>
+  <p>Agrega, edita o elimina metas según el nivel.</p>
+
+  <button class="metas-btn icono-separado" [routerLink]="['/previo']">
+    <i class="fas fa-arrow-left icono"></i>
+    <span>Previo</span>
+  </button>
+
+  <button class="metas-btn" (click)="abrirAgregar()" *ngIf="!mostrarAgregar && !mostrarEditar">
+    + Agregar Nueva Meta
+  </button>
+
+  <!-- FORMULARIO AGREGAR -->
+  <div *ngIf="mostrarAgregar" class="formulario-meta">
+    <h3 class="titulo-agg">Agregar Nueva Meta</h3>
+
+    <label class="metas-label">Nivel:</label>
+    <input class="metas-input" type="text" [(ngModel)]="agregarForm.nivel" placeholder="Ej. Distribuidor Oro" />
+
+    <label class="metas-label">Compromiso SCOTT:</label>
+    <input class="metas-input" type="text" [(ngModel)]="agregarForm.compromiso_scott" monedaFormatoInput />
+
+    <label class="metas-label">Compromiso SYNCROS:</label>
+    <input class="metas-input" type="text" [(ngModel)]="agregarForm.compromiso_syncros" monedaFormatoInput />
+
+    <label class="metas-label">Compromiso APPAREL:</label>
+    <input class="metas-input" type="text" [(ngModel)]="agregarForm.compromiso_apparel" monedaFormatoInput />
+
+    <label class="metas-label">Compromiso VITTORIA:</label>
+    <input class="metas-input" type="text" [(ngModel)]="agregarForm.compromiso_vittoria" monedaFormatoInput />
+
+    <div class="metas-botones">
+      <button class="metas-btn" (click)="guardarAgregar()">Agregar Meta</button>
+      <button class="metas-btn" (click)="cancelarForm()">Cancelar</button>
+    </div>
+  </div>
+
+  <div *ngIf="mostrarEditar" class="formulario-meta">
+    <h3 class="titulo-agg">Editar Meta</h3>
+
+    <label class="metas-label">Nivel:</label>
+    <input class="metas-input" type="text" [(ngModel)]="editarForm.nivel" placeholder="Ej. Distribuidor Oro" />
+
+    <!-- Compromiso SCOTT -->
+    <div class="grupo-meta">
+      <label class="metas-label">Compromiso SCOTT:</label>
+      <div class="campo-con-formato">
+        <div class="campo-editable">
+          <label class="sub-label">Escribe la nueva cifra:</label>
+          <input class="metas-input" type="text" [(ngModel)]="editarForm.compromiso_scott" monedaFormatoInput />
+        </div>
+        <div class="campo-vista-previa">
+          <label class="sub-label">Cifra que se mostrará:</label>
+          <div class="formato-moneda-preview">{{ formatearMoneda(editarForm.compromiso_scott) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compromiso SYNCROS -->
+    <div class="grupo-meta">
+      <label class="metas-label">Compromiso SYNCROS:</label>
+      <div class="campo-con-formato">
+        <div class="campo-editable">
+          <label class="sub-label">Escribe la nueva cifra:</label>
+          <input class="metas-input" type="text" [(ngModel)]="editarForm.compromiso_syncros" monedaFormatoInput />
+        </div>
+        <div class="campo-vista-previa">
+          <label class="sub-label">Cifra que se mostrará:</label>
+          <div class="formato-moneda-preview">{{ formatearMoneda(editarForm.compromiso_syncros) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compromiso APPAREL -->
+    <div class="grupo-meta">
+      <label class="metas-label">Compromiso APPAREL:</label>
+      <div class="campo-con-formato">
+        <div class="campo-editable">
+          <label class="sub-label">Escribe la nueva cifra:</label>
+          <input class="metas-input" type="text" [(ngModel)]="editarForm.compromiso_apparel" monedaFormatoInput />
+        </div>
+        <div class="campo-vista-previa">
+          <label class="sub-label">Cifra que se mostrará:</label>
+          <div class="formato-moneda-preview">{{ formatearMoneda(editarForm.compromiso_apparel) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compromiso VITTORIA -->
+    <div class="grupo-meta">
+      <label class="metas-label">Compromiso VITTORIA:</label>
+      <div class="campo-con-formato">
+        <div class="campo-editable">
+          <label class="sub-label">Escribe la nueva cifra:</label>
+          <input class="metas-input" type="text" [(ngModel)]="editarForm.compromiso_vittoria" monedaFormatoInput />
+        </div>
+        <div class="campo-vista-previa">
+          <label class="sub-label">Cifra que se mostrará:</label>
+          <div class="formato-moneda-preview">{{ formatearMoneda(editarForm.compromiso_vittoria) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="metas-botones">
+      <button class="metas-btn" (click)="guardarEditar()">Guardar Cambios</button>
+      <button class="metas-btn" (click)="cancelarForm()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- TABLA -->
+  <table class="tabla-metas" *ngIf="!mostrarAgregar && !mostrarEditar">
+    <thead>
+      <tr>
+        <th>Nivel Distribuidor</th>
+        <th>SCOTT</th>
+        <th>SYNCROS</th>
+        <th>APPAREL</th>
+        <th>VITTORIA</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let meta of metas">
+        <td>{{ meta.nivel }}</td>
+        <td>{{ meta.compromiso_scott | currency:'$':'symbol':'1.0-0' }}</td>
+        <td>{{ meta.compromiso_syncros | currency:'$':'symbol':'1.0-0' }}</td>
+        <td>{{ meta.compromiso_apparel | currency:'$':'symbol':'1.0-0' }}</td>
+        <td>{{ meta.compromiso_vittoria | currency:'$':'symbol':'1.0-0' }}</td>
+        <td>
+          <button class="metas-btn btn-editar" (click)="abrirEditar(meta)">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="metas-btn btn-eliminar" (click)="confirmarEliminar(meta)">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Confirmación eliminar -->
+<div *ngIf="confirmacionVisible" class="confirmacion-dialogo">
+  <div class="confirmacion-contenido">
+    <p>
+      ¿Estás seguro que deseas eliminar la meta del nivel
+      <strong>{{ editarForm.nivel }}</strong>?
+    </p>
+    <div class="confirmacion-botones">
+      <button class="confirmacion" (click)="eliminarMeta()">Sí, eliminar</button>
+      <button class="secondary" (click)="cancelarEliminacion()">Cancelar</button>
+    </div>
+  </div>
+</div>

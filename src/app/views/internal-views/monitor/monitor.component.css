@@ -20,12 +20,11 @@ h2 {
   gap: 1rem;
   justify-content: center;
   margin-bottom: 1.5rem;
-
 }
 
 .acciones-monitor button {
   padding: 0.6rem 1.2rem;
-  background-color: #EB5E28;
+  background-color: #474646;
   border: none;
   border-radius: 6px;
   color: #fff;
@@ -219,7 +218,6 @@ input[type=number]::-webkit-inner-spin-button {
 
 .filtro-columna button::after {
   content: "⏷";
-  /* Flechita hacia abajo */
   font-size: 0.7rem;
 }
 
@@ -228,7 +226,7 @@ input[type=number]::-webkit-inner-spin-button {
   top: 100%;
   left: 0;
   background-color: #2a2a28;
-  border: 1px solid #EB5E28;
+  border: 1px solid #2a2a28;
   padding: 0.75rem;
   z-index: 1000;
   /* Muy alto para asegurar que esté encima */
@@ -254,6 +252,7 @@ input[type=number]::-webkit-inner-spin-button {
 
 .monitor-container {
   overflow-x: hidden;
+  font-size: 15px;
 }
 
 @keyframes fadeIn {
@@ -502,17 +501,17 @@ input[type=number]::-webkit-inner-spin-button {
 }
 
 .dropdown-actions button {
-  background-color: #EB5E28;
+  background-color: #555;
   color: #fff;
   border: none;
   padding: 0.2rem 0.5rem;
-  border-radius: 10px;
+  border-radius: 5px;
   cursor: pointer;
   font-size: 0.85rem;
 }
 
 .dropdown-search {
-  width: 150%;
+  width: 100%;
   margin-bottom: 0.5rem;
   padding: 0.3rem;
   border-radius: 5px;
@@ -523,4 +522,132 @@ input[type=number]::-webkit-inner-spin-button {
   display: block;
   margin: 0.25rem 0;
   font-size: 0.7rem;
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.mini-btn {
+  padding: 2px 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  background-color: #555;
+  border: 1px solid #555;
+  border-radius: 4px;
+  color: #fff;
+}
+
+.compact-dropdown-panel.left-aligned {
+  left: 0;
+  right: auto;
+  transform: translateX(0);
+}
+
+.columna-categoria.with-dropdown {
+  position: relative;
+}
+
+.dialogo-exportar {
+  background: linear-gradient(135deg, #252422 0%, #1e1d1b 100%);
+  color: #FFFCF2;
+  border: none;
+  border-radius: 12px;
+  padding: 1rem;
+  font-family: 'Segoe UI', sans-serif;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  animation: fadeIn 0.2s ease-in-out forwards;
+  width: 90%;
+  max-width: 320px;
+  text-align: left;
+  position: fixed;
+  top: 80%;
+  left: 50%;
+  transform: translate(-60%, -80%);
+  z-index: 1000;
+}
+
+.dialogo-exportar h3 {
+  margin-top: 0;
+  color: #EB5E28;
+  font-size: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.dialogo-exportar label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  font-size: 0.85rem;
+}
+
+.dialogo-exportar label:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dialogo-exportar input[type="checkbox"] {
+  margin-right: 0.5rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  cursor: pointer;
+}
+
+.botones-dialogo {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-top: 1.2rem;
+}
+
+.boton-login {
+  background: linear-gradient(135deg, #EB5E28 0%, #C44512 100%);
+  color: white;
+  padding: 0.6rem 1.5rem;
+  border: none;
+  border-radius: 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 6px rgba(235, 94, 40, 0.3);
+}
+
+.boton-login:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(235, 94, 40, 0.4);
+}
+
+.boton-cancelar {
+  background-color: transparent;
+  color: #FFFCF2;
+  padding: 0.6rem 1.5rem;
+  border: 2px solid #FFFCF2;
+  border-radius: 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.boton-cancelar:hover {
+  background-color: #FFFCF2;
+  color: #1e1d1b;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -55%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
 }
