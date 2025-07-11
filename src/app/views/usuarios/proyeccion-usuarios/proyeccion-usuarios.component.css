@@ -260,8 +260,7 @@
     animation: fadeIn 0.2s ease-in-out;
     margin-top: 25px;
     transform: translateZ(0);
-    z-index: 9999;
-    /* AÑADE ESTO */
+    z-index: 9999; /* AÑADE ESTO */
 }
 
 /* Input dentro del dropdown */
@@ -298,91 +297,3 @@
     height: 60px;
 }
 
-.btn-detalles {
-    background-color: #474646;
-    color: #fff;
-    border: none;
-    padding: 0.4rem 0.65rem;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.btn-detalles:hover {
-    background-color: #ff6b2c;
-    transform: scale(1.05);
-}
-
-.dialogo-exportar-bg {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 1000;
-}
-
-.dialogo-exportar {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #2c2c2e; /* gris oscuro */
-  color: #f1f1f1;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-  z-index: 1001;
-  width: 340px;
-  font-family: 'Segoe UI', sans-serif;
-}
-
-.dialogo-exportar h3 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 1.5rem;
-  color: #EB5A25;
-  text-align: center;
-}
-
-.dialogo-exportar label {
-  display: block;
-  margin: 0.5rem 0;
-  cursor: pointer;
-}
-
-.dialogo-exportar input[type="checkbox"],
-.dialogo-exportar input[type="radio"] {
-  margin-right: 0.5rem;
-  accent-color: #EB5A25;
-}
-
-.dialogo-exportar button {
-  width: 100%;
-  padding: 0.6rem;
-  margin-top: 1rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.dialogo-exportar button:first-of-type {
-  background: #EB5A25;
-  color: white;
-}
-
-.dialogo-exportar button:first-of-type:hover {
-  background: #d14a1c;
-}
-
-.dialogo-exportar button:last-of-type {
-  background: #444;
-  color: #f1f1f1;
-}
-
-.dialogo-exportar button:last-of-type:hover {
-  background: #555;
-}

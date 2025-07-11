@@ -1,0 +1,181 @@
+.usuarios-fullscreen {
+  min-height: 80vh;
+  padding: 2rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+}
+
+/* ENCABEZADO */
+.usuarios-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #2e2e2e;
+}
+
+.usuarios-header h2 {
+  color: #EB5E28;
+  font-weight: 600;
+  font-size: 1.8rem;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+/* TABLA MODERNA OSCURA */
+.tabla-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  background: #232220;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.tabla-usuarios {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 0;
+}
+
+.tabla-usuarios th,
+.tabla-usuarios td {
+  padding: 14px 16px;
+  text-align: center;
+  font-size: 14px;
+  border-bottom: 1px solid #2e2e2e;
+}
+
+.tabla-usuarios th {
+  background-color: #e06635;
+  color: #fff;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.tabla-usuarios tr:not(:last-child) td {
+  border-bottom: 1px solid #2e2e2e;
+}
+
+.tabla-usuarios tr:hover td {
+  background-color: #2e2c2a;
+}
+
+.tabla-usuarios tr:nth-child(even) {
+  background-color: #282624;
+}
+
+.tabla-usuarios tr:last-child td {
+  border-bottom: none;
+}
+
+/* Columnas específicas */
+.tabla-usuarios th.quincena,
+.tabla-usuarios td.quincena {
+  width: 60px;
+  font-size: 13px;
+  padding: 10px;
+}
+
+.tabla-usuarios th.descripcion,
+.tabla-usuarios td.descripcion {
+  text-align: left;
+  padding-left: 16px;
+  min-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Efectos modernos */
+.tabla-usuarios {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Cargando - diseño oscuro */
+.cargando-spinner {
+  text-align: center;
+  margin: 3rem 0;
+  padding: 2rem;
+  background: #232220;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(235, 94, 40, 0.2);
+  border-top: 4px solid #EB5E28;
+  border-radius: 50%;
+  animation: spin 0.8s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+  margin: 0 auto 1.5rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Sin datos - diseño oscuro */
+.sin-datos {
+  text-align: center;
+  margin: 2rem 0;
+  padding: 2rem;
+  color: #888;
+  font-size: 16px;
+  background: #232220;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.sin-datos svg {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+  opacity: 0.4;
+  fill: #EB5E28;
+}
+
+/* Scrollbar personalizado (opcional) */
+.tabla-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.tabla-container::-webkit-scrollbar-track {
+  background: #2e2e2e;
+  border-radius: 4px;
+}
+
+.tabla-container::-webkit-scrollbar-thumb {
+  background: #EB5E28;
+  border-radius: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .usuarios-fullscreen {
+    padding: 1rem;
+  }
+  
+  .usuarios-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .tabla-usuarios th,
+  .tabla-usuarios td {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+}

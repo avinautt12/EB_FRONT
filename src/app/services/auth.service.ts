@@ -61,11 +61,29 @@ export class AuthService {
     localStorage.setItem('token', token);
   }
 
-  getToken(): string | null {
-    return localStorage.getItem('token');
+  // En tu AuthService
+  getToken(): string {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+    return token;
   }
 
   clearToken(): void {
     localStorage.removeItem('token');
   }
+
+  getUserId(): number | null {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.id || null; // Ajusta 'id' si tu token usa otro nombre, ej: 'userId'
+    } catch (e) {
+      return null;
+    }
+  }
+
 }

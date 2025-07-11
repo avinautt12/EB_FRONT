@@ -13,6 +13,10 @@ import { MetasComponent } from './views/internal-views/metas/metas.component';
 import { DistribuidoresComponent } from './views/internal-views/distribuidores/distribuidores.component';
 import { DashboardComponent } from './views/usuarios/dashboard/dashboard.component';
 import { ProyeccionComponent } from './views/internal-views/proyeccion/proyeccion.component';
+import { ProyeccionUsuariosComponent } from './views/usuarios/proyeccion-usuarios/proyeccion-usuarios.component';
+import { CrearProyeccionUsuariosComponent } from './views/usuarios/crear-proyeccion-usuarios/crear-proyeccion-usuarios.component';
+import { ProyeccionHistorialComponent } from './views/usuarios/proyeccion-historial/proyeccion-historial.component';
+import { ProyeccionDetallesComponent } from './views/internal-views/proyeccion-detalles/proyeccion-detalles.component';
 
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
@@ -29,9 +33,13 @@ export const routes: Routes = [
   { path: 'caratulas', component: CaratulasComponent, canActivate: [authGuard] },
   { path: 'usuarios', component: UsuariosComponent, canActivate: [authGuard] },
   { path: 'proyeccion', component: ProyeccionComponent, canActivate: [authGuard] },
+  { path: 'proyeccion/detalles/:id', component: ProyeccionDetallesComponent, canActivate: [authGuard] },
   { path: 'recuperacion/enviar-correo', component: EnviarCorreoComponent},
   { path: 'recuperacion/verificar-codigo', component: VerificarCodigoComponent},
   { path: 'recuperacion/restablecer-contrasena', component: RestablecerContrasenaComponent},
   { path: 'usuarios/dashboard', component: DashboardComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/proyeccion-compras', component: ProyeccionUsuariosComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/crear-proyeccion', component: CrearProyeccionUsuariosComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/proyeccion-historial', component: ProyeccionHistorialComponent, canActivate: [usuarioGuard] },
   { path: '**', redirectTo: '' }
 ];

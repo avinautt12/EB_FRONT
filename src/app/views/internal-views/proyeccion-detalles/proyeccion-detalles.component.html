@@ -1,0 +1,73 @@
+<app-home-bar></app-home-bar>
+
+<div class="p-6 max-w-6xl mx-auto">
+
+
+  <div class="acciones-monitor">
+    <button type="button" (click)="volver()">
+      <i class="fas fa-arrow-left mr-2"></i> Volver
+    </button>
+  </div>
+
+  <div *ngIf="cargando" class="flex flex-col items-center justify-center h-40">
+    <div class="loader mb-2"></div>
+    <p class="text-gray-500">Cargando detalles...</p>
+  </div>
+
+  <h2 class="text-2xl font-semibold text-gray-800">
+    {{ detalle?.descripcion }}
+  </h2>
+
+  <ng-container *ngIf="!cargando">
+    <div *ngIf="tieneHistorialValido(); else sinHistorialYDetalle" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm bg-white p-4 rounded-xl shadow-md border">
+        <div><strong>Modelo:</strong> {{ detalle.modelo }}</div>
+        <div><strong>Precio Público:</strong> {{ detalle.precio_publico_iva | currency }}</div>
+        <div><strong>Clave Factura:</strong> {{ detalle.clave_factura }}</div>
+        <div><strong>Clave Odoo:</strong> {{ detalle.clave_odoo }}</div>
+        <div><strong>EAN:</strong> {{ detalle.ean }}</div>
+        <div><strong>Referencia:</strong> {{ detalle.referencia }}</div>
+        <div><strong>Total Cantidad:</strong> {{ detalle.orden_total_cant }}</div>
+        <div><strong>Total Importe:</strong> {{ detalle.orden_total_importe || '-' }}</div>
+      </div>
+
+      <div class="mt-8">
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">Historial por Cliente</h3>
+
+        <div class="overflow-auto rounded-lg shadow border">
+          <table class="w-full text-sm text-left text-gray-700">
+            <thead class="bg-gray-100 border-b">
+              <tr>
+                <th class="px-4 py-2">Cliente</th>
+                <th class="px-4 py-2">Fecha</th>
+                <th class="px-4 py-2">1er quincena de octubre</th>
+                <th class="px-4 py-2">2da quincena de octubre</th>
+                <th class="px-4 py-2">1er quincena de noviembre</th>
+                <th class="px-4 py-2">2da quincena de noviembre</th>
+                <th class="px-4 py-2">1er quincena de diciembre</th>
+                <th class="px-4 py-2">2da quincena de diciembre</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let h of detalle.historial_clientes" class="border-b hover:bg-gray-50">
+                <td class="px-4 py-2">{{ h.nombre_cliente }}</td>
+                <td class="px-4 py-2">{{ h.fecha_registro | date:'short' }}</td>
+                <td class="px-4 py-2">{{ h.q1_oct_2025 }}</td>
+                <td class="px-4 py-2">{{ h.q2_oct_2025 }}</td>
+                <td class="px-4 py-2">{{ h.q1_nov_2025 }}</td>
+                <td class="px-4 py-2">{{ h.q2_nov_2025 }}</td>
+                <td class="px-4 py-2">{{ h.q1_dic_2025 }}</td>
+                <td class="px-4 py-2">{{ h.q2_dic_2025 }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #sinHistorialYDetalle>
+      <p class="mensaje-sin-proyecciones">Aún no hay proyecciones de este producto.</p>
+    </ng-template>
+  </ng-container>
+
+</div>

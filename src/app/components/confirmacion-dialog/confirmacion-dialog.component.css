@@ -1,0 +1,75 @@
+:host {
+  display: block;
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  padding: 1rem;
+  border-radius: 6px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.mensaje-confirmacion {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.detalles-proyeccion {
+  margin-top: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.item-proyeccion {
+  border-bottom: 1px solid #444;
+  padding: 0.75rem 0;
+  margin-bottom: 0.5rem;
+}
+
+.producto-clave {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.producto-precio {
+  font-size: 0.9rem;
+  color: #cccccc;
+  margin-top: 0.2rem;
+}
+
+.quincenas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #ffa94d;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  margin: 0 0.25rem;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-cancelar {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-cancelar:hover {
+  background-color: #5a6268;
+}
+
+.btn-confirmar {
+  background-color: #EB5E28;
+  color: white;
+}
+
+.btn-confirmar:hover {
+  background-color: #c7491f;
+}

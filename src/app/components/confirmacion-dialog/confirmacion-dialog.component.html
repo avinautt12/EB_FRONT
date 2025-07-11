@@ -1,0 +1,30 @@
+<h2 mat-dialog-title>{{ data.titulo }}</h2>
+
+<div mat-dialog-content>
+  <p class="mensaje-confirmacion">{{ data.mensaje }}</p>
+
+  <div *ngIf="data.detalles" class="detalles-proyeccion">
+    <h3>Resumen de la Proyección:</h3>
+
+    <div *ngFor="let item of data.detalles" class="item-proyeccion">
+      <p class="producto-clave">
+        <strong>{{ item.producto.clave_factura }}</strong> – {{ item.producto.descripcion }}
+      </p>
+      <p class="producto-precio">Precio: {{ item.producto.precio | currency }}</p>
+
+      <div class="quincenas">
+        <div *ngIf="item.q1_oct_2025 > 0">1Q Oct: <strong>{{ item.q1_oct_2025 }}</strong></div>
+        <div *ngIf="item.q2_oct_2025 > 0">2Q Oct: <strong>{{ item.q2_oct_2025 }}</strong></div>
+        <div *ngIf="item.q1_nov_2025 > 0">1Q Nov: <strong>{{ item.q1_nov_2025 }}</strong></div>
+        <div *ngIf="item.q2_nov_2025 > 0">2Q Nov: <strong>{{ item.q2_nov_2025 }}</strong></div>
+        <div *ngIf="item.q1_dic_2025 > 0">1Q Dic: <strong>{{ item.q1_dic_2025 }}</strong></div>
+        <div *ngIf="item.q2_dic_2025 > 0">2Q Dic: <strong>{{ item.q2_dic_2025 }}</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button class="btn-cancelar" (click)="onNoClick()">Cancelar</button>
+  <button class="btn-confirmar" (click)="onYesClick()" cdkFocusInitial>Confirmar</button>
+</div>

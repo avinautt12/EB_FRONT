@@ -547,7 +547,4 @@ export class MonitorComponent {
     this.filtrosCheckbox.subcategoriasSeleccionadas.clear();
     this.filtrarFacturas();
   }
-
-
-
 }

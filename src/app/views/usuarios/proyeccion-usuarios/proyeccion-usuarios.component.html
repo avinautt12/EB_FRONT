@@ -1,14 +1,17 @@
-<app-home-bar></app-home-bar>
+<app-top-bar-usuarios></app-top-bar-usuarios>
 
 <div class="monitor-container">
     <h2>Proyecciones de Ventas</h2>
 
     <div class="acciones-monitor">
-        <button class="btn-volver" [routerLink]="['/home']">
+        <button class="btn-volver" [routerLink]="['/usuarios/dashboard']">
             <i class="fas fa-arrow-left"></i> Volver
         </button>
-        <button class="btn-exportar" (click)="abrirDialogoExportar()">
-            <i class="fas fa-file-export"></i> Exportar
+        <button class="btn-crear" [routerLink]="['/usuarios/crear-proyeccion']">
+            <i class="fas fa-plus"></i> Crear Proyección
+        </button>
+        <button class="btn-historial" [routerLink]="['/usuarios/proyeccion-historial']">
+            <i class="fas fa-history"></i> Ver Historial de Proyecciones
         </button>
     </div>
 
@@ -107,7 +110,6 @@
                     <th>2DA QUINCENA DE DICIEMBRE 2025</th>
                     <th>Total Cantidad</th>
                     <th>Total Importe</th>
-                    <th>Detalles</th>
                 </tr>
             </thead>
             <tbody>
@@ -133,11 +135,6 @@
                     <td>{{ item.q2_dic_2025 }}</td>
                     <td>{{ item.orden_total_cant }}</td>
                     <td>{{ item.orden_total_importe | currency }}</td>
-                    <td>
-                        <button class="btn-detalles" (click)="verDetalles(item)">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </td>
                 </tr>
             </tbody>
         </table>
@@ -158,26 +155,4 @@
             <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">Última »</button>
         </div>
     </div>
-</div>
-
-<div *ngIf="mostrarDialogoExportar" class="dialogo-exportar">
-    <h3>Exportar a Excel</h3>
-
-    <div>
-        <label><input type="radio" [(ngModel)]="exportarTodo" [value]="true" /> Exportar todos los datos</label>
-        <label><input type="radio" [(ngModel)]="exportarTodo" [value]="false" /> Exportar solo datos filtrados</label>
-    </div>
-
-    <div>
-        <p>Selecciona columnas a exportar:</p>
-        <div *ngFor="let col of columnasDisponibles">
-            <label>
-                <input type="checkbox" [(ngModel)]="col.seleccionado" />
-                {{ col.label }}
-            </label>
-        </div>
-    </div>
-
-    <button (click)="exportarExcel()">Exportar</button>
-    <button (click)="cerrarDialogoExportar()">Cancelar</button>
 </div>

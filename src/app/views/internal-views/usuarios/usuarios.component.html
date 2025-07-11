@@ -217,6 +217,9 @@
                                     </div>
                                 </div>
                             </th>
+                            <th class="columna-distribuidor">
+                                Distribuidor
+                            </th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -228,6 +231,7 @@
                             <td>{{ u.usuario }}</td>
                             <td>{{ u.rol === ROLES.ADMIN.backendValue ? ROLES.ADMIN.display : ROLES.USUARIO.display }}
                             </td>
+                            <td>{{u.cliente_nombre}}</td>
                             <td>
                                 <div class="acciones-celda">
                                     <button class="btn btn-accion azul" (click)="editarUsuario(u)" title="Editar">

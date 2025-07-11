@@ -15,6 +15,8 @@ interface Usuario {
   nombre: string;
   correo: string;
   rol: 'Administrador' | 'Usuario';
+  cliente_nombre?: string; // Nombre del cliente asociado, si aplica
+  cliente_id?: number;
   activo: boolean;
 }
 
@@ -101,11 +103,17 @@ export class UsuariosComponent implements OnInit {
     this.socketService.on<Usuario>('usuarioActualizado', (actualizado) => {
       const idx = this.usuarios.findIndex(u => u.id === actualizado.id);
       if (idx !== -1) {
-        this.usuarios[idx] = actualizado;
+        // Asegura que tenga todos los campos esperados por tu frontend
+        this.usuarios[idx] = {
+          ...actualizado,
+          rol: actualizado.rol === 'Administrador' ? this.ROLES.ADMIN.backendValue : this.ROLES.USUARIO.backendValue,
+          cliente_nombre: actualizado.cliente_nombre || '', // opcional, para que no quede vacío
+        };
         this.filtrarUsuarios();
+        this.cargarUsuarios(); 
       }
-      console.log('✅ Usuario actualizado recibido vía socket:', actualizado);
     });
+
   }
 
   cargarUsuarios(): void {
@@ -188,11 +196,24 @@ export class UsuariosComponent implements OnInit {
   editarUsuario(usuario: Usuario): void {
     this.nuevoUsuario = {
       ...usuario,
-      contrasena: '' // Limpiar contraseña para no mostrarla
+      contrasena: '' // No mostrar la contraseña
     };
+
+    if (usuario.cliente_nombre) {
+      this.asociarCliente = true;
+      this.clienteBusqueda = usuario.cliente_nombre; // Mostrar directamente en el input
+      this.clienteSeleccionadoId = usuario.cliente_id || null; // Si tienes el id
+    } else {
+      this.asociarCliente = false;
+      this.clienteBusqueda = '';
+      this.clienteSeleccionadoId = null;
+    }
+
     this.mostrarFormularioEdicion = true;
     this.mostrarFormularioRegistroVisible = false;
   }
+
+
 
   volverALista(): void {
     this.mostrarFormularioRegistroVisible = false;
