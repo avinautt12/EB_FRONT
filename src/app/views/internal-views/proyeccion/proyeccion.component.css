@@ -29,7 +29,7 @@
     width: 95%;
     border-collapse: collapse;
     margin: 0 auto;
-    min-width: 1000px;
+    min-width: 2700px;
     table-layout: fixed;
 }
 
@@ -135,7 +135,6 @@
     0% {
         transform: rotate(0deg);
     }
-
     100% {
         transform: rotate(360deg);
     }
@@ -150,7 +149,7 @@
     font-style: italic;
 }
 
-/* Acciones */
+/* === ACCIONES MONITOR === */
 .acciones-monitor {
     display: flex;
     flex-wrap: wrap;
@@ -178,7 +177,28 @@
     transform: scale(1.08);
 }
 
-.btn-volver,
+/* === BOTONES ESPECÍFICOS === */
+.btn-volver {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.2rem;
+    font-size: 0.8rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-weight: 500;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    background-color: #474646;
+    color: #fff;
+}
+
+.btn-volver:hover {
+    background-color: #333;
+    transform: translateY(-2px);
+}
+
 .btn-exportar {
     display: flex;
     align-items: center;
@@ -191,19 +211,6 @@
     transition: background-color 0.3s ease, transform 0.2s ease;
     font-weight: 500;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-}
-
-.btn-volver {
-    background-color: #474646;
-    color: #fff;
-}
-
-.btn-volver:hover {
-    background-color: #333;
-    transform: translateY(-2px);
-}
-
-.btn-exportar {
     background-color: #EB5E28;
     color: #fff;
 }
@@ -213,12 +220,76 @@
     transform: translateY(-2px);
 }
 
+/* === BOTONES DE EXPORTACIÓN === */
+.opciones-exportar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.btn-exportar-global {
+    background-color: #474646;
+    color: white;
+    padding: 0.8rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-exportar-global:hover {
+    background-color: #FF6B2C;
+}
+
+.btn-exportar-detallado {
+    background-color: #474646;
+    color: white;
+    padding: 0.8rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-exportar-detallado:hover {
+    background-color: #FF6B2C;
+}
+
+.btn-cancelar {
+    background-color: #444;
+    color: #f1f1f1;
+    padding: 0.8rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: 500;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.btn-cancelar:hover {
+    background-color: #555;
+}
+
 /* === FILTROS POR COLUMNA === */
 .filtro-columna {
     position: relative;
     display: inline-block;
     z-index: 9000;
-    /* Asegura que quede por encima */
 }
 
 .filtro-columna button {
@@ -249,7 +320,7 @@
 /* Dropdown del filtro */
 .dropdown-filtro {
     position: absolute;
-    top: 100%;
+    top: 130%;
     left: 0;
     background-color: #2a2a28;
     border: 1px solid #2a2a28;
@@ -261,7 +332,6 @@
     margin-top: 25px;
     transform: translateZ(0);
     z-index: 9999;
-    /* AÑADE ESTO */
 }
 
 /* Input dentro del dropdown */
@@ -281,7 +351,6 @@
         opacity: 0;
         transform: translateY(-8px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -315,74 +384,71 @@
     transform: scale(1.05);
 }
 
+/* === DIÁLOGOS === */
 .dialogo-exportar-bg {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 1000;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
 }
 
 .dialogo-exportar {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #2c2c2e; /* gris oscuro */
-  color: #f1f1f1;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-  z-index: 1001;
-  width: 340px;
-  font-family: 'Segoe UI', sans-serif;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #2c2c2e;
+    color: #f1f1f1;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    z-index: 1001;
+    width: 340px;
+    font-family: 'Segoe UI', sans-serif;
 }
 
 .dialogo-exportar h3 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 1.5rem;
-  color: #EB5A25;
-  text-align: center;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    color: #EB5A25;
+    text-align: center;
 }
 
-.dialogo-exportar label {
-  display: block;
-  margin: 0.5rem 0;
-  cursor: pointer;
+.dialogo-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
 }
 
-.dialogo-exportar input[type="checkbox"],
-.dialogo-exportar input[type="radio"] {
-  margin-right: 0.5rem;
-  accent-color: #EB5A25;
+.dialogo {
+    background-color: #3c3b3b;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
-.dialogo-exportar button {
-  width: 100%;
-  padding: 0.6rem;
-  margin-top: 1rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s ease;
+.acciones-dialogo {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
 }
 
-.dialogo-exportar button:first-of-type {
-  background: #EB5A25;
-  color: white;
-}
-
-.dialogo-exportar button:first-of-type:hover {
-  background: #d14a1c;
-}
-
-.dialogo-exportar button:last-of-type {
-  background: #444;
-  color: #f1f1f1;
-}
-
-.dialogo-exportar button:last-of-type:hover {
-  background: #555;
+/* === COLUMNA DESCRIPCIÓN === */
+.columna-descripcion {
+    width: 270px;
+    min-width: 200px;
+    max-width: 300px;
+    white-space: normal;
+    word-break: break-word;
 }

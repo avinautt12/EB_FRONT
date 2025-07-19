@@ -1,181 +1,370 @@
-.usuarios-fullscreen {
-  min-height: 80vh;
-  padding: 2rem;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: #1a1a1a;
-  color: #e0e0e0;
+/* CONTENEDOR PRINCIPAL COMPACTO */
+.proyecciones-container-wide {
+    width: 98vw;
+    max-width: 2000px;
+    margin: 1.5rem auto;
+    padding: 1.5rem 1rem;
+    background-color: #252422;
+    font-family: 'Segoe UI', sans-serif;
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    color: #CCC5B9;
+    min-height: 80vh;
+    overflow-x: auto;
 }
 
-/* ENCABEZADO */
-.usuarios-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #2e2e2e;
+/* ENCABEZADO COMPACTO */
+.proyecciones-header {
+    margin-bottom: 1.5rem;
+    text-align: center;
 }
 
-.usuarios-header h2 {
-  color: #EB5E28;
-  font-weight: 600;
-  font-size: 1.8rem;
-  margin: 0;
-  letter-spacing: -0.5px;
+.proyecciones-header h1 {
+    color: #EB5E28;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.6rem;
 }
 
-/* TABLA MODERNA OSCURA */
-.tabla-container {
-  overflow-x: auto;
-  border-radius: 8px;
-  background: #232220;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+/* BOTONES COMPACTOS */
+.acciones-monitor {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1.2rem;
 }
 
-.tabla-usuarios {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  margin-top: 0;
+.acciones-monitor button {
+    padding: 0.6rem 1.2rem;
+    background-color: #474646;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-family: 'Segoe UI', sans-serif;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transform: scale(1);
 }
 
-.tabla-usuarios th,
-.tabla-usuarios td {
-  padding: 14px 16px;
-  text-align: center;
-  font-size: 14px;
-  border-bottom: 1px solid #2e2e2e;
+.acciones-monitor button:hover {
+    background-color: #ff6b2c;
+    transform: scale(1.08);
 }
 
-.tabla-usuarios th {
-  background-color: #e06635;
-  color: #fff;
-  font-weight: 600;
-  position: sticky;
-  top: 0;
-  text-transform: uppercase;
-  font-size: 13px;
-  letter-spacing: 0.5px;
+/* GRUPOS DE PROYECCIÓN COMPACTOS */
+.proyeccion-group {
+    background-color: #1e1d1b;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border: 1px solid #403D39;
 }
 
-.tabla-usuarios tr:not(:last-child) td {
-  border-bottom: 1px solid #2e2e2e;
+.proyeccion-group-header {
+    background-color: #2b2b2b;
+    padding: 0.8rem 1.5rem;
+    border-bottom: 1px solid #403D39;
 }
 
-.tabla-usuarios tr:hover td {
-  background-color: #2e2c2a;
+.group-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
-.tabla-usuarios tr:nth-child(even) {
-  background-color: #282624;
+.group-date {
+    font-weight: 600;
+    color: #EB5E28;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
 }
 
-.tabla-usuarios tr:last-child td {
-  border-bottom: none;
+.group-totals {
+    display: flex;
+    gap: 1.5rem;
 }
 
-/* Columnas específicas */
-.tabla-usuarios th.quincena,
-.tabla-usuarios td.quincena {
-  width: 60px;
-  font-size: 13px;
-  padding: 10px;
+.group-totals span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    font-size: 0.95rem;
 }
 
-.tabla-usuarios th.descripcion,
-.tabla-usuarios td.descripcion {
-  text-align: left;
-  padding-left: 16px;
-  min-width: 250px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* DESGLOSE POR QUINCENA COMPACTO */
+.quincenas-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.8rem;
+    padding: 0.8rem;
+    background-color: rgba(64, 61, 57, 0.3);
+    border-radius: 6px;
 }
 
-/* Efectos modernos */
-.tabla-usuarios {
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+.quincena-summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 90px;
+    padding: 0.3rem;
+    background-color: rgba(235, 94, 40, 0.1);
+    border-radius: 4px;
 }
 
-/* Cargando - diseño oscuro */
-.cargando-spinner {
-  text-align: center;
-  margin: 3rem 0;
-  padding: 2rem;
-  background: #232220;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+.quincena-summary-title {
+    font-size: 0.75rem;
+    color: #EB5E28;
+    font-weight: 500;
+    margin-bottom: 0.2rem;
 }
 
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(235, 94, 40, 0.2);
-  border-top: 4px solid #EB5E28;
-  border-radius: 50%;
-  animation: spin 0.8s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
-  margin: 0 auto 1.5rem;
+.quincena-summary-cantidad {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #FFFCF2;
+}
+
+.quincena-summary-importe {
+    font-size: 0.8rem;
+    color: #CCC5B9;
+}
+
+/* TABLA COMPACTA */
+.table-responsive-wide {
+    overflow-x: auto;
+    padding: 0 1rem 1rem;
+    width: calc(100% - 2rem);
+    margin: 0 auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.proyecciones-table-wide {
+    width: 100%;
+    min-width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+    table-layout: auto;
+    font-size: 0.82rem;
+}
+
+.proyecciones-table-wide th,
+.proyecciones-table-wide td {
+    padding: 0.4rem 0.3rem;
+    text-align: left;
+    border-bottom: 1px solid #403D39;
+    white-space: nowrap;
+}
+
+.proyecciones-table-wide th {
+    background-color: #33312e;
+    color: #EB5E28;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    font-size: 0.85rem;
+}
+
+.proyecciones-table-wide tr:hover {
+    background-color: rgba(235, 94, 40, 0.05);
+}
+
+.quincena-header {
+    min-width: 80px;
+    text-align: center !important;
+}
+
+.quincena-cell {
+    text-align: center;
+    padding: 0.3rem !important;
+}
+
+.quincena-cantidad {
+    font-weight: 600;
+    color: #FFFCF2;
+    font-size: 0.82rem;
+}
+
+.quincena-importe {
+    font-size: 0.72rem;
+    color: #CCC5B9;
+}
+
+.product-info {
+    min-width: 150px;
+}
+
+.price-cell,
+.total-cell,
+.amount-cell {
+    text-align: right;
+    padding-right: 0.5rem !important;
+    font-size: 0.82rem;
+}
+
+.price-main {
+    font-weight: 600;
+    color: #FFFCF2;
+    font-size: 0.85rem;
+}
+
+.product-desc {
+    font-weight: 500;
+    margin-bottom: 0.15rem;
+    font-size: 0.85rem;
+}
+
+.product-codes {
+    font-size: 0.68rem;
+    color: #999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+/* Barra de scroll personalizada */
+.table-responsive-wide::-webkit-scrollbar {
+    height: 6px;
+}
+
+.table-responsive-wide::-webkit-scrollbar-track {
+    background: #403D39;
+    border-radius: 3px;
+}
+
+.table-responsive-wide::-webkit-scrollbar-thumb {
+    background: #EB5E28;
+    border-radius: 3px;
+}
+
+.table-responsive-wide::-webkit-scrollbar-thumb:hover {
+    background: #ff6b2c;
+}
+
+/* ESTADOS */
+.loader-container {
+    text-align: center;
+    padding: 2rem;
+}
+
+.loader {
+    border: 3px solid #403D39;
+    border-top: 3px solid #EB5E28;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
-/* Sin datos - diseño oscuro */
-.sin-datos {
-  text-align: center;
-  margin: 2rem 0;
-  padding: 2rem;
-  color: #888;
-  font-size: 16px;
-  background: #232220;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+.not-found-message {
+    text-align: center;
+    padding: 2rem;
+    color: #999;
 }
 
-.sin-datos svg {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 1rem;
-  opacity: 0.4;
-  fill: #EB5E28;
+.not-found-message i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #EB5E28;
 }
 
-/* Scrollbar personalizado (opcional) */
-.tabla-container::-webkit-scrollbar {
-  height: 8px;
+/* RESPONSIVE COMPACTO */
+@media (max-width: 1200px) {
+    .proyecciones-container-wide {
+        width: 100vw;
+        border-radius: 0;
+        padding: 1.2rem 0.8rem;
+    }
+
+    .quincenas-summary {
+        gap: 0.8rem;
+    }
+
+    .quincena-summary-item {
+        min-width: 80px;
+    }
 }
 
-.tabla-container::-webkit-scrollbar-track {
-  background: #2e2e2e;
-  border-radius: 4px;
-}
-
-.tabla-container::-webkit-scrollbar-thumb {
-  background: #EB5E28;
-  border-radius: 4px;
-}
-
-/* Responsive */
 @media (max-width: 768px) {
-  .usuarios-fullscreen {
-    padding: 1rem;
-  }
-  
-  .usuarios-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .tabla-usuarios th,
-  .tabla-usuarios td {
-    padding: 12px 10px;
-    font-size: 13px;
-  }
+    .proyecciones-header h1 {
+        font-size: 1.2rem;
+    }
+
+    .acciones-monitor {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .group-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+    }
+
+    .group-totals {
+        width: 100%;
+        justify-content: space-between;
+        gap: 0.8rem;
+    }
+
+    .quincenas-summary {
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .quincena-summary-item {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.6rem;
+    }
+
+    .quincena-summary-title {
+        margin-bottom: 0;
+        margin-right: auto;
+        padding-right: 0.8rem;
+    }
+
+    .proyecciones-table-wide {
+        font-size: 0.78rem;
+    }
+
+    .proyecciones-table-wide th {
+        font-size: 0.8rem;
+    }
+
+    .product-info {
+        min-width: 130px;
+    }
+
+    .quincena-header {
+        min-width: 70px;
+    }
 }

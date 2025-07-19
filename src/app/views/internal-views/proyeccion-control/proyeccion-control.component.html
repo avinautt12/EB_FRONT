@@ -1,0 +1,342 @@
+<app-home-bar></app-home-bar>
+
+<!-- Mensaje de alerta -->
+<div *ngIf="mensajeAlerta" class="alerta" [ngClass]="tipoAlerta">
+    <i class="fas" [class.fa-check-circle]="tipoAlerta === 'exito'"
+        [class.fa-exclamation-circle]="tipoAlerta === 'error'"></i>
+    {{ mensajeAlerta }}
+</div>
+
+<main class="proyecciones-container">
+    <header class="proyecciones-header">
+        <h1><i class="fas fa-chart-line"></i> Gestión de Proyecciones</h1>
+        <p class="subtitle">Busca un producto por referencia, clave o descripción, edita o elimina los datos o agrega
+            uno nuevo.</p>
+    </header>
+
+    <section class="proyecciones-actions">
+        <button *ngIf="!mostrarFormulario" class="btn btn-secondary" [routerLink]="['/proyeccion']">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+
+        <button *ngIf="!mostrarFormulario" class="btn btn-primary agregar" (click)="mostrarFormulario = true">
+            <i class="fas fa-plus"></i>
+            Agregar Nueva
+        </button>
+    </section>
+
+    <!-- FORMULARIO DE AGREGAR PROYECCIÓN -->
+    <section *ngIf="mostrarFormulario" class="card form-section">
+        <h3 class="form-title">+ Nuevo Producto</h3>
+
+        <form class="form-grid" (submit)="agregarProyeccion(); $event.preventDefault()">
+            <!-- Primera columna - Información básica -->
+            <div class="form-column">
+                <div class="form-group">
+                    <label>Referencia:</label>
+                    <input type="text" [(ngModel)]="nuevaProyeccion.referencia" name="referencia" required
+                        placeholder="Ej: REF-12345" class="form-control">
+                    <small class="form-hint">Identificador único del producto</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Clave Factura:</label>
+                    <input type="text" [(ngModel)]="nuevaProyeccion.clave_factura" name="clave_factura" required
+                        class="form-control" placeholder="Código de facturación">
+                </div>
+
+                <div class="form-group">
+                    <label>Clave 6 Dígitos:</label>
+                    <input type="text" [(ngModel)]="nuevaProyeccion.clave_6_digitos" name="clave_6_digitos"
+                        maxlength="6" pattern="[0-9]{6}" class="form-control" placeholder="6 dígitos numéricos">
+                    <small class="form-hint">Solo números, sin espacios ni guiones</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Descripción:</label>
+                    <textarea [(ngModel)]="nuevaProyeccion.descripcion" name="descripcion" required class="form-control"
+                        rows="3" placeholder="Descripción detallada del producto"></textarea>
+                </div>
+            </div>
+
+            <!-- Segunda columna - Códigos e identificación -->
+            <div class="form-column">
+                <div class="form-group">
+                    <label>EAN:</label>
+                    <input type="text" [(ngModel)]="nuevaProyeccion.ean" name="ean" pattern="[0-9]{13}"
+                        class="form-control" placeholder="Código de 13 dígitos">
+                    <small class="form-hint">Código de barras estándar</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Clave Odoo:</label>
+                    <input type="text" [(ngModel)]="nuevaProyeccion.clave_odoo" name="clave_odoo" class="form-control"
+                        placeholder="Identificador en Odoo">
+                </div>
+
+                <div class="form-group">
+                    <label>Modelo:</label>
+                    <input type="text" [(ngModel)]="nuevaProyeccion.modelo" name="modelo" class="form-control"
+                        placeholder="Modelo del producto">
+                </div>
+                
+                <div class="form-group">
+                    <label>Disponibilidad:</label>
+                    <select [(ngModel)]="nuevaProyeccion.id_disponibilidad" name="id_disponibilidad" required
+                        class="form-control">
+                        <option value="" disabled selected>Seleccione disponibilidad</option>
+                        <option *ngFor="let d of disponibilidades" [value]="d.id">
+                            {{ d.descripcion }}
+                        </option>
+                    </select>
+                    <small class="form-hint">Periodos disponibles para entrega</small>
+                </div>
+            </div>
+
+            <!-- Tercera columna - Precios (sin IVA) -->
+            <div class="form-column">
+                <div class="price-section">
+                    <h4><i class="fas fa-tags"></i> Precios (Ingresa los precios sin IVA, el sistema agregará el IVA)</h4>
+                    
+                    <div class="form-group">
+                        <label>Precio Distribuidor:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" [(ngModel)]="nuevaProyeccion.precio_distribuidor_sin_iva"
+                                class="form-control" name="precio_distribuidor_sin_iva" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Precio Elite Plus:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" [(ngModel)]="nuevaProyeccion.precio_elite_plus_sin_iva"
+                                class="form-control" name="precio_elite_plus_sin_iva" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Precio Elite:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" [(ngModel)]="nuevaProyeccion.precio_elite_sin_iva"
+                                class="form-control" name="precio_elite_sin_iva" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Precio Partner:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" [(ngModel)]="nuevaProyeccion.precio_partner_sin_iva"
+                                class="form-control" name="precio_partner_sin_iva" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Precio Público:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" [(ngModel)]="nuevaProyeccion.precio_publico_sin_iva"
+                                class="form-control" name="precio_publico_sin_iva" min="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-secondary" type="button" (click)="mostrarFormulario = false">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+
+                <button type="submit" class="btn btn-primary" [disabled]="cargando">
+                    <i class="fas fa-save"></i>
+                    <span *ngIf="!cargando">Guardar Proyección</span>
+                    <span *ngIf="cargando">Procesando...</span>
+                    <i *ngIf="cargando" class="fas fa-spinner fa-spin"></i>
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <!-- BUSCADOR -->
+    <section *ngIf="!mostrarFormulario" class="card search-section">
+        <div class="search-container">
+            <div class="search-input-group">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="form-control search-input"
+                    placeholder="Buscar por referencia, clave o descripción..." [(ngModel)]="busqueda"
+                    (input)="filtrarSugerencias()">
+                <button class="btn btn-primary" (click)="buscarProyeccion()" [disabled]="cargando || !busqueda">
+                    <span *ngIf="!cargando">Buscar</span>
+                    <i *ngIf="cargando" class="fas fa-spinner fa-spin"></i>
+                </button>
+            </div>
+
+            <!-- SUGERENCIAS -->
+            <ul *ngIf="sugerencias.length > 0" class="proyecciones-sugerencias">
+                <li *ngFor="let sugerencia of sugerencias" (click)="seleccionarSugerencia(sugerencia)">
+                    {{ sugerencia.nombre }}
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- DETALLE DE PROYECCIÓN -->
+    <section *ngIf="proyeccion && !mostrarFormulario" class="card detail-section">
+        <div class="detail-header">
+            <h3><i class="fas fa-info-circle"></i> Detalles de Proyección</h3>
+            <div class="detail-actions">
+                <button class="btn btn-primary" [disabled]="!hayCambios() || cargando"
+                    (click)="confirmacionVisible = true">
+                    <i class="fas fa-save"></i>
+                    <span *ngIf="!cargando">Guardar Cambios</span>
+                    <i *ngIf="cargando" class="fas fa-spinner fa-spin"></i>
+                </button>
+                <button class="btn btn-danger" (click)="confirmacionEliminarVisible = true">
+                    <i class="fas fa-trash-alt"></i> Eliminar
+                </button>
+            </div>
+        </div>
+
+        <div class="detail-grid">
+            <div class="detail-column">
+                <div class="form-group">
+                    <label>Referencia:</label>
+                    <input type="text" [(ngModel)]="proyeccion.referencia" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Clave Factura:</label>
+                    <input type="text" [(ngModel)]="proyeccion.clave_factura" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Clave 6 Dígitos:</label>
+                    <input type="text" [(ngModel)]="proyeccion.clave_6_digitos" maxlength="6" pattern="[0-9]{6}"
+                        class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label>Descripción:</label>
+                    <textarea [(ngModel)]="proyeccion.descripcion" class="form-control" rows="3" required></textarea>
+                </div>
+            </div>
+
+            <div class="detail-column">
+                <div class="form-group">
+                    <label>EAN:</label>
+                    <input type="text" [(ngModel)]="proyeccion.ean" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>Clave Odoo:</label>
+                    <input type="text" [(ngModel)]="proyeccion.clave_odoo" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>Modelo:</label>
+                    <input type="text" [(ngModel)]="proyeccion.modelo" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label>Disponibilidad:</label>
+                    <select [(ngModel)]="proyeccion.id_disponibilidad" class="form-control" required>
+                        <option *ngFor="let d of disponibilidades" [value]="d.id">
+                            {{ d.descripcion }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="detail-column">
+                <div class="price-section">
+                    <h4><i class="fas fa-tags"></i> Precios (Ingresa los precios sin IVA, el sistema agregará el IVA)</h4>
+
+                    <div class="form-group">
+                        <label>Precio Distribuidor:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" [(ngModel)]="proyeccion.precio_distribuidor_sin_iva"
+                                class="form-control" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Precio Elite Plus:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" [(ngModel)]="proyeccion.precio_elite_plus_sin_iva"
+                                class="form-control" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Precio Elite:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" [(ngModel)]="proyeccion.precio_elite_sin_iva"
+                                class="form-control" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Precio Partner:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" [(ngModel)]="proyeccion.precio_partner_sin_iva"
+                                class="form-control" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Precio Público:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" [(ngModel)]="proyeccion.precio_publico_sin_iva"
+                                class="form-control" min="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MENSAJE NO ENCONTRADO -->
+    <div *ngIf="!cargando && proyeccion === null && intentoBusqueda" class="card not-found-message">
+        <i class="fas fa-search"></i>
+        <p>No se encontró ninguna proyección con esa referencia, clave o descripción.</p>
+    </div>
+
+    <!-- MODALES DE CONFIRMACIÓN -->
+    <div *ngIf="confirmacionVisible" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h4><i class="fas fa-exclamation-triangle"></i> Confirmar cambios</h4>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro que deseas guardar los cambios en este producto?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
+                <button class="btn btn-primary" (click)="confirmarEdicion()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="confirmacionEliminarVisible" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h4><i class="fas fa-exclamation-triangle"></i> Confirmar eliminación</h4>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro que deseas eliminar este producto? Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" (click)="cancelarEliminacion()">Cancelar</button>
+                <button class="btn btn-danger" (click)="confirmarEliminacion()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</main>

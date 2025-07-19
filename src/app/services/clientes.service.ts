@@ -15,6 +15,20 @@ export class ClientesService {
     return this.http.get<any>(`${this.apiUrl}/clientes`);
   }
 
+  getNivelCliente(): Observable<any> {
+    const token = localStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
+
+    return this.http.get<any>(`${this.apiUrl}/clientes/nivel`, { headers });
+  }
+
+  getInfoClienteActual(): Observable<any> {
+    const token = localStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
+
+    return this.http.get<any>(`${this.apiUrl}/clientes/info`, { headers });
+  }
+
   getNombresClientes(): Observable<{ clave: string; nombre_cliente: string }[]> {
     return this.http.get<{ clave: string; nombre_cliente: string }[]>(`${this.apiUrl}/clientes/nombres`);
   }

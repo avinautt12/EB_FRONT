@@ -1,49 +1,91 @@
 <app-top-bar-usuarios></app-top-bar-usuarios>
 
-<div class="usuarios-fullscreen">
-    <div class="usuarios-header">
-        <h2>Historial de Proyecciones</h2>
+<div class="proyecciones-container-wide">
+    <div class="proyecciones-header">
+        <h1><i class="fas fa-history"></i> Historial de Proyecciones</h1>
+        <div class="acciones-monitor">
+            <button [routerLink]="['/usuarios/proyeccion-compras']">
+                <i class="fas fa-arrow-left"></i> Volver
+            </button>
+            <button (click)="exportarHistorialExcel()">
+                <i class="fas fa-file-export"></i> Exportar Excel
+            </button>
+        </div>
     </div>
 
-    <div *ngIf="cargando" class="cargando-spinner">
-        <div class="spinner"></div>
+    <!-- Estado de carga -->
+    <div *ngIf="cargando" class="loader-container">
+        <div class="loader"></div>
         <p>Cargando historial...</p>
     </div>
 
-    <div *ngIf="!cargando && historial.length === 0" class="sin-datos">
+    <!-- Sin datos -->
+    <div *ngIf="!cargando && historialAgrupado.length === 0" class="not-found-message">
+        <i class="fas fa-box-open"></i>
         <p>No tienes proyecciones registradas.</p>
     </div>
 
-    <table *ngIf="!cargando && historial.length > 0" class="tabla-usuarios">
-        <thead>
-            <tr>
-                <th>Fecha en que se realizó la proyección</th>
-                <th>Clave</th>
-                <th class="descripcion">Descripción</th>
-                <th>Modelo</th>
-                <th class="quincena">1ra Quincena Oct</th>
-                <th class="quincena">2da Quincena Oct</th>
-                <th class="quincena">1ra Quincena Nov</th>
-                <th class="quincena">2da Quincena Nov</th>
-                <th class="quincena">1ra Quincena Dic</th>
-                <th class="quincena">2da Quincena Dic</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let item of historial">
-                <td>{{ formatearFechaUTC(item.fecha_registro) }}</td>
-                <td>{{ item.clave_factura }}</td>
-                <td class="descripcion">{{ item.descripcion }}</td>
-                <td>{{ item.modelo }}</td>
-                <td class="quincena">{{ item.q1_oct_2025 }}</td>
-                <td class="quincena">{{ item.q2_oct_2025 }}</td>
-                <td class="quincena">{{ item.q1_nov_2025 }}</td>
-                <td class="quincena">{{ item.q2_nov_2025 }}</td>
-                <td class="quincena">{{ item.q1_dic_2025 }}</td>
-                <td class="quincena">{{ item.q2_dic_2025 }}</td>
-                <td><strong>{{ getTotalPorItem(item) }}</strong></td>
-            </tr>
-        </tbody>
-    </table>
+    <!-- Listado de proyecciones -->
+    <div *ngIf="!cargando && historialAgrupado.length > 0">
+        <div *ngFor="let grupo of historialAgrupado" class="proyeccion-group">
+            <div class="proyeccion-group-header">
+                <div class="group-info">
+                    <span class="group-date"><i class="far fa-calendar-alt"></i> {{ formatearFechaUTC(grupo.fecha) }}</span>
+                    <span class="group-totals">
+                        <span><i class="fas fa-bicycle"></i> {{ grupo.totalBicis }} bicicletas</span>
+                        <span><i class="fas fa-dollar-sign"></i> {{ grupo.totalImporte | currency:'MXN':'symbol' }}</span>
+                    </span>
+                </div>
+                
+                <!-- Desglose por quincena en el encabezado -->
+                <div class="quincenas-summary">
+                    <div *ngFor="let quincena of quincenas" class="quincena-summary-item">
+                        <div class="quincena-summary-title">{{ formatearQuincena(quincena) }}</div>
+                        <div class="quincena-summary-cantidad">{{ grupo.totalesQuincena[quincena]?.cantidad || 0 }} unid</div>
+                        <div class="quincena-summary-importe">{{ grupo.totalesQuincena[quincena]?.importe | currency:'MXN':'symbol' }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive-wide">
+                <table class="proyecciones-table-wide">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Referencia</th>
+                            <th>Modelo</th>
+                            <th>Precio Unitario</th>
+                            <th *ngFor="let quincena of quincenas" class="quincena-header">
+                                {{ formatearQuincena(quincena) }}
+                            </th>
+                            <th>Total Unidades</th>
+                            <th>Importe Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of grupo.items">
+                            <td class="product-info">
+                                <div class="product-desc">{{ item.descripcion }}</div>
+                                <div class="product-codes">
+                                    <span>EAN: {{ item.ean }}</span>
+                                    <span>Odoo: {{ item.clave_odoo }}</span>
+                                </div>
+                            </td>
+                            <td>{{ item.referencia }}</td>
+                            <td>{{ item.modelo }}</td>
+                            <td class="price-cell">
+                                <div class="price-main">{{ item.precio_aplicado | currency:'MXN':'symbol' }}</div>
+                            </td>
+                            <td *ngFor="let quincena of quincenas" class="quincena-cell">
+                                <div class="quincena-cantidad">{{ item[quincena] || 0 }}</div>
+                                <div class="quincena-importe">{{ (item[quincena] || 0) * item.precio_aplicado | currency:'MXN':'symbol' }}</div>
+                            </td>
+                            <td class="total-cell">{{ getTotalPorItem(item) }}</td>
+                            <td class="amount-cell">{{ getTotalPorItem(item) * item.precio_aplicado | currency:'MXN':'symbol' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>

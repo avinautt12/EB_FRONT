@@ -17,6 +17,7 @@ import { ProyeccionUsuariosComponent } from './views/usuarios/proyeccion-usuario
 import { CrearProyeccionUsuariosComponent } from './views/usuarios/crear-proyeccion-usuarios/crear-proyeccion-usuarios.component';
 import { ProyeccionHistorialComponent } from './views/usuarios/proyeccion-historial/proyeccion-historial.component';
 import { ProyeccionDetallesComponent } from './views/internal-views/proyeccion-detalles/proyeccion-detalles.component';
+import { ProyeccionControlComponent } from './views/internal-views/proyeccion-control/proyeccion-control.component';
 
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
@@ -34,6 +35,7 @@ export const routes: Routes = [
   { path: 'usuarios', component: UsuariosComponent, canActivate: [authGuard] },
   { path: 'proyeccion', component: ProyeccionComponent, canActivate: [authGuard] },
   { path: 'proyeccion/detalles/:id', component: ProyeccionDetallesComponent, canActivate: [authGuard] },
+  { path: 'proyeccion/control', component: ProyeccionControlComponent, canActivate: [authGuard] },
   { path: 'recuperacion/enviar-correo', component: EnviarCorreoComponent},
   { path: 'recuperacion/verificar-codigo', component: VerificarCodigoComponent},
   { path: 'recuperacion/restablecer-contrasena', component: RestablecerContrasenaComponent},

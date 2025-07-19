@@ -15,12 +15,21 @@ export class ConfirmacionDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: {
       titulo: string;
       mensaje: string;
+      nivelCliente: string;
+      precioCliente: number;
+      precioPublico: number;
+      compromisoCliente: number;
+      totalBicicletas: number;
+      totalProyeccion: number;
       detalles: Array<{
         producto: {
           clave_factura: string;
           descripcion: string;
-          precio: number;
         };
+        precioUnitario: number;
+        subtotal: number;
+        q1_sep_2025: number;
+        q2_sep_2025: number;
         q1_oct_2025: number;
         q2_oct_2025: number;
         q1_nov_2025: number;

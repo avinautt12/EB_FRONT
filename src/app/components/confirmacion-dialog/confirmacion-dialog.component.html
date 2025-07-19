@@ -5,21 +5,39 @@
 
   <div *ngIf="data.detalles" class="detalles-proyeccion">
     <h3>Resumen de la Proyección:</h3>
+    
+    <div class="resumen-nivel">
+      <p><strong>Nivel:</strong> {{ data.nivelCliente }}</p>
+      <p><strong>Precio aplicado:</strong> {{ data.precioCliente | currency }}</p>
+      <p><strong>Precio público:</strong> {{ data.precioPublico | currency }}</p>
+    </div>
 
     <div *ngFor="let item of data.detalles" class="item-proyeccion">
       <p class="producto-clave">
         <strong>{{ item.producto.clave_factura }}</strong> – {{ item.producto.descripcion }}
       </p>
-      <p class="producto-precio">Precio: {{ item.producto.precio | currency }}</p>
+      <p class="producto-precio">Precio: {{ item.precioUnitario | currency }}</p>
+      <p class="producto-subtotal">Subtotal: {{ item.subtotal | currency }}</p>
 
       <div class="quincenas">
-        <div *ngIf="item.q1_oct_2025 > 0">1Q Oct: <strong>{{ item.q1_oct_2025 }}</strong></div>
-        <div *ngIf="item.q2_oct_2025 > 0">2Q Oct: <strong>{{ item.q2_oct_2025 }}</strong></div>
-        <div *ngIf="item.q1_nov_2025 > 0">1Q Nov: <strong>{{ item.q1_nov_2025 }}</strong></div>
-        <div *ngIf="item.q2_nov_2025 > 0">2Q Nov: <strong>{{ item.q2_nov_2025 }}</strong></div>
-        <div *ngIf="item.q1_dic_2025 > 0">1Q Dic: <strong>{{ item.q1_dic_2025 }}</strong></div>
+        <div *ngIf="item.q1_sep_2025 > 0">1er Quincena Sep: <strong>{{ item.q1_sep_2025 }}</strong></div>
+        <div *ngIf="item.q2_sep_2025 > 0">2da Quincena Sep: <strong>{{ item.q2_sep_2025 }}</strong></div>
+        <div *ngIf="item.q1_oct_2025 > 0">1er Quincena Oct: <strong>{{ item.q1_oct_2025 }}</strong></div>
+        <div *ngIf="item.q2_oct_2025 > 0">2da Quincena Oct: <strong>{{ item.q2_oct_2025 }}</strong></div>
+        <div *ngIf="item.q1_nov_2025 > 0">1er Quincena Nov: <strong>{{ item.q1_nov_2025 }}</strong></div>
+        <div *ngIf="item.q2_nov_2025 > 0">2da Quincena Nov: <strong>{{ item.q2_nov_2025 }}</strong></div>
+        <div *ngIf="item.q1_dic_2025 > 0">1er Quincena Dic: <strong>{{ item.q1_dic_2025 }}</strong></div>
         <div *ngIf="item.q2_dic_2025 > 0">2Q Dic: <strong>{{ item.q2_dic_2025 }}</strong></div>
       </div>
+    </div>
+
+    <div class="total-proyeccion">
+      <p><strong>Total de bicicletas:</strong> {{ data.totalBicicletas }}</p>
+      <p><strong>Total proyectado:</strong> {{ data.totalProyeccion | currency }}</p>
+      <p><strong>Compra inicial:</strong> {{ data.compromisoCliente | currency }}</p>
+      <p [ngClass]="{'cumplido': data.totalProyeccion >= data.compromisoCliente, 'pendiente': data.totalProyeccion < data.compromisoCliente}">
+        {{ data.totalProyeccion >= data.compromisoCliente ? '¡Meta cumplida!' : 'Aún no alcanzas tu meta' }}
+      </p>
     </div>
   </div>
 </div>

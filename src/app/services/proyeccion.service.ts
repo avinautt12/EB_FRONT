@@ -21,19 +21,13 @@ export class ProyeccionService {
     return this.http.get<any[]>(`${this.baseUrl}/proyecciones-limpias`);
   }
 
-  agregarProyeccionCliente(proyeccion: any[], token: string) {
-    const idUsuario = this.authService.getUserId();
-
-    if (!idUsuario) {
-      throw new Error('No se pudo obtener el id de usuario del token');
-    }
-
-    return this.http.post(`${this.baseUrl}/proyecciones/agregar`, proyeccion, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'id_usuario': idUsuario.toString()
-      }
+  agregarProyeccionCliente(proyecciones: any[], token: string): Observable<any> {
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
     });
+
+    return this.http.post(`${this.baseUrl}/proyecciones/agregar`, proyecciones, { headers });
   }
 
   getHistorialCliente(): Observable<any[]> {
@@ -54,6 +48,58 @@ export class ProyeccionService {
     return this.http.get<any>(`${this.baseUrl}/proyecciones/detalles/${idProyeccion}`);
   }
 
+  buscarProyeccionPorId(id: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/proyecciones/buscar/${id}`);
+  }
+
+  agregarProyeccion(proyeccion: any) {
+    return this.http.post(`${this.baseUrl}/proyecciones/nueva`, proyeccion);
+  }
+
+  editarProyeccion(id: number, proyeccion: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/proyecciones/editar/${id}`, proyeccion);
+  }
+
+  eliminarProyeccion(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/proyecciones/eliminar/${id}`);
+  }
+
+  getDisponibilidades(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/disponibilidades`);
+  }
+
+  verificarProyeccionCliente(): Observable<any> {
+    const token = this.authService.getToken();
+    if (!token) {
+      throw new Error('Token no disponible');
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+
+    return this.http.get(`${this.baseUrl}/proyecciones/ya-enviada`, { headers });
+  }
+
+  getProyeccionesDetalladas(): Observable<any[]> {
+    const token = this.authService.getToken();
+    if (!token) {
+      throw new Error('Token no disponible');
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+
+    return this.http.get<any[]>(`${this.baseUrl}/proyecciones/resumen-global`, { headers });
+  }
+
+  subirArchivoProyecciones(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post(`${this.baseUrl}/importar_proyecciones`, formData);
+  }
 }
 
 

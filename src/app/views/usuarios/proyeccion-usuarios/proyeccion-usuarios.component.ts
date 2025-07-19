@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Router } from '@angular/router';
 import { TopBarUsuariosComponent } from "../../../components/top-bar-usuarios/top-bar-usuarios.component";
+import { AlertaService } from '../../../services/alerta.service';
 
 @Component({
   selector: 'app-proyeccion-usuarios',
@@ -37,10 +38,12 @@ export class ProyeccionUsuariosComponent implements OnInit {
   proyeccionesFiltradas: any[] = [];
   proyeccionesPaginadas: any[] = [];
 
+  yaProyectado: boolean = false;
 
-  constructor(private proyeccionService: ProyeccionService, private router: Router) { }
+  constructor(private proyeccionService: ProyeccionService, private alertaService: AlertaService, private router: Router) { }
 
   ngOnInit(): void {
+    this.verificarSiYaProyectado();
     this.proyeccionService.getProyecciones().subscribe({
       next: (data) => {
         this.proyecciones = data;
@@ -53,6 +56,27 @@ export class ProyeccionUsuariosComponent implements OnInit {
       error: (error) => {
         console.error('Error al obtener proyecciones:', error);
         this.cargando = false;
+      }
+    });
+  }
+
+  manejarClickCrear() {
+    if (this.yaProyectado) {
+      this.alertaService.mostrarError('Ya has enviado tu proyección. Solo puedes realizarla una vez.');
+      return;
+    }
+
+    this.router.navigate(['/usuarios/crear-proyeccion']);
+  }
+
+
+  verificarSiYaProyectado() {
+    this.proyeccionService.verificarProyeccionCliente().subscribe({
+      next: (res) => {
+        this.yaProyectado = res.yaEnviada;
+      },
+      error: (err) => {
+        console.error('Error al verificar proyección', err);
       }
     });
   }
@@ -95,6 +119,8 @@ export class ProyeccionUsuariosComponent implements OnInit {
 
   getCantidadProyectada(): number {
     return this.proyecciones.filter(item =>
+      (item.q1_sep_2025 || 0) > 0 ||
+      (item.q2_sep_2025 || 0) > 0 ||
       (item.q1_oct_2025 || 0) > 0 ||
       (item.q2_oct_2025 || 0) > 0 ||
       (item.q1_nov_2025 || 0) > 0 ||

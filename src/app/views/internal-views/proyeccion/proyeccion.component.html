@@ -7,8 +7,14 @@
         <button class="btn-volver" [routerLink]="['/home']">
             <i class="fas fa-arrow-left"></i> Volver
         </button>
+        <button class="btn-administrar" [routerLink]="['/proyeccion/control']">
+            <i class="fas fa-cog"></i> Administrar
+        </button>
         <button class="btn-exportar" (click)="abrirDialogoExportar()">
             <i class="fas fa-file-export"></i> Exportar
+        </button>
+        <button class="btn-importar" (click)="abrirDialogoImportar()">
+            <i class="fas fa-file-import"></i> Importar
         </button>
     </div>
 
@@ -25,7 +31,18 @@
         <table class="tabla-previo">
             <thead>
                 <tr>
-                    <th>Referencia</th>
+                    <th>
+                        <div class="sticky-th">
+                            Referencia
+                            <div class="filtro-columna">
+                                <button (click)="toggleFiltro('referencia')"></button>
+                                <div class="dropdown-filtro" *ngIf="filtroAbierto === 'referencia'">
+                                    <input type="text" [(ngModel)]="filtros.referencia" (input)="filtrarProyecciones()"
+                                        placeholder="Escribe aquí..." />
+                                </div>
+                            </div>
+                        </div>
+                    </th>
                     <th>
                         <div class="sticky-th">
                             Clave Factura
@@ -57,7 +74,7 @@
                                 <button (click)="toggleFiltro('ean')"></button>
                                 <div class="dropdown-filtro" *ngIf="filtroAbierto === 'ean'">
                                     <input type="text" [(ngModel)]="filtros.ean" (input)="filtrarProyecciones()"
-                                        placeholder="Escribe aqui..." />
+                                        placeholder="Escribe aquí..." />
                                 </div>
                             </div>
                         </div>
@@ -76,18 +93,6 @@
                     </th>
                     <th>
                         <div class="sticky-th">
-                            Descripción
-                            <div class="filtro-columna">
-                                <button (click)="toggleFiltro('descripcion')"></button>
-                                <div class="dropdown-filtro" *ngIf="filtroAbierto === 'descripcion'">
-                                    <input type="text" [(ngModel)]="filtros.descripcion" (input)="filtrarProyecciones()"
-                                        placeholder="Escribe aquí..." />
-                                </div>
-                            </div>
-                        </div>
-                    </th>
-                    <th>
-                        <div class="sticky-th">
                             Modelo
                             <div class="filtro-columna">
                                 <button (click)="toggleFiltro('modelo')"></button>
@@ -98,21 +103,53 @@
                             </div>
                         </div>
                     </th>
-                    <th>Precio Público</th>
+                    <th class="columna-descripcion">
+                        <div class="sticky-th">
+                            Descripción
+                            <div class="filtro-columna">
+                                <button (click)="toggleFiltro('descripcion')"></button>
+                                <div class="dropdown-filtro" *ngIf="filtroAbierto === 'descripcion'">
+                                    <input type="text" [(ngModel)]="filtros.descripcion" (input)="filtrarProyecciones()"
+                                        placeholder="Escribe aquí..." />
+                                </div>
+                            </div>
+                        </div>
+                    </th>
+                    <!-- Precios -->
+                    <th>Precio Público con IVA</th>
+                    <th>Precio Público sin IVA</th>
+                    <th>Precio Público MY26</th>
+                    <th>Distribuidor con IVA</th>
+                    <th>Distribuidor sin IVA</th>
+                    <th>Partner con IVA</th>
+                    <th>Partner sin IVA</th>
+                    <th>Elite con IVA</th>
+                    <th>Elite sin IVA</th>
+                    <th>Elite Plus con IVA</th>
+                    <th>Elite Plus sin IVA</th>
+
+
+                    <!-- Quincenas -->
+                    <th>1ER QUINCENA DE SEPTIEMBRE 2025</th>
+                    <th>2DA QUINCENA DE SEPTIEMBRE 2025</th>
                     <th>1ER QUINCENA DE OCTUBRE 2025</th>
                     <th>2DA QUINCENA DE OCTUBRE 2025</th>
                     <th>1ER QUINCENA DE NOVIEMBRE 2025</th>
                     <th>2DA QUINCENA DE NOVIEMBRE 2025</th>
                     <th>1ER QUINCENA DE DICIEMBRE 2025</th>
                     <th>2DA QUINCENA DE DICIEMBRE 2025</th>
+
+                    <!-- Totales -->
                     <th>Total Cantidad</th>
                     <th>Total Importe</th>
+
                     <th>Detalles</th>
                 </tr>
             </thead>
+
             <tbody>
                 <tr *ngIf="proyeccionesPaginadas.length === 0">
-                    <td colspan="14" class="sin-coincidencias">
+                    <td colspan="23" class="sin-coincidencias">
                         No hay coincidencias con los filtros aplicados.
                     </td>
                 </tr>
@@ -120,19 +157,39 @@
                     <td>{{ item.referencia }}</td>
                     <td>{{ item.clave_factura }}</td>
                     <td>{{ item.clave_6_digitos }}</td>
-                    <td>{{ item.ean}}</td>
-                    <td>{{ item.clave_odoo}}</td>
-                    <td>{{ item.descripcion }}</td>
+                    <td>{{ item.ean }}</td>
+                    <td>{{ item.clave_odoo }}</td>
                     <td>{{ item.modelo }}</td>
-                    <td>{{ item.precio_publico_iva | currency }}</td>
+                    <td>{{ item.descripcion }}</td>
+
+                    <!-- Precios -->
+                    <td>{{ item.precio_publico_con_iva | currency }}</td>
+                    <td>{{ item.precio_publico_sin_iva | currency }}</td>
+                    <td>{{ item.precio_publico_con_iva_my26 | currency }}</td>
+                    <td>{{ item.precio_distribuidor_con_iva | currency }}</td>
+                    <td>{{ item.precio_distribuidor_sin_iva | currency }}</td>
+                    <td>{{ item.precio_partner_con_iva | currency }}</td>
+                    <td>{{ item.precio_partner_sin_iva | currency }}</td>
+                    <td>{{ item.precio_elite_con_iva | currency }}</td>
+                    <td>{{ item.precio_elite_sin_iva | currency }}</td>
+                    <td>{{ item.precio_elite_plus_con_iva | currency }}</td>
+                    <td>{{ item.precio_elite_plus_sin_iva | currency }}</td>
+
+                    <!-- Quincenas -->
+                    <td>{{ item.q1_sep_2025 }}</td>
+                    <td>{{ item.q2_sep_2025 }}</td>
                     <td>{{ item.q1_oct_2025 }}</td>
                     <td>{{ item.q2_oct_2025 }}</td>
                     <td>{{ item.q1_nov_2025 }}</td>
                     <td>{{ item.q2_nov_2025 }}</td>
                     <td>{{ item.q1_dic_2025 }}</td>
                     <td>{{ item.q2_dic_2025 }}</td>
+
+                    <!-- Totales -->
                     <td>{{ item.orden_total_cant }}</td>
                     <td>{{ item.orden_total_importe | currency }}</td>
+
+                    <!-- Botón Detalles -->
                     <td>
                         <button class="btn-detalles" (click)="verDetalles(item)">
                             <i class="fas fa-eye"></i>
@@ -140,44 +197,46 @@
                     </td>
                 </tr>
             </tbody>
+
         </table>
+    </div>
+    <div class="paginador" *ngIf="totalPaginas > 0">
+        <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1">« Primera</button>
+        <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">‹ Anterior</button>
 
-        <div class="paginador" *ngIf="totalPaginas > 0">
-            <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1">« Primera</button>
-            <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">‹ Anterior</button>
+        <span class="paginador-info">
+            Página
+            <input type="number" min="1" [max]="totalPaginas" [(ngModel)]="paginaActualTemp"
+                (keyup.enter)="cambiarPagina(paginaActualTemp)" />
+            de {{ totalPaginas }}
+        </span>
 
-            <span class="paginador-info">
-                Página
-                <input type="number" min="1" [max]="totalPaginas" [(ngModel)]="paginaActualTemp"
-                    (keyup.enter)="cambiarPagina(paginaActualTemp)" />
-                de {{ totalPaginas }}
-            </span>
+        <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">Siguiente
+            ›</button>
+        <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">Última »</button>
+    </div>
+</div>
 
-            <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">Siguiente
-                ›</button>
-            <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">Última »</button>
+<div *ngIf="mostrarDialogoImportar" class="dialogo-overlay">
+    <div class="dialogo">
+        <h3>Importar proyecciones desde Excel</h3>
+        <input type="file" accept=".xlsx" (change)="onArchivoSeleccionado($event)" />
+        <div class="acciones-dialogo">
+            <button (click)="importarProyecciones()">Importar</button>
+            <button (click)="cerrarDialogoImportar()">Cancelar</button>
         </div>
     </div>
 </div>
 
 <div *ngIf="mostrarDialogoExportar" class="dialogo-exportar">
     <h3>Exportar a Excel</h3>
-
-    <div>
-        <label><input type="radio" [(ngModel)]="exportarTodo" [value]="true" /> Exportar todos los datos</label>
-        <label><input type="radio" [(ngModel)]="exportarTodo" [value]="false" /> Exportar solo datos filtrados</label>
+    <div class="opciones-exportar">
+        <button class="btn-exportar-global" (click)="exportarExcelGlobal()">
+            <i class="fas fa-file-excel"></i> Excel Global
+        </button>
+        <button class="btn-exportar-detallado" (click)="exportarExcelDetallado()">
+            <i class="fas fa-file-excel"></i> Excel Detallado
+        </button>
     </div>
-
-    <div>
-        <p>Selecciona columnas a exportar:</p>
-        <div *ngFor="let col of columnasDisponibles">
-            <label>
-                <input type="checkbox" [(ngModel)]="col.seleccionado" />
-                {{ col.label }}
-            </label>
-        </div>
-    </div>
-
-    <button (click)="exportarExcel()">Exportar</button>
-    <button (click)="cerrarDialogoExportar()">Cancelar</button>
+    <button class="btn-cancelar" (click)="cerrarDialogoExportar()">Cancelar</button>
 </div>

@@ -1,24 +1,59 @@
 <app-top-bar-usuarios></app-top-bar-usuarios>
-
 <app-alerta *ngIf="mensajeAlerta" [mensaje]="mensajeAlerta" [tipo]="tipoAlerta"></app-alerta>
 
 <div class="monitor-container">
-    <h2>Proyecciones de Ventas</h2>
+    <h2>Proyecciones de Compras</h2>
 
-    <div class="instrucciones-proyeccion">
-        <h3>¿Cómo enviar tu proyección?</h3>
-        <p>Captura la cantidad de bicicletas que deseas recibir en cada quincena. El sistema detectará automáticamente
-            las cantidades ingresadas para calcular el total y permitir el envío.</p>
+    <div class="bloque-superior">
+        <div class="instrucciones-proyeccion">
+            <h3>¿Cómo enviar tu proyección?</h3>
+
+            <div *ngIf="nivelCliente">
+                <p><strong>Tu nivel de distribuidor:</strong> {{ nivelCliente }}</p>
+                <p><strong>Compra Inicial:</strong> {{ compromisoCliente | number:'1.2-2' }}&nbsp;MXN</p>
+            </div>
+
+            <p>
+                Captura la cantidad de bicicletas que deseas recibir en cada quincena, se te tomará en cuenta el
+                precio de tu nivel de distribuidor para calcular el total.
+                El sistema detectará automáticamente las cantidades ingresadas para calcular el total y permitir el
+                envío.
+            </p>
+        </div>
+
+        <div class="resumen-compromiso" *ngIf="nivelCliente && compromisoCliente">
+            <h4>Resumen de tu Proyección</h4>
+            <p><strong>Total proyectado:</strong> {{ calcularTotalProyeccion() | number:'1.2-2' }}&nbsp;MXN</p>
+            <p><strong>Total de bicicletas:</strong> {{ calcularTotalBicicletas() }}</p>
+            <p><strong>Compra Inicial:</strong> {{ compromisoCliente | number:'1.2-2' }}&nbsp;MXN</p>
+
+            <!-- Sección nueva de montos por quincena -->
+            <div class="montos-quincena">
+                <h5>Montos por quincena (se mostraran los montos mientras ingreses cantidades):</h5>
+                <div *ngFor="let monto of calcularMontosPorQuincena() | keyvalue">
+                    <p *ngIf="monto.value > 0">
+                        <strong>{{ formatearNombreQuincena(monto.key) }}:</strong>
+                        {{ monto.value | number:'1.2-2' }}&nbsp;MXN
+                    </p>
+                </div>
+            </div>
+
+            <p [ngClass]="{
+        'cumplido': calcularTotalProyeccion() >= compromisoCliente,
+        'pendiente': calcularTotalProyeccion() < compromisoCliente
+    }">
+                {{ calcularTotalProyeccion() >= compromisoCliente ? '¡Meta cumplida!' : 'Aún no alcanzas tu meta' }}
+            </p>
+        </div>
     </div>
 
     <div class="acciones-monitor">
-        <button class="btn-volver" [routerLink]="['/usuarios/dashboard']">
+        <button class="btn-volver" [routerLink]="['/usuarios/proyeccion-compras']">
             <i class="fas fa-arrow-left"></i> Volver
         </button>
         <button class="btn-exportar" (click)="prepararEnvio()" [disabled]="getCantidadProyectada() === 0">
             <i class="fas fa-paper-plane"></i> Enviar Proyección ({{ getCantidadProyectada() }})
         </button>
-
     </div>
 
     <div *ngIf="cargando" class="cargando-spinner">
@@ -40,7 +75,10 @@
                     <th>Clave Odoo</th>
                     <th>Descripción</th>
                     <th>Modelo</th>
+                    <th>Precio ({{ nivelCliente || 'Público' }})</th>
                     <th>Precio Público</th>
+                    <th>1ER QUINCENA DE SEPTIEMBRE 2025</th>
+                    <th>2DA QUINCENA DE SEPTIEMBRE 2025</th>
                     <th>1ER QUINCENA DE OCTUBRE 2025</th>
                     <th>2DA QUINCENA DE OCTUBRE 2025</th>
                     <th>1ER QUINCENA DE NOVIEMBRE 2025</th>
@@ -51,7 +89,7 @@
             </thead>
             <tbody>
                 <tr *ngIf="proyeccionesPaginadas.length === 0">
-                    <td colspan="14" class="sin-coincidencias">
+                    <td colspan="16" class="sin-coincidencias">
                         No hay coincidencias con los filtros aplicados.
                     </td>
                 </tr>
@@ -62,15 +100,58 @@
                     <td>{{ item.clave_odoo }}</td>
                     <td>{{ item.descripcion }}</td>
                     <td>{{ item.modelo }}</td>
-                    <td>{{ item.precio_publico_iva | currency }}</td>
+                    <td>{{ getPrecioCliente(item) | currency }}</td>
+                    <td>{{ item.precio_publico_con_iva | currency }}</td>
 
                     <!-- Inputs para cada quincena -->
-                    <td><input type="number" min="0" [(ngModel)]="item.q1_oct_2025"></td>
-                    <td><input type="number" min="0" [(ngModel)]="item.q2_oct_2025"></td>
-                    <td><input type="number" min="0" [(ngModel)]="item.q1_nov_2025"></td>
-                    <td><input type="number" min="0" [(ngModel)]="item.q2_nov_2025"></td>
-                    <td><input type="number" min="0" [(ngModel)]="item.q1_dic_2025"></td>
-                    <td><input type="number" min="0" [(ngModel)]="item.q2_dic_2025"></td>
+                    <td>
+                        <input type="number" min="0" [(ngModel)]="item.q1_sep_2025"
+                            [disabled]="!item.disponibilidad.q1_sep_2025"
+                            [class.no-disponible]="!item.disponibilidad.q1_sep_2025">
+                        <span *ngIf="!item.disponibilidad.q1_sep_2025" class="badge-disponibilidad">No disponible</span>
+                    </td>
+                    <td>
+                        <input type="number" min="0" [(ngModel)]="item.q2_sep_2025"
+                            [disabled]="!item.disponibilidad.q2_sep_2025"
+                            [class.no-disponible]="!item.disponibilidad.q2_sep_2025">
+                        <span *ngIf="!item.disponibilidad.q2_sep_2025" class="badge-disponibilidad">No disponible</span>
+                    </td>
+                    <td>
+                        <input type="number" min="0" [(ngModel)]="item.q1_oct_2025"
+                            [disabled]="!item.disponibilidad.q1_oct_2025"
+                            [class.no-disponible]="!item.disponibilidad.q1_oct_2025">
+                        <span *ngIf="!item.disponibilidad.q1_oct_2025" class="badge-disponibilidad">No disponible</span>
+                    </td>
+                    <td>
+                        <input type="number" min="0" [(ngModel)]="item.q2_oct_2025"
+                            [disabled]="!item.disponibilidad.q2_oct_2025"
+                            [class.no-disponible]="!item.disponibilidad.q2_oct_2025">
+                        <span *ngIf="!item.disponibilidad.q2_oct_2025" class="badge-disponibilidad">No disponible</span>
+                    </td>
+                    <td>
+                        <input type="number" min="0" [(ngModel)]="item.q1_nov_2025"
+                            [disabled]="!item.disponibilidad.q1_nov_2025"
+                            [class.no-disponible]="!item.disponibilidad.q1_nov_2025">
+                        <span *ngIf="!item.disponibilidad.q1_nov_2025" class="badge-disponibilidad">No disponible</span>
+                    </td>
+                    <td>
+                        <input type="number" min="0" [(ngModel)]="item.q2_nov_2025"
+                            [disabled]="!item.disponibilidad.q2_nov_2025"
+                            [class.no-disponible]="!item.disponibilidad.q2_nov_2025">
+                        <span *ngIf="!item.disponibilidad.q2_nov_2025" class="badge-disponibilidad">No disponible</span>
+                    </td>
+                    <td>
+                        <input type="number" min="0" [(ngModel)]="item.q1_dic_2025"
+                            [disabled]="!item.disponibilidad.q1_dic_2025"
+                            [class.no-disponible]="!item.disponibilidad.q1_dic_2025">
+                        <span *ngIf="!item.disponibilidad.q1_dic_2025" class="badge-disponibilidad">No disponible</span>
+                    </td>
+                    <td>
+                        <input type="number" min="0" [(ngModel)]="item.q2_dic_2025"
+                            [disabled]="!item.disponibilidad.q2_dic_2025"
+                            [class.no-disponible]="!item.disponibilidad.q2_dic_2025">
+                        <span *ngIf="!item.disponibilidad.q2_dic_2025" class="badge-disponibilidad">No disponible</span>
+                    </td>
                 </tr>
             </tbody>
         </table>

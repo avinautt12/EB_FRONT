@@ -1,73 +1,161 @@
 <app-home-bar></app-home-bar>
 
-<div class="p-6 max-w-6xl mx-auto">
+<div class="container-wide bg-custom">
+  <!-- Botón de volver -->
+  <button (click)="volver()" class="btn-detalles">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd"
+        d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+        clip-rule="evenodd" />
+    </svg>
+    Volver al monitor
+  </button>
 
-
-  <div class="acciones-monitor">
-    <button type="button" (click)="volver()">
-      <i class="fas fa-arrow-left mr-2"></i> Volver
-    </button>
+  <!-- Cargando -->
+  <div *ngIf="cargando" class="loader-container">
+    <div class="loader"></div>
+    <p class="text-white">Cargando detalles del producto...</p>
   </div>
 
-  <div *ngIf="cargando" class="flex flex-col items-center justify-center h-40">
-    <div class="loader mb-2"></div>
-    <p class="text-gray-500">Cargando detalles...</p>
-  </div>
+  <!-- Contenido principal -->
+  <div *ngIf="!cargando && detalle" class="card-custom">
+    <!-- Encabezado -->
+    <div class="card-header-custom">
+      <h1 class="card-title">{{ detalle.descripcion }}</h1>
+      <p class="card-subtitle">{{ detalle.modelo }} • {{ detalle.clave_factura }}</p>
+    </div>
 
-  <h2 class="text-2xl font-semibold text-gray-800">
-    {{ detalle?.descripcion }}
-  </h2>
+    <!-- Información básica -->
+    <div class="section">
+      <div class="info-grid">
+        <div class="info-card">
+          <h3 class="section-title">Detalles del Producto</h3>
+          <div>
+            <p class="info-item"><span class="info-label">Referencia:</span> <span class="info-value">{{
+                detalle.referencia }}</span></p>
+            <p class="info-item"><span class="info-label">Clave Odoo:</span> <span class="info-value">{{
+                detalle.clave_odoo }}</span></p>
+            <p class="info-item"><span class="info-label">EAN:</span> <span class="info-value">{{ detalle.ean }}</span>
+            </p>
+          </div>
+        </div>
 
-  <ng-container *ngIf="!cargando">
-    <div *ngIf="tieneHistorialValido(); else sinHistorialYDetalle" class="space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm bg-white p-4 rounded-xl shadow-md border">
-        <div><strong>Modelo:</strong> {{ detalle.modelo }}</div>
-        <div><strong>Precio Público:</strong> {{ detalle.precio_publico_iva | currency }}</div>
-        <div><strong>Clave Factura:</strong> {{ detalle.clave_factura }}</div>
-        <div><strong>Clave Odoo:</strong> {{ detalle.clave_odoo }}</div>
-        <div><strong>EAN:</strong> {{ detalle.ean }}</div>
-        <div><strong>Referencia:</strong> {{ detalle.referencia }}</div>
-        <div><strong>Total Cantidad:</strong> {{ detalle.orden_total_cant }}</div>
-        <div><strong>Total Importe:</strong> {{ detalle.orden_total_importe || '-' }}</div>
-      </div>
+        <div class="info-card">
+          <h3 class="section-title">Precios</h3>
+          <div>
+            <p class="info-item">
+              <span class="info-label">Público:</span>
+              <span class="info-value">
+                {{ detalle.precio_publico_con_iva | currency:'MXN':'symbol':'1.2-2' }} (IVA)
+                <br>
+                <span class="price-without-iva">{{ detalle.precio_publico_sin_iva | currency:'MXN':'symbol':'1.2-2' }}
+                  (sin IVA)</span>
+              </span>
+            </p>
 
-      <div class="mt-8">
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">Historial por Cliente</h3>
+            <p class="info-item">
+              <span class="info-label">Distribuidor:</span>
+              <span class="info-value">
+                {{ detalle.precio_distribuidor_con_iva | currency:'MXN':'symbol':'1.2-2' }} (IVA)
+                <br>
+                <span class="price-without-iva">{{ detalle.precio_distribuidor_sin_iva | currency:'MXN':'symbol':'1.2-2'
+                  }} (sin IVA)</span>
+              </span>
+            </p>
 
-        <div class="overflow-auto rounded-lg shadow border">
-          <table class="w-full text-sm text-left text-gray-700">
-            <thead class="bg-gray-100 border-b">
-              <tr>
-                <th class="px-4 py-2">Cliente</th>
-                <th class="px-4 py-2">Fecha</th>
-                <th class="px-4 py-2">1er quincena de octubre</th>
-                <th class="px-4 py-2">2da quincena de octubre</th>
-                <th class="px-4 py-2">1er quincena de noviembre</th>
-                <th class="px-4 py-2">2da quincena de noviembre</th>
-                <th class="px-4 py-2">1er quincena de diciembre</th>
-                <th class="px-4 py-2">2da quincena de diciembre</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let h of detalle.historial_clientes" class="border-b hover:bg-gray-50">
-                <td class="px-4 py-2">{{ h.nombre_cliente }}</td>
-                <td class="px-4 py-2">{{ h.fecha_registro | date:'short' }}</td>
-                <td class="px-4 py-2">{{ h.q1_oct_2025 }}</td>
-                <td class="px-4 py-2">{{ h.q2_oct_2025 }}</td>
-                <td class="px-4 py-2">{{ h.q1_nov_2025 }}</td>
-                <td class="px-4 py-2">{{ h.q2_nov_2025 }}</td>
-                <td class="px-4 py-2">{{ h.q1_dic_2025 }}</td>
-                <td class="px-4 py-2">{{ h.q2_dic_2025 }}</td>
-              </tr>
-            </tbody>
-          </table>
+            <p class="info-item">
+              <span class="info-label">Partner:</span>
+              <span class="info-value">
+                {{ detalle.precio_partner_con_iva | currency:'MXN':'symbol':'1.2-2' }} (IVA)
+                <br>
+                <span class="price-without-iva">{{ detalle.precio_partner_sin_iva | currency:'MXN':'symbol':'1.2-2' }}
+                  (sin IVA)</span>
+              </span>
+            </p>
+
+            <p class="info-item">
+              <span class="info-label">Elite:</span>
+              <span class="info-value">
+                {{ detalle.precio_elite_con_iva | currency:'MXN':'symbol':'1.2-2' }} (IVA)
+                <br>
+                <span class="price-without-iva">{{ detalle.precio_elite_sin_iva | currency:'MXN':'symbol':'1.2-2' }}
+                  (sin IVA)</span>
+              </span>
+            </p>
+
+            <p class="info-item">
+              <span class="info-label">Elite Plus:</span>
+              <span class="info-value">
+                {{ detalle.precio_elite_plus_con_iva | currency:'MXN':'symbol':'1.2-2' }} (IVA)
+                <br>
+                <span class="price-without-iva">{{ detalle.precio_elite_plus_sin_iva | currency:'MXN':'symbol':'1.2-2'
+                  }} (sin IVA)</span>
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <h3 class="section-title">Resumen</h3>
+          <div>
+            <p class="info-item"><span class="info-label">Total proyectado:</span> <span class="info-value">{{
+                detalle.orden_total_cant || 0 }} unidades</span></p>
+            <p class="info-item"><span class="info-label">Importe total:</span> <span class="info-value">{{
+                detalle.orden_total_importe != null ? (detalle.orden_total_importe | currency:'MXN':'symbol':'1.2-2') :
+                '-' }}</span></p>
+          </div>
         </div>
       </div>
     </div>
 
-    <ng-template #sinHistorialYDetalle>
-      <p class="mensaje-sin-proyecciones">Aún no hay proyecciones de este producto.</p>
-    </ng-template>
-  </ng-container>
+    <!-- Proyección por quincenas -->
+    <div class="section">
+      <h3 class="section-title">Proyección por Quincenas</h3>
+      <div class="quincenas-grid">
+        <div
+          *ngFor="let quincena of ['q1_sep_2025', 'q2_sep_2025', 'q1_oct_2025', 'q2_oct_2025', 'q1_nov_2025', 'q2_nov_2025', 'q1_dic_2025', 'q2_dic_2025']"
+          class="quincena-card">
+          <h4 class="quincena-title">{{ formatearQuincena(quincena) }}</h4>
+          <p class="quincena-value">{{ getCantidadQuincena(quincena) }} unidades</p>
+        </div>
+      </div>
+    </div>
 
+    <!-- Historial de clientes -->
+    <div class="section" *ngIf="tieneHistorialValido()">
+      <h3 class="section-title">Historial de Proyecciones</h3>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Fecha</th>
+              <th>Folio</th>
+              <th>Precio</th>
+              <th
+                *ngFor="let quincena of ['q1_sep_2025', 'q2_sep_2025', 'q1_oct_2025', 'q2_oct_2025', 'q1_nov_2025', 'q2_nov_2025', 'q1_dic_2025', 'q2_dic_2025']">
+                {{ formatearQuincena(quincena).split(' ')[0] }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let h of detalle.historial_clientes">
+              <td>{{ h.nombre_cliente }}</td>
+              <td>{{ h.fecha_registro | date:'medium' }}</td>
+              <td>{{ h.folio }}</td>
+              <td>{{ h.precio_aplicado | currency:'MXN':'symbol':'1.2-2' }}</td>
+              <td
+                *ngFor="let quincena of ['q1_sep_2025', 'q2_sep_2025', 'q1_oct_2025', 'q2_oct_2025', 'q1_nov_2025', 'q2_nov_2025', 'q1_dic_2025', 'q2_dic_2025']">
+                {{ h[quincena] || 0 }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div *ngIf="!tieneHistorialValido()" class="empty-message">
+      No hay historial de proyecciones para este producto.
+    </div>
+  </div>
 </div>

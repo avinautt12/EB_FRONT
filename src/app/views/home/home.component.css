@@ -1,12 +1,12 @@
 .home-container {
-  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  max-width: 1200px;
   margin: 2rem auto;
   padding: 2rem;
-  background: linear-gradient(135deg, #252422 0%, #1e1d1b 100%);
   color: #FFFCF2;
   font-family: 'Segoe UI', sans-serif;
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
   text-align: center;
 }
 
