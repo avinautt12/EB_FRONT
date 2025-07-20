@@ -14,8 +14,8 @@ interface Usuario {
   contrasena?: string;
   nombre: string;
   correo: string;
-  rol: 'Administrador' | 'Usuario';
-  cliente_nombre?: string; // Nombre del cliente asociado, si aplica
+  rol: string;
+  cliente_nombre?: string | null; // Nombre del cliente asociado, si aplica
   cliente_id?: number;
   activo: boolean;
 }
@@ -128,16 +128,20 @@ export class UsuariosComponent implements OnInit {
   }
 
   filtrarUsuarios() {
-    this.paginaActual = 1; // Reset paginación al filtrar
+    this.paginaActual = 1;
 
     this.usuariosFiltrados = this.usuarios.filter(u => {
-      // Asegúrate de que los campos existan antes de usar .toLowerCase()
-      const nombre = u.nombre || '';
-      const correo = u.correo || '';
-      const usuarioStr = u.usuario || '';
-      const rol = u.rol || '';
+      // Protege todos los campos que usan toLowerCase()
+      const nombre = typeof u.nombre === 'string' ? u.nombre : '';
+      const correo = typeof u.correo === 'string' ? u.correo : '';
+      const usuarioStr = typeof u.usuario === 'string' ? u.usuario : '';
+      const rol = typeof u.rol === 'string' ? u.rol : '';
 
-      const coincideClave = u.id?.toString().toLowerCase().includes(this.filtros.clave.toLowerCase());
+      // Protege también el filtro de clave (ID)
+      const claveFiltro = typeof this.filtros.clave === 'string' ? this.filtros.clave : '';
+      const idStr = u.id ? u.id.toString() : '';
+
+      const coincideClave = idStr.toLowerCase().includes(claveFiltro.toLowerCase());
       const coincideNombre = nombre.toLowerCase().includes(this.filtros.nombre.toLowerCase());
       const coincideCorreo = correo.toLowerCase().includes(this.filtros.correo.toLowerCase());
       const coincideUsuario = usuarioStr.toLowerCase().includes(this.filtros.usuario.toLowerCase());
@@ -239,41 +243,52 @@ export class UsuariosComponent implements OnInit {
     if (this.validarFormulario()) {
       this.cargandoUsuarios = true;
 
-      const usuarioParaCrear: any = {
+      const usuarioParaCrear = {
         usuario: this.nuevoUsuario.usuario,
         contrasena: this.nuevoUsuario.contrasena,
         nombre: this.nuevoUsuario.nombre,
         correo: this.nuevoUsuario.correo,
         rol: this.nuevoUsuario.rol,
-        activo: true
+        activo: true,
+        ...(this.asociarCliente && this.clienteSeleccionadoId && {
+          cliente_id: this.clienteSeleccionadoId
+        })
       };
-
-      if (this.asociarCliente && this.clienteSeleccionadoId) {
-        usuarioParaCrear.cliente_id = this.clienteSeleccionadoId;
-      }
 
       this.usuariosService.crearUsuario(usuarioParaCrear).subscribe({
         next: (usuarioCreado) => {
-          // Actualización MANUAL de la lista
-          this.usuarios.unshift({
-            ...usuarioCreado,
-            nombre: usuarioCreado.nombre || '',
-            correo: usuarioCreado.correo || '',
-            usuario: usuarioCreado.usuario || '',
-            rol: usuarioCreado.rol || this.ROLES.USUARIO.backendValue,
-            cliente_nombre: usuarioCreado.cliente_nombre || '',
-            cliente_id: usuarioCreado.cliente_id || null,
-            activo: usuarioCreado.activo !== undefined ? usuarioCreado.activo : true
-          });
-
-          this.filtrarUsuarios();
+          // 1. Primero muestra el éxito (sin esperar al filtrado)
           this.alerta.mostrarExito('✅ Usuario creado con éxito');
-          this.volverALista();
           this.cargandoUsuarios = false;
-          this.cdr.detectChanges(); // Forzar actualización de vista
+          this.volverALista();
+
+          // 2. Actualiza la lista de usuarios con protección total
+          try {
+            const usuarioSeguro = {
+              id: usuarioCreado.id || 0,
+              nombre: String(usuarioCreado.nombre || ''),
+              correo: String(usuarioCreado.correo || ''),
+              usuario: String(usuarioCreado.usuario || ''),
+              rol: String(usuarioCreado.rol || this.ROLES.USUARIO.backendValue),
+              cliente_nombre: usuarioCreado.cliente_nombre ? String(usuarioCreado.cliente_nombre) : null,
+              cliente_id: usuarioCreado.cliente_id || null,
+              activo: usuarioCreado.activo !== undefined ? usuarioCreado.activo : true
+            };
+
+            this.usuarios.unshift(usuarioSeguro);
+
+            // 3. Filtrado con manejo de errores silencioso
+            try {
+              this.filtrarUsuarios();
+            } catch (error) {
+              console.warn('Error al filtrar (no crítico):', error);
+            }
+
+          } catch (error) {
+            console.error('Error al procesar respuesta:', error);
+          }
         },
         error: (error) => {
-          console.error('Error al crear usuario:', error);
           this.alerta.mostrarError(error.error?.error || 'Error al crear usuario');
           this.cargandoUsuarios = false;
         }
