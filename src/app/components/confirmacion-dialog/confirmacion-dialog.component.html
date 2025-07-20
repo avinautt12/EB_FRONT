@@ -35,9 +35,6 @@
       <p><strong>Total de bicicletas:</strong> {{ data.totalBicicletas }}</p>
       <p><strong>Total proyectado:</strong> {{ data.totalProyeccion | currency }}</p>
       <p><strong>Compra inicial:</strong> {{ data.compromisoCliente | currency }}</p>
-      <p [ngClass]="{'cumplido': data.totalProyeccion >= data.compromisoCliente, 'pendiente': data.totalProyeccion < data.compromisoCliente}">
-        {{ data.totalProyeccion >= data.compromisoCliente ? '¡Meta cumplida!' : 'Aún no alcanzas tu meta' }}
-      </p>
     </div>
   </div>
 </div>

@@ -14,10 +14,9 @@
             </div>
 
             <p>
-                Captura la cantidad de bicicletas que deseas recibir en cada quincena, se te tomará en cuenta el
-                precio de tu nivel de distribuidor para calcular el total.
-                El sistema detectará automáticamente las cantidades ingresadas para calcular el total y permitir el
-                envío.
+                Registra la cantidad de bicicletas que deseas recibir en cada quincena.
+                El sistema calculará automáticamente el monto total correspondiente,
+                considerando el precio asignado según tu nivel de distribuidor.
             </p>
         </div>
 
@@ -26,24 +25,44 @@
             <p><strong>Total proyectado:</strong> {{ calcularTotalProyeccion() | number:'1.2-2' }}&nbsp;MXN</p>
             <p><strong>Total de bicicletas:</strong> {{ calcularTotalBicicletas() }}</p>
             <p><strong>Compra Inicial:</strong> {{ compromisoCliente | number:'1.2-2' }}&nbsp;MXN</p>
+            <p class="info-montos-quincena">
+                <span>Haz clic en "<strong>Ver montos por quincena</strong>" para conocer la cantidad de dinero proyectada en cada quincena.</span>
+            </p>
 
-            <!-- Sección nueva de montos por quincena -->
+            <!-- Sección de montos por quincena -->
             <div class="montos-quincena">
-                <h5>Montos por quincena (se mostraran los montos mientras ingreses cantidades):</h5>
-                <div *ngFor="let monto of calcularMontosPorQuincena() | keyvalue">
-                    <p *ngIf="monto.value > 0">
-                        <strong>{{ formatearNombreQuincena(monto.key) }}:</strong>
-                        {{ monto.value | number:'1.2-2' }}&nbsp;MXN
-                    </p>
-                </div>
+                <button class="btn-ver-montos" (click)="mostrarModalMontos()">
+                    <i class="fas fa-calculator"></i> Ver montos por quincena
+                </button>
             </div>
 
-            <p [ngClass]="{
-        'cumplido': calcularTotalProyeccion() >= compromisoCliente,
-        'pendiente': calcularTotalProyeccion() < compromisoCliente
-    }">
-                {{ calcularTotalProyeccion() >= compromisoCliente ? '¡Meta cumplida!' : 'Aún no alcanzas tu meta' }}
-            </p>
+            <!-- Modal para mostrar los montos -->
+            <div class="modal-montos" *ngIf="mostrarModal" (click)="cerrarModal($event)">
+                <div class="modal-contenido">
+                    <div class="modal-header">
+                        <h4>Montos por quincena</h4>
+                        <button class="btn-cerrar" (click)="cerrarModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <ng-container *ngIf="tieneMontos(); else sinMontos">
+                            <div *ngFor="let monto of calcularMontosPorQuincena() | keyvalue">
+                                <div class="monto-item" *ngIf="monto.value > 0">
+                                    <span class="quincena">{{ formatearNombreQuincena(monto.key) }}:</span>
+                                    <span class="valor">{{ monto.value | number:'1.2-2' }} MXN</span>
+                                </div>
+                            </div>
+                            <div class="total-montos">
+                                <strong>Total proyectado:</strong> {{ calcularTotalProyeccion() | number:'1.2-2' }} MXN
+                            </div>
+                        </ng-container>
+                        <ng-template #sinMontos>
+                            <div class="sin-montos">
+                                Aún no has ingresado ninguna proyección.
+                            </div>
+                        </ng-template>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -75,8 +94,8 @@
                     <th>Clave Odoo</th>
                     <th>Descripción</th>
                     <th>Modelo</th>
-                    <th>Precio ({{ nivelCliente || 'Público' }})</th>
-                    <th>Precio Público</th>
+                    <th>Precio ({{ nivelCliente || 'Público' }}) con IVA</th>
+                    <th>Precio Público (con IVA)</th>
                     <th>1ER QUINCENA DE SEPTIEMBRE 2025</th>
                     <th>2DA QUINCENA DE SEPTIEMBRE 2025</th>
                     <th>1ER QUINCENA DE OCTUBRE 2025</th>

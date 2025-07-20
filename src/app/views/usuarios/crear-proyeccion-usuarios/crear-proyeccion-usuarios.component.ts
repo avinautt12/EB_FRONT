@@ -72,6 +72,10 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
   nivelCliente: string = '';
   compromisoCliente: number = 0;
 
+  mostrarMontos: boolean = false; // Controla si se muestra o no el contenido
+
+  mostrarModal: boolean = false;
+
   constructor(
     private proyeccionService: ProyeccionService,
     private authService: AuthService,
@@ -368,5 +372,36 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
     return `${numeroQuincena} Quincena ${meses[mes] || mes} ${año}`;
   }
 
+  contarMontosPositivos(): number {
+    const montos = this.calcularMontosPorQuincena();
+    return Object.values(montos).filter(monto => monto > 0).length;
+  }
+
+  mostrarModalMontos(): void {
+    this.mostrarModal = true;
+    document.body.style.overflow = 'hidden'; // Evita el scroll del body
+  }
+
+  cerrarModal(event?: MouseEvent): void {
+    // Cierra solo si se hace clic fuera del contenido o en el botón de cerrar
+    if (!event || (event.target as HTMLElement).classList.contains('modal-montos')) {
+      this.mostrarModal = false;
+      document.body.style.overflow = '';
+    }
+  }
+
+  tieneMontos(): boolean {
+    if (!this.proyecciones) return false;
+    return this.proyecciones.some(item =>
+      (item.q1_sep_2025 && item.q1_sep_2025 > 0) ||
+      (item.q2_sep_2025 && item.q2_sep_2025 > 0) ||
+      (item.q1_oct_2025 && item.q1_oct_2025 > 0) ||
+      (item.q2_oct_2025 && item.q2_oct_2025 > 0) ||
+      (item.q1_nov_2025 && item.q1_nov_2025 > 0) ||
+      (item.q2_nov_2025 && item.q2_nov_2025 > 0) ||
+      (item.q1_dic_2025 && item.q1_dic_2025 > 0) ||
+      (item.q2_dic_2025 && item.q2_dic_2025 > 0)
+    );
+  }
 
 }
