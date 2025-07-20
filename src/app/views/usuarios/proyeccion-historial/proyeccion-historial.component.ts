@@ -43,13 +43,19 @@ export class ProyeccionHistorialComponent implements OnInit {
     this.proyeccionService.getHistorialCliente().subscribe({
       next: (res) => {
         this.historial = res;
-        this.historialAgrupado = this.agruparPorFecha(res);
+        if (Array.isArray(res) && res.length > 0) {
+          this.historialAgrupado = this.agruparPorFecha(res);
+        } else {
+          this.historialAgrupado = [];
+        }
         this.cargando = false;
       },
       error: (err) => {
         if (err && err.status !== 404) {
           this.alertaService.mostrarError('No se pudo cargar el historial.');
         }
+        this.historial = [];
+        this.historialAgrupado = [];
         console.error(err);
         this.cargando = false;
       }
