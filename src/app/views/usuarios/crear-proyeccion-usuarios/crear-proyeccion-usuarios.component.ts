@@ -107,7 +107,8 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
   }
 
   mapearDatosProyecciones(data: any[]): Proyeccion[] {
-    return data.map(item => ({
+    // Primero mapeamos los datos
+    const proyeccionesMapeadas = data.map(item => ({
       ...item,
       q1_sep_2025: null,
       q2_sep_2025: null,
@@ -128,6 +129,21 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
         q2_dic_2025: item.disp_q2_dic_2025 !== undefined ? Boolean(item.disp_q2_dic_2025) : true
       }
     }));
+
+    // Luego ordenamos por modelo
+    return proyeccionesMapeadas.sort((a, b) => {
+      // Manejo de casos donde modelo podría ser null/undefined
+      const modeloA = (a.modelo || '').toString().toLowerCase().trim();
+      const modeloB = (b.modelo || '').toString().toLowerCase().trim();
+
+      // Ordenamos primero por si alguno está vacío
+      if (!modeloA && !modeloB) return 0;
+      if (!modeloA) return 1;
+      if (!modeloB) return -1;
+
+      // Orden alfabético normal
+      return modeloA.localeCompare(modeloB);
+    });
   }
 
   obtenerDatosCliente(): void {
@@ -180,6 +196,13 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
   }
 
   actualizarPaginado(): void {
+    // Asegurarnos de que las proyecciones están ordenadas
+    this.proyecciones = [...this.proyecciones].sort((a, b) => {
+      const modeloA = (a.modelo || '').toString().toLowerCase().trim();
+      const modeloB = (b.modelo || '').toString().toLowerCase().trim();
+      return modeloA.localeCompare(modeloB);
+    });
+
     const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
     const fin = inicio + this.itemsPorPagina;
     this.proyeccionesPaginadas = this.proyecciones.slice(inicio, fin);

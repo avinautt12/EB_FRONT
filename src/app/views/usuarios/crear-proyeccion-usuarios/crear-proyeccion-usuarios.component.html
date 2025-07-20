@@ -26,7 +26,8 @@
             <p><strong>Total de bicicletas:</strong> {{ calcularTotalBicicletas() }}</p>
             <p><strong>Compra Inicial:</strong> {{ compromisoCliente | number:'1.2-2' }}&nbsp;MXN</p>
             <p class="info-montos-quincena">
-                <span>Haz clic en "<strong>Ver montos por quincena</strong>" para conocer la cantidad de dinero proyectada en cada quincena.</span>
+                <span>Haz clic en "<strong>Ver montos por quincena</strong>" para conocer la cantidad de dinero
+                    proyectada en cada quincena.</span>
             </p>
 
             <!-- Sección de montos por quincena -->
@@ -90,10 +91,10 @@
                 <tr>
                     <th>Referencia</th>
                     <th>Clave 6 Dígitos</th>
-                    <th>EAN</th>
+                    <th class="ean" style="min-width: 70px;">EAN</th>
                     <th>Clave Odoo</th>
-                    <th>Descripción</th>
-                    <th>Modelo</th>
+                    <th class="descripcion" style="min-width: 200px;">Descripción</th>
+                    <th class="modelo" style="min-width: 120px;">Modelo</th>
                     <th>Precio ({{ nivelCliente || 'Público' }}) con IVA</th>
                     <th>Precio Público (con IVA)</th>
                     <th>1ER QUINCENA DE SEPTIEMBRE 2025</th>
@@ -174,21 +175,20 @@
                 </tr>
             </tbody>
         </table>
+    </div>
+    <div class="paginador" *ngIf="totalPaginas > 0">
+        <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1">« Primera</button>
+        <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">‹ Anterior</button>
 
-        <div class="paginador" *ngIf="totalPaginas > 0">
-            <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1">« Primera</button>
-            <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">‹ Anterior</button>
+        <span class="paginador-info">
+            Página
+            <input type="number" min="1" [max]="totalPaginas" [(ngModel)]="paginaActualTemp"
+                (keyup.enter)="cambiarPagina(paginaActualTemp)" />
+            de {{ totalPaginas }}
+        </span>
 
-            <span class="paginador-info">
-                Página
-                <input type="number" min="1" [max]="totalPaginas" [(ngModel)]="paginaActualTemp"
-                    (keyup.enter)="cambiarPagina(paginaActualTemp)" />
-                de {{ totalPaginas }}
-            </span>
-
-            <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">Siguiente
-                ›</button>
-            <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">Última »</button>
-        </div>
+        <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">Siguiente
+            ›</button>
+        <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">Última »</button>
     </div>
 </div>
