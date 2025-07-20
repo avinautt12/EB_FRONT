@@ -131,11 +131,17 @@ export class UsuariosComponent implements OnInit {
     this.paginaActual = 1; // Reset paginación al filtrar
 
     this.usuariosFiltrados = this.usuarios.filter(u => {
+      // Asegúrate de que los campos existan antes de usar .toLowerCase()
+      const nombre = u.nombre || '';
+      const correo = u.correo || '';
+      const usuarioStr = u.usuario || '';
+      const rol = u.rol || '';
+
       const coincideClave = u.id?.toString().toLowerCase().includes(this.filtros.clave.toLowerCase());
-      const coincideNombre = u.nombre.toLowerCase().includes(this.filtros.nombre.toLowerCase());
-      const coincideCorreo = u.correo.toLowerCase().includes(this.filtros.correo.toLowerCase());
-      const coincideUsuario = u.usuario.toLowerCase().includes(this.filtros.usuario.toLowerCase());
-      const coincideRol = this.filtros.rol === '' || u.rol === this.filtros.rol;
+      const coincideNombre = nombre.toLowerCase().includes(this.filtros.nombre.toLowerCase());
+      const coincideCorreo = correo.toLowerCase().includes(this.filtros.correo.toLowerCase());
+      const coincideUsuario = usuarioStr.toLowerCase().includes(this.filtros.usuario.toLowerCase());
+      const coincideRol = this.filtros.rol === '' || rol === this.filtros.rol;
 
       return coincideClave && coincideNombre && coincideCorreo && coincideUsuario && coincideRol;
     });
@@ -251,11 +257,13 @@ export class UsuariosComponent implements OnInit {
           // Actualización MANUAL de la lista
           this.usuarios.unshift({
             ...usuarioCreado,
-            rol: usuarioCreado.rol === 'Administrador'
-              ? this.ROLES.ADMIN.backendValue
-              : this.ROLES.USUARIO.backendValue,
+            nombre: usuarioCreado.nombre || '',
+            correo: usuarioCreado.correo || '',
+            usuario: usuarioCreado.usuario || '',
+            rol: usuarioCreado.rol || this.ROLES.USUARIO.backendValue,
             cliente_nombre: usuarioCreado.cliente_nombre || '',
-            cliente_id: usuarioCreado.cliente_id || undefined
+            cliente_id: usuarioCreado.cliente_id || null,
+            activo: usuarioCreado.activo !== undefined ? usuarioCreado.activo : true
           });
 
           this.filtrarUsuarios();
