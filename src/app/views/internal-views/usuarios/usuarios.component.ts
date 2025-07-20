@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
@@ -37,6 +37,7 @@ export class UsuariosComponent implements OnInit {
   private socketService = inject(SocketService);
   private alerta = inject(AlertaService);
   private clientesService = inject(ClientesService);
+  private cdr = inject(ChangeDetectorRef);
 
   readonly ROLES = {
     ADMIN: { backendValue: 'Administrador' as const, display: 'Administrador' as const },
@@ -87,31 +88,19 @@ export class UsuariosComponent implements OnInit {
   ngOnInit(): void {
     this.cargarUsuarios();
 
+    // Manejo de alertas
     this.alerta.alerta$.subscribe(({ mensaje, tipo }) => {
       this.mensajeAlerta = mensaje;
       this.tipoAlerta = tipo;
       setTimeout(() => this.mensajeAlerta = null, 4000);
     });
 
+    // Carga sugerencias de clientes
     this.clientesService.getNombresClientes().subscribe({
       next: (res: ClienteNombre[]) => {
         this.clienteSugerencias = res;
       },
-      error: () => console.error('Error al obtener los nombres de clientes')
-    });
-
-    this.socketService.on<Usuario>('usuarioActualizado', (actualizado) => {
-      const idx = this.usuarios.findIndex(u => u.id === actualizado.id);
-      if (idx !== -1) {
-        // Asegura que tenga todos los campos esperados por tu frontend
-        this.usuarios[idx] = {
-          ...actualizado,
-          rol: actualizado.rol === 'Administrador' ? this.ROLES.ADMIN.backendValue : this.ROLES.USUARIO.backendValue,
-          cliente_nombre: actualizado.cliente_nombre || '', // opcional, para que no quede vacío
-        };
-        this.filtrarUsuarios();
-        this.cargarUsuarios(); 
-      }
+      error: () => console.error('Error al obtener clientes')
     });
 
   }
@@ -194,26 +183,46 @@ export class UsuariosComponent implements OnInit {
   }
 
   editarUsuario(usuario: Usuario): void {
-    this.nuevoUsuario = {
-      ...usuario,
-      contrasena: '' // No mostrar la contraseña
-    };
+    this.nuevoUsuario = { ...usuario };
+    this.mostrarFormularioEdicion = true;
 
-    if (usuario.cliente_nombre) {
+    if (usuario.cliente_id) {
       this.asociarCliente = true;
-      this.clienteBusqueda = usuario.cliente_nombre; // Mostrar directamente en el input
-      this.clienteSeleccionadoId = usuario.cliente_id || null; // Si tienes el id
+      this.clienteSeleccionadoId = usuario.cliente_id;
+
+      // Opción 1: Si el usuario ya trae el nombre del cliente
+      if (usuario.cliente_nombre) {
+        this.clienteBusqueda = usuario.cliente_nombre;
+      }
+      // Opción 2: Buscar en clienteSugerencias
+      else {
+        const clienteEncontrado = this.buscarClientePorId(usuario.cliente_id);
+        if (clienteEncontrado) {
+          this.clienteBusqueda = `${clienteEncontrado.nombre_cliente}`;
+        } else {
+          this.clienteBusqueda = `Cliente ID: ${usuario.cliente_id}`;
+        }
+      }
     } else {
       this.asociarCliente = false;
-      this.clienteBusqueda = '';
       this.clienteSeleccionadoId = null;
+      this.clienteBusqueda = '';
     }
-
-    this.mostrarFormularioEdicion = true;
-    this.mostrarFormularioRegistroVisible = false;
   }
 
-
+  // Método auxiliar para buscar cliente por ID
+  buscarClientePorId(clienteId: number): ClienteNombre | undefined {
+    // Intenta encontrar el cliente cuyo ID está en la clave (ej: "CLI-123")
+    return this.clienteSugerencias.find(c => {
+      try {
+        const partes = c.clave.split('-');
+        const idDeClave = parseInt(partes[partes.length - 1]);
+        return idDeClave === clienteId;
+      } catch {
+        return false;
+      }
+    });
+  }
 
   volverALista(): void {
     this.mostrarFormularioRegistroVisible = false;
@@ -230,7 +239,7 @@ export class UsuariosComponent implements OnInit {
         nombre: this.nuevoUsuario.nombre,
         correo: this.nuevoUsuario.correo,
         rol: this.nuevoUsuario.rol,
-        activo: this.nuevoUsuario.activo
+        activo: true
       };
 
       if (this.asociarCliente && this.clienteSeleccionadoId) {
@@ -239,19 +248,25 @@ export class UsuariosComponent implements OnInit {
 
       this.usuariosService.crearUsuario(usuarioParaCrear).subscribe({
         next: (usuarioCreado) => {
-          this.usuarios.push(usuarioCreado);
+          // Actualización MANUAL de la lista
+          this.usuarios.unshift({
+            ...usuarioCreado,
+            rol: usuarioCreado.rol === 'Administrador'
+              ? this.ROLES.ADMIN.backendValue
+              : this.ROLES.USUARIO.backendValue,
+            cliente_nombre: usuarioCreado.cliente_nombre || '',
+            cliente_id: usuarioCreado.cliente_id || undefined
+          });
+
           this.filtrarUsuarios();
           this.alerta.mostrarExito('✅ Usuario creado con éxito');
           this.volverALista();
           this.cargandoUsuarios = false;
+          this.cdr.detectChanges(); // Forzar actualización de vista
         },
         error: (error) => {
           console.error('Error al crear usuario:', error);
-          if (error.status === 400 && error.error?.error) {
-            this.alerta.mostrarError(error.error.error);
-          } else {
-            this.alerta.mostrarError('Ocurrió un error inesperado.');
-          }
+          this.alerta.mostrarError(error.error?.error || 'Error al crear usuario');
           this.cargandoUsuarios = false;
         }
       });
@@ -283,7 +298,7 @@ export class UsuariosComponent implements OnInit {
       if (this.asociarCliente && this.clienteSeleccionadoId) {
         datosActualizacion.cliente_id = this.clienteSeleccionadoId;
       } else {
-        datosActualizacion.cliente_id = null; // ❗ Para eliminarlo si no hay checkbox marcado
+        datosActualizacion.cliente_id = null;
       }
 
       this.usuariosService.actualizarUsuario(this.nuevoUsuario.id, datosActualizacion).subscribe({
@@ -359,24 +374,20 @@ export class UsuariosComponent implements OnInit {
   }
 
   eliminarUsuario(): void {
-    if (this.usuarioAEliminar && this.usuarioAEliminar.id) {
+    if (this.usuarioAEliminar?.id) {
       this.cargandoUsuarios = true;
       this.usuariosService.eliminarUsuario(this.usuarioAEliminar.id).subscribe({
         next: () => {
+          // Actualización MANUAL
           this.usuarios = this.usuarios.filter(u => u.id !== this.usuarioAEliminar?.id);
           this.filtrarUsuarios();
+          this.alerta.mostrarExito('✅ Usuario eliminado');
           this.mostrarConfirmacion = false;
-          this.usuarioAEliminar = null;
           this.cargandoUsuarios = false;
-
-          if (this.paginaActual > 1 && this.usuariosPaginados().length === 0) {
-            this.paginaActual--;
-          }
-          this.alerta.mostrarExito('✅ Usuario eliminado con éxito');
         },
         error: (error) => {
-          console.error('Error al eliminar usuario:', error);
-          this.alerta.mostrarError(error.error?.error || 'Error al eliminar usuario');
+          console.error('Error al eliminar:', error);
+          this.alerta.mostrarError('Error al eliminar usuario');
           this.cargandoUsuarios = false;
         }
       });
