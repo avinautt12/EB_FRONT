@@ -97,8 +97,11 @@
         <table class="tabla-previo">
             <thead>
                 <tr>
+                    <th>Clave 6 Dígitos</th>
+                    <th class="ean" style="min-width: 70px;">EAN</th>
+                    <th class="clave_odoo" style="min-width: 180px;">Clave Odoo</th>
                     <th>
-                        <div class="sortable-header-reference">
+                        <div class="sortable-header">
                             Referencia
                             <div class="sort-dropdown" [class.show]="showRefFilter">
                                 <button class="sort-btn" (click)="toggleRefFilter($event)">
@@ -132,9 +135,6 @@
                             </div>
                         </div>
                     </th>
-                    <th>Clave 6 Dígitos</th>
-                    <th class="ean" style="min-width: 70px;">EAN</th>
-                    <th>Clave Odoo</th>
                     <th class="descripcion" style="min-width: 200px;">
                         <div class="sortable-header">
                             Descripción
@@ -213,10 +213,10 @@
                     </td>
                 </tr>
                 <tr *ngFor="let item of proyeccionesPaginadas">
-                    <td>{{ item.referencia }}</td>
                     <td>{{ item.clave_6_digitos }}</td>
                     <td>{{ item.ean }}</td>
                     <td>{{ item.clave_odoo }}</td>
+                    <td>{{ item.referencia }}</td>
                     <td>{{ item.descripcion }}</td>
                     <td>{{ item.modelo }}</td>
                     <td>{{ getPrecioCliente(item) | currency }}</td>

@@ -601,36 +601,14 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
   }
 
   // Métodos para el filtro de Referencia
-  toggleRefFilter(event: MouseEvent): void {
-    event.stopPropagation();
+  toggleRefFilter(event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation(); // Esto evita que el evento llegue al HostListener
+    }
     this.showRefFilter = !this.showRefFilter;
-
-    // Manejar clases para el body en móviles
-    if (window.innerWidth <= 768) {
-      if (this.showRefFilter) {
-        document.body.classList.add('filter-open');
-        setTimeout(() => {
-          this.positionMobileFilter();
-        }, 10);
-      } else {
-        document.body.classList.remove('filter-open');
-      }
+    if (this.showRefFilter && this.refOptions.length === 0) {
+      this.initializeRefOptions();
     }
-  }
-
-  private positionMobileFilter(): void {
-    const filterOptions = document.querySelector('.filter-options') as HTMLElement;
-    if (filterOptions) {
-      // Asegura que el filtro esté centrado
-      filterOptions.style.top = '50%';
-      filterOptions.style.left = '50%';
-      filterOptions.style.transform = 'translate(-50%, -50%)';
-    }
-  }
-
-  // Limpiar al destruir el componente
-  ngOnDestroy() {
-    document.body.classList.remove('filter-open');
   }
 
   initializeRefOptions(): void {
@@ -653,23 +631,23 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
     );
   }
 
-  applyRefFilter(event?: MouseEvent): void {
-    if (event) event.stopPropagation();
-    this.selectedRefs = this.refOptions
-      .filter(option => option.selected)
-      .map(option => option.value);
-    this.applyFilters();
-    // No cerrar automáticamente
-  }
+ applyRefFilter(event?: MouseEvent): void {
+  if (event) event.stopPropagation();
+  this.selectedRefs = this.refOptions
+    .filter(option => option.selected)
+    .map(option => option.value);
+  this.applyFilters();
+  // No cerrar automáticamente
+}
 
-  clearRefFilter(event?: MouseEvent): void {
-    if (event) event.stopPropagation();
-    this.refOptions.forEach(option => option.selected = false);
-    this.selectedRefs = [];
-    this.referenciaFilterCount = 0;
-    this.applyFilters();
-    // No cerrar automáticamente
-  }
+clearRefFilter(event?: MouseEvent): void {
+  if (event) event.stopPropagation();
+  this.refOptions.forEach(option => option.selected = false);
+  this.selectedRefs = [];
+  this.referenciaFilterCount = 0;
+  this.applyFilters();
+  // No cerrar automáticamente
+}
 
   toggleModeloFilter(event?: MouseEvent): void {
     if (event) {
