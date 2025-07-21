@@ -104,7 +104,7 @@
                         <div class="sortable-header">
                             Referencia
                             <div class="sort-dropdown" [class.show]="showRefFilter">
-                                <button class="sort-btn" (click)="toggleRefFilter($event)">
+                                <button class="sort-btn" (click)="toggleRefFilter($event); showModeloFilter = false;">
                                     <i class="fas fa-filter"></i>
                                     <span class="current-sort">
                                         {{referenciaFilterCount > 0 ? referenciaFilterCount + ' seleccionadas' :
@@ -163,7 +163,7 @@
                         <div class="sortable-header">
                             Modelo
                             <div class="sort-dropdown" [class.show]="showModeloFilter">
-                                <button class="sort-btn" (click)="toggleModeloFilter($event)">
+                                <button class="sort-btn" (click)="toggleModeloFilter($event); showRefFilter = false;">
                                     <i class="fas fa-filter"></i>
                                     <span class="current-sort">
                                         {{modeloFilterCount > 0 ? modeloFilterCount + ' seleccionados' : 'Filtrar'}}

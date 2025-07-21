@@ -710,7 +710,7 @@ input[type="number"]:disabled {
     text-align: left;
     padding: 10px 16px;
     border: none;
-    background: none;
+    background-color: #f8f9fa;
     cursor: pointer;
     color: #212529;
     font-size: 14px;
@@ -773,12 +773,12 @@ input[type="number"]:disabled {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Estilos base para filtros */
 .filter-options {
     min-width: 280px;
     max-width: 300px;
     max-height: 400px;
     min-height: 250px;
-    /* Altura mínima fija */
     overflow-y: auto;
     padding: 0;
     background-color: white;
@@ -793,7 +793,7 @@ input[type="number"]:disabled {
 }
 
 .filter-search {
-    padding: 10px;
+    padding: 12px;
     background: #f8f9fa;
     border-bottom: 1px solid #dee2e6;
     position: sticky;
@@ -803,24 +803,20 @@ input[type="number"]:disabled {
 
 .filter-search input {
     width: 100%;
-    padding: 6px 12px;
+    padding: 8px 12px;
     border: 1px solid #ced4da;
     border-radius: 4px;
-    color: #495057;
-    /* Color de texto para el input */
+    font-size: 14px;
 }
 
 .filter-items-container {
-    padding: 5px 0;
+    padding: 8px 0;
     min-height: 120px;
-    /* Altura mínima para el área de items */
 }
 
 .filter-item {
-    padding: 8px 16px;
+    padding: 10px 16px;
     transition: all 0.2s ease;
-    color: #212529;
-    /* Color de texto oscuro */
 }
 
 .filter-item:hover {
@@ -830,25 +826,25 @@ input[type="number"]:disabled {
 .filter-item label {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     cursor: pointer;
     width: 100%;
-    color: inherit;
-    /* Hereda el color del padre */
+    font-size: 14px;
 }
 
 .filter-item input[type="checkbox"] {
     margin: 0;
+    width: 16px;
+    height: 16px;
     accent-color: #0d6efd;
-    /* Color azul para los checkboxes */
+    cursor: pointer;
 }
 
 .filter-actions {
     display: flex;
     justify-content: space-between;
-    gap: 8px;
-    /* Espacio entre botones reducido */
-    padding: 8px 8px;
+    gap: 10px;
+    padding: 12px;
     border-top: 1px solid #e0e0e0;
     background: #f8f9fa;
     position: sticky;
@@ -857,8 +853,7 @@ input[type="number"]:disabled {
 
 .filter-actions button {
     flex: 1;
-    /* Hace que todos los botones ocupen el mismo espacio */
-    padding: 6px 5px;
+    padding: 6px 8px;
     border-radius: 5px;
     border: 1px solid transparent;
     font-weight: 500;
@@ -868,7 +863,6 @@ input[type="number"]:disabled {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* Botón Limpiar */
@@ -880,7 +874,6 @@ input[type="number"]:disabled {
 
 .filter-actions button:first-child:hover {
     background-color: #f8d7da;
-    border-color: #dc3545;
 }
 
 /* Botón Aplicar */
@@ -904,126 +897,44 @@ input[type="number"]:disabled {
 
 .filter-actions button:last-child:hover {
     background-color: #f8f9fa;
-    border-color: #d3d9df;
 }
 
-/* Efecto para todos los botones al hacer click */
-.filter-actions button:active {
-    transform: translateY(1px);
-    box-shadow: none;
-}
-
-/* Estilo para las opciones seleccionadas */
-.filter-item input[type="checkbox"]:checked+span {
-    font-weight: 500;
-    color: #0d6efd;
-}
-
-/* Contenedor principal del filtro */
-.sortable-header-reference {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-left: 75px;
-    /* Desplazamiento en desktop */
+/* Contenedores principales */
+.sortable-header-reference,
+.sortable-header {
     position: relative;
-    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    z-index: 100;
 }
 
-/* Dropdown del filtro */
-.sortable-header-reference .filter-options {
-    min-width: 280px;
-    max-width: 300px;
-    right: 0;
-    left: auto;
+.sort-dropdown {
+    position: relative;
+    display: inline-block;
 }
 
 /* Versión móvil */
 @media (max-width: 768px) {
-    .sortable-header-reference {
-        margin-left: 0;
-        justify-content: flex-end;
-        padding-right: 10px;
-    }
-
-    .sortable-header-reference .filter-options {
-        position: fixed;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        width: 90%;
-        max-width: 400px;
-        max-height: 80vh;
-        z-index: 1050;
-    }
-
-    /* Fondo oscuro para mejor contraste en móviles */
-    .filter-backdrop {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 1040;
-    }
-}
-
-/* Tablet landscape */
-@media (max-width: 992px) and (min-width: 769px) {
-    .sortable-header-reference {
-        margin-left: 30px;
-    }
-
-    .sortable-header-reference .filter-options {
-        min-width: 250px;
-    }
-}
-
-/* Ajustes para pantallas muy grandes */
-@media (min-width: 1600px) {
-    .sortable-header-reference {
-        margin-left: 100px;
-    }
-}
-
-/* Añade esto al final de tu CSS */
-@media (max-width: 768px) {
-
-    /* Contenedor principal del filtro en móviles */
-    .sortable-header-reference {
-        position: static;
-        /* Cambia a static para mejor comportamiento */
-        margin-left: 0;
-        width: 100%;
-        justify-content: flex-start;
-        padding: 0 10px;
-    }
-
-    /* Dropdown del filtro en móviles */
-    .sortable-header-reference .filter-options {
-        position: fixed;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%) scale(0.95);
-        width: 90%;
+    .filter-options {
+        position: fixed !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) scale(0.95) !important;
+        width: 90vw;
         max-width: 400px;
         max-height: 70vh;
         min-height: 250px;
         opacity: 0;
         visibility: hidden;
         transition: all 0.3s ease;
-        z-index: 1050;
-        margin: 0;
     }
 
-    .sortable-header-reference .filter-options.show {
+    .filter-options.show {
         opacity: 1;
         visibility: visible;
-        transform: translate(-50%, -50%) scale(1);
+        transform: translate(-50%, -50%) scale(1) !important;
     }
 
-    /* Fondo oscuro para móviles */
     .filter-backdrop {
         position: fixed;
         top: 0;
@@ -1042,17 +953,18 @@ input[type="number"]:disabled {
         visibility: visible;
     }
 
-    /* Mejoras para elementos táctiles */
+    body.filter-modal-open {
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+    }
+
+    /* Mejoras para touch */
     .filter-item {
         padding: 12px 16px;
     }
 
     .filter-item label {
-        font-size: 16px;
-    }
-
-    .filter-search input {
-        padding: 10px 12px;
         font-size: 16px;
     }
 
@@ -1062,10 +974,27 @@ input[type="number"]:disabled {
     }
 }
 
-/* Asegura que el body no se desplace cuando el filtro está abierto */
-body.filter-modal-open {
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
+/* Estilos para el botón que activa el filtro */
+.sort-btn {
+    background-color: #f8f9fa;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.sort-btn:hover {
+    background-color: #f8f9fa;
+}
+
+.current-sort {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
 }
 
