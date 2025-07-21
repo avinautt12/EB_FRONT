@@ -79,6 +79,21 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
   showSortDropdown: boolean = false;
   currentSortDirection: 'asc' | 'desc' = 'asc';
 
+  showRefFilter = false;
+  refOptions: { value: string, selected: boolean }[] = [];
+  filteredRefOptions: { value: string, selected: boolean }[] = [];
+  refSearchTerm = '';
+  selectedRefs: string[] = [];
+  referenciaFilterCount = 0;
+
+  // Propiedades para el filtro de Modelo
+  showModeloFilter = false;
+  modeloOptions: { value: string, selected: boolean }[] = [];
+  filteredModeloOptions: { value: string, selected: boolean }[] = [];
+  modeloSearchTerm = '';
+  selectedModelos: string[] = [];
+  modeloFilterCount = 0;
+
   constructor(
     private proyeccionService: ProyeccionService,
     private authService: AuthService,
@@ -132,6 +147,9 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
         q2_dic_2025: item.disp_q2_dic_2025 !== undefined ? Boolean(item.disp_q2_dic_2025) : true
       }
     }));
+
+    this.initializeRefOptions();
+    this.initializeModeloOptions();
 
     // Ordenar inicialmente por descripción normalizada
     return proyeccionesMapeadas.sort((a, b) => {
@@ -213,9 +231,25 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
   }
 
   actualizarPaginado(): void {
+    let filteredData = [...this.proyecciones];
+
+    // Aplicar filtros si existen
+    if (this.selectedRefs.length > 0) {
+      filteredData = filteredData.filter(p =>
+        this.selectedRefs.includes(p.referencia)
+      );
+    }
+
+    if (this.selectedModelos.length > 0) {
+      filteredData = filteredData.filter(p =>
+        this.selectedModelos.includes(p.modelo)
+      );
+    }
+
     const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
     const fin = inicio + this.itemsPorPagina;
-    this.proyeccionesPaginadas = this.proyecciones.slice(inicio, fin);
+    this.proyeccionesPaginadas = filteredData.slice(inicio, fin);
+    this.totalPaginas = Math.ceil(filteredData.length / this.itemsPorPagina);
   }
 
   private normalizarParaOrden(descripcion: string): string {
@@ -548,13 +582,159 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
     this.actualizarPaginado();
   }
 
-  // Cerrar el dropdown al hacer clic fuera de él
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    if (!target.closest('.sort-dropdown')) {
+
+    // Verificar si el click fue en cualquier elemento que no sea parte del filtro
+    const isFilterElement = target.closest('.sort-dropdown') ||
+      target.closest('.filter-options') ||
+      target.closest('.filter-item') ||
+      target.closest('.filter-search') ||
+      target.closest('.filter-actions');
+
+    if (!isFilterElement) {
       this.showSortDropdown = false;
+      this.showRefFilter = false;
+      this.showModeloFilter = false;
     }
   }
 
+  // Métodos para el filtro de Referencia
+  toggleRefFilter(event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation(); // Esto evita que el evento llegue al HostListener
+    }
+    this.showRefFilter = !this.showRefFilter;
+    if (this.showRefFilter && this.refOptions.length === 0) {
+      this.initializeRefOptions();
+    }
+  }
+
+  initializeRefOptions(): void {
+    const uniqueRefs = [...new Set(this.proyecciones.map(p => p.referencia))];
+    this.refOptions = uniqueRefs.map(ref => ({
+      value: ref,
+      selected: this.selectedRefs.includes(ref)
+    }));
+    this.filteredRefOptions = [...this.refOptions];
+  }
+
+  filterRefOptions(): void {
+    if (!this.refSearchTerm) {
+      this.filteredRefOptions = [...this.refOptions];
+      return;
+    }
+    const term = this.refSearchTerm.toLowerCase();
+    this.filteredRefOptions = this.refOptions.filter(option =>
+      option.value.toLowerCase().includes(term)
+    );
+  }
+
+ applyRefFilter(event?: MouseEvent): void {
+  if (event) event.stopPropagation();
+  this.selectedRefs = this.refOptions
+    .filter(option => option.selected)
+    .map(option => option.value);
+  this.applyFilters();
+  // No cerrar automáticamente
+}
+
+clearRefFilter(event?: MouseEvent): void {
+  if (event) event.stopPropagation();
+  this.refOptions.forEach(option => option.selected = false);
+  this.selectedRefs = [];
+  this.referenciaFilterCount = 0;
+  this.applyFilters();
+  // No cerrar automáticamente
+}
+
+  toggleModeloFilter(event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.showModeloFilter = !this.showModeloFilter;
+    if (this.showModeloFilter && this.modeloOptions.length === 0) {
+      this.initializeModeloOptions();
+    }
+  }
+
+  initializeModeloOptions(): void {
+    const uniqueModelos = [...new Set(this.proyecciones.map(p => p.modelo))];
+    this.modeloOptions = uniqueModelos.map(modelo => ({
+      value: modelo,
+      selected: this.selectedModelos.includes(modelo)
+    }));
+    this.filteredModeloOptions = [...this.modeloOptions];
+  }
+
+  filterModeloOptions(): void {
+    if (!this.modeloSearchTerm) {
+      this.filteredModeloOptions = [...this.modeloOptions];
+      return;
+    }
+    const term = this.modeloSearchTerm.toLowerCase();
+    this.filteredModeloOptions = this.modeloOptions.filter(option =>
+      option.value.toLowerCase().includes(term)
+    );
+  }
+
+  applyModeloFilter(event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    this.selectedModelos = this.modeloOptions
+      .filter(option => option.selected)
+      .map(option => option.value);
+    this.modeloFilterCount = this.selectedModelos.length;
+    this.applyFilters();
+    // No cerrar automáticamente
+  }
+
+  clearModeloFilter(event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    this.modeloOptions.forEach(option => option.selected = false);
+    this.selectedModelos = [];
+    this.modeloFilterCount = 0;
+    this.applyFilters();
+    // No cerrar automáticamente
+  }
+
+  applyFilters(): void {
+    let filteredData = [...this.proyecciones];
+
+    // Aplicar filtro de referencia
+    if (this.selectedRefs.length > 0) {
+      filteredData = filteredData.filter(p =>
+        this.selectedRefs.includes(p.referencia)
+      );
+    }
+
+    // Aplicar filtro de modelo
+    if (this.selectedModelos.length > 0) {
+      filteredData = filteredData.filter(p =>
+        this.selectedModelos.includes(p.modelo)
+      );
+    }
+
+    // Actualizar datos paginados
+    this.proyeccionesPaginadas = filteredData.slice(
+      (this.paginaActual - 1) * this.itemsPorPagina,
+      this.paginaActual * this.itemsPorPagina
+    );
+
+    // Recalcular total de páginas
+    this.totalPaginas = Math.ceil(filteredData.length / this.itemsPorPagina);
+  }
+
+  actualizarPaginadoConFiltros(filteredData: Proyeccion[]): void {
+    const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
+    const fin = inicio + this.itemsPorPagina;
+    this.proyeccionesPaginadas = filteredData.slice(inicio, fin);
+    this.totalPaginas = Math.ceil(filteredData.length / this.itemsPorPagina);
+  }
+
+  onCheckboxChange(): void {
+    // Solo actualiza los contadores pero no cierra el dropdown
+    this.referenciaFilterCount = this.refOptions.filter(o => o.selected).length;
+    this.modeloFilterCount = this.modeloOptions.filter(o => o.selected).length;
+  }
 }

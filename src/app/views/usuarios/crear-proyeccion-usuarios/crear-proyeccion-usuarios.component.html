@@ -10,7 +10,8 @@
 
             <div *ngIf="nivelCliente">
                 <p><strong>Tu nivel de distribuidor:</strong> {{ nivelCliente }}</p>
-                <p><strong>Compra Inicial:</strong> {{ compromisoCliente | number:'1.2-2' }}&nbsp;MXN</p>
+                <p><strong>Compra Inicial (Bimestre 2 y 3):</strong> {{ compromisoCliente | number:'1.2-2' }}&nbsp;MXN
+                </p>
             </div>
 
             <p>
@@ -20,7 +21,10 @@
             </p>
             <br>
             <p>
-                Puede utilizar la columna <strong>Descripción</strong> para ordenar los productos de forma ascendente o descendente, según su preferencia.
+                Puede utilizar la columna <strong>Descripción</strong> para ordenar los productos de forma ascendente o
+                descendente, según su preferencia.<br>
+                Además, puede aplicar filtros en las columnas <strong>Referencia</strong> y <strong>Modelo</strong> para
+                mostrar solo los productos que le interesen.
             </p>
         </div>
 
@@ -28,7 +32,7 @@
             <h4>Resumen de tu Proyección</h4>
             <p><strong>Total proyectado:</strong> {{ calcularTotalProyeccion() | number:'1.2-2' }}&nbsp;MXN</p>
             <p><strong>Total de bicicletas:</strong> {{ calcularTotalBicicletas() }}</p>
-            <p><strong>Compra Inicial:</strong> {{ compromisoCliente | number:'1.2-2' }}&nbsp;MXN</p>
+            <p><strong>Compra Inicial (Bimestre 2 y 3):</strong> {{ compromisoCliente | number:'1.2-2' }}&nbsp;MXN</p>
             <p class="info-montos-quincena">
                 <span>Haz clic en "<strong>Ver montos por quincena</strong>" para conocer la cantidad de dinero
                     proyectada en cada quincena.</span>
@@ -93,7 +97,41 @@
         <table class="tabla-previo">
             <thead>
                 <tr>
-                    <th>Referencia</th>
+                    <th>
+                        <div class="sortable-header-reference">
+                            Referencia
+                            <div class="sort-dropdown" [class.show]="showRefFilter">
+                                <button class="sort-btn" (click)="toggleRefFilter($event)">
+                                    <i class="fas fa-filter"></i>
+                                    <span class="current-sort">
+                                        {{referenciaFilterCount > 0 ? referenciaFilterCount + ' seleccionadas' :
+                                        'Filtrar'}}
+                                        <i class="fas fa-chevron-down"></i>
+                                    </span>
+                                </button>
+                                <div class="sort-options filter-options">
+                                    <div class="filter-search">
+                                        <input type="text" [(ngModel)]="refSearchTerm"
+                                            placeholder="Buscar referencias..." (input)="filterRefOptions()">
+                                    </div>
+                                    <div class="filter-items-container">
+                                        <div *ngFor="let option of filteredRefOptions" class="filter-item">
+                                            <label>
+                                                <input type="checkbox" [(ngModel)]="option.selected"
+                                                    (click)="$event.stopPropagation()" (change)="onCheckboxChange()">
+                                                {{option.value}}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="filter-actions">
+                                        <button (click)="clearRefFilter()">Limpiar</button>
+                                        <button (click)="applyRefFilter()">Aplicar</button>
+                                        <button (click)="showRefFilter = false; $event.stopPropagation()">Cerrar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </th>
                     <th>Clave 6 Dígitos</th>
                     <th class="ean" style="min-width: 70px;">EAN</th>
                     <th>Clave Odoo</th>
@@ -121,7 +159,41 @@
                             </div>
                         </div>
                     </th>
-                    <th class="modelo" style="min-width: 120px;">Modelo</th>
+                    <th class="modelo" style="min-width: 120px;">
+                        <div class="sortable-header">
+                            Modelo
+                            <div class="sort-dropdown" [class.show]="showModeloFilter">
+                                <button class="sort-btn" (click)="toggleModeloFilter($event)">
+                                    <i class="fas fa-filter"></i>
+                                    <span class="current-sort">
+                                        {{modeloFilterCount > 0 ? modeloFilterCount + ' seleccionados' : 'Filtrar'}}
+                                        <i class="fas fa-chevron-down"></i>
+                                    </span>
+                                </button>
+                                <div class="sort-options filter-options">
+                                    <div class="filter-search">
+                                        <input type="text" [(ngModel)]="modeloSearchTerm"
+                                            placeholder="Buscar modelos..." (input)="filterModeloOptions()">
+                                    </div>
+                                    <div class="filter-items-container">
+                                        <div *ngFor="let option of filteredModeloOptions" class="filter-item">
+                                            <label>
+                                                <input type="checkbox" [(ngModel)]="option.selected"
+                                                    (click)="$event.stopPropagation()"
+                                                    (change)="onCheckboxChange()">
+                                                {{option.value}}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="filter-actions">
+                                        <button (click)="clearModeloFilter()">Limpiar</button>
+                                        <button (click)="applyModeloFilter()">Aplicar</button>
+                                        <button (click)="showModeloFilter = false; $event.stopPropagation()">Cerrar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </th>
                     <th>Precio ({{ nivelCliente || 'Público' }}) con IVA</th>
                     <th>Precio Público (con IVA)</th>
                     <th>1ER QUINCENA DE SEPTIEMBRE 2025</th>
