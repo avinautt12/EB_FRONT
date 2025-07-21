@@ -18,6 +18,10 @@
                 El sistema calculará automáticamente el monto total correspondiente,
                 considerando el precio asignado según tu nivel de distribuidor.
             </p>
+            <br>
+            <p>
+                Puede utilizar la columna <strong>Descripción</strong> para ordenar los productos de forma ascendente o descendente, según su preferencia.
+            </p>
         </div>
 
         <div class="resumen-compromiso" *ngIf="nivelCliente && compromisoCliente">
@@ -93,7 +97,30 @@
                     <th>Clave 6 Dígitos</th>
                     <th class="ean" style="min-width: 70px;">EAN</th>
                     <th>Clave Odoo</th>
-                    <th class="descripcion" style="min-width: 200px;">Descripción</th>
+                    <th class="descripcion" style="min-width: 200px;">
+                        <div class="sortable-header">
+                            Descripción
+                            <div class="sort-dropdown" [class.show]="showSortDropdown">
+                                <button class="sort-btn" (click)="toggleSortDropdown()">
+                                    <i class="fas fa-sort"></i>
+                                    <span class="current-sort">
+                                        {{currentSortDirection === 'asc' ? 'A-Z' : 'Z-A'}}
+                                        <i class="fas fa-chevron-down"></i>
+                                    </span>
+                                </button>
+                                <div class="sort-options">
+                                    <button (click)="sortByDescription('asc')"
+                                        [class.active]="currentSortDirection === 'asc'">
+                                        <i class="fas fa-sort-alpha-down"></i> A-Z (Ascendente)
+                                    </button>
+                                    <button (click)="sortByDescription('desc')"
+                                        [class.active]="currentSortDirection === 'desc'">
+                                        <i class="fas fa-sort-alpha-up"></i> Z-A (Descendente)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </th>
                     <th class="modelo" style="min-width: 120px;">Modelo</th>
                     <th>Precio ({{ nivelCliente || 'Público' }}) con IVA</th>
                     <th>Precio Público (con IVA)</th>

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProyeccionService } from '../../../services/proyeccion.service';
@@ -76,6 +76,9 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
 
   mostrarModal: boolean = false;
 
+  showSortDropdown: boolean = false;
+  currentSortDirection: 'asc' | 'desc' = 'asc';
+
   constructor(
     private proyeccionService: ProyeccionService,
     private authService: AuthService,
@@ -130,19 +133,33 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
       }
     }));
 
-    // Luego ordenamos por modelo
+    // Ordenar inicialmente por descripción normalizada
     return proyeccionesMapeadas.sort((a, b) => {
-      // Manejo de casos donde modelo podría ser null/undefined
-      const modeloA = (a.modelo || '').toString().toLowerCase().trim();
-      const modeloB = (b.modelo || '').toString().toLowerCase().trim();
+      const claveA = this.normalizarParaOrden(a.descripcion);
+      const claveB = this.normalizarParaOrden(b.descripcion);
 
-      // Ordenamos primero por si alguno está vacío
-      if (!modeloA && !modeloB) return 0;
-      if (!modeloA) return 1;
-      if (!modeloB) return -1;
+      // Comparar modelo base
+      const modeloA = claveA.split('_')[0];
+      const modeloB = claveB.split('_')[0];
+      const comparisonModelo = modeloA.localeCompare(modeloB);
+      if (comparisonModelo !== 0) return comparisonModelo;
 
-      // Orden alfabético normal
-      return modeloA.localeCompare(modeloB);
+      // Comparar versión numérica
+      const versionA = claveA.split('_')[1];
+      const versionB = claveB.split('_')[1];
+      const comparisonVersion = versionA.localeCompare(versionB);
+      if (comparisonVersion !== 0) return comparisonVersion;
+
+      // Comparar año (MY26)
+      const añoA = claveA.split('_')[2];
+      const añoB = claveB.split('_')[2];
+      const comparisonAño = añoA.localeCompare(añoB);
+      if (comparisonAño !== 0) return comparisonAño;
+
+      // Comparar variante
+      const varianteA = claveA.split('_')[3];
+      const varianteB = claveB.split('_')[3];
+      return varianteA.localeCompare(varianteB);
     });
   }
 
@@ -196,16 +213,64 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
   }
 
   actualizarPaginado(): void {
-    // Asegurarnos de que las proyecciones están ordenadas
-    this.proyecciones = [...this.proyecciones].sort((a, b) => {
-      const modeloA = (a.modelo || '').toString().toLowerCase().trim();
-      const modeloB = (b.modelo || '').toString().toLowerCase().trim();
-      return modeloA.localeCompare(modeloB);
-    });
-
     const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
     const fin = inicio + this.itemsPorPagina;
     this.proyeccionesPaginadas = this.proyecciones.slice(inicio, fin);
+  }
+
+  private normalizarParaOrden(descripcion: string): string {
+    if (!descripcion) return '';
+
+    // Extraer modelo base (SCALE, SPARK, ADDICT, etc.)
+    const modelosBase = [
+      'SCALE', 'CONTESSA SCALE', 'SPARK RC', 'SPARK', 'GENIUS', 'SPEEDSTER GRAVEL', 'SPEEDSTER',
+      'PATRON ERIDE', 'CONTESSA PATRON ERIDE', 'STRIKE ERIDE', 'CONTESSA STRIKE ERIDE',
+      'CONTESSA ACTIVE', 'ADDICT', 'ADDICT RC', 'ADDICT GRAVEL', 'RANSOM', 'VOLTAGE ERIDE',
+      'CONTRAIL', 'FOIL RC', 'RC TEAM ISSUE', 'WORLD CUP', 'RC TEAM', 'LUMEN', 'ROXTER'
+    ];
+
+    let modeloBase = '';
+    let version = '';
+
+    // Buscar el modelo base más largo que coincida
+    for (const modelo of modelosBase.sort((a, b) => b.length - a.length)) {
+      if (descripcion.toUpperCase().includes(modelo.toUpperCase())) {
+        modeloBase = modelo.toUpperCase();
+
+        // Extraer versión (número después del modelo base)
+        const versionMatch = descripcion.match(new RegExp(`${modelo}\\s*(\\d+)`, 'i'));
+        if (versionMatch) {
+          version = versionMatch[1].padStart(3, '0'); // Rellenar con ceros para orden correcto
+        }
+        break;
+      }
+    }
+
+    // Si no encontramos modelo base, usar las primeras palabras
+    if (!modeloBase) {
+      const palabras = descripcion.split(' ');
+      modeloBase = palabras.slice(0, 2).join(' ').toUpperCase();
+    }
+
+    // Extraer año (MY26) si existe
+    let año = '';
+    const añoMatch = descripcion.match(/(MY\d{2})/i);
+    if (añoMatch) {
+      año = añoMatch[1].toUpperCase();
+    }
+
+    // Extraer variante (COMP, TEAM, etc.) si existe
+    let variante = '';
+    const variantes = ['COMP', 'TEAM', 'TEAM ISSUE', 'TUNED', 'EQ'];
+    for (const v of variantes) {
+      if (descripcion.toUpperCase().includes(v)) {
+        variante = v;
+        break;
+      }
+    }
+
+    // Crear clave de ordenamiento: modeloBase + version + año + variante
+    return `${modeloBase}_${version}_${año}_${variante}`;
   }
 
   cambiarPagina(pagina: number): void {
@@ -425,6 +490,71 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
       (item.q1_dic_2025 && item.q1_dic_2025 > 0) ||
       (item.q2_dic_2025 && item.q2_dic_2025 > 0)
     );
+  }
+
+  // Agregar estos métodos a la clase
+  toggleSortDropdown(): void {
+    this.showSortDropdown = !this.showSortDropdown;
+  }
+
+  sortByDescription(direction: 'asc' | 'desc'): void {
+    this.currentSortDirection = direction;
+    this.showSortDropdown = false;
+
+    // Resetear a la primera página al ordenar
+    this.paginaActual = 1;
+    this.paginaActualTemp = 1;
+
+    // Hacer una copia del array para ordenar
+    const proyeccionesOrdenadas = [...this.proyecciones];
+
+    proyeccionesOrdenadas.sort((a, b) => {
+      const claveA = this.normalizarParaOrden(a.descripcion);
+      const claveB = this.normalizarParaOrden(b.descripcion);
+
+      // Comparar modelo base
+      const modeloA = claveA.split('_')[0];
+      const modeloB = claveB.split('_')[0];
+      const comparisonModelo = modeloA.localeCompare(modeloB);
+      if (comparisonModelo !== 0) {
+        return direction === 'asc' ? comparisonModelo : -comparisonModelo;
+      }
+
+      // Comparar versión numérica
+      const versionA = claveA.split('_')[1];
+      const versionB = claveB.split('_')[1];
+      const comparisonVersion = versionA.localeCompare(versionB);
+      if (comparisonVersion !== 0) {
+        return direction === 'asc' ? comparisonVersion : -comparisonVersion;
+      }
+
+      // Comparar año (MY26)
+      const añoA = claveA.split('_')[2];
+      const añoB = claveB.split('_')[2];
+      const comparisonAño = añoA.localeCompare(añoB);
+      if (comparisonAño !== 0) {
+        return direction === 'asc' ? comparisonAño : -comparisonAño;
+      }
+
+      // Comparar variante
+      const varianteA = claveA.split('_')[3];
+      const varianteB = claveB.split('_')[3];
+      return direction === 'asc'
+        ? varianteA.localeCompare(varianteB)
+        : varianteB.localeCompare(varianteA);
+    });
+
+    this.proyecciones = proyeccionesOrdenadas;
+    this.actualizarPaginado();
+  }
+
+  // Cerrar el dropdown al hacer clic fuera de él
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.sort-dropdown')) {
+      this.showSortDropdown = false;
+    }
   }
 
 }

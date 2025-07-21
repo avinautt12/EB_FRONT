@@ -633,3 +633,156 @@ input[type="number"]:disabled {
     }
 }
 
+/* Estilos para el ordenamiento - Versión Mejorada */
+.sortable-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.sort-btn {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #495057;
+  font-size: 14px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.sort-btn:hover {
+  background: #e9ecef;
+  border-color: #ced4da;
+  color: #212529;
+}
+
+.sort-btn i {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.sort-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.sort-options {
+  position: absolute;
+  background-color: white;
+  min-width: 200px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  border-radius: 8px;
+  overflow: hidden;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+}
+
+.sort-dropdown.show .sort-options {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.sort-dropdown.show .sort-btn i {
+  transform: rotate(180deg);
+}
+
+.sort-options button {
+  width: 100%;
+  text-align: left;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #212529;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.sort-options button i {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.sort-options button:hover {
+  background-color: #f8f9fa;
+  color: #0d6efd;
+}
+
+.sort-options button:hover i {
+  color: #0d6efd;
+}
+
+.sort-options button.active {
+  background-color: #e7f1ff;
+  color: #0d6efd;
+  font-weight: 500;
+}
+
+.sort-options button.active i {
+  color: #0d6efd;
+}
+
+/* Indicador visual de orden actual */
+.current-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #6c757d;
+  margin-left: 4px;
+}
+
+.current-sort i {
+  font-size: 10px;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  .sortable-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .sort-dropdown {
+    width: 100%;
+  }
+  
+  .sort-btn {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .sort-options {
+    width: 100%;
+    right: auto;
+    left: 0;
+  }
+  
+  .current-sort {
+    margin-left: 0;
+    margin-top: 2px;
+    align-self: flex-start;
+  }
+}
+
+/* Efecto de transición suave */
+.sort-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
