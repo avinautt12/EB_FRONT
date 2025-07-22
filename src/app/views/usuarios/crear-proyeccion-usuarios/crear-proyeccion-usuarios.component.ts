@@ -64,7 +64,7 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
   // Paginación
   paginaActual: number = 1;
   paginaActualTemp: number = 1;
-  itemsPorPagina: number = 10;
+  itemsPorPagina: number = 50;
   totalPaginas: number = 0;
   proyeccionesPaginadas: Proyeccion[] = [];
 

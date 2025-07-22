@@ -73,7 +73,7 @@ export class UsuariosComponent implements OnInit {
   };
 
   paginaActual = 1;
-  usuariosPorPagina = 5;
+  usuariosPorPagina = 25;
 
   filtroAbierto: string | null = null;
 
