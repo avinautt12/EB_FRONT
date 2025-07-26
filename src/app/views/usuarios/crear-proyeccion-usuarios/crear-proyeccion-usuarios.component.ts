@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProyeccionService } from '../../../services/proyeccion.service';
@@ -10,7 +10,9 @@ import { AuthService } from '../../../services/auth.service';
 import { AlertaService } from '../../../services/alerta.service';
 import { AlertaComponent } from '../../../components/alerta/alerta.component';
 import { ClientesService } from '../../../services/clientes.service';
-import { Router } from '@angular/router';
+import { Router, NavigationStart } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
+import { environment } from '../../../../environments/environment.prod';
 
 interface Disponibilidad {
   q1_sep_2025: boolean;
@@ -55,7 +57,7 @@ interface Proyeccion {
   styleUrls: ['./crear-proyeccion-usuarios.component.css'],
   imports: [CommonModule, FormsModule, RouterModule, TopBarUsuariosComponent, AlertaComponent]
 })
-export class CrearProyeccionUsuariosComponent implements OnInit {
+export class CrearProyeccionUsuariosComponent implements OnInit, OnDestroy {
   proyecciones: Proyeccion[] = [];
   mensajeAlerta: string | null = null;
   tipoAlerta: 'exito' | 'error' = 'exito';
@@ -94,6 +96,13 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
   selectedModelos: string[] = [];
   modeloFilterCount = 0;
 
+  private autoguardadoInterval: any;
+  private cambiosSinGuardar = false;
+  ultimoAutoguardado: Date | null = null;
+  private tiempoAutoguardado = 1000;
+
+  private destroy$ = new Subject<void>();
+
   constructor(
     private proyeccionService: ProyeccionService,
     private authService: AuthService,
@@ -101,11 +110,215 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
     private alertaService: AlertaService,
     private clientesService: ClientesService,
     private router: Router
-  ) { }
+  ) {
+    this.router.events.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(event => {
+      if (event instanceof NavigationStart) {
+        this.guardarAntesDeSalir();
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.cargarProyecciones();
     this.obtenerDatosCliente();
+    this.iniciarAutoguardado();
+
+    // Escuchar evento de cierre de sesión
+    this.authService.onLogout$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.guardarAutomaticamenteSync();
+    });
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.cambiosSinGuardar) {
+      // Intenta guardar sincrónicamente (puede no funcionar completamente)
+      this.guardarAutomaticamenteSync();
+      // Muestra mensaje de confirmación
+      event.preventDefault();
+      event.returnValue = 'Tienes cambios sin guardar. ¿Seguro que quieres salir?';
+    }
+  }
+
+  private guardarAntesDeSalir(): void {
+    if (this.cambiosSinGuardar) {
+      // Guardar antes de cambiar de vista
+      this.guardarAutomaticamenteSync();
+    }
+  }
+
+  private guardarAutomaticamenteSync(): void {
+    if (!this.cambiosSinGuardar) return;
+
+    const proyeccionesParaGuardar = this.getProyeccionesParaGuardar();
+
+    if (proyeccionesParaGuardar.length > 0) {
+      try {
+        const token = this.authService.getToken();
+        if (!token) return;
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${environment.apiUrl}/proyecciones/autoguardado`, false);
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+
+        xhr.send(JSON.stringify({
+          accion: 'guardar',
+          proyecciones: proyeccionesParaGuardar
+        }));
+
+        if (xhr.status === 200) {
+          this.cambiosSinGuardar = false;
+          this.ultimoAutoguardado = new Date();
+        }
+      } catch (error) {
+        console.error('Error en autoguardado sincrónico:', error);
+      }
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Guardar antes de destruir el componente
+    this.guardarAutomaticamenteSync();
+
+    // Limpiar observables
+    this.destroy$.next();
+    this.destroy$.complete();
+
+    // Limpiar intervalo 
+    if (this.autoguardadoInterval) {
+      clearInterval(this.autoguardadoInterval);
+    }
+  }
+
+  // Añade estos nuevos métodos para el autoguardado
+  private iniciarAutoguardado(): void {
+    // Cargar datos guardados al iniciar
+    this.cargarDatosAutoguardados();
+
+    // Configurar intervalo de autoguardado
+    this.autoguardadoInterval = setInterval(() => {
+      if (this.cambiosSinGuardar) {
+        this.guardarAutomaticamente();
+      }
+    }, this.tiempoAutoguardado);
+  }
+
+  private cargarDatosAutoguardados(): void {
+    this.proyeccionService.cargarAutoguardado().subscribe({
+      next: (response: any) => {
+        if (response.data && response.data.length > 0) {
+          const dialogRef = this.dialog.open(ConfirmacionDialogComponent, {
+            width: '90%', // Cambiado a porcentaje para responsividad
+            maxWidth: '500px', // Máximo ancho en pantallas grandes
+            panelClass: 'autoguardado-dialog', // Clase CSS personalizada
+            data: {
+              titulo: 'Proyección recuperada',
+              mensaje: '¿Deseas recuperar tu proyección guardada automáticamente?',
+              mostrarOpciones: true
+            }
+          });
+
+          dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+              this.aplicarDatosAutoguardados(response.data);
+            } else {
+              this.proyeccionService.limpiarAutoguardado().subscribe();
+            }
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar autoguardado:', error);
+      }
+    });
+  }
+
+  private aplicarDatosAutoguardados(datos: any[]): void {
+    datos.forEach(item => {
+      const proyeccion = this.proyecciones.find(p => p.id === item.id_proyeccion);
+      if (proyeccion) {
+        // Solo asignar valores si el campo está disponible
+        if (proyeccion.disponibilidad.q1_sep_2025 && item.q1_sep_2025) {
+          proyeccion.q1_sep_2025 = item.q1_sep_2025;
+        }
+        if (proyeccion.disponibilidad.q2_sep_2025 && item.q2_sep_2025) {
+          proyeccion.q2_sep_2025 = item.q2_sep_2025;
+        }
+        if (proyeccion.disponibilidad.q1_oct_2025 && item.q1_oct_2025) {
+          proyeccion.q1_oct_2025 = item.q1_oct_2025;
+        }
+        if (proyeccion.disponibilidad.q2_oct_2025 && item.q2_oct_2025) {
+          proyeccion.q2_oct_2025 = item.q2_oct_2025;
+        }
+        if (proyeccion.disponibilidad.q1_nov_2025 && item.q1_nov_2025) {
+          proyeccion.q1_nov_2025 = item.q1_nov_2025;
+        }
+        if (proyeccion.disponibilidad.q2_nov_2025 && item.q2_nov_2025) {
+          proyeccion.q2_nov_2025 = item.q2_nov_2025;
+        }
+        if (proyeccion.disponibilidad.q1_dic_2025 && item.q1_dic_2025) {
+          proyeccion.q1_dic_2025 = item.q1_dic_2025;
+        }
+        if (proyeccion.disponibilidad.q2_dic_2025 && item.q2_dic_2025) {
+          proyeccion.q2_dic_2025 = item.q2_dic_2025;
+        }
+      }
+    });
+    this.actualizarPaginado();
+  }
+
+  onInputChange(): void {
+    this.cambiosSinGuardar = true;
+  }
+
+  private guardarAutomaticamente(): void {
+    if (!this.cambiosSinGuardar) return;
+
+    const proyeccionesParaGuardar = this.getProyeccionesParaGuardar();
+
+    if (proyeccionesParaGuardar.length > 0) {
+      this.proyeccionService.guardarAutomaticamente(proyeccionesParaGuardar).subscribe({
+        next: () => {
+          this.cambiosSinGuardar = false;
+          this.ultimoAutoguardado = new Date();
+          console.log('Autoguardado realizado');
+        },
+        error: (error) => {
+          console.error('Error en autoguardado:', error);
+        }
+      });
+    }
+  }
+
+  private getProyeccionesParaGuardar(): any[] {
+    return this.proyecciones
+      .filter(p =>
+        // Solo incluir proyecciones con al menos un valor en campos disponibles
+        (p.disponibilidad.q1_sep_2025 && p.q1_sep_2025) ||
+        (p.disponibilidad.q2_sep_2025 && p.q2_sep_2025) ||
+        (p.disponibilidad.q1_oct_2025 && p.q1_oct_2025) ||
+        (p.disponibilidad.q2_oct_2025 && p.q2_oct_2025) ||
+        (p.disponibilidad.q1_nov_2025 && p.q1_nov_2025) ||
+        (p.disponibilidad.q2_nov_2025 && p.q2_nov_2025) ||
+        (p.disponibilidad.q1_dic_2025 && p.q1_dic_2025) ||
+        (p.disponibilidad.q2_dic_2025 && p.q2_dic_2025)
+      )
+      .map(p => ({
+        id_proyeccion: p.id,
+        q1_sep_2025: p.disponibilidad.q1_sep_2025 ? (p.q1_sep_2025 || null) : null,
+        q2_sep_2025: p.disponibilidad.q2_sep_2025 ? (p.q2_sep_2025 || null) : null,
+        q1_oct_2025: p.disponibilidad.q1_oct_2025 ? (p.q1_oct_2025 || null) : null,
+        q2_oct_2025: p.disponibilidad.q2_oct_2025 ? (p.q2_oct_2025 || null) : null,
+        q1_nov_2025: p.disponibilidad.q1_nov_2025 ? (p.q1_nov_2025 || null) : null,
+        q2_nov_2025: p.disponibilidad.q2_nov_2025 ? (p.q2_nov_2025 || null) : null,
+        q1_dic_2025: p.disponibilidad.q1_dic_2025 ? (p.q1_dic_2025 || null) : null,
+        q2_dic_2025: p.disponibilidad.q2_dic_2025 ? (p.q2_dic_2025 || null) : null
+      }));
   }
 
   cargarProyecciones(): void {
@@ -407,6 +620,7 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
 
     this.proyeccionService.agregarProyeccionCliente(datosParaEnviar, token).subscribe({
       next: (response: any) => {
+        this.proyeccionService.limpiarAutoguardado().subscribe();
         const mensaje = `Proyección enviada exitosamente.`;
         this.alertaService.mostrarExito(mensaje);
 
@@ -631,23 +845,23 @@ export class CrearProyeccionUsuariosComponent implements OnInit {
     );
   }
 
- applyRefFilter(event?: MouseEvent): void {
-  if (event) event.stopPropagation();
-  this.selectedRefs = this.refOptions
-    .filter(option => option.selected)
-    .map(option => option.value);
-  this.applyFilters();
-  // No cerrar automáticamente
-}
+  applyRefFilter(event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    this.selectedRefs = this.refOptions
+      .filter(option => option.selected)
+      .map(option => option.value);
+    this.applyFilters();
+    // No cerrar automáticamente
+  }
 
-clearRefFilter(event?: MouseEvent): void {
-  if (event) event.stopPropagation();
-  this.refOptions.forEach(option => option.selected = false);
-  this.selectedRefs = [];
-  this.referenciaFilterCount = 0;
-  this.applyFilters();
-  // No cerrar automáticamente
-}
+  clearRefFilter(event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    this.refOptions.forEach(option => option.selected = false);
+    this.selectedRefs = [];
+    this.referenciaFilterCount = 0;
+    this.applyFilters();
+    // No cerrar automáticamente
+  }
 
   toggleModeloFilter(event?: MouseEvent): void {
     if (event) {

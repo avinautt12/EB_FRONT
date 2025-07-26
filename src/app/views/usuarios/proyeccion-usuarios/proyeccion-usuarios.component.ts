@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProyeccionService } from '../../../services/proyeccion.service';
-import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Router } from '@angular/router';

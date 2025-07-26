@@ -100,6 +100,65 @@ export class ProyeccionService {
 
     return this.http.post(`${this.baseUrl}/importar_proyecciones`, formData);
   }
+
+  /**
+  * Guarda automáticamente las proyecciones en el servidor
+  * @param proyecciones Array de proyecciones a guardar
+  */
+  guardarAutomaticamente(proyecciones: any[]): Observable<any> {
+    const token = this.authService.getToken();
+    if (!token) {
+      throw new Error('Token no disponible');
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.post(`${this.baseUrl}/proyecciones/autoguardado`, {
+      accion: 'guardar',
+      proyecciones: proyecciones
+    }, { headers });
+  }
+
+  /**
+   * Carga las proyecciones guardadas automáticamente
+   */
+  cargarAutoguardado(): Observable<any> {
+    const token = this.authService.getToken();
+    if (!token) {
+      throw new Error('Token no disponible');
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.post(`${this.baseUrl}/proyecciones/autoguardado`, {
+      accion: 'cargar'
+    }, { headers });
+  }
+
+  /**
+   * Elimina las proyecciones guardadas automáticamente
+   */
+  limpiarAutoguardado(): Observable<any> {
+    const token = this.authService.getToken();
+    if (!token) {
+      throw new Error('Token no disponible');
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.post(`${this.baseUrl}/proyecciones/autoguardado`, {
+      accion: 'limpiar'
+    }, { headers });
+  }
 }
 
 
