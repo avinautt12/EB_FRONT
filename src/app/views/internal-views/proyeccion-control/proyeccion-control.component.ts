@@ -15,6 +15,7 @@ interface Producto {
   clave_odoo: string;
   descripcion: string;
   modelo: string;
+  spec?: string; 
   precio_distribuidor_sin_iva?: number;
   precio_elite_plus_sin_iva?: number;
   precio_elite_sin_iva?: number;
@@ -28,6 +29,12 @@ interface Producto {
   q2_nov_2025: number;
   q1_dic_2025: number;
   q2_dic_2025: number;
+  q1_mar_2026: number;
+  q2_mar_2026: number;
+  q1_abr_2026: number;
+  q2_abr_2026: number;
+  q1_may_2026: number;
+  q2_may_2026: number;
   id_disponibilidad: number;
   disp_q1_sep_2025?: boolean;
   disp_q2_sep_2025?: boolean;
@@ -37,6 +44,12 @@ interface Producto {
   disp_q2_nov_2025?: boolean;
   disp_q1_dic_2025?: boolean;
   disp_q2_dic_2025?: boolean;
+  disp_q1_mar_2026?: boolean;
+  disp_q2_mar_2026?: boolean;
+  disp_q1_abr_2026?: boolean;
+  disp_q2_abr_2026?: boolean;
+  disp_q1_may_2026?: boolean;
+  disp_q2_may_2026?: boolean;
 }
 
 interface Disponibilidad {
@@ -49,6 +62,12 @@ interface Disponibilidad {
   q2_nov_2025: boolean;
   q1_dic_2025: boolean;
   q2_dic_2025: boolean;
+  q1_mar_2026: boolean;
+  q2_mar_2026: boolean;
+  q1_abr_2026: boolean;
+  q2_abr_2026: boolean;
+  q1_may_2026: boolean;
+  q2_may_2026: boolean;
   descripcion: string;
 }
 
@@ -73,6 +92,7 @@ export class ProyeccionControlComponent implements OnInit {
     clave_odoo: '',
     descripcion: '',
     modelo: '',
+    spec: '',
     precio_distribuidor_sin_iva: 0,
     precio_elite_plus_sin_iva: 0,
     precio_elite_sin_iva: 0,
@@ -86,6 +106,12 @@ export class ProyeccionControlComponent implements OnInit {
     q2_nov_2025: 0,
     q1_dic_2025: 0,
     q2_dic_2025: 0,
+    q1_mar_2026: 0,
+    q2_mar_2026: 0,
+    q1_abr_2026: 0,
+    q2_abr_2026: 0,
+    q1_may_2026: 0,
+    q2_may_2026: 0,
     id_disponibilidad: 5
   };
   mostrarFormulario = false;
@@ -236,6 +262,7 @@ export class ProyeccionControlComponent implements OnInit {
           clave_odoo: this.proyeccion!.clave_odoo,
           descripcion: this.proyeccion!.descripcion,
           modelo: this.proyeccion!.modelo,
+          spec: this.proyeccion!.spec,
           precio_distribuidor_sin_iva: this.proyeccion!.precio_distribuidor_sin_iva,
           precio_elite_plus_sin_iva: this.proyeccion!.precio_elite_plus_sin_iva,
           precio_elite_sin_iva: this.proyeccion!.precio_elite_sin_iva,
@@ -249,6 +276,12 @@ export class ProyeccionControlComponent implements OnInit {
           q2_nov_2025: this.proyeccion!.q2_nov_2025,
           q1_dic_2025: this.proyeccion!.q1_dic_2025,
           q2_dic_2025: this.proyeccion!.q2_dic_2025,
+          q1_mar_2026: this.proyeccion!.q1_mar_2026,
+          q2_mar_2026: this.proyeccion!.q2_mar_2026,
+          q1_abr_2026: this.proyeccion!.q1_abr_2026,
+          q2_abr_2026: this.proyeccion!.q2_abr_2026,
+          q1_may_2026: this.proyeccion!.q1_may_2026,
+          q2_may_2026: this.proyeccion!.q2_may_2026,
           id_disponibilidad: this.proyeccion!.id_disponibilidad,
           // Campos opcionales
           disp_q1_sep_2025: this.proyeccion!.disp_q1_sep_2025,
@@ -258,7 +291,13 @@ export class ProyeccionControlComponent implements OnInit {
           disp_q1_nov_2025: this.proyeccion!.disp_q1_nov_2025,
           disp_q2_nov_2025: this.proyeccion!.disp_q2_nov_2025,
           disp_q1_dic_2025: this.proyeccion!.disp_q1_dic_2025,
-          disp_q2_dic_2025: this.proyeccion!.disp_q2_dic_2025
+          disp_q2_dic_2025: this.proyeccion!.disp_q2_dic_2025,
+          disp_q1_mar_2026: this.proyeccion!.disp_q1_mar_2026,
+          disp_q2_mar_2026: this.proyeccion!.disp_q2_mar_2026,
+          disp_q1_abr_2026: this.proyeccion!.disp_q1_abr_2026,
+          disp_q2_abr_2026: this.proyeccion!.disp_q2_abr_2026,
+          disp_q1_may_2026: this.proyeccion!.disp_q1_may_2026,
+          disp_q2_may_2026: this.proyeccion!.disp_q2_may_2026
         };
         this.confirmacionVisible = false;
         this.cargando = false;
@@ -314,6 +353,7 @@ export class ProyeccionControlComponent implements OnInit {
       clave_odoo: '',
       descripcion: '',
       modelo: '',
+      spec: '',
       precio_distribuidor_sin_iva: 0,
       precio_elite_plus_sin_iva: 0,
       precio_elite_sin_iva: 0,
@@ -327,6 +367,12 @@ export class ProyeccionControlComponent implements OnInit {
       q2_nov_2025: 0,
       q1_dic_2025: 0,
       q2_dic_2025: 0,
+      q1_mar_2026: 0,
+      q2_mar_2026: 0,
+      q1_abr_2026: 0,
+      q2_abr_2026: 0,
+      q1_may_2026: 0,
+      q2_may_2026: 0,
       id_disponibilidad: 5
     };
   }

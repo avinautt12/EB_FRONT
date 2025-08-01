@@ -35,7 +35,10 @@
                 detalle.referencia }}</span></p>
             <p class="info-item"><span class="info-label">Clave Odoo:</span> <span class="info-value">{{
                 detalle.clave_odoo }}</span></p>
-            <p class="info-item"><span class="info-label">EAN:</span> <span class="info-value">{{ detalle.ean }}</span>
+            <p class="info-item"><span class="info-label">EAN:</span> <span class="info-value">{{ 
+            detalle.ean }}</span>
+            <p class="info-item"><span class="info-label">Especificaciones:</span> <span class="info-value">{{ 
+            detalle.spec }}</span>
             </p>
           </div>
         </div>
@@ -113,7 +116,9 @@
       <h3 class="section-title">Proyección por Quincenas</h3>
       <div class="quincenas-grid">
         <div
-          *ngFor="let quincena of ['q1_sep_2025', 'q2_sep_2025', 'q1_oct_2025', 'q2_oct_2025', 'q1_nov_2025', 'q2_nov_2025', 'q1_dic_2025', 'q2_dic_2025']"
+          *ngFor="let quincena of ['q1_sep_2025', 'q2_sep_2025', 'q1_oct_2025', 'q2_oct_2025', 'q1_nov_2025', 
+          'q2_nov_2025', 'q1_dic_2025', 'q2_dic_2025', 'q1_mar_2026', 'q2_mar_2026', 'q1_abr_2026', 
+          'q2_abr_2026', 'q1_may_2026', 'q2_may_2026']"
           class="quincena-card">
           <h4 class="quincena-title">{{ formatearQuincena(quincena) }}</h4>
           <p class="quincena-value">{{ getCantidadQuincena(quincena) }} unidades</p>
@@ -133,7 +138,9 @@
               <th>Folio</th>
               <th>Precio</th>
               <th
-                *ngFor="let quincena of ['q1_sep_2025', 'q2_sep_2025', 'q1_oct_2025', 'q2_oct_2025', 'q1_nov_2025', 'q2_nov_2025', 'q1_dic_2025', 'q2_dic_2025']">
+                *ngFor="let quincena of ['q1_sep_2025', 'q2_sep_2025', 'q1_oct_2025', 'q2_oct_2025', 
+                'q1_nov_2025', 'q2_nov_2025', 'q1_dic_2025', 'q2_dic_2025', 'q1_mar_2026', 'q2_mar_2026', 
+                'q1_abr_2026', 'q2_abr_2026', 'q1_may_2026', 'q2_may_2026']">
                 {{ formatearQuincena(quincena).split(' ')[0] }}
               </th>
             </tr>
@@ -145,7 +152,9 @@
               <td>{{ h.folio }}</td>
               <td>{{ h.precio_aplicado | currency:'MXN':'symbol':'1.2-2' }}</td>
               <td
-                *ngFor="let quincena of ['q1_sep_2025', 'q2_sep_2025', 'q1_oct_2025', 'q2_oct_2025', 'q1_nov_2025', 'q2_nov_2025', 'q1_dic_2025', 'q2_dic_2025']">
+                *ngFor="let quincena of ['q1_sep_2025', 'q2_sep_2025', 'q1_oct_2025', 'q2_oct_2025', 'q1_nov_2025',
+                'q2_nov_2025', 'q1_dic_2025', 'q2_dic_2025', 'q1_mar_2026', 'q2_mar_2026', 'q1_abr_2026',
+                'q2_abr_2026', 'q1_may_2026', 'q2_may_2026']">
                 {{ h[quincena] || 0 }}
               </td>
             </tr>

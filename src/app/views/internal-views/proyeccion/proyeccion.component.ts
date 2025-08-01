@@ -16,6 +16,7 @@ interface ProductoDetallado {
   ean: string;
   clave_odoo: string;
   modelo: string;
+  spec: string;
   descripcion: string;
   precio_aplicado: number;
   precio_publico_con_iva: number;
@@ -27,6 +28,12 @@ interface ProductoDetallado {
   q2_nov_2025: number;
   q1_dic_2025: number;
   q2_dic_2025: number;
+  q1_mar_2026: number;
+  q2_mar_2026: number;
+  q1_abr_2026: number;
+  q2_abr_2026: number;
+  q1_may_2026: number;
+  q2_may_2026: number;
   orden_total_cant: number;
   orden_total_importe: number;
   fecha_registro: string;
@@ -54,7 +61,7 @@ export class ProyeccionComponent implements OnInit {
   // Variables de paginación
   paginaActual: number = 1;
   paginaActualTemp: number = 1;
-  itemsPorPagina: number = 10;
+  itemsPorPagina: number = 40;
   totalPaginas: number = 0;
 
   // Filtros
@@ -65,7 +72,8 @@ export class ProyeccionComponent implements OnInit {
     clave_odoo: '',
     ean: '',
     descripcion: '',
-    modelo: ''
+    modelo: '',
+    spec: '',
   };
 
   filtroAbierto: string | null = null;
@@ -167,6 +175,7 @@ export class ProyeccionComponent implements OnInit {
       'Clave Odoo': item.clave_odoo,
       'Descripción': item.descripcion,
       'Modelo': item.modelo,
+      'Especificaciones': item.spec,
 
       // Precios con IVA
       'Precio Público con IVA': item.precio_publico_con_iva,
@@ -192,14 +201,16 @@ export class ProyeccionComponent implements OnInit {
       '2Q Nov 2025': item.q2_nov_2025,
       '1Q Dic 2025': item.q1_dic_2025,
       '2Q Dic 2025': item.q2_dic_2025,
+      '1Q Mar 2026': item.q1_mar_2026,
+      '2Q Mar 2026': item.q2_mar_2026,
+      '1Q Abr 2026': item.q1_abr_2026,
+      '2Q Abr 2026': item.q2_abr_2026,
+      '1Q May 2026': item.q1_may_2026,
+      '2Q May 2026': item.q2_may_2026,
 
       // Totales
       'Total Cantidad': item.orden_total_cant,
       'Total Importe': item.orden_total_importe,
-
-      // Información adicional
-      'ID': item.id,
-      'ID Disponibilidad': item.id_disponibilidad
     }));
 
     this.generarExcel(datosFormateados, 'Proyecciones_Globales');
@@ -240,6 +251,7 @@ export class ProyeccionComponent implements OnInit {
           'EAN': producto.ean,
           'Clave Odoo': producto.clave_odoo,
           'Modelo': producto.modelo,
+          'Especificaciones': producto.spec,
           'Descripción': producto.descripcion,
           'Precio Aplicado': producto.precio_aplicado?.toFixed(2),
           'Precio Público': producto.precio_publico_con_iva?.toFixed(2),
@@ -251,6 +263,12 @@ export class ProyeccionComponent implements OnInit {
           '2Q Nov 2025': producto.q2_nov_2025,
           '1Q Dic 2025': producto.q1_dic_2025,
           '2Q Dic 2025': producto.q2_dic_2025,
+          '1Q Mar 2026': producto.q1_mar_2026,
+          '2Q Mar 2026': producto.q2_mar_2026,
+          '1Q Abr 2026': producto.q1_abr_2026,
+          '2Q Abr 2026': producto.q2_abr_2026,
+          '1Q May 2026': producto.q1_may_2026,
+          '2Q May 2026': producto.q2_may_2026,
           'Total Unidades': producto.orden_total_cant,
           'Total Importe': producto.orden_total_importe?.toFixed(2),
           'Fecha Registro': producto.fecha_registro

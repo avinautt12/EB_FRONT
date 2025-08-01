@@ -79,7 +79,13 @@
                     <input type="text" [(ngModel)]="nuevaProyeccion.modelo" name="modelo" class="form-control"
                         placeholder="Modelo del producto">
                 </div>
-                
+
+                <div class="form-group">
+                    <label>Especificaciones:</label>
+                    <textarea [(ngModel)]="nuevaProyeccion.spec" name="spec" class="form-control"
+                        rows="3" placeholder="Especificaciones del producto"></textarea>
+                </div>
+
                 <div class="form-group">
                     <label>Disponibilidad:</label>
                     <select [(ngModel)]="nuevaProyeccion.id_disponibilidad" name="id_disponibilidad" required
@@ -239,7 +245,12 @@
                     <label>Modelo:</label>
                     <input type="text" [(ngModel)]="proyeccion.modelo" class="form-control">
                 </div>
-                
+
+                <div class="form-group">
+                    <label>Especificaciones:</label>
+                    <textarea [(ngModel)]="proyeccion.spec" class="form-control" rows="3"></textarea>
+                </div>
+
                 <div class="form-group">
                     <label>Disponibilidad:</label>
                     <select [(ngModel)]="proyeccion.id_disponibilidad" class="form-control" required>

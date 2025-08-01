@@ -25,7 +25,10 @@ export class ProyeccionHistorialComponent implements OnInit {
     'q1_sep_2025', 'q2_sep_2025',
     'q1_oct_2025', 'q2_oct_2025',
     'q1_nov_2025', 'q2_nov_2025',
-    'q1_dic_2025', 'q2_dic_2025'
+    'q1_dic_2025', 'q2_dic_2025',
+    'q1_mar_2026', 'q2_mar_2026',
+    'q1_abr_2026', 'q2_abr_2026',
+    'q1_may_2026', 'q2_may_2026'
   ];
 
   constructor(
@@ -82,7 +85,8 @@ export class ProyeccionHistorialComponent implements OnInit {
     const año = parts[2];
 
     const meses: { [key: string]: string } = {
-      'sep': 'Sep', 'oct': 'Oct', 'nov': 'Nov', 'dic': 'Dic'
+      'sep': 'Sep', 'oct': 'Oct', 'nov': 'Nov', 'dic': 'Dic',
+      'mar': 'Mar', 'abr': 'Abr', 'may': 'May'
     };
 
     return `${num}${num === '1' ? 'era' : 'da'} ${meses[mes]} ${año}`;
@@ -113,7 +117,8 @@ export class ProyeccionHistorialComponent implements OnInit {
       const año = parts[2];
 
       const meses: { [key: string]: string } = {
-        'sep': 'Sep', 'oct': 'Oct', 'nov': 'Nov', 'dic': 'Dic'
+        'sep': 'Sep', 'oct': 'Oct', 'nov': 'Nov', 'dic': 'Dic',
+        'mar': 'Mar', 'abr': 'Abr', 'may': 'May'
       };
 
       return `${num}${num === '1' ? 'er' : 'do'} Q ${meses[mes]} ${año}`;
@@ -131,6 +136,7 @@ export class ProyeccionHistorialComponent implements OnInit {
           'Fecha': this.formatearFechaUTC(grupo.fecha),
           'Referencia': item.referencia,
           'Modelo': item.modelo,
+          'Especificaciones': item.spec || 'N/A',
           'Descripción': item.descripcion,
           'EAN': item.ean,
           'Clave Odoo': item.clave_odoo,

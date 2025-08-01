@@ -103,6 +103,11 @@
                             </div>
                         </div>
                     </th>
+                    <th>
+                        <div class="sticky-th">
+                            Especificaciones
+                        </div>
+                    </th>
                     <th class="columna-descripcion">
                         <div class="sticky-th">
                             Descripción
@@ -138,6 +143,12 @@
                     <th>2DA QUINCENA DE NOVIEMBRE 2025</th>
                     <th>1ER QUINCENA DE DICIEMBRE 2025</th>
                     <th>2DA QUINCENA DE DICIEMBRE 2025</th>
+                    <th>1ER QUINCENA DE MARZO 2026</th>
+                    <th>2DA QUINCENA DE MARZO 2026</th>
+                    <th>1ER QUINCENA DE ABRIL 2026</th>
+                    <th>2DA QUINCENA DE ABRIL 2026</th>
+                    <th>1ER QUINCENA DE MAYO 2026</th>
+                    <th>2DA QUINCENA DE MAYO 2026</th>
 
                     <!-- Totales -->
                     <th>Total Cantidad</th>
@@ -160,6 +171,7 @@
                     <td>{{ item.ean }}</td>
                     <td>{{ item.clave_odoo }}</td>
                     <td>{{ item.modelo }}</td>
+                    <td>{{ item.spec }}</td>
                     <td>{{ item.descripcion }}</td>
 
                     <!-- Precios -->
@@ -184,6 +196,12 @@
                     <td>{{ item.q2_nov_2025 }}</td>
                     <td>{{ item.q1_dic_2025 }}</td>
                     <td>{{ item.q2_dic_2025 }}</td>
+                    <td>{{ item.q1_mar_2026 }}</td>
+                    <td>{{ item.q2_mar_2026 }}</td>
+                    <td>{{ item.q1_abr_2026 }}</td>
+                    <td>{{ item.q2_abr_2026 }}</td>
+                    <td>{{ item.q1_may_2026 }}</td>
+                    <td>{{ item.q2_may_2026 }}</td>
 
                     <!-- Totales -->
                     <td>{{ item.orden_total_cant }}</td>

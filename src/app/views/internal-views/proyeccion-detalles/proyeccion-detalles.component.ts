@@ -22,7 +22,10 @@ export class ProyeccionDetallesComponent implements OnInit {
     'sep': 'Septiembre',
     'oct': 'Octubre',
     'nov': 'Noviembre',
-    'dic': 'Diciembre'
+    'dic': 'Diciembre',
+    'mar': 'Marzo',
+    'abr': 'Abril',
+    'may': 'Mayo'
   };
 
   constructor(

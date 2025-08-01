@@ -29,7 +29,8 @@ export class ProyeccionUsuariosComponent implements OnInit {
     clave_odoo: '',
     ean: '',
     descripcion: '',
-    modelo: ''
+    modelo: '',
+    spec: ''
   };
 
   filtroAbierto: string | null = null;
@@ -102,8 +103,9 @@ export class ProyeccionUsuariosComponent implements OnInit {
       item.clave_factura?.toLowerCase().includes(this.filtros.clave_factura.toLowerCase()) &&
       item.clave_6_digitos?.toLowerCase().includes(this.filtros.clave_6_digitos.toLowerCase()) &&
       item.descripcion?.toLowerCase().includes(this.filtros.descripcion.toLowerCase()) &&
-      item.modelo?.toLowerCase().includes(this.filtros.modelo.toLowerCase())
-      && item.clave_odoo?.toLowerCase().includes(this.filtros.clave_odoo.toLowerCase()) &&
+      item.modelo?.toLowerCase().includes(this.filtros.modelo.toLowerCase()) &&
+      item.spec?.toLowerCase().includes(this.filtros.spec.toLowerCase()) &&
+      item.clave_odoo?.toLowerCase().includes(this.filtros.clave_odoo.toLowerCase()) &&
       item.ean?.toLowerCase().includes(this.filtros.ean.toLowerCase())
     );
 
@@ -125,7 +127,13 @@ export class ProyeccionUsuariosComponent implements OnInit {
       (item.q1_nov_2025 || 0) > 0 ||
       (item.q2_nov_2025 || 0) > 0 ||
       (item.q1_dic_2025 || 0) > 0 ||
-      (item.q2_dic_2025 || 0) > 0
+      (item.q2_dic_2025 || 0) > 0 ||
+      (item.q1_mar_2026 || 0) > 0 ||
+      (item.q2_mar_2026 || 0) > 0 ||
+      (item.q1_abr_2026 || 0) > 0 ||
+      (item.q2_abr_2026 || 0) > 0 ||
+      (item.q1_may_2026 || 0) > 0 ||
+      (item.q2_may_2026 || 0) > 0 
     ).length;
   }
 }

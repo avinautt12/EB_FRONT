@@ -23,6 +23,12 @@ interface Disponibilidad {
   q2_nov_2025: boolean;
   q1_dic_2025: boolean;
   q2_dic_2025: boolean;
+  q1_mar_2026?: boolean;
+  q2_mar_2026?: boolean;
+  q1_abr_2026?: boolean;
+  q2_abr_2026?: boolean;
+  q1_may_2026?: boolean;
+  q2_may_2026?: boolean;
 }
 
 interface Proyeccion {
@@ -32,6 +38,7 @@ interface Proyeccion {
   clave_odoo: string;
   descripcion: string;
   modelo: string;
+  spec: string;
   ean: string;
   referencia: string;
   q1_sep_2025: number | null;
@@ -42,6 +49,12 @@ interface Proyeccion {
   q2_nov_2025: number | null;
   q1_dic_2025: number | null;
   q2_dic_2025: number | null;
+  q1_mar_2026?: number | null;
+  q2_mar_2026?: number | null;
+  q1_abr_2026?: number | null;
+  q2_abr_2026?: number | null;
+  q1_may_2026?: number | null;
+  q2_may_2026?: number | null;
   disponibilidad: Disponibilidad;
   precio_publico_con_iva: number;
   precio_distribuidor_con_iva: number;
@@ -267,6 +280,24 @@ export class CrearProyeccionUsuariosComponent implements OnInit, OnDestroy {
         if (proyeccion.disponibilidad.q2_dic_2025 && item.q2_dic_2025) {
           proyeccion.q2_dic_2025 = item.q2_dic_2025;
         }
+        if (proyeccion.disponibilidad.q1_mar_2026 && item.q1_mar_2026) {
+          proyeccion.q1_mar_2026 = item.q1_mar_2026;
+        }
+        if (proyeccion.disponibilidad.q2_mar_2026 && item.q2_mar_2026) {
+          proyeccion.q2_mar_2026 = item.q2_mar_2026;
+        }
+        if (proyeccion.disponibilidad.q1_abr_2026 && item.q1_abr_2026) {
+          proyeccion.q1_abr_2026 = item.q1_abr_2026;
+        }
+        if (proyeccion.disponibilidad.q2_abr_2026 && item.q2_abr_2026) {
+          proyeccion.q2_abr_2026 = item.q2_abr_2026;
+        }
+        if (proyeccion.disponibilidad.q1_may_2026 && item.q1_may_2026) {
+          proyeccion.q1_may_2026 = item.q1_may_2026;
+        }
+        if (proyeccion.disponibilidad.q2_may_2026 && item.q2_may_2026) {
+          proyeccion.q2_may_2026 = item.q2_may_2026;
+        }
       }
     });
     this.actualizarPaginado();
@@ -306,7 +337,13 @@ export class CrearProyeccionUsuariosComponent implements OnInit, OnDestroy {
         (p.disponibilidad.q1_nov_2025 && p.q1_nov_2025) ||
         (p.disponibilidad.q2_nov_2025 && p.q2_nov_2025) ||
         (p.disponibilidad.q1_dic_2025 && p.q1_dic_2025) ||
-        (p.disponibilidad.q2_dic_2025 && p.q2_dic_2025)
+        (p.disponibilidad.q2_dic_2025 && p.q2_dic_2025) ||
+        (p.disponibilidad.q1_mar_2026 && p.q1_mar_2026) ||
+        (p.disponibilidad.q2_mar_2026 && p.q2_mar_2026) ||
+        (p.disponibilidad.q1_abr_2026 && p.q1_abr_2026) ||
+        (p.disponibilidad.q2_abr_2026 && p.q2_abr_2026) ||
+        (p.disponibilidad.q1_may_2026 && p.q1_may_2026) ||
+        (p.disponibilidad.q2_may_2026 && p.q2_may_2026)
       )
       .map(p => ({
         id_proyeccion: p.id,
@@ -317,7 +354,13 @@ export class CrearProyeccionUsuariosComponent implements OnInit, OnDestroy {
         q1_nov_2025: p.disponibilidad.q1_nov_2025 ? (p.q1_nov_2025 || null) : null,
         q2_nov_2025: p.disponibilidad.q2_nov_2025 ? (p.q2_nov_2025 || null) : null,
         q1_dic_2025: p.disponibilidad.q1_dic_2025 ? (p.q1_dic_2025 || null) : null,
-        q2_dic_2025: p.disponibilidad.q2_dic_2025 ? (p.q2_dic_2025 || null) : null
+        q2_dic_2025: p.disponibilidad.q2_dic_2025 ? (p.q2_dic_2025 || null) : null,
+        q1_mar_2026: p.disponibilidad.q1_mar_2026 ? (p.q1_mar_2026 || null) : null,
+        q2_mar_2026: p.disponibilidad.q2_mar_2026 ? (p.q2_mar_2026 || null) : null,
+        q1_abr_2026: p.disponibilidad.q1_abr_2026 ? (p.q1_abr_2026 || null) : null,
+        q2_abr_2026: p.disponibilidad.q2_abr_2026 ? (p.q2_abr_2026 || null) : null,
+        q1_may_2026: p.disponibilidad.q1_may_2026 ? (p.q1_may_2026 || null) : null,
+        q2_may_2026: p.disponibilidad.q2_may_2026 ? (p.q2_may_2026 || null) : null
       }));
   }
 
@@ -349,6 +392,12 @@ export class CrearProyeccionUsuariosComponent implements OnInit, OnDestroy {
       q2_nov_2025: null,
       q1_dic_2025: null,
       q2_dic_2025: null,
+      q1_mar_2026: null,
+      q2_mar_2026: null,
+      q1_abr_2026: null,
+      q2_abr_2026: null,
+      q1_may_2026: null,
+      q2_may_2026: null,
       disponibilidad: {
         q1_sep_2025: item.disp_q1_sep_2025 !== undefined ? Boolean(item.disp_q1_sep_2025) : true,
         q2_sep_2025: item.disp_q2_sep_2025 !== undefined ? Boolean(item.disp_q2_sep_2025) : true,
@@ -357,7 +406,13 @@ export class CrearProyeccionUsuariosComponent implements OnInit, OnDestroy {
         q1_nov_2025: item.disp_q1_nov_2025 !== undefined ? Boolean(item.disp_q1_nov_2025) : true,
         q2_nov_2025: item.disp_q2_nov_2025 !== undefined ? Boolean(item.disp_q2_nov_2025) : true,
         q1_dic_2025: item.disp_q1_dic_2025 !== undefined ? Boolean(item.disp_q1_dic_2025) : true,
-        q2_dic_2025: item.disp_q2_dic_2025 !== undefined ? Boolean(item.disp_q2_dic_2025) : true
+        q2_dic_2025: item.disp_q2_dic_2025 !== undefined ? Boolean(item.disp_q2_dic_2025) : true,
+        q1_mar_2026: item.disp_q1_mar_2026 !== undefined ? Boolean(item.disp_q1_mar_2026) : true,
+        q2_mar_2026: item.disp_q2_mar_2026 !== undefined ? Boolean(item.disp_q2_mar_2026) : true,
+        q1_abr_2026: item.disp_q1_abr_2026 !== undefined ? Boolean(item.disp_q1_abr_2026) : true,
+        q2_abr_2026: item.disp_q2_abr_2026 !== undefined ? Boolean(item.disp_q2_abr_2026) : true,
+        q1_may_2026: item.disp_q1_may_2026 !== undefined ? Boolean(item.disp_q1_may_2026) : true,
+        q2_may_2026: item.disp_q2_may_2026 !== undefined ? Boolean(item.disp_q2_may_2026) : true
       }
     }));
 
@@ -555,7 +610,13 @@ export class CrearProyeccionUsuariosComponent implements OnInit, OnDestroy {
         item.q1_nov_2025 || 0,
         item.q2_nov_2025 || 0,
         item.q1_dic_2025 || 0,
-        item.q2_dic_2025 || 0
+        item.q2_dic_2025 || 0,
+        item.q1_mar_2026 || 0,
+        item.q2_mar_2026 || 0,
+        item.q1_abr_2026 || 0,
+        item.q2_abr_2026 || 0,
+        item.q1_may_2026 || 0,
+        item.q2_may_2026 || 0
       ];
       const cantidadTotal = cantidades.reduce((sum, cantidad) => sum + cantidad, 0);
 
@@ -574,7 +635,13 @@ export class CrearProyeccionUsuariosComponent implements OnInit, OnDestroy {
         q1_nov_2025: item.q1_nov_2025 || 0,
         q2_nov_2025: item.q2_nov_2025 || 0,
         q1_dic_2025: item.q1_dic_2025 || 0,
-        q2_dic_2025: item.q2_dic_2025 || 0
+        q2_dic_2025: item.q2_dic_2025 || 0,
+        q1_mar_2026: item.q1_mar_2026 || 0,
+        q2_mar_2026: item.q2_mar_2026 || 0,
+        q1_abr_2026: item.q1_abr_2026 || 0,
+        q2_abr_2026: item.q2_abr_2026 || 0,
+        q1_may_2026: item.q1_may_2026 || 0,
+        q2_may_2026: item.q2_may_2026 || 0
       };
     });
 
@@ -615,7 +682,13 @@ export class CrearProyeccionUsuariosComponent implements OnInit, OnDestroy {
       q1_nov_2025: item.q1_nov_2025 || 0,
       q2_nov_2025: item.q2_nov_2025 || 0,
       q1_dic_2025: item.q1_dic_2025 || 0,
-      q2_dic_2025: item.q2_dic_2025 || 0
+      q2_dic_2025: item.q2_dic_2025 || 0,
+      q1_mar_2026: item.q1_mar_2026 || 0,
+      q2_mar_2026: item.q2_mar_2026 || 0,
+      q1_abr_2026: item.q1_abr_2026 || 0,
+      q2_abr_2026: item.q2_abr_2026 || 0,
+      q1_may_2026: item.q1_may_2026 || 0,
+      q2_may_2026: item.q2_may_2026 || 0
     }));
 
     this.proyeccionService.agregarProyeccionCliente(datosParaEnviar, token).subscribe({
@@ -678,7 +751,13 @@ export class CrearProyeccionUsuariosComponent implements OnInit, OnDestroy {
       'q1_nov_2025': 0,
       'q2_nov_2025': 0,
       'q1_dic_2025': 0,
-      'q2_dic_2025': 0
+      'q2_dic_2025': 0,
+      'q1_mar_2026': 0,
+      'q2_mar_2026': 0,
+      'q1_abr_2026': 0,
+      'q2_abr_2026': 0,
+      'q1_may_2026': 0,
+      'q2_may_2026': 0
     };
 
     this.proyecciones.forEach(item => {
@@ -700,7 +779,10 @@ export class CrearProyeccionUsuariosComponent implements OnInit, OnDestroy {
       'sep': 'Septiembre',
       'oct': 'Octubre',
       'nov': 'Noviembre',
-      'dic': 'Diciembre'
+      'dic': 'Diciembre',
+      'mar': 'Marzo',
+      'abr': 'Abril',
+      'may': 'Mayo'
     };
 
     const numeroQuincena = quincena === 'q1' ? '1er' : '2da';
@@ -736,7 +818,13 @@ export class CrearProyeccionUsuariosComponent implements OnInit, OnDestroy {
       (item.q1_nov_2025 && item.q1_nov_2025 > 0) ||
       (item.q2_nov_2025 && item.q2_nov_2025 > 0) ||
       (item.q1_dic_2025 && item.q1_dic_2025 > 0) ||
-      (item.q2_dic_2025 && item.q2_dic_2025 > 0)
+      (item.q2_dic_2025 && item.q2_dic_2025 > 0) ||
+      (item.q1_mar_2026 && item.q1_mar_2026 > 0) ||
+      (item.q2_mar_2026 && item.q2_mar_2026 > 0) ||
+      (item.q1_abr_2026 && item.q1_abr_2026 > 0) ||
+      (item.q2_abr_2026 && item.q2_abr_2026 > 0) ||
+      (item.q1_may_2026 && item.q1_may_2026 > 0) ||
+      (item.q2_may_2026 && item.q2_may_2026 > 0)
     );
   }
 

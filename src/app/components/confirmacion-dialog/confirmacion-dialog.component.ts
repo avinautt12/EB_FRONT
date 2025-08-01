@@ -36,6 +36,12 @@ export class ConfirmacionDialogComponent {
         q2_nov_2025: number;
         q1_dic_2025: number;
         q2_dic_2025: number;
+        q1_mar_2026: number;
+        q2_mar_2026: number;
+        q1_abr_2026: number;
+        q2_abr_2026: number;
+        q1_may_2026: number;
+        q2_may_2026: number;
       }>;
     }
   ) {}

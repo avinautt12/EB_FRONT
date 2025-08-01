@@ -54,6 +54,7 @@
                             <th>Producto</th>
                             <th>Referencia</th>
                             <th>Modelo</th>
+                            <th>Especificaciones</th>
                             <th>Precio Unitario</th>
                             <th *ngFor="let quincena of quincenas" class="quincena-header">
                                 {{ formatearQuincena(quincena) }}
@@ -73,6 +74,7 @@
                             </td>
                             <td>{{ item.referencia }}</td>
                             <td>{{ item.modelo }}</td>
+                            <td>{{ item.spec }}</td>
                             <td class="price-cell">
                                 <div class="price-main">{{ item.precio_aplicado | currency:'MXN':'symbol' }}</div>
                             </td>

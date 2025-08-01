@@ -194,6 +194,7 @@
                             </div>
                         </div>
                     </th>
+                    <th  style="min-width: 440px;">Especificaciones</th>
                     <th>Precio ({{ nivelCliente || 'Público' }}) con IVA</th>
                     <th>Precio Público (con IVA)</th>
                     <th>1ER QUINCENA DE SEPTIEMBRE 2025</th>
@@ -204,6 +205,12 @@
                     <th>2DA QUINCENA DE NOVIEMBRE 2025</th>
                     <th>1ER QUINCENA DE DICIEMBRE 2025</th>
                     <th>2DA QUINCENA DE DICIEMBRE 2025</th>
+                    <th>1ER QUINCENA DE MARZO 2026</th>
+                    <th>2DA QUINCENA DE MARZO 2026</th>
+                    <th>1ER QUINCENA DE ABRIL 2026</th>
+                    <th>2DA QUINCENA DE ABRIL 2026</th>
+                    <th>1ER QUINCENA DE MAYO 2026</th>
+                    <th>2DA QUINCENA DE MAYO 2026</th>
                 </tr>
             </thead>
             <tbody>
@@ -219,6 +226,7 @@
                     <td>{{ item.referencia }}</td>
                     <td>{{ item.descripcion }}</td>
                     <td>{{ item.modelo }}</td>
+                    <td>{{ item.spec }}</td>
                     <td>{{ getPrecioCliente(item) | currency }}</td>
                     <td>{{ item.precio_publico_con_iva | currency }}</td>
 
@@ -278,6 +286,48 @@
                             [class.no-disponible]="!item.disponibilidad.q2_dic_2025"
                             (change)="onInputChange()">
                         <span *ngIf="!item.disponibilidad.q2_dic_2025" class="badge-disponibilidad">No disponible</span>
+                    </td>
+                    <td>
+                        <input type="number" min="0" [(ngModel)]="item.q1_mar_2026"
+                            [disabled]="!item.disponibilidad.q1_mar_2026"
+                            [class.no-disponible]="!item.disponibilidad.q1_mar_2026"
+                            (change)="onInputChange()">
+                        <span *ngIf="!item.disponibilidad.q1_mar_2026" class="badge-disponibilidad">No disponible</span>
+                    </td>
+                    <td>
+                        <input type="number" min="0" [(ngModel)]="item.q2_mar_2026"
+                            [disabled]="!item.disponibilidad.q2_mar_2026"
+                            [class.no-disponible]="!item.disponibilidad.q2_mar_2026"
+                            (change)="onInputChange()">
+                        <span *ngIf="!item.disponibilidad.q2_mar_2026" class="badge-disponibilidad">No disponible</span>
+                    </td>
+                    <td>
+                        <input type="number" min="0" [(ngModel)]="item.q1_abr_2026"
+                            [disabled]="!item.disponibilidad.q1_abr_2026"
+                            [class.no-disponible]="!item.disponibilidad.q1_abr_2026"
+                            (change)="onInputChange()">
+                        <span *ngIf="!item.disponibilidad.q1_abr_2026" class="badge-disponibilidad">No disponible</span>
+                    </td>
+                    <td>
+                        <input type="number" min="0" [(ngModel)]="item.q2_abr_2026"
+                            [disabled]="!item.disponibilidad.q2_abr_2026"
+                            [class.no-disponible]="!item.disponibilidad.q2_abr_2026"
+                            (change)="onInputChange()">
+                        <span *ngIf="!item.disponibilidad.q2_abr_2026" class="badge-disponibilidad">No disponible</span>
+                    </td>
+                    <td>
+                        <input type="number" min="0" [(ngModel)]="item.q1_may_2026"
+                            [disabled]="!item.disponibilidad.q1_may_2026"
+                            [class.no-disponible]="!item.disponibilidad.q1_may_2026"
+                            (change)="onInputChange()">
+                        <span *ngIf="!item.disponibilidad.q1_may_2026" class="badge-disponibilidad">No disponible</span>
+                    </td>
+                    <td>
+                        <input type="number" min="0" [(ngModel)]="item.q2_may_2026"
+                            [disabled]="!item.disponibilidad.q2_may_2026"
+                            [class.no-disponible]="!item.disponibilidad.q2_may_2026"
+                            (change)="onInputChange()">
+                        <span *ngIf="!item.disponibilidad.q2_may_2026" class="badge-disponibilidad">No disponible</span>
                     </td>
                 </tr>
             </tbody>

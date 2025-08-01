@@ -33,6 +33,106 @@
     table-layout: fixed;
 }
 
+/* === ANCHOS DE COLUMNAS === */
+.tabla-previo th:nth-child(1), 
+.tabla-previo td:nth-child(1) { /* Referencia */
+    width: 100px;
+    min-width: 100px;
+    max-width: 120px;
+}
+
+.tabla-previo th:nth-child(2), 
+.tabla-previo td:nth-child(2) { /* Clave Factura */
+    width: 120px;
+    min-width: 120px;
+    max-width: 140px;
+}
+
+.tabla-previo th:nth-child(3), 
+.tabla-previo td:nth-child(3) { /* Clave 6 Dígitos */
+    width: 100px;
+    min-width: 100px;
+    max-width: 120px;
+}
+
+.tabla-previo th:nth-child(4), 
+.tabla-previo td:nth-child(4) { /* EAN */
+    width: 120px;
+    min-width: 120px;
+    max-width: 140px;
+}
+
+.tabla-previo th:nth-child(5), 
+.tabla-previo td:nth-child(5) { /* Clave Odoo */
+    width: 100px;
+    min-width: 100px;
+    max-width: 120px;
+}
+
+.tabla-previo th:nth-child(6), 
+.tabla-previo td:nth-child(6) { /* Modelo */
+    width: 120px;
+    min-width: 120px;
+    max-width: 150px;
+}
+
+.tabla-previo th:nth-child(7), 
+.tabla-previo td:nth-child(7) { /* Especificaciones */
+    width: 400px;
+    min-width: 350px;
+    max-width: 420px;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.tabla-previo th:nth-child(8), 
+.tabla-previo td:nth-child(8) { /* Descripción */
+    width: 270px;
+    min-width: 200px;
+    max-width: 300px;
+    white-space: normal;
+    word-break: break-word;
+}
+
+/* Precios - todos con el mismo ancho */
+.tabla-previo th:nth-child(n+9):nth-child(-n+19),
+.tabla-previo td:nth-child(n+9):nth-child(-n+19) {
+    width: 90px;
+    min-width: 90px;
+    max-width: 110px;
+}
+
+/* Quincenas - todos con el mismo ancho */
+.tabla-previo th:nth-child(n+20):nth-child(-n+33),
+.tabla-previo td:nth-child(n+20):nth-child(-n+33) {
+    width: 80px;
+    min-width: 80px;
+    max-width: 100px;
+}
+
+/* Totales */
+.tabla-previo th:nth-child(34), 
+.tabla-previo td:nth-child(34) { /* Total Cantidad */
+    width: 90px;
+    min-width: 90px;
+    max-width: 110px;
+}
+
+.tabla-previo th:nth-child(35), 
+.tabla-previo td:nth-child(35) { /* Total Importe */
+    width: 100px;
+    min-width: 100px;
+    max-width: 120px;
+}
+
+/* Botón Detalles */
+.tabla-previo th:nth-child(36), 
+.tabla-previo td:nth-child(36) {
+    width: 70px;
+    min-width: 70px;
+    max-width: 80px;
+}
+
 .tabla-previo thead th {
     position: sticky;
     top: 0;
@@ -444,11 +544,33 @@
     gap: 1rem;
 }
 
-/* === COLUMNA DESCRIPCIÓN === */
-.columna-descripcion {
-    width: 270px;
-    min-width: 200px;
-    max-width: 300px;
-    white-space: normal;
-    word-break: break-word;
+/* === RESPONSIVE ADJUSTMENTS === */
+@media (max-width: 1400px) {
+    .monitor-container {
+        padding: 1.5rem;
+    }
+    
+    .tabla-previo {
+        min-width: 2500px;
+    }
+}
+
+@media (max-width: 768px) {
+    .monitor-container {
+        padding: 1rem;
+    }
+    
+    .monitor-container h2 {
+        font-size: 1.5rem;
+    }
+    
+    .acciones-monitor {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .paginador {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
 }
