@@ -168,49 +168,53 @@ export class ProyeccionComponent implements OnInit {
   exportarExcelGlobal(): void {
     const datosFormateados = this.proyeccionesCompleta.map(item => ({
       // Información básica del producto
-      'Referencia': item.referencia,
-      'Clave Factura': item.clave_factura,
-      'Clave 6 Dígitos': item.clave_6_digitos,
-      'EAN': item.ean,
-      'Clave Odoo': item.clave_odoo,
-      'Descripción': item.descripcion,
-      'Modelo': item.modelo,
-      'Especificaciones': item.spec,
+      'Referencia': item.referencia || '',
+      'Clave Factura': item.clave_factura || '',
+      'Clave 6 Dígitos': {
+        v: item.clave_6_digitos || '',
+        t: 's', // 's' indica string (texto)
+        z: '@'  // Formato de texto en Excel
+      },
+      'EAN': item.ean || '',
+      'Clave Odoo': item.clave_odoo || '',
+      'Descripción': item.descripcion || '',
+      'Modelo': item.modelo || '',
+      'Especificaciones': item.spec || '',
 
       // Precios con IVA
-      'Precio Público con IVA': item.precio_publico_con_iva,
-      'Precio Público MY26': item.precio_publico_con_iva_my26,
-      'Distribuidor con IVA': item.precio_distribuidor_con_iva,
-      'Partner con IVA': item.precio_partner_con_iva,
-      'Elite con IVA': item.precio_elite_con_iva,
-      'Elite Plus con IVA': item.precio_elite_plus_con_iva,
+      'Precio Público con IVA': { v: item.precio_publico_con_iva ?? 0, t: 'n', z: '"$"#,##0.00' },
+      'Precio Público MY26': { v: item.precio_publico_con_iva_my26 ?? 0, t: 'n', z: '"$"#,##0.00' },
+      'Distribuidor con IVA': { v: item.precio_distribuidor_con_iva ?? 0, t: 'n', z: '"$"#,##0.00' },
+      'Partner con IVA': { v: item.precio_partner_con_iva ?? 0, t: 'n', z: '"$"#,##0.00' },
+      'Elite con IVA': { v: item.precio_elite_con_iva ?? 0, t: 'n', z: '"$"#,##0.00' },
+      'Elite Plus con IVA': { v: item.precio_elite_plus_con_iva ?? 0, t: 'n', z: '"$"#,##0.00' },
 
-      // Precios sin IVA
-      'Precio Público sin IVA': item.precio_publico_sin_iva,
-      'Distribuidor sin IVA': item.precio_distribuidor_sin_iva,
-      'Partner sin IVA': item.precio_partner_sin_iva,
-      'Elite sin IVA': item.precio_elite_sin_iva,
-      'Elite Plus sin IVA': item.precio_elite_plus_sin_iva,
+      // Precios sin IVA (formato numérico)
+      'Precio Público sin IVA': { v: item.precio_publico_sin_iva ?? 0, t: 'n', z: '"$"#,##0.00' },
+      'Distribuidor sin IVA': { v: item.precio_distribuidor_sin_iva ?? 0, t: 'n', z: '"$"#,##0.00' },
+      'Partner sin IVA': { v: item.precio_partner_sin_iva ?? 0, t: 'n', z: '"$"#,##0.00' },
+      'Elite sin IVA': { v: item.precio_elite_sin_iva ?? 0, t: 'n', z: '"$"#,##0.00' },
+      'Elite Plus sin IVA': { v: item.precio_elite_plus_sin_iva ?? 0, t: 'n', z: '"$"#,##0.00' },
 
       // Proyecciones por quincena
-      '1Q Sep 2025': item.q1_sep_2025,
-      '2Q Sep 2025': item.q2_sep_2025,
-      '1Q Oct 2025': item.q1_oct_2025,
-      '2Q Oct 2025': item.q2_oct_2025,
-      '1Q Nov 2025': item.q1_nov_2025,
-      '2Q Nov 2025': item.q2_nov_2025,
-      '1Q Dic 2025': item.q1_dic_2025,
-      '2Q Dic 2025': item.q2_dic_2025,
-      '1Q Mar 2026': item.q1_mar_2026,
-      '2Q Mar 2026': item.q2_mar_2026,
-      '1Q Abr 2026': item.q1_abr_2026,
-      '2Q Abr 2026': item.q2_abr_2026,
-      '1Q May 2026': item.q1_may_2026,
-      '2Q May 2026': item.q2_may_2026,
+      '1Q Sep 2025': item.q1_sep_2025 ?? 0,
+      '2Q Sep 2025': item.q2_sep_2025 ?? 0,
+      '1Q Oct 2025': item.q1_oct_2025 ?? 0,
+      '2Q Oct 2025': item.q2_oct_2025 ?? 0,
+      '1Q Nov 2025': item.q1_nov_2025 ?? 0,
+      '2Q Nov 2025': item.q2_nov_2025 ?? 0,
+      '1Q Dic 2025': item.q1_dic_2025 ?? 0,
+      '2Q Dic 2025': item.q2_dic_2025 ?? 0,
+      '1Q Mar 2026': item.q1_mar_2026 ?? 0,
+      '2Q Mar 2026': item.q2_mar_2026 ?? 0,
+      '1Q Abr 2026': item.q1_abr_2026 ?? 0,
+      '2Q Abr 2026': item.q2_abr_2026 ?? 0,
+      '1Q May 2026': item.q1_may_2026 ?? 0,
+      '2Q May 2026': item.q2_may_2026 ?? 0,
 
       // Totales
-      'Total Cantidad': item.orden_total_cant,
-      'Total Importe': item.orden_total_importe,
+      'Total Cantidad': item.orden_total_cant ?? 0,
+      'Total Importe': { v: item.orden_total_importe ?? 0, t: 'n', z: '"$"#,##0.00' },
     }));
 
     this.generarExcel(datosFormateados, 'Proyecciones_Globales');
@@ -239,38 +243,52 @@ export class ProyeccionComponent implements OnInit {
 
     clientes.forEach(cliente => {
       cliente.productos.forEach(producto => {
+        const limpiarClave6Digitos = (valor: string): string => {
+          return valor ? valor.replace(/\.0$/, '') : '';
+        };
         datosFormateados.push({
-          'Cliente': cliente.nombre_cliente,
-          'Clave Cliente': cliente.clave_cliente,
-          'Zona': cliente.zona,
-          'Nivel': cliente.nivel,
-          'Folio': producto.folio,
-          'Referencia': producto.referencia,
-          'Clave Factura': producto.clave_factura,
-          'Clave 6 Dígitos': producto.clave_6_digitos,
-          'EAN': producto.ean,
-          'Clave Odoo': producto.clave_odoo,
-          'Modelo': producto.modelo,
-          'Especificaciones': producto.spec,
-          'Descripción': producto.descripcion,
-          'Precio Aplicado': producto.precio_aplicado?.toFixed(2),
-          'Precio Público': producto.precio_publico_con_iva?.toFixed(2),
-          '1Q Sep 2025': producto.q1_sep_2025,
-          '2Q Sep 2025': producto.q2_sep_2025,
-          '1Q Oct 2025': producto.q1_oct_2025,
-          '2Q Oct 2025': producto.q2_oct_2025,
-          '1Q Nov 2025': producto.q1_nov_2025,
-          '2Q Nov 2025': producto.q2_nov_2025,
-          '1Q Dic 2025': producto.q1_dic_2025,
-          '2Q Dic 2025': producto.q2_dic_2025,
-          '1Q Mar 2026': producto.q1_mar_2026,
-          '2Q Mar 2026': producto.q2_mar_2026,
-          '1Q Abr 2026': producto.q1_abr_2026,
-          '2Q Abr 2026': producto.q2_abr_2026,
-          '1Q May 2026': producto.q1_may_2026,
-          '2Q May 2026': producto.q2_may_2026,
-          'Total Unidades': producto.orden_total_cant,
-          'Total Importe': producto.orden_total_importe?.toFixed(2),
+          // Información de texto (exportar como string)
+          'Cliente': { v: cliente.nombre_cliente || '', t: 's' },
+          'Clave Cliente': { v: cliente.clave_cliente || '', t: 's' },
+          'Zona': { v: cliente.zona || '', t: 's' },
+          'Nivel': { v: cliente.nivel || '', t: 's' },
+          'Folio': { v: producto.folio || '', t: 's' },
+          'Referencia': { v: producto.referencia || '', t: 's' },
+          'Clave Factura': { v: producto.clave_factura || '', t: 's' },
+          'Clave 6 Dígitos': {
+            v: limpiarClave6Digitos(producto.clave_6_digitos),
+            t: 's',
+            z: '@',
+            s: { numFmt: '@' } // Estilo explícito para texto
+          },
+          'EAN': { v: producto.ean || '', t: 's' },
+          'Clave Odoo': { v: producto.clave_odoo || '', t: 's' },
+          'Modelo': { v: producto.modelo || '', t: 's' },
+          'Especificaciones': { v: producto.spec || '', t: 's' },
+          'Descripción': { v: producto.descripcion || '', t: 's' },
+
+          // Campos numéricos (formato de moneda)
+          'Precio Aplicado': { v: producto.precio_aplicado, t: 'n', z: '"$"#,##0.00' },
+          'Precio Público': { v: producto.precio_publico_con_iva, t: 'n', z: '"$"#,##0.00' },
+
+          // Campos numéricos (formato estándar)
+          '1Q Sep 2025': { v: producto.q1_sep_2025, t: 'n' },
+          '2Q Sep 2025': { v: producto.q2_sep_2025, t: 'n' },
+          '1Q Oct 2025': { v: producto.q1_oct_2025, t: 'n' },
+          '2Q Oct 2025': { v: producto.q2_oct_2025, t: 'n' },
+          '1Q Nov 2025': { v: producto.q1_nov_2025, t: 'n' },
+          '2Q Nov 2025': { v: producto.q2_nov_2025, t: 'n' },
+          '1Q Dic 2025': { v: producto.q1_dic_2025, t: 'n' },
+          '2Q Dic 2025': { v: producto.q2_dic_2025, t: 'n' },
+          '1Q Mar 2026': { v: producto.q1_mar_2026, t: 'n' },
+          '2Q Mar 2026': { v: producto.q2_mar_2026, t: 'n' },
+          '1Q Abr 2026': { v: producto.q1_abr_2026, t: 'n' },
+          '2Q Abr 2026': { v: producto.q2_abr_2026, t: 'n' },
+          '1Q May 2026': { v: producto.q1_may_2026, t: 'n' },
+          '2Q May 2026': { v: producto.q2_may_2026, t: 'n' },
+          'Total Unidades': { v: producto.orden_total_cant, t: 'n' },
+          'Total Importe': { v: producto.orden_total_importe, t: 'n', z: '"$"#,##0.00' },
+          // Fecha
           'Fecha Registro': producto.fecha_registro
         });
       });
@@ -280,54 +298,104 @@ export class ProyeccionComponent implements OnInit {
   }
 
   private generarExcel(datos: any[], nombreArchivo: string, conSaltos: boolean = false): void {
-    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(datos);
+    // 1. Crear un libro de trabajo nuevo
+    const workbook: XLSX.WorkBook = XLSX.utils.book_new();
 
-    // Configurar anchos de columnas automáticamente
+    // 2. Crear una hoja de cálculo con los datos
+    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet([]);
+
+    // 3. Agregar los datos con formato
+    XLSX.utils.sheet_add_json(worksheet, datos, {
+      skipHeader: false,
+      origin: 'A1',
+      cellDates: true
+    });
+
+    // 4. Configurar anchos de columnas
     const columnWidths = Object.keys(datos[0] || {}).map(key => ({
       wch: Math.min(
         Math.max(
           key.length,
-          ...datos.map(row => (row[key]?.toString() || '').length)
+          ...datos.map(row => {
+            const value = row[key];
+            return (value?.v?.toString() || value?.toString() || '').length
+          })
         ) + 2,
-        50 // Ancho máximo de 50 caracteres
+        50
       )
     }));
     worksheet['!cols'] = columnWidths;
 
-    // Aplicar formato de moneda a campos numéricos
-    Object.keys(datos[0] || {}).forEach((key, index) => {
-      if (key.includes('Precio') || key.includes('Importe')) {
-        const colLetter = XLSX.utils.encode_col(index);
-        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+    // 5. Configurar estilos directamente en las celdas (SOLUCIÓN DEFINITIVA)
+    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
 
-        for (let row = 1; row <= range.e.r; row++) {
-          const cell = worksheet[`${colLetter}${row}`];
-          if (cell && typeof cell.v === 'number') {
-            cell.z = '"$"#,##0.00';
-          }
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const header = worksheet[XLSX.utils.encode_cell({ r: range.s.r, c: C })].v;
+
+      for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+
+        if (!worksheet[cellAddress]) continue;
+
+        // Forzar formato de texto para campos clave
+        if (header.includes('Clave') ||
+          header === 'EAN' ||
+          header === 'Modelo' ||
+          header === 'Referencia' ||
+          header === 'Folio') {
+          worksheet[cellAddress].t = 's';
+          worksheet[cellAddress].z = '@';
+
+          // Agregar estilo explícito para formato de texto
+          worksheet[cellAddress].s = {
+            ...(worksheet[cellAddress].s || {}),
+            numFmt: '@' // Formato de texto explícito
+          };
+        }
+
+        // Formato de moneda para precios
+        if ((header.includes('Precio') || header.includes('Importe')) && worksheet[cellAddress].v != null) {
+          worksheet[cellAddress].z = '"$"#,##0.00';
+          worksheet[cellAddress].s = {
+            ...(worksheet[cellAddress].s || {}),
+            numFmt: '"$"#,##0.00'
+          };
         }
       }
-    });
+    }
 
-    // Habilitar saltos de línea para celdas largas
+    // 6. Configurar saltos de línea si es necesario
     if (conSaltos) {
-      const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-      for (let row = 1; row <= range.e.r; row++) {
-        for (let col = 0; col <= range.e.c; col++) {
-          const cell = worksheet[XLSX.utils.encode_cell({ r: row, c: col })];
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+          const cell = worksheet[cellAddress];
+
           if (cell && cell.v && typeof cell.v === 'string' && cell.v.length > 30) {
-            cell.s = { ...cell.s, alignment: { wrapText: true } };
+            cell.s = {
+              ...(cell.s || {}),
+              alignment: {
+                wrapText: true,
+                vertical: 'top'
+              }
+            };
           }
         }
       }
     }
 
-    const workbook: XLSX.WorkBook = {
-      Sheets: { 'Datos': worksheet },
-      SheetNames: ['Datos']
-    };
+    // 7. Agregar la hoja al libro
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Datos');
 
-    const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    // 8. Escribir el archivo con todas las opciones necesarias
+    const excelBuffer: any = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+      cellStyles: true,
+      bookSST: true // Importante para formatos de texto
+    });
+
+    // 9. Guardar el archivo
     const blob: Blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
     FileSaver.saveAs(blob, `${nombreArchivo}_${new Date().toISOString().slice(0, 10)}.xlsx`);
   }

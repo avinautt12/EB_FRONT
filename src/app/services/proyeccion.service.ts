@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +15,17 @@ export class ProyeccionService {
   constructor(private http: HttpClient, private authService: AuthService) { }
 
   getProyecciones(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/proyecciones`);
+    return this.http.get<any[]>(`${this.baseUrl}/proyecciones`).pipe(
+      map(proyecciones => proyecciones.map(proyeccion => ({
+        ...proyeccion,
+        clave_6_digitos: this.limpiarClave6Digitos(proyeccion.clave_6_digitos)
+      })))
+    );
+  }
+
+  private limpiarClave6Digitos(valor: string): string {
+    // Elimina .0 al final si existe y cualquier espacio
+    return valor ? valor.toString().replace(/\.0$/, '').trim() : '';
   }
 
   getProyeccionesLimpias(): Observable<any[]> {

@@ -34,10 +34,10 @@ export class LoginComponent {
     this.authService.login(credentials).subscribe({
       next: (response) => {
         localStorage.setItem('token', response.token);
-        console.log('Token guardado en localStorage:', response.token);
+        //console.log('Token guardado en localStorage:', response.token);
 
         const decodedToken: any = jwtDecode(response.token);
-        console.log('Token decodificado:', decodedToken);
+        //console.log('Token decodificado:', decodedToken);
 
         if (decodedToken.rol === 1) {
           this.router.navigate(['/home']);
