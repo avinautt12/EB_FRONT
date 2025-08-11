@@ -1,0 +1,224 @@
+/* Estilos principales del contenedor del filtro */
+.sort-dropdown {
+  position: relative;
+  display: inline-block;
+  width: 90%;
+}
+
+/* Estilos del botón principal */
+.sort-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  gap: 4px;
+  min-width: 40px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  background-color: #ffffff;
+  outline: none;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.sort-btn:hover {
+  background-color: #e9ecef;
+  border-color: #ced4da;
+}
+
+.sort-btn i {
+  margin-left: auto;
+  gap: 15px;
+  transition: transform 0.2s ease;
+}
+
+.sort-dropdown.show .sort-btn i.fa-chevron-down {
+  transform: rotate(180deg);
+}
+
+.selected-text {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: calc(100% - 24px);
+}
+
+/* Estilos del dropdown - Versión mejorada */
+.filter-options {
+  width: 280px;
+  background-color: white;
+  color: #212529;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  position: absolute;
+  left: 0;
+  z-index: 1050;
+  margin-top: 15px;
+  display: none;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sort-dropdown.show .filter-options {
+  display: flex;
+}
+
+/* Contenedor principal del dropdown */
+.filter-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  max-height: 400px;
+}
+
+/* Secciones del filtro */
+.filter-section {
+  padding: 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.filter-section:last-child {
+  border-bottom: none;
+}
+
+.filter-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #495057;
+  font-weight: 500;
+}
+
+/* Grupo de radio buttons */
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.radio-group input[type="radio"] {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: #0d6efd;
+  cursor: pointer;
+}
+
+/* Rango de fechas */
+.date-range {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.date-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.date-input label {
+  min-width: 50px;
+  font-size: 14px;
+  color: #495057;
+}
+
+.date-input input[type="date"] {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.15s ease;
+}
+
+.date-input input[type="date"]:focus {
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Estilos para los botones de acción */
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px;
+  border-top: 1px solid #e9ecef;
+  background: #f8f9fa;
+  position: sticky;
+  bottom: 0;
+  flex-shrink: 0;
+}
+
+.filter-actions button {
+  min-width: 80px;
+  padding: 8px 16px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 36px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-actions button:first-child {
+  color: #dc3545;
+  background-color: #fff;
+  border-color: #dc3545;
+}
+
+.filter-actions button:first-child:hover {
+  background-color: #f8d7da;
+}
+
+.filter-actions button:last-child {
+  color: #fff;
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.filter-actions button:last-child:hover {
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
+}
+
+/* Scrollbar personalizado */
+.filter-content-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+.filter-content-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filter-content-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.filter-content-wrapper::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.filter-content-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

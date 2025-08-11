@@ -1,10 +1,13 @@
 .monitor-container {
-  max-width: 95%;
+  max-width: 90%;
+  /* Cambiado de 95% a 100% */
   margin: 2rem auto;
   padding-bottom: 1.5rem;
   font-family: 'Segoe UI', sans-serif;
   color: #FFFCF2;
   min-height: calc(100vh - 10rem);
+  overflow: visible;
+  /* Asegúrate de que no haya overflow hidden */
 }
 
 h2 {
@@ -13,7 +16,6 @@ h2 {
   margin-bottom: 1rem;
 }
 
-/* Acciones */
 .acciones-monitor {
   display: flex;
   flex-wrap: wrap;
@@ -41,17 +43,49 @@ h2 {
   transform: scale(1.08);
 }
 
-/* Tabla */
+/* Contenedor de la tabla - Modificado */
 .tabla-contenedor {
   position: relative;
   width: 100%;
+  height: 100%;
+  min-height: 400px;
+  overflow: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.tabla-contenedor::-webkit-scrollbar {
+  display: none;
+}
+
+.tabla-scroll-horizontal {
+  width: fit-content;
+  /* Ancho según contenido */
+  min-width: 100%;
+  /* Mínimo el ancho del contenedor */
   overflow-x: auto;
+  /* Habilita scroll horizontal */
+  overflow-y: hidden;
+  /* Oculta scroll vertical */
+  -ms-overflow-style: none;
+  /* IE y Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.tabla-contenedor::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari y Opera */
 }
 
 .tabla-facturas {
-  width: 100%;
+  width: auto;
+  /* Cambiado de 100% a auto */
+  min-width: 100%;
+  /* Asegura que sea al menos tan ancha como el contenedor */
   border-collapse: collapse;
-  /* Elimina display: block y max-height del table principal */
+  table-layout: auto;
+  /* Permite que las celdas se ajusten al contenido */
 }
 
 .tabla-facturas thead {
@@ -59,7 +93,6 @@ h2 {
   position: sticky;
   top: 0;
   z-index: 10;
-  /* Aumenta el z-index del thead */
 }
 
 .tabla-facturas thead th {
@@ -71,8 +104,7 @@ h2 {
   padding: 0.6rem;
   text-align: left;
   white-space: nowrap;
-  /* Añade position: relative para establecer un nuevo contexto de apilamiento */
-  position: relative;
+  /* Evita saltos de línea en headers */
 }
 
 .tabla-facturas tbody tr {
@@ -91,12 +123,10 @@ h2 {
   border: 1px solid #444;
   padding: 0.6rem;
   text-align: left;
-  color: #fff;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: unset;
-  max-width: none;
-  word-break: break-word;
+  white-space: nowrap;
+  /* Evita saltos de línea en celdas */
+  word-break: keep-all;
+  /* Modificado de break-word */
 }
 
 /* Mensaje de carga */
@@ -185,76 +215,6 @@ h2 {
   font-style: italic;
 }
 
-input[type=number]::-webkit-outer-spin-button,
-input[type=number]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.filtro-columna {
-  position: relative;
-  display: inline-block;
-  z-index: 20;
-}
-
-.filtro-columna button {
-  background-color: transparent;
-  border: none;
-  color: #EB5E28;
-  cursor: pointer;
-  margin-left: 5px;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.3rem 0.5rem;
-  border-radius: 6px;
-  transition: background-color 0.2s ease;
-}
-
-.filtro-columna button:hover {
-  background-color: rgba(235, 94, 40, 0.1);
-}
-
-.filtro-columna button::after {
-  content: "⏷";
-  font-size: 0.7rem;
-}
-
-.dropdown-filtro {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: #2a2a28;
-  border: 1px solid #2a2a28;
-  padding: 0.75rem;
-  z-index: 1000;
-  /* Muy alto para asegurar que esté encima */
-  min-width: 200px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  animation: fadeIn 0.2s ease-in-out;
-  /* Añade esto para que no se desborde */
-  overflow: visible !important;
-  transform: translateZ(0);
-  /* Forzar aceleración hardware */
-}
-
-.dropdown-filtro input {
-  width: 90%;
-  padding: 0.5rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  background-color: #fff;
-  color: #000;
-  font-size: 0.9rem;
-}
-
-.monitor-container {
-  overflow-x: hidden;
-  font-size: 15px;
-}
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -265,289 +225,6 @@ input[type=number]::-webkit-inner-spin-button {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.filtro-dropdown-wrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.filtro-dropdown-box {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: #2a2a28;
-  padding: 0.25rem;
-  border: 1px solid #444;
-  border-radius: 4px;
-  z-index: 99;
-  width: 180px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-}
-
-.filtro-dropdown-box input[type="text"],
-.filtro-dropdown-box input[type="date"] {
-  width: 100%;
-  padding: 0.3rem;
-  font-size: 0.85rem;
-  border: 1px solid #666;
-  border-radius: 3px;
-  background-color: #1e1e1c;
-  color: white;
-}
-
-.filtro-dropdown-box label {
-  display: block;
-  margin-bottom: 0.3rem;
-  color: white;
-  font-size: 0.75rem;
-}
-
-.filtro-dropdown-wrapper button {
-  background: transparent;
-  border: 1px solid #EB5E28;
-  color: #EB5E28;
-  border-radius: 4px;
-  padding: 2px 6px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  transition: background-color 0.2s ease;
-}
-
-.filtro-dropdown-wrapper button:hover {
-  background-color: #EB5E28;
-  color: white;
-}
-
-/* Contenedor principal */
-.compact-date-filter {
-  position: relative;
-  display: inline-block;
-  margin-left: 8px;
-}
-
-/* Botón principal compacto */
-.compact-date-btn {
-  background: rgba(235, 94, 40, 0.1);
-  border: 1px solid #EB5E28;
-  border-radius: 4px;
-  padding: 2px 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.compact-date-btn:hover {
-  background: rgba(235, 94, 40, 0.2);
-}
-
-.sort-icon {
-  font-size: 12px;
-  color: #EB5E28;
-}
-
-.filter-icon {
-  background-color: transparent;
-  border: none;
-  color: #EB5E28;
-  cursor: pointer;
-  font-size: 0.7rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.3rem 0.5rem;
-  border-radius: 6px;
-  transition: background-color 0.2s ease;
-}
-
-.filter-icon:hover {
-  background-color: rgba(235, 94, 40, 0.1);
-}
-
-/* Panel flotante */
-.compact-date-panel {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: #2a2a28;
-  border: 1px solid #444;
-  border-radius: 6px;
-  padding: 10px;
-  z-index: 1000;
-  width: 180px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.date-range-controls {
-  margin-bottom: 10px;
-}
-
-.date-input-group {
-  margin-bottom: 8px;
-}
-
-.date-input-group label {
-  display: block;
-  font-size: 11px;
-  color: #ccc;
-  margin-bottom: 2px;
-}
-
-.compact-date-input {
-  width: 92%;
-  padding: 4px 6px;
-  border: 1px solid #555;
-  border-radius: 3px;
-  background: #1e1e1c;
-  color: white;
-  font-size: 12px;
-}
-
-.date-sort-controls {
-  display: flex;
-  gap: 6px;
-}
-
-.date-sort-controls button {
-  flex: 1;
-  padding: 4px 6px;
-  font-size: 11px;
-  background: #1e1e1c;
-  border: 1px solid #555;
-  color: #ccc;
-  cursor: pointer;
-  border-radius: 3px;
-}
-
-.date-sort-controls button.active {
-  border-color: #EB5E28;
-  color: #EB5E28;
-  font-weight: bold;
-}
-
-/* Contenedor compacto similar al filtro de fecha */
-.compact-filter-container {
-  position: relative;
-  display: inline-block;
-}
-
-.compact-filter-btn {
-  background: transparent;
-  border: none;
-  color: #EB5E28;
-  font-size: 1rem;
-  cursor: pointer;
-  padding: 0 0.2rem;
-}
-
-.compact-filter-panel {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background-color: #2a2a28;
-  border: 1px solid #444;
-  padding: 0.5rem;
-  z-index: 20;
-  min-width: 150px;
-  border-radius: 6px;
-  max-height: 250px;
-  overflow-y: auto;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
-
-/* Checkbox dentro del filtro */
-.checkbox-group label {
-  display: block;
-  margin-bottom: 0.25rem;
-  font-size: 0.9rem;
-  color: #fff;
-}
-
-.checkbox-group input[type="checkbox"] {
-  margin-right: 0.4rem;
-}
-
-.compact-dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.compact-dropdown-btn {
-  background-color: transparent;
-  border: none;
-  color: #EB5E28;
-  cursor: pointer;
-  font-size: 1.1rem;
-}
-
-.compact-dropdown-panel {
-  position: absolute;
-  background-color: #2a2a28;
-  border: 1px solid #444;
-  padding: 0.5rem;
-  z-index: 100;
-  max-height: 200px;
-  overflow-y: auto;
-  width: 220px;
-  color: white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-.dropdown-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.9rem;
-}
-
-.dropdown-actions button {
-  background-color: #555;
-  color: #fff;
-  border: none;
-  padding: 0.2rem 0.5rem;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-
-.dropdown-search {
-  width: 100%;
-  margin-bottom: 0.5rem;
-  padding: 0.3rem;
-  border-radius: 5px;
-  border: none;
-}
-
-.dropdown-opciones label {
-  display: block;
-  margin: 0.25rem 0;
-  font-size: 0.7rem;
-}
-
-.filter-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-
-.mini-btn {
-  padding: 2px 6px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  background-color: #555;
-  border: 1px solid #555;
-  border-radius: 4px;
-  color: #fff;
-}
-
-.compact-dropdown-panel.left-aligned {
-  left: 0;
-  right: auto;
-  transform: translateX(0);
-}
-
-.columna-categoria.with-dropdown {
-  position: relative;
 }
 
 .dialogo-exportar {
@@ -640,6 +317,23 @@ input[type=number]::-webkit-inner-spin-button {
   color: #1e1d1b;
 }
 
+.boton-exportar {
+  background-color: transparent;
+  color: #FFFCF2;
+  padding: 0.6rem 1.5rem;
+  border: 2px solid #FFFCF2;
+  border-radius: 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.boton-exportar:hover {
+  background-color: #FFFCF2;
+  color: #1e1d1b;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -651,3 +345,6 @@ input[type=number]::-webkit-inner-spin-button {
     transform: translate(-50%, -50%);
   }
 }
+
+/* filtros */
+

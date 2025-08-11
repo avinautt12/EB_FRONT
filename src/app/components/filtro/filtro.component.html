@@ -1,0 +1,44 @@
+<div class="sort-dropdown" [class.show]="showDropdown">
+  <button class="sort-btn" (click)="toggleDropdown($event)">
+    <i class="fas fa-filter"></i>
+    <span *ngIf="hasSelectedOptions" class="selected-text">
+      {{ selectedLabel }}
+    </span>
+    <i class="fas fa-chevron-down"></i>
+  </button>
+
+  <div class="filter-options">
+    <div class="filter-content-wrapper">
+      <div class="filter-search">
+        <input type="text" 
+               [(ngModel)]="searchTerm" 
+               (input)="filterOptions()" 
+               placeholder="Escribe aquí"
+               (click)="$event.stopPropagation()"
+               (keydown.enter)="applyFilter()">
+      </div>
+      
+      <div class="filter-items-container">
+        <!-- Mensaje cuando no hay resultados -->
+        <div *ngIf="filteredOptions.length === 0" class="no-selections">
+          {{ searchTerm ? 'No se encontraron resultados' : 'No hay elementos seleccionados' }}
+        </div>
+        
+        <div *ngFor="let option of filteredOptions" class="filter-item">
+          <label>
+            <input type="checkbox" 
+                   [(ngModel)]="option.selected"
+                   (change)="onSelectionChange()"
+                   (click)="$event.stopPropagation()">
+            {{ option.value }}
+          </label>
+        </div>
+      </div>
+      
+      <div class="filter-actions">
+        <button (click)="clearFilter(); $event.stopPropagation()">Limpiar</button>
+        <button (click)="applyFilter(); $event.stopPropagation()">Aplicar</button>
+      </div>
+    </div>
+  </div>
+</div>

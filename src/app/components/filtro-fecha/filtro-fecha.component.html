@@ -1,0 +1,50 @@
+<div class="sort-dropdown" [class.show]="showDropdown">
+  <button class="sort-btn" (click)="toggleDropdown($event)">
+    <i class="fas fa-filter"></i>
+    <span *ngIf="ordenSeleccionado || fechaDesde || fechaHasta" class="selected-text">
+      {{ getSelectedLabel() }}
+    </span>
+    <i class="fas fa-chevron-down"></i>
+  </button>
+
+  <div class="filter-options" *ngIf="showDropdown">
+    <div class="filter-content-wrapper">
+      <div class="filter-section">
+        <h4>Ordenar por fecha</h4>
+        <div class="radio-group">
+          <label>
+            <input type="radio" name="orden" [(ngModel)]="ordenSeleccionado" value="asc">
+            Ascendente (Más antiguo primero)
+          </label>
+          <label>
+            <input type="radio" name="orden" [(ngModel)]="ordenSeleccionado" value="desc">
+            Descendente (Más reciente primero)
+          </label>
+          <label>
+            <input type="radio" name="orden" [(ngModel)]="ordenSeleccionado" [value]="null">
+            Sin orden
+          </label>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <h4>Filtrar por rango</h4>
+        <div class="date-range">
+          <div class="date-input">
+            <label>Desde:</label>
+            <input type="date" [(ngModel)]="fechaDesde">
+          </div>
+          <div class="date-input">
+            <label>Hasta:</label>
+            <input type="date" [(ngModel)]="fechaHasta">
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button (click)="limpiarFiltro(); $event.stopPropagation()">Limpiar</button>
+        <button (click)="aplicarFiltro(); $event.stopPropagation()">Aplicar</button>
+      </div>
+    </div>
+  </div>
+</div>

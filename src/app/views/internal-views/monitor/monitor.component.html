@@ -1,296 +1,189 @@
 <app-home-bar></app-home-bar>
 
+<app-alerta *ngIf="mensajeAlerta" [mensaje]="mensajeAlerta" [tipo]="tipoAlerta"></app-alerta>
+
 <div class="monitor-container">
   <h2>Monitor de Facturas</h2>
 
+  <!-- Barra de acciones -->
   <div class="acciones-monitor">
     <button [routerLink]="['/previo']">
       <i class="fas fa-arrow-left"></i> Previo
     </button>
+
     <button (click)="seleccionarArchivo()">
       <i class="fas fa-file-import"></i> Importar
     </button>
-    <input #inputArchivo type="file" (change)="importarArchivo($event)" hidden />
-    <button (click)="abrirDialogoExportar()"><i class="fas fa-file-export"></i> Exportar</button>
+    <input #inputArchivo type="file" (change)="importarArchivo($event)" hidden accept=".xlsx,.xls" />
+
+    <button (click)="abrirDialogoExportar()">
+      <i class="fas fa-file-export"></i> Exportar
+    </button>
   </div>
 
+  <!-- Diálogo exportar -->
   <dialog #dialogoExportar class="dialogo-exportar">
     <h3>Selecciona columnas a exportar</h3>
-    <div *ngFor="let col of columnasDisponibles">
-      <label>
-        <input type="checkbox" [(ngModel)]="col.seleccionado" />
-        {{ col.etiqueta }}
-      </label>
+
+    <div class="columnas-exportar">
+      <div *ngFor="let col of columnasDisponibles" class="columna-exportar">
+        <label>
+          <input type="checkbox" [(ngModel)]="col.seleccionado" />
+          {{ col.etiqueta }}
+        </label>
+      </div>
     </div>
+
     <div class="botones-dialogo">
-      <button class="boton-login" (click)="exportarExcel()">Exportar</button>
+      <button class="boton-exportar" (click)="exportarExcel()">Exportar</button>
       <button class="boton-cancelar" (click)="cerrarDialogoExportar()">Cancelar</button>
     </div>
   </dialog>
 
+  <!-- Spinner carga -->
   <div *ngIf="cargando" class="cargando-spinner">
     <div class="spinner"></div>
-    <p>Cargando...</p>
+    <p>Cargando datos...</p>
   </div>
 
+  <!-- Mensaje sin datos -->
   <div *ngIf="!cargando && facturasPaginadas.length === 0" class="sin-datos">
-    <p>No se pudieron cargar los datos o no hay facturas disponibles.</p>
+    <p>No se encontraron facturas con los filtros aplicados.</p>
   </div>
 
-  <div *ngIf="!cargando" class="tabla-contenedor">
+  <!-- Tabla facturas -->
+  <div *ngIf="!cargando && facturasPaginadas.length > 0" class="tabla-contenedor">
     <table class="tabla-facturas">
       <thead>
         <tr>
-          <th class="columna-numero">
-            Número de Factura
-            <div class="filtro-columna">
-              <button (click)="toggleFiltro('numero_factura')"></button>
-              <div class="dropdown-filtro" *ngIf="filtroAbierto === 'numero_factura'">
-                <input type="text" [(ngModel)]="filtros.numero_factura" (input)="filtrarFacturas()"
-                  placeholder="Filtrar por número..." />
-              </div>
-            </div>
+
+          <th class="columna-numero" style="min-width: 140px;">
+            Número Factura
+            <app-filtro filtroId="numero" [options]="numeroOptions" [(showDropdown)]="showNumeroFilter"
+              (apply)="onNumeroFilterApply($event)" (clear)="onNumeroFilterClear()">
+            </app-filtro>
           </th>
-          <th class="columna-referencia">
-            Referencia Interna
-            <div class="filtro-columna">
-              <button (click)="toggleFiltro('referencia_interna')"></button>
-              <div class="dropdown-filtro" *ngIf="filtroAbierto === 'referencia_interna'">
-                <input type="text" [(ngModel)]="filtros.referencia_interna" (input)="filtrarFacturas()"
-                  placeholder="Filtrar por referencia..." />
-              </div>
-            </div>
+
+          <th class="columna-referencia" style="min-width: 140px;">
+            Referencia
+            <app-filtro filtroId="referencia" [options]="referenciaOptions" [(showDropdown)]="showReferenciaFilter"
+              (apply)="onReferenciaFilterApply($event)" (clear)="onReferenciaFilterClear()"></app-filtro>
           </th>
-          <th class="columna-producto">
+
+          <th class="columna-producto" style="min-width: 200px;">
             Producto
-            <div class="filtro-columna">
-              <button (click)="toggleFiltro('nombre_producto')"></button>
-              <div class="dropdown-filtro" *ngIf="filtroAbierto === 'nombre_producto'">
-                <input type="text" [(ngModel)]="filtros.nombre_producto" (input)="filtrarFacturas()"
-                  placeholder="Filtrar por producto..." />
-              </div>
-            </div>
+            <app-filtro filtroId="producto" [options]="productoOptions" [(showDropdown)]="showProductoFilter"
+              (apply)="onProductoFilterApply($event)" (clear)="onProductoFilterClear()"></app-filtro>
           </th>
+
           <th class="columna-contacto-ref">
             Ref. Contacto
-            <div class="filtro-columna">
-              <button (click)="toggleFiltro('contacto_referencia')"></button>
-              <div class="dropdown-filtro" *ngIf="filtroAbierto === 'contacto_referencia'">
-                <input type="text" [(ngModel)]="filtros.contacto_referencia" (input)="filtrarFacturas()"
-                  placeholder="Filtrar por ref. contacto..." />
-              </div>
-            </div>
+            <app-filtro filtroId="contactoReferencia" [options]="contactoReferenciaOptions" [(showDropdown)]="showContactoReferenciaFilter"
+              (apply)="onContactoReferenciaFilterApply($event)"
+              (clear)="onContactoReferenciaFilterClear()"></app-filtro>
           </th>
-          <th class="columna-contacto-nom">
+
+          <th class="columna-contacto-nom" style="min-width: 180px;">
             Nombre Contacto
-            <div class="filtro-columna">
-              <button (click)="toggleFiltro('contacto_nombre')"></button>
-              <div class="dropdown-filtro" *ngIf="filtroAbierto === 'contacto_nombre'">
-                <input type="text" [(ngModel)]="filtros.contacto_nombre" (input)="filtrarFacturas()"
-                  placeholder="Filtrar por nombre contacto..." />
-              </div>
-            </div>
+            <app-filtro filtroId="contactoNombre" [options]="contactoNombreOptions" [(showDropdown)]="showContactoNombreFilter"
+              (apply)="onContactoNombreFilterApply($event)" (clear)="onContactoNombreFilterClear()"></app-filtro>
           </th>
-          <th class="columna-fecha">
+
+          <th class="columna-fecha" style="min-width: 100px;">
             Fecha
-            <div class="compact-date-filter">
-              <!-- Botón combinado para ordenación y filtro -->
-              <button class="compact-date-btn" (click)="toggleFechaFilter()">
-                <span class="sort-icon">{{ordenFechaAscendente ? '↑' : '↓'}}</span>
-                <span class="filter-icon">⏷</span>
-              </button>
-              <!-- Panel de filtro flotante -->
-              <div class="compact-date-panel" *ngIf="filtroFechaAbierto">
-                <div class="date-range-controls">
-                  <div class="date-input-group">
-                    <label>Desde:</label>
-                    <input type="date" [(ngModel)]="filtros.fecha_desde" (change)="aplicarFiltroFecha()"
-                      class="compact-date-input">
-                  </div>
-                  <div class="date-input-group">
-                    <label>Hasta:</label>
-                    <input type="date" [(ngModel)]="filtros.fecha_hasta" (change)="aplicarFiltroFecha()"
-                      class="compact-date-input">
-                  </div>
-                </div>
-                <div class="date-sort-controls">
-                  <button (click)="cambiarOrdenFecha('asc')" [class.active]="ordenFechaAscendente">↑ Ascendente</button>
-                  <button (click)="cambiarOrdenFecha('desc')" [class.active]="!ordenFechaAscendente">↓
-                    Descendente</button>
-                </div>
-              </div>
-            </div>
+            <app-filtro-fecha filtroId="fecha" [(showDropdown)]="showFechaFilter" (apply)="onFechaFilterApply($event)"
+              (clear)="onFechaFilterClear()">
+            </app-filtro-fecha>
           </th>
-          <th class="columna-precio">Precio Unitario</th>
+
+          <!-- Columnas sin filtro de texto -->
+          <th style="min-width: 120px;">Precio Unit.</th>
           <th class="columna-cantidad">Cantidad</th>
-          <th class="columna-venta-total">Venta Total</th>
-          <th class="columna-marca">
+          <th style="min-width: 120px;">Total</th>
+
+          <!-- Filtros con checkbox (ejemplo Marca) -->
+          <th class="columna-marca" style="min-width: 120px;">
             Marca
-            <div class="compact-filter-container">
-              <button class="compact-filter-btn" (click)="toggleFiltro('marca')">
-                <span class="filter-icon">⏷</span>
-              </button>
-              <div class="compact-filter-panel" *ngIf="filtroAbierto === 'marca'">
-                <div class="filter-actions">
-                  <button class="mini-btn" (click)="seleccionarTodasMarcas()">Seleccionar todas</button>
-                  <button class="mini-btn" (click)="borrarSeleccionMarcas()">Borrar</button>
-                </div>
-                <div class="checkbox-group">
-                  <label *ngFor="let marca of marcasUnicas">
-                    <input type="checkbox" [checked]="filtrosCheckbox.marcasSeleccionadas.has(marca)"
-                      (change)="toggleMarca(marca, $event)" />
-                    {{ marca }}
-                  </label>
-                </div>
-              </div>
-            </div>
+            <app-filtro filtroId="marca" [options]="marcaOptions" [(showDropdown)]="showMarcaFilter" (apply)="onMarcaFilterApply($event)"
+              (clear)="onMarcaFilterClear()"></app-filtro>
           </th>
-          <th class="columna-subcategoria">
+
+          <!-- Más columnas con filtros checkbox similar a Marca -->
+          <th class="columna-subcategoria" style="min-width: 120px;">
             Subcategoría
-            <div class="compact-filter-container">
-              <button class="compact-filter-btn" (click)="toggleFiltro('subcategoria')">
-                <span class="filter-icon">⏷</span>
-              </button>
-              <div class="compact-filter-panel" *ngIf="filtroAbierto === 'subcategoria'">
-                <div class="filter-actions">
-                  <button class="mini-btn" (click)="seleccionarTodasSubcategorias()">Seleccionar todas</button>
-                  <button class="mini-btn" (click)="borrarSeleccionSubcategorias()">Borrar</button>
-                </div>
-                <div class="checkbox-group">
-                  <label *ngFor="let sub of subcategoriasUnicas">
-                    <input type="checkbox" [checked]="filtrosCheckbox.subcategoriasSeleccionadas.has(sub)"
-                      (change)="toggleSubcategoria(sub, $event)" />
-                    {{ sub }}
-                  </label>
-                </div>
-              </div>
-            </div>
+            <app-filtro filtroId="subcategoria" [options]="subcategoriaOptions" [(showDropdown)]="showSubcategoriaFilter"
+              (apply)="onSubcategoriaFilterApply($event)" (clear)="onSubcategoriaFilterClear()"></app-filtro>
           </th>
-          <th class="columna-eride">
+
+          <th class="columna-eride" style="min-width: 50px;">
             ERIDE
-            <div class="filtro-columna">
-              <button class="compact-filter-btn" (click)="toggleFiltro('eride')">
-              </button>
-              <div class="compact-filter-panel" *ngIf="filtroAbierto === 'eride'">
-                <div class="checkbox-group">
-                  <label *ngFor="let valor of erideUnicos">
-                    <input type="checkbox" [checked]="filtrosCheckbox.erideSeleccionados.has(valor)"
-                      (change)="toggleERIDE(valor, $event)" />
-                    {{ valor }}
-                  </label>
-                </div>
-              </div>
-            </div>
+            <app-filtro filtroId="eride" [options]="erideOptions" [(showDropdown)]="showErideFilter" (apply)="onErideFilterApply($event)"
+              (clear)="onErideFilterClear()"></app-filtro>
           </th>
-          <th class="columna-apparel">
+
+          <th class="columna-apparel" style="min-width: 50px;">
             APPAREL
-            <div class="filtro-columna">
-              <button class="compact-filter-btn" (click)="toggleFiltro('apparel')">
-              </button>
-              <div class="compact-filter-panel" *ngIf="filtroAbierto === 'apparel'">
-                <div class="checkbox-group">
-                  <label *ngFor="let valor of apparelUnicos">
-                    <input type="checkbox" [checked]="filtrosCheckbox.apparelSeleccionados.has(valor)"
-                      (change)="toggleAPPAREL(valor, $event)" />
-                    {{ valor }}
-                  </label>
-                </div>
-              </div>
-            </div>
+            <app-filtro filtroId="apparel" [options]="apparelOptions" [(showDropdown)]="showApparelFilter"
+              (apply)="onApparelFilterApply($event)" (clear)="onApparelFilterClear()"></app-filtro>
           </th>
-          <th class="columna-categoria with-dropdown">
+
+          <th class="columna-evac" style="min-width: 50px;">
+            EVAC
+            <app-filtro filtroId="evac" [options]="evacOptions" [(showDropdown)]="showEvacFilter" (apply)="onEvacFilterApply($event)"
+              (clear)="onEvacFilterClear()"></app-filtro>
+          </th>
+
+          <th class="columna-categoria" style="min-width: 160px;">
             Categoría
-            <div class="compact-dropdown">
-              <button class="compact-dropdown-btn" (click)="toggleFiltro('categoria')">
-                <span class="filter-icon">⏷</span>
-              </button>
-              <div class="compact-dropdown-panel left-aligned" *ngIf="filtroAbierto === 'categoria'">
-                <div class="dropdown-actions">
-                  <button (click)="seleccionarTodasCategorias()">Seleccionar todo</button>
-                  <button (click)="borrarSeleccionCategorias()">Borrar</button>
-                </div>
-                <input type="text" [(ngModel)]="busquedaCategoria" placeholder="Buscar..." class="dropdown-search" />
-                <div class="dropdown-opciones">
-                  <label *ngFor="let categoria of categoriasUnicas | filtroPorTexto: busquedaCategoria">
-                    <input type="checkbox" [checked]="filtrosCheckbox.categoriasSeleccionadas.has(categoria)"
-                      (change)="toggleCategoria(categoria, $event)" />
-                    {{ categoria }}
-                  </label>
-                </div>
-              </div>
-            </div>
+            <app-filtro filtroId="categoria" [options]="categoriaOptions" [(showDropdown)]="showCategoriaFilter"
+              (apply)="onCategoriaFilterApply($event)" (clear)="onCategoriaFilterClear()"></app-filtro>
           </th>
-          <th class="columna-estado">
+
+          <th class="columna-estado" style="min-width: 80px;">
             Estado
-            <div class="compact-filter-container">
-              <button class="compact-filter-btn" (click)="toggleFiltro('estado')">
-                <span class="filter-icon">⏷</span>
-              </button>
-              <div class="compact-filter-panel" *ngIf="filtroAbierto === 'estado'">
-                <div class="checkbox-group">
-                  <label *ngFor="let estado of estadosUnicos">
-                    <input type="checkbox" [checked]="filtrosCheckbox.estadosSeleccionados.has(estado)"
-                      (change)="toggleEstado(estado, $event)" />
-                    {{ estado }}
-                  </label>
-                </div>
-              </div>
-            </div>
           </th>
-          <th class="columna-costo">Costo</th>
         </tr>
       </thead>
-      <tbody class="cuerpo-con-scroll">
+
+      <tbody>
         <tr *ngFor="let factura of facturasPaginadas">
           <td>{{ factura.numero_factura }}</td>
           <td>{{ factura.referencia_interna }}</td>
           <td>{{ factura.nombre_producto }}</td>
           <td>{{ factura.contacto_referencia }}</td>
           <td>{{ factura.contacto_nombre }}</td>
-          <td>{{ factura.fecha_factura | date: 'dd/MM/yyyy' }}</td>
-          <td>${{ factura.precio_unitario }}</td>
+          <td>{{ formatearFecha(factura.fecha_factura) }}</td>
+          <td>{{ factura.precio_unitario | currency }}</td>
           <td>{{ factura.cantidad }}</td>
-          <td>
-            {{
-            factura.venta_total != null
-            ? (factura.venta_total | currency:'USD':'symbol')
-            : (calcularVentaTotal(factura.precio_unitario, factura.cantidad, factura.estado_factura) |
-            currency:'USD':'symbol')
-            }}
-          </td>
-          <td>
-            {{
-            factura.marca != null
-            ? factura.marca
-            : extraerPrimeraParte(factura.categoria_producto)
-            }}
-          </td>
-          <td>
-            {{
-            factura.subcategoria != null
-            ? factura.subcategoria
-            : obtenerSegundaParte(factura.categoria_producto)
-            }}
-          </td>
-          <td>{{ factura.eride != null ? factura.eride : contieneERIDE(factura.categoria_producto) }}</td>
-          <td>{{ factura.apparel != null ? factura.apparel : contieneAPPAREL(factura.categoria_producto) }}</td>
+          <td>{{ factura.venta_total | currency }}</td>
+          <td>{{ factura.marca }}</td>
+          <td>{{ factura.subcategoria }}</td>
+          <td>{{ factura.eride }}</td>
+          <td>{{ factura.apparel }}</td>
+          <td>{{ factura.evac }}</td>
           <td>{{ factura.categoria_producto }}</td>
           <td>{{ factura.estado_factura }}</td>
-          <td>${{ factura.costo_producto }}</td>
         </tr>
       </tbody>
     </table>
   </div>
-  <div class="paginador">
-    <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1">« Primera</button>
-    <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">‹ Anterior</button>
-    <span class="paginador-info">
-      Página
-      <input type="number" min="1" [max]="totalPaginas" [(ngModel)]="paginaActualTemp"
-        (keyup.enter)="cambiarPagina(paginaActualTemp)" />
-      de {{ totalPaginas }}
+
+  <!-- Paginación -->
+  <div class="paginador" *ngIf="facturasFiltradas.length > elementosPorPagina">
+    <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1">
+      <i class="fas fa-angle-double-left"></i>
+    </button>
+    <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">
+      <i class="fas fa-angle-left"></i>
+    </button>
+    <span class="info-pagina">
+      Página <strong>{{ paginaActual }}</strong> de <strong>{{ totalPaginas }}</strong>
     </span>
-    <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">Siguiente ›</button>
-    <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">Última »</button>
+    <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">
+      <i class="fas fa-angle-right"></i>
+    </button>
+    <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">
+      <i class="fas fa-angle-double-right"></i>
+    </button>
   </div>
 </div>

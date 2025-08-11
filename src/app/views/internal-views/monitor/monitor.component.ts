@@ -1,16 +1,18 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MonitorOdooService } from '../../../services/monitor-odoo.service';
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
-import { FiltroPorTextoPipe } from '../../../pipes/filtro-por-texto.pipe';
-import { ViewChild, ElementRef, } from '@angular/core';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
 import { AlertaService } from '../../../services/alerta.service';
+import { AlertaComponent } from '../../../components/alerta/alerta.component';
+import { FiltroComponent } from '../../../components/filtro/filtro.component';
+import { FiltroFechaComponent } from '../../../components/filtro-fecha/filtro-fecha.component';
 
 interface Factura {
+  id: number;
   numero_factura: string;
   referencia_interna: string;
   nombre_producto: string;
@@ -19,95 +21,134 @@ interface Factura {
   fecha_factura: string;
   precio_unitario: number;
   cantidad: number;
+  venta_total: number;
+  marca: string;
+  subcategoria: string;
+  apparel: string;
+  eride: string;
+  evac: string;
   categoria_producto: string;
   estado_factura: string;
-  costo_producto: number;
 }
 
 @Component({
   selector: 'app-monitor',
   standalone: true,
-  imports: [CommonModule, HomeBarComponent, FormsModule, FiltroPorTextoPipe, RouterModule],
+  imports: [CommonModule, HomeBarComponent, FormsModule, RouterModule, AlertaComponent, FiltroComponent, FiltroFechaComponent],
   templateUrl: './monitor.component.html',
-  styleUrl: './monitor.component.css',
+  styleUrls: ['./monitor.component.css'],
   providers: [MonitorOdooService]
 })
 export class MonitorComponent {
-  facturas: any[] = [];
-  cargando: boolean = false;
-
   @ViewChild('inputArchivo') inputArchivo!: ElementRef<HTMLInputElement>;
   @ViewChild('dialogoExportar') dialogoExportar!: ElementRef;
 
-  paginaActual: number = 1;
-  paginaActualTemp: number = 1;
-  elementosPorPagina: number = 20;
-  facturasPaginadas: any[] = [];
+  facturas: Factura[] = [];
+  facturasFiltradas: Factura[] = [];
+  facturasPaginadas: Factura[] = [];
+  cargando = false;
 
-  filtros: any = {
-    numero_factura: '',
-    referencia_interna: '',
-    nombre_producto: '',
-    contacto_referencia: '',
-    contacto_nombre: '',
-    fecha_factura: '',
-    precio_unitario: '',
-    cantidad: '',
-    categoria_producto: '',
-    estado_factura: '',
-    costo_producto: ''
-  };
+  // Paginación
+  paginaActual = 1;
+  paginaActualTemp = 1;
+  elementosPorPagina = 100;
+  totalPaginas = 1;
 
-  facturasFiltradas: any[] = [];
-
-  filtroAbierto: string | null = null;
-  ordenDescendente: boolean = true;
-  ordenFechaAscendente = false;
-
-  filtroFechaAbierto: boolean = false;
-
-  categoriasUnicas: string[] = [];
-  estadosUnicos: string[] = [];
-
-  filtrosCheckbox = {
-    categoriasSeleccionadas: new Set<string>(),
-    estadosSeleccionados: new Set<string>(),
-    marcasSeleccionadas: new Set<string>(),
-    subcategoriasSeleccionadas: new Set<string>(),
-    erideSeleccionados: new Set<string>(),
-    apparelSeleccionados: new Set<string>()
-  };
-
-  filtroCategoriaAbierto: boolean = false;
-  busquedaCategoria: string = '';
-
-  totalPaginas: number = 1;
-
-  marcasUnicas: string[] = [];
-  subcategoriasUnicas: string[] = [];
-  erideUnicos: string[] = ['SI', 'NO'];
-  apparelUnicos: string[] = ['SI', 'NO'];
-
+  // Columnas para exportar
   columnasDisponibles = [
-    { nombre: 'numero_factura', etiqueta: 'Líneas de factura/Número', seleccionado: true },
-    { nombre: 'referencia_interna', etiqueta: 'Líneas de factura/Producto/Referencia interna', seleccionado: true },
-    { nombre: 'nombre_producto', etiqueta: 'Líneas de factura/Producto/Nombre', seleccionado: true },
-    { nombre: 'contacto_referencia', etiqueta: 'Líneas de factura/Contacto/Referencia', seleccionado: true },
-    { nombre: 'contacto_nombre', etiqueta: 'Líneas de factura/Contacto/Nombre', seleccionado: true },
-    { nombre: 'fecha_factura', etiqueta: 'Líneas de factura/Fecha de factura', seleccionado: true },
-    { nombre: 'precio_unitario', etiqueta: 'Líneas de factura/Precio unitario', seleccionado: true },
-    { nombre: 'cantidad', etiqueta: 'Líneas de factura/Cantidad', seleccionado: true },
-    { nombre: 'venta_total', etiqueta: 'Líneas de factura/Venta Total', seleccionado: true },
-    { nombre: 'marca', etiqueta: 'Líneas de factura/Marca', seleccionado: true },
-    { nombre: 'subcategoria', etiqueta: 'Líneas de factura/Subcategoría', seleccionado: true },
-    { nombre: 'eride', etiqueta: 'Líneas de factura/ERIDE', seleccionado: true },
-    { nombre: 'apparel', etiqueta: 'Líneas de factura/APPAREL', seleccionado: true },
-    { nombre: 'categoria_producto', etiqueta: 'Líneas de factura/Producto/Categoría del producto', seleccionado: true },
-    { nombre: 'estado_factura', etiqueta: 'Líneas de factura/Estado', seleccionado: true },
-    { nombre: 'costo_producto', etiqueta: 'Líneas de factura/Producto/Costo', seleccionado: true }
+    { nombre: 'numero_factura', etiqueta: 'Número Factura', seleccionado: true },
+    { nombre: 'referencia_interna', etiqueta: 'Referencia Interna', seleccionado: true },
+    { nombre: 'nombre_producto', etiqueta: 'Producto', seleccionado: true },
+    { nombre: 'contacto_referencia', etiqueta: 'Ref. Contacto', seleccionado: true },
+    { nombre: 'contacto_nombre', etiqueta: 'Nombre Contacto', seleccionado: true },
+    { nombre: 'fecha_factura', etiqueta: 'Fecha Factura', seleccionado: true },
+    { nombre: 'precio_unitario', etiqueta: 'Precio Unitario', seleccionado: true },
+    { nombre: 'cantidad', etiqueta: 'Cantidad', seleccionado: true },
+    { nombre: 'venta_total', etiqueta: 'Venta Total', seleccionado: true },
+    { nombre: 'marca', etiqueta: 'Marca', seleccionado: true },
+    { nombre: 'subcategoria', etiqueta: 'Subcategoría', seleccionado: true },
+    { nombre: 'apparel', etiqueta: 'APPAREL', seleccionado: true },
+    { nombre: 'eride', etiqueta: 'ERIDE', seleccionado: true },
+    { nombre: 'evac', etiqueta: 'EVAC', seleccionado: true },
+    { nombre: 'categoria_producto', etiqueta: 'Categoría', seleccionado: true },
+    { nombre: 'estado_factura', etiqueta: 'Estado', seleccionado: true }
   ];
 
-  constructor(private monitorService: MonitorOdooService, private alertaService: AlertaService) { }
+  mensajeAlerta: string | null = null;
+  tipoAlerta: 'exito' | 'error' = 'exito';
+
+  showNumeroFilter = false;
+  showReferenciaFilter = false;
+  showProductoFilter = false;
+  showContactoReferenciaFilter = false;
+  showContactoNombreFilter = false;
+  showMarcaFilter = false;
+  showSubcategoriaFilter = false;
+  showErideFilter = false;
+  showApparelFilter = false;
+  showEvacFilter = false;
+  showCategoriaFilter = false;
+
+  // Opciones de filtro
+  numeroOptions: { value: string, selected: boolean }[] = [];
+  referenciaOptions: { value: string, selected: boolean }[] = [];
+  productoOptions: { value: string, selected: boolean }[] = [];
+  contactoReferenciaOptions: { value: string, selected: boolean }[] = [];
+  contactoNombreOptions: { value: string, selected: boolean }[] = [];
+  marcaOptions: { value: string, selected: boolean }[] = [];
+  subcategoriaOptions: { value: string, selected: boolean }[] = [];
+  erideOptions: { value: string, selected: boolean }[] = [];
+  apparelOptions: { value: string, selected: boolean }[] = [];
+  evacOptions: { value: string, selected: boolean }[] = [];
+  categoriaOptions: { value: string, selected: boolean }[] = [];
+
+  // Opciones filtradas
+  filteredNumeroOptions: { value: string, selected: boolean }[] = [];
+  filteredReferenciaOptions: { value: string, selected: boolean }[] = [];
+  filteredProductoOptions: { value: string, selected: boolean }[] = [];
+  filteredContactoReferenciaOptions: { value: string, selected: boolean }[] = [];
+  filteredContactoNombreOptions: { value: string, selected: boolean }[] = [];
+  filteredMarcaOptions: { value: string, selected: boolean }[] = [];
+  filteredSubcategoriaOptions: { value: string, selected: boolean }[] = [];
+  filteredErideOptions: { value: string, selected: boolean }[] = [];
+  filteredApparelOptions: { value: string, selected: boolean }[] = [];
+  filteredEvacOptions: { value: string, selected: boolean }[] = [];
+  filteredCategoriaOptions: { value: string, selected: boolean }[] = [];
+
+  // Contadores de selección
+  numeroFilterCount = 0;
+  referenciaFilterCount = 0;
+  productoFilterCount = 0;
+  contactoReferenciaFilterCount = 0;
+  contactoNombreFilterCount = 0;
+  marcaFilterCount = 0;
+  subcategoriaFilterCount = 0;
+  erideFilterCount = 0;
+  apparelFilterCount = 0;
+  evacFilterCount = 0;
+  categoriaFilterCount = 0;
+
+  selectedNumeros: string[] = [];
+  selectedReferencias: string[] = [];
+  selectedProductos: string[] = [];
+  selectedContactos: string[] = [];
+  selectedContactosNombres: string[] = [];
+  selectedMarcas: string[] = [];
+  selectedSubcategorias: string[] = [];
+  selectedEride: string[] = [];
+  selectedApparel: string[] = [];
+  selectedEvac: string[] = [];
+  selectedCategorias: string[] = [];
+
+  showFechaFilter = false;
+  fechaOrden: 'asc' | 'desc' | null = null;
+  fechaDesdeFiltro: string = '';
+  fechaHastaFiltro: string = '';
+
+  constructor(
+    private monitorService: MonitorOdooService,
+    private alertaService: AlertaService
+  ) { }
 
   ngOnInit() {
     this.obtenerFacturas();
@@ -116,78 +157,119 @@ export class MonitorComponent {
   obtenerFacturas() {
     this.cargando = true;
     this.monitorService.getFacturas().subscribe({
-      next: (data: Factura[]) => {
+      next: (data: any[]) => {
         this.facturas = data.filter(f =>
           f.numero_factura && f.numero_factura !== '/' &&
           f.fecha_factura && f.fecha_factura !== '0001-01-01 00:00:00'
         );
 
-        this.categoriasUnicas = [...new Set(
-          this.facturas
-            .map(f => f.categoria_producto)
-            .filter(c => c && c.toUpperCase().trim() !== 'SERVICIOS')
-        )];
-        this.estadosUnicos = [...new Set(
-          this.facturas
-            .map(f => f.estado_factura)
-            .filter(e => e && e !== '0001-01-01 00:00:00')
-        )];
-        this.marcasUnicas = [...new Set(
-          this.facturas
-            .map(f => this.extraerPrimeraParte(f.categoria_producto))
-            .filter(m => m && m.trim() !== '' && m !== '0001-01-01 00:00:00')
-        )];
-        this.subcategoriasUnicas = [...new Set(
-          this.facturas
-            .map(f => this.obtenerSegundaParte(f.categoria_producto))
-            .filter(sub => sub && sub.trim() !== '' && sub !== '0001-01-01 00:00:00')
-        )];
-
-        this.totalPaginas = Math.ceil(this.facturas.length / this.elementosPorPagina);
-        this.actualizarFacturasPaginadas();
+        this.actualizarListasUnicas();
         this.filtrarFacturas();
         this.cargando = false;
       },
       error: (error) => {
         console.error('Error al obtener facturas:', error);
+        this.alertaService.mostrarError('Error al cargar facturas');
         this.cargando = false;
       }
     });
   }
 
+  actualizarListasUnicas() {
+    // Inicializar opciones para el filtro de número de factura
+    const numerosUnicos = [...new Set(this.facturas.map(f => f.numero_factura).filter(n => n))];
+    this.numeroOptions = numerosUnicos.map(numero => ({
+      value: numero,
+      selected: this.selectedNumeros.includes(numero)
+    }));
+
+    const referenciasUnicas = [...new Set(this.facturas.map(f => f.referencia_interna).filter(r => r))];
+    this.referenciaOptions = referenciasUnicas.map(referencia => ({
+      value: referencia,
+      selected: this.selectedReferencias.includes(referencia)
+    }));
+
+    const productosUnicos = [...new Set(this.facturas.map(f => f.nombre_producto).filter(p => p))];
+    this.productoOptions = productosUnicos.map(producto => ({
+      value: producto,
+      selected: this.selectedProductos.includes(producto)
+    }));
+
+    const contactosUnicos = [...new Set(this.facturas.map(f => f.contacto_referencia).filter(c => c))];
+    this.contactoReferenciaOptions = contactosUnicos.map(contacto => ({
+      value: contacto,
+      selected: this.selectedContactos.includes(contacto)
+    }));
+
+    const contactosNombresUnicos = [...new Set(this.facturas.map(f => f.contacto_nombre).filter(c => c))];
+    this.contactoNombreOptions = contactosNombresUnicos.map(contactoNombre => ({
+      value: contactoNombre,
+      selected: this.selectedContactosNombres.includes(contactoNombre)
+    }));
+
+    const marcasUnicas = [...new Set(this.facturas.map(f => f.marca).filter(m => m))];
+    this.marcaOptions = marcasUnicas.map(marca => ({
+      value: marca,
+      selected: this.selectedMarcas.includes(marca)
+    }));
+
+    const subcategoriasUnicas = [...new Set(this.facturas.map(f => f.subcategoria).filter(s => s))];
+    this.subcategoriaOptions = subcategoriasUnicas.map(subcategoria => ({
+      value: subcategoria,
+      selected: this.selectedSubcategorias.includes(subcategoria)
+    }));
+
+    const erideUnicos = [...new Set(this.facturas.map(f => f.eride).filter(e => e))];
+    this.erideOptions = erideUnicos.map(eride => ({
+      value: eride,
+      selected: this.selectedEride.includes(eride)
+    }));
+
+    const apparelUnicos = [...new Set(this.facturas.map(f => f.apparel).filter(a => a))];
+    this.apparelOptions = apparelUnicos.map(apparel => ({
+      value: apparel,
+      selected: this.selectedApparel.includes(apparel)
+    }));
+
+    const evacUnicos = [...new Set(this.facturas.map(f => f.evac).filter(e => e))];
+    this.evacOptions = evacUnicos.map(evac => ({
+      value: evac,
+      selected: this.selectedEvac.includes(evac)
+    }));
+
+    const categoriasUnicas = [...new Set(this.facturas.map(f => f.categoria_producto).filter(c => c))];
+    this.categoriaOptions = categoriasUnicas.map(categoria => ({
+      value: categoria,
+      selected: this.selectedCategorias.includes(categoria)
+    }));
+  }
+
+  // Métodos para importación
   seleccionarArchivo() {
     this.inputArchivo.nativeElement.click();
   }
 
   importarArchivo(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const archivo = input.files[0];
+    if (input.files?.length) {
       const formData = new FormData();
-      formData.append('file', archivo);
+      formData.append('file', input.files[0]);
 
       this.cargando = true;
       this.monitorService.importarFacturas(formData).subscribe({
-        next: (res: any) => {
+        next: (res) => {
           this.alertaService.mostrarExito(res.message);
           this.obtenerFacturas();
-          this.cargando = false;
         },
-        error: err => {
-          if (err.status === 400) {
-            this.alertaService.mostrarError(err.error?.error || 'Error de validación en archivo');
-          } else if (err.status === 500) {
-            this.alertaService.mostrarError('Error interno del servidor. Intenta más tarde.');
-          } else {
-            this.alertaService.mostrarError('Error desconocido al importar');
-          }
-          console.error(err);
+        error: (err) => {
+          this.alertaService.mostrarError(err.error?.error || 'Error al importar');
           this.cargando = false;
         }
       });
     }
   }
 
+  // Métodos para exportación
   abrirDialogoExportar() {
     this.dialogoExportar.nativeElement.showModal();
   }
@@ -196,83 +278,69 @@ export class MonitorComponent {
     this.dialogoExportar.nativeElement.close();
   }
 
-  formatearFecha(fechaStr: string): string {
-    const [anio, mes, dia] = fechaStr.split('-');
-    return `${dia}/${mes}/${anio}`;
-  }
-
   exportarExcel() {
     const columnasSeleccionadas = this.columnasDisponibles
       .filter(c => c.seleccionado)
       .map(c => c.nombre);
 
-    const datosFiltrados = this.facturasFiltradas.map(factura => {
+    const datosExportar = this.facturasFiltradas.map(factura => {
       const fila: any = {};
-      let filaValida = true;
-
       columnasSeleccionadas.forEach(col => {
-        // Manejo especial para columnas calculadas
-        switch (col) {
-          case 'venta_total':
-            fila[col] = this.calcularVentaTotal(factura.precio_unitario, factura.cantidad, factura.estado_factura);
-            break;
-          case 'marca':
-            fila[col] = this.extraerPrimeraParte(factura.categoria_producto);
-            break;
-          case 'subcategoria':
-            fila[col] = this.obtenerSegundaParte(factura.categoria_producto);
-            break;
-          case 'eride':
-            fila[col] = this.contieneERIDE(factura.categoria_producto);
-            break;
-          case 'apparel':
-            fila[col] = this.contieneAPPAREL(factura.categoria_producto);
-            break;
-          default:
-            // Para las columnas normales
-            const valor = factura[col];
-            if (
-              valor === '/' ||
-              valor === '0001-01-01 00:00:00' ||
-              valor === null ||
-              valor === undefined ||
-              valor === ''
-            ) {
-              fila[col] = '';
-            } else if (col.toLowerCase().includes('fecha') && valor) {
-              fila[col] = this.formatearFecha(valor);
-            } else {
-              fila[col] = valor;
-            }
+        let valor = factura[col as keyof Factura] ?? '';
+
+        // Formatear fecha en formato YYYY-MM-DD si la columna es fecha_factura
+        if (col === 'fecha_factura' && valor) {
+          const fecha = new Date(valor);
+          // Formateo YYYY-MM-DD sin horas
+          valor = fecha.toISOString().slice(0, 10);
         }
+
+        // Convertir precio_unitario y venta_total a número
+        if (col === 'precio_unitario' || col === 'venta_total') {
+          if (typeof valor === 'string') {
+            valor = valor.replace(/[^0-9.-]+/g, '');
+            valor = parseFloat(valor);
+          }
+        }
+
+        fila[col] = valor;
       });
       return fila;
     });
 
-    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(datosFiltrados);
+    const worksheet = XLSX.utils.json_to_sheet(datosExportar);
 
-    // Ajuste automático del ancho de columnas
-    const columnWidths = columnasSeleccionadas.map(col => {
-      const maxLength = Math.max(
-        col.length,
-        ...datosFiltrados.map(f => (f[col] ? f[col].toString().length : 0))
-      );
-      return { wch: maxLength + 5 };
+    // Ajustar ancho automático
+    const colWidths = columnasSeleccionadas.map(col => {
+      const valores = datosExportar.map(row => row[col]?.toString() ?? '');
+      valores.push(col);
+      const maxLength = Math.max(...valores.map(v => v.length));
+      return { wch: maxLength + 2 };
     });
-    worksheet['!cols'] = columnWidths;
+    worksheet['!cols'] = colWidths;
 
-    const workbook: XLSX.WorkBook = {
-      Sheets: { 'Facturas': worksheet },
-      SheetNames: ['Facturas']
-    };
+    // Formatear columnas numéricas (precio_unitario y venta_total)
+    ['precio_unitario', 'venta_total'].forEach(colName => {
+      const idx = columnasSeleccionadas.indexOf(colName);
+      if (idx !== -1) {
+        const letraCol = XLSX.utils.encode_col(idx);
+        for (let i = 2; i <= datosExportar.length + 1; i++) {
+          const celda = worksheet[`${letraCol}${i}`];
+          if (celda && typeof celda.v === 'number') {
+            celda.t = 'n';
+            celda.z = '#,##0.00';
+          }
+        }
+      }
+    });
 
-    const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob: Blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-    FileSaver.saveAs(blob, 'facturas_exportadas.xlsx');
-
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Facturas');
+    XLSX.writeFile(workbook, 'facturas_exportadas.xlsx');
     this.cerrarDialogoExportar();
   }
 
+  // Métodos de paginación
   cambiarPagina(numero: number) {
     if (numero < 1 || numero > this.totalPaginas) return;
     this.paginaActual = numero;
@@ -280,271 +348,443 @@ export class MonitorComponent {
     this.actualizarFacturasPaginadas();
   }
 
-  // actualizarFacturasPaginadas() {
-  //   const inicio = (this.paginaActual - 1) * this.elementosPorPagina;
-  //   const fin = inicio + this.elementosPorPagina;
-  //   this.facturasPaginadas = this.facturas.slice(inicio, fin);
-  // }
+  actualizarFacturasPaginadas() {
+    const inicio = (this.paginaActual - 1) * this.elementosPorPagina;
+    const fin = inicio + this.elementosPorPagina;
+    this.facturasPaginadas = this.facturasFiltradas.slice(inicio, fin);
+  }
 
   filtrarFacturas() {
     let facturasFiltradas = [...this.facturas];
 
-    facturasFiltradas = facturasFiltradas.filter(f =>
-      f.categoria_producto && f.categoria_producto.toUpperCase().trim() !== 'SERVICIOS'
-    );
-
-    // Filtros específicos
-    if (this.filtros.numero_factura) {
-      facturasFiltradas = facturasFiltradas.filter(f => f.numero_factura?.includes(this.filtros.numero_factura));
-    }
-    if (this.filtros.referencia_interna) {
-      facturasFiltradas = facturasFiltradas.filter(f => f.referencia_interna?.includes(this.filtros.referencia_interna));
-    }
-    if (this.filtros.nombre_producto) {
-      facturasFiltradas = facturasFiltradas.filter(f => f.nombre_producto?.includes(this.filtros.nombre_producto));
-    }
-    if (this.filtros.contacto_referencia) {
-      facturasFiltradas = facturasFiltradas.filter(f => f.contacto_referencia?.includes(this.filtros.contacto_referencia));
-    }
-    if (this.filtros.contacto_nombre) {
-      facturasFiltradas = facturasFiltradas.filter(f => f.contacto_nombre?.toLowerCase().includes(this.filtros.contacto_nombre.toLowerCase()));
-    }
-
-    // Filtros de fecha
-    if (this.filtros.fecha_desde) {
-      const desde = new Date(this.filtros.fecha_desde);
-      facturasFiltradas = facturasFiltradas.filter(f => new Date(f.fecha_factura) >= desde);
-    }
-    if (this.filtros.fecha_hasta) {
-      const hasta = new Date(this.filtros.fecha_hasta);
-      facturasFiltradas = facturasFiltradas.filter(f => new Date(f.fecha_factura) <= hasta);
-    }
-
-    if (this.filtrosCheckbox.categoriasSeleccionadas.size > 0) {
-      facturasFiltradas = facturasFiltradas.filter(f => this.filtrosCheckbox.categoriasSeleccionadas.has(f.categoria_producto));
-    }
-
-    if (this.filtrosCheckbox.estadosSeleccionados.size > 0) {
-      facturasFiltradas = facturasFiltradas.filter(f => this.filtrosCheckbox.estadosSeleccionados.has(f.estado_factura));
-    }
-
-    if (this.filtrosCheckbox.marcasSeleccionadas.size > 0) {
+    // Filtro por números de factura seleccionados
+    if (this.selectedNumeros.length > 0) {
       facturasFiltradas = facturasFiltradas.filter(f =>
-        this.filtrosCheckbox.marcasSeleccionadas.has(this.extraerPrimeraParte(f.categoria_producto))
+        f.numero_factura && this.selectedNumeros.includes(f.numero_factura)
       );
     }
 
-    if (this.filtrosCheckbox.subcategoriasSeleccionadas.size > 0) {
+    // Filtro por referencias seleccionadas
+    if (this.selectedReferencias.length > 0) {
       facturasFiltradas = facturasFiltradas.filter(f =>
-        this.filtrosCheckbox.subcategoriasSeleccionadas.has(this.obtenerSegundaParte(f.categoria_producto))
+        f.referencia_interna && this.selectedReferencias.includes(f.referencia_interna)
       );
     }
 
-    if (this.filtrosCheckbox.erideSeleccionados.size > 0) {
+    // Filtro por productos seleccionados
+    if (this.selectedProductos.length > 0) {
       facturasFiltradas = facturasFiltradas.filter(f =>
-        this.filtrosCheckbox.erideSeleccionados.has(this.contieneERIDE(f.nombre_producto))
+        f.nombre_producto && this.selectedProductos.includes(f.nombre_producto)
       );
     }
 
-    if (this.filtrosCheckbox.apparelSeleccionados.size > 0) {
+    // Filtro por contactos seleccionados
+    if (this.selectedContactos.length > 0) {
       facturasFiltradas = facturasFiltradas.filter(f =>
-        this.filtrosCheckbox.apparelSeleccionados.has(this.contieneAPPAREL(f.nombre_producto))
+        f.contacto_referencia && this.selectedContactos.includes(f.contacto_referencia)
       );
     }
 
-    // Filtros genéricos para otros campos
-    Object.keys(this.filtros).forEach(campo => {
-      if (
-        [
-          'numero_factura',
-          'referencia_interna',
-          'nombre_producto',
-          'contacto_referencia',
-          'contacto_nombre',
-          'fecha_desde',
-          'fecha_hasta'
-        ].includes(campo)
-      ) return;
-      const filtro = this.filtros[campo]?.toString().toLowerCase();
-      if (!filtro) return;
-      facturasFiltradas = facturasFiltradas.filter(f => (f[campo] ?? '').toString().toLowerCase().includes(filtro));
-    });
+    // Filtro por nombres de contactos seleccionados
+    if (this.selectedContactosNombres.length > 0) {
+      facturasFiltradas = facturasFiltradas.filter(f =>
+        f.contacto_nombre && this.selectedContactosNombres.includes(f.contacto_nombre)
+      );
+    }
 
-    // Ordenar por fecha
-    facturasFiltradas = facturasFiltradas.sort((a, b) => {
-      const fechaA = new Date(a.fecha_factura).getTime();
-      const fechaB = new Date(b.fecha_factura).getTime();
-      return this.ordenFechaAscendente ? fechaA - fechaB : fechaB - fechaA;
-    });
+    // Filtro por marcas seleccionadas
+    if (this.selectedMarcas.length > 0) {
+      facturasFiltradas = facturasFiltradas.filter(f =>
+        f.marca && this.selectedMarcas.includes(f.marca)
+      );
+    }
+
+    // Filtro por subcategorías seleccionadas
+    if (this.selectedSubcategorias.length > 0) {
+      facturasFiltradas = facturasFiltradas.filter(f =>
+        f.subcategoria && this.selectedSubcategorias.includes(f.subcategoria)
+      );
+    }
+
+    // Filtro por ERIDE seleccionados
+    if (this.selectedEride.length > 0) {
+      facturasFiltradas = facturasFiltradas.filter(f =>
+        f.eride && this.selectedEride.includes(f.eride)
+      );
+    }
+
+    // Filtro por APPAREL seleccionados
+    if (this.selectedApparel.length > 0) {
+      facturasFiltradas = facturasFiltradas.filter(f =>
+        f.apparel && this.selectedApparel.includes(f.apparel)
+      );
+    }
+
+    // Filtro por EVAC seleccionados
+    if (this.selectedEvac.length > 0) {
+      facturasFiltradas = facturasFiltradas.filter(f =>
+        f.evac && this.selectedEvac.includes(f.evac)
+      );
+    }
+
+    // Filtro por categorías seleccionadas
+    if (this.selectedCategorias.length > 0) {
+      facturasFiltradas = facturasFiltradas.filter(f =>
+        f.categoria_producto && this.selectedCategorias.includes(f.categoria_producto)
+      );
+    }
+
+    // Filtro por rango de fechas
+    if (this.fechaDesdeFiltro || this.fechaHastaFiltro) {
+      facturasFiltradas = facturasFiltradas.filter(f => {
+        const fechaFactura = new Date(f.fecha_factura).toISOString().split('T')[0];
+
+        const cumpleDesde = !this.fechaDesdeFiltro || fechaFactura >= this.fechaDesdeFiltro;
+        const cumpleHasta = !this.fechaHastaFiltro || fechaFactura <= this.fechaHastaFiltro;
+
+        return cumpleDesde && cumpleHasta;
+      });
+    }
+
+    // Ordenar por fecha si hay un orden seleccionado
+    if (this.fechaOrden) {
+      facturasFiltradas.sort((a, b) => {
+        const fechaA = new Date(a.fecha_factura).getTime();
+        const fechaB = new Date(b.fecha_factura).getTime();
+        return this.fechaOrden === 'asc' ? fechaA - fechaB : fechaB - fechaA;
+      });
+    }
+
+    // ... resto de tus filtros existentes ...
 
     this.facturasFiltradas = facturasFiltradas;
     this.totalPaginas = Math.ceil(this.facturasFiltradas.length / this.elementosPorPagina);
-    this.actualizarFacturasPaginadas();
     this.cambiarPagina(1);
   }
 
-  toggleFiltro(filtro: string) {
-    if (this.filtroAbierto === filtro) {
-      this.filtroAbierto = null;
-    } else {
-      this.filtroAbierto = filtro;
-    }
-  }
-
-  actualizarFacturasPaginadas() {
-    const inicio = (this.paginaActual - 1) * this.elementosPorPagina;
-    const fin = inicio + this.elementosPorPagina;
-    const fuente = this.facturasFiltradas.length ? this.facturasFiltradas : this.facturas;
-    this.facturasPaginadas = fuente.slice(inicio, fin);
-  }
-
-  ordenarPorFecha() {
-    this.ordenFechaAscendente = !this.ordenFechaAscendente;
-    this.filtrarFacturas();
-  }
-
-  // Métodos adicionales
-  toggleFechaFilter() {
-    this.filtroFechaAbierto = !this.filtroFechaAbierto;
-  }
-
-  cambiarOrdenFecha(orden: string) {
-    this.ordenFechaAscendente = orden === 'asc';
-    this.filtrarFacturas();
-    this.filtroFechaAbierto = false;
-  }
-
-  aplicarFiltroFecha() {
-    this.filtrarFacturas();
-    // Opcional: cerrar automáticamente después de aplicar
-    // this.filtroFechaAbierto = false;
-  }
-
-  toggleCategoria(categoria: string, event: Event) {
-    const checked = (event.target as HTMLInputElement).checked;
-    if (checked) {
-      this.filtrosCheckbox.categoriasSeleccionadas.add(categoria);
-    } else {
-      this.filtrosCheckbox.categoriasSeleccionadas.delete(categoria);
-    }
-    this.filtrarFacturas();
-  }
-
-  toggleEstado(estado: string, event: Event) {
-    const checked = (event.target as HTMLInputElement).checked;
-    if (checked) {
-      this.filtrosCheckbox.estadosSeleccionados.add(estado);
-    } else {
-      this.filtrosCheckbox.estadosSeleccionados.delete(estado);
-    }
-    this.filtrarFacturas();
-  }
-
-  toggleFiltroCategoria() {
-    this.filtroCategoriaAbierto = !this.filtroCategoriaAbierto;
-  }
-
-  seleccionarTodasCategorias() {
-    this.categoriasUnicas.forEach(c => this.filtrosCheckbox.categoriasSeleccionadas.add(c));
-    this.filtrarFacturas();
-  }
-
-  borrarSeleccionCategorias() {
-    this.filtrosCheckbox.categoriasSeleccionadas.clear();
-    this.filtrarFacturas();
-  }
-
-  calcularVentaTotal(precio: number, cantidad: number, estado: string): number {
-    const esCancelado = estado?.toLowerCase().trim().replace(/\s+/g, '') === 'cancel';
-    const total = precio * cantidad * 1.16;
-    return esCancelado ? -total : total;
-  }
-
+  // Métodos de utilidad
   extraerPrimeraParte(texto: string): string {
     if (!texto) return '';
-    const indice = texto.indexOf(' /');
-    return indice !== -1 ? texto.substring(0, indice) : texto;
+    const partes = texto.split('/').map(p => p.trim());
+    return partes[0] || '';
   }
 
   obtenerSegundaParte(texto: string): string {
     if (!texto) return '';
-    const primera = texto.indexOf(' /');
-    const segunda = texto.indexOf(' /', primera + 2);
-    if (primera !== -1 && segunda !== -1) {
-      return texto.substring(primera + 2, segunda).trim();
-    } else if (primera !== -1) {
-      return texto.substring(primera + 2).trim();
-    }
-    return texto;
+    const partes = texto.split('/').map(p => p.trim());
+    return partes.length > 1 ? partes[1] : '';
   }
 
   contieneERIDE(texto: string): string {
-    if (!texto) return 'NO';
-    return texto.includes('ERIDE') ? 'SI' : 'NO';
+    return texto?.toUpperCase().includes('ERIDE') ? 'SI' : 'NO';
   }
 
   contieneAPPAREL(texto: string): string {
-    if (!texto) return 'NO';
-    return texto.includes('APPAREL') ? 'SI' : 'NO';
+    return texto?.toUpperCase().includes('APPAREL') ? 'SI' : 'NO';
   }
 
-  toggleMarca(marca: string, event: Event) {
-    const checked = (event.target as HTMLInputElement).checked;
-    if (checked) {
-      this.filtrosCheckbox.marcasSeleccionadas.add(marca);
-    } else {
-      this.filtrosCheckbox.marcasSeleccionadas.delete(marca);
-    }
+  formatearFecha(fechaStr: string): string {
+    if (!fechaStr) return '';
+
+    // Parsear la fecha del formato "Thu, 07 Aug 2025 00:00:00 GMT"
+    const fecha = new Date(fechaStr);
+    if (isNaN(fecha.getTime())) return fechaStr; // si no es fecha válida
+
+    // Obtener año, mes y día en UTC para evitar desfase por zona horaria
+    const year = fecha.getUTCFullYear();
+    const month = (fecha.getUTCMonth() + 1).toString().padStart(2, '0');
+    const day = fecha.getUTCDate().toString().padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
+
+
+  calcularVentaTotal(precio: number, cantidad: number): number {
+    return precio * cantidad;
+  }
+
+  /* filtros */
+
+  // Métodos para manejar el filtro de número
+  onNumeroFilterApply(selectedValues: string[]) {
+    this.selectedNumeros = selectedValues;
+    this.numeroFilterCount = selectedValues.length;
+
+    // Actualizar el estado de las opciones seleccionadas
+    this.numeroOptions.forEach(option => {
+      option.selected = this.selectedNumeros.includes(option.value);
+    });
+
     this.filtrarFacturas();
   }
 
-  toggleSubcategoria(sub: string, event: Event) {
-    const checked = (event.target as HTMLInputElement).checked;
-    if (checked) {
-      this.filtrosCheckbox.subcategoriasSeleccionadas.add(sub);
-    } else {
-      this.filtrosCheckbox.subcategoriasSeleccionadas.delete(sub);
-    }
+  onNumeroFilterClear() {
+    this.selectedNumeros = [];
+    this.numeroFilterCount = 0;
+
+    // Desmarcar todas las opciones
+    this.numeroOptions.forEach(option => {
+      option.selected = false;
+    });
+
     this.filtrarFacturas();
   }
 
-  toggleERIDE(valor: string, event: Event) {
-    const checked = (event.target as HTMLInputElement).checked;
-    if (checked) {
-      this.filtrosCheckbox.erideSeleccionados.add(valor);
-    } else {
-      this.filtrosCheckbox.erideSeleccionados.delete(valor);
-    }
+  onReferenciaFilterApply(selectedValues: string[]) {
+    this.selectedReferencias = selectedValues;
+    this.referenciaFilterCount = selectedValues.length;
+
+    // Actualizar el estado de las opciones seleccionadas
+    this.referenciaOptions.forEach(option => {
+      option.selected = this.selectedReferencias.includes(option.value);
+    });
+
     this.filtrarFacturas();
   }
 
-  toggleAPPAREL(valor: string, event: Event) {
-    const checked = (event.target as HTMLInputElement).checked;
-    if (checked) {
-      this.filtrosCheckbox.apparelSeleccionados.add(valor);
-    } else {
-      this.filtrosCheckbox.apparelSeleccionados.delete(valor);
-    }
+  onReferenciaFilterClear() {
+    this.selectedReferencias = [];
+    this.referenciaFilterCount = 0;
+
+    // Desmarcar todas las opciones
+    this.referenciaOptions.forEach(option => {
+      option.selected = false;
+    });
+
     this.filtrarFacturas();
   }
 
-  seleccionarTodasMarcas() {
-    this.marcasUnicas.forEach(m => this.filtrosCheckbox.marcasSeleccionadas.add(m));
+  onProductoFilterApply(selectedValues: string[]) {
+    this.selectedProductos = selectedValues;
+    this.productoFilterCount = selectedValues.length;
+
+    // Actualizar el estado de las opciones seleccionadas
+    this.productoOptions.forEach(option => {
+      option.selected = this.selectedProductos.includes(option.value);
+    });
+
     this.filtrarFacturas();
   }
 
-  borrarSeleccionMarcas() {
-    this.filtrosCheckbox.marcasSeleccionadas.clear();
+  onProductoFilterClear() {
+    this.selectedProductos = [];
+    this.productoFilterCount = 0;
+
+    // Desmarcar todas las opciones
+    this.productoOptions.forEach(option => {
+      option.selected = false;
+    });
+
     this.filtrarFacturas();
   }
 
-  seleccionarTodasSubcategorias() {
-    this.subcategoriasUnicas.forEach(s => this.filtrosCheckbox.subcategoriasSeleccionadas.add(s));
+  onContactoReferenciaFilterApply(selectedValues: string[]) {
+    this.selectedContactos = selectedValues;
+    this.contactoReferenciaFilterCount = selectedValues.length;
+
+    // Actualizar el estado de las opciones seleccionadas
+    this.contactoReferenciaOptions.forEach(option => {
+      option.selected = this.selectedContactos.includes(option.value);
+    });
+
     this.filtrarFacturas();
   }
 
-  borrarSeleccionSubcategorias() {
-    this.filtrosCheckbox.subcategoriasSeleccionadas.clear();
+  onContactoReferenciaFilterClear() {
+    this.selectedContactos = [];
+    this.contactoReferenciaFilterCount = 0;
+
+    // Desmarcar todas las opciones
+    this.contactoReferenciaOptions.forEach(option => {
+      option.selected = false;
+    });
+
     this.filtrarFacturas();
   }
+
+  onContactoNombreFilterApply(selectedValues: string[]) {
+    this.selectedContactosNombres = selectedValues;
+    this.contactoNombreFilterCount = selectedValues.length;
+
+    // Actualizar el estado de las opciones seleccionadas
+    this.contactoNombreOptions.forEach(option => {
+      option.selected = this.selectedContactosNombres.includes(option.value);
+    });
+
+    this.filtrarFacturas();
+  }
+
+  onContactoNombreFilterClear() {
+    this.selectedContactosNombres = [];
+    this.contactoNombreFilterCount = 0;
+
+    // Desmarcar todas las opciones
+    this.contactoNombreOptions.forEach(option => {
+      option.selected = false;
+    });
+
+    this.filtrarFacturas();
+  }
+
+  onMarcaFilterApply(selectedValues: string[]) {
+    this.selectedMarcas = selectedValues;
+    this.marcaFilterCount = selectedValues.length;
+
+    // Actualizar el estado de las opciones seleccionadas
+    this.marcaOptions.forEach(option => {
+      option.selected = this.selectedMarcas.includes(option.value);
+    });
+
+    this.filtrarFacturas();
+  }
+
+  onMarcaFilterClear() {
+    this.selectedMarcas = [];
+    this.marcaFilterCount = 0;
+
+    // Desmarcar todas las opciones
+    this.marcaOptions.forEach(option => {
+      option.selected = false;
+    });
+
+    this.filtrarFacturas();
+  }
+
+  onSubcategoriaFilterApply(selectedValues: string[]) {
+    this.selectedSubcategorias = selectedValues;
+    this.subcategoriaFilterCount = selectedValues.length;
+
+    // Actualizar el estado de las opciones seleccionadas
+    this.subcategoriaOptions.forEach(option => {
+      option.selected = this.selectedSubcategorias.includes(option.value);
+    });
+
+    this.filtrarFacturas();
+  }
+
+  onSubcategoriaFilterClear() {
+    this.selectedSubcategorias = [];
+    this.subcategoriaFilterCount = 0;
+
+    // Desmarcar todas las opciones
+    this.subcategoriaOptions.forEach(option => {
+      option.selected = false;
+    });
+
+    this.filtrarFacturas();
+  }
+
+  onErideFilterApply(selectedValues: string[]) {
+    this.selectedEride = selectedValues;
+    this.erideFilterCount = selectedValues.length;
+
+    // Actualizar el estado de las opciones seleccionadas
+    this.erideOptions.forEach(option => {
+      option.selected = this.selectedEride.includes(option.value);
+    });
+
+    this.filtrarFacturas();
+  }
+
+  onErideFilterClear() {
+    this.selectedEride = [];
+    this.erideFilterCount = 0;
+
+    // Desmarcar todas las opciones
+    this.erideOptions.forEach(option => {
+      option.selected = false;
+    });
+
+    this.filtrarFacturas();
+  }
+
+  onApparelFilterApply(selectedValues: string[]) {
+    this.selectedApparel = selectedValues;
+    this.apparelFilterCount = selectedValues.length;
+
+    // Actualizar el estado de las opciones seleccionadas
+    this.apparelOptions.forEach(option => {
+      option.selected = this.selectedApparel.includes(option.value);
+    });
+
+    this.filtrarFacturas();
+  }
+
+  onApparelFilterClear() {
+    this.selectedApparel = [];
+    this.apparelFilterCount = 0;
+
+    // Desmarcar todas las opciones
+    this.apparelOptions.forEach(option => {
+      option.selected = false;
+    });
+
+    this.filtrarFacturas();
+  }
+
+  onEvacFilterApply(selectedValues: string[]) {
+    this.selectedEvac = selectedValues;
+    this.evacFilterCount = selectedValues.length;
+
+    // Actualizar el estado de las opciones seleccionadas
+    this.evacOptions.forEach(option => {
+      option.selected = this.selectedEvac.includes(option.value);
+    });
+
+    this.filtrarFacturas();
+  }
+
+  onEvacFilterClear() {
+    this.selectedEvac = [];
+    this.evacFilterCount = 0;
+
+    // Desmarcar todas las opciones
+    this.evacOptions.forEach(option => {
+      option.selected = false;
+    });
+
+    this.filtrarFacturas();
+  }
+
+  onCategoriaFilterApply(selectedValues: string[]) {
+    this.selectedCategorias = selectedValues;
+    this.categoriaFilterCount = selectedValues.length;
+
+    // Actualizar el estado de las opciones seleccionadas
+    this.categoriaOptions.forEach(option => {
+      option.selected = this.selectedCategorias.includes(option.value);
+    });
+
+    this.filtrarFacturas();
+  }
+
+  onCategoriaFilterClear() {
+    this.selectedCategorias = [];
+    this.categoriaFilterCount = 0;
+
+    // Desmarcar todas las opciones
+    this.categoriaOptions.forEach(option => {
+      option.selected = false;
+    });
+
+    this.filtrarFacturas();
+  }
+
+  onFechaFilterApply(filtro: any) {
+    this.fechaOrden = filtro.orden;
+    this.fechaDesdeFiltro = filtro.fechaDesde;
+    this.fechaHastaFiltro = filtro.fechaHasta;
+    this.filtrarFacturas();
+  }
+
+  onFechaFilterClear() {
+    this.fechaOrden = null;
+    this.fechaDesdeFiltro = '';
+    this.fechaHastaFiltro = '';
+    this.filtrarFacturas();
+  }
+
+  /* Validacion de filtros */
+  
+  
 }
