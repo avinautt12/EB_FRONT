@@ -431,3 +431,19 @@ input[type=number]::-webkit-inner-spin-button {
 .separador-integral td {
   padding: 8px 0;
 }
+
+.header-with-filter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.header-title {
+  text-align: center;
+  width: 100%;
+}
+
+.header-with-filter app-filtro {
+  margin-top: 5px;
+}
