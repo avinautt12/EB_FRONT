@@ -7,9 +7,10 @@
     <button class="btn" [routerLink]="['/monitor']"><i class="fas fa-folder-open"></i> Monitor</button>
     <button class="btn" [routerLink]="['/distribuidores']"><i class="fas fa-file-alt"></i> Distribuidores</button>
     <button class="btn" [routerLink]="['/metas']"><i class="fas fa-bullseye"></i> Metas</button>
-    <button class="btn" [routerLink]="['/graficas']"><i class="fas fa-chart-bar"></i> Gráficas</button>
     <button class="btn" [routerLink]="['/caratulas']"><i class="fas fa-book"></i> Carátulas</button>
-    <button class="btn btn-success" (click)="guardarDatosEnBackend()"><i class="fas fa-save"></i> Guardar Datos</button>
+    <button class="btn btn-export" (click)="exportarAExcel()" [disabled]="cargando">
+      <i class="fas fa-file-excel"></i> Exportar Excel
+    </button>
   </div>
 
   <div *ngIf="cargando" class="cargando-spinner">
@@ -28,36 +29,41 @@
           <th class="columna-clave" style="min-width: 120px">
             <div class="filter-horizontal-container">
               <span class="filter-label">Clave</span>
-              <app-filtro filtroId="clave" [options]="opcionesClave" [(showDropdown)]="showClaveFilter"
-                (apply)="aplicarFiltroClave($event)" (clear)="limpiarFiltroClave()">
-              </app-filtro>
+              <app-filtro-previo tipo="clave" placeholder="Buscar clave..." [opciones]="opcionesClave"
+                (aplicarFiltro)="aplicarFiltroClave($event)" (limpiarFiltro)="limpiarFiltroClave()">
+              </app-filtro-previo>
             </div>
           </th>
+
           <th style="min-width: 150px;">
             <div class="filter-horizontal-container">
               <span class="filter-label">EVAC</span>
-              <app-filtro filtroId="evac" [options]="opcionesEvac" [(showDropdown)]="showEvacFilter"
-                (apply)="aplicarFiltroEvac($event)" (clear)="limpiarFiltroEvac()">
-              </app-filtro>
+              <app-filtro-previo tipo="evac" placeholder="Buscar EVAC..." [opciones]="opcionesEvac"
+                (aplicarFiltro)="aplicarFiltroEvac($event)" (limpiarFiltro)="limpiarFiltroEvac()">
+              </app-filtro-previo>
             </div>
           </th>
+
           <th style="min-width: 280px;">
             <div class="filter-horizontal-container">
               <span class="filter-label">Cliente</span>
-              <app-filtro filtroId="cliente" [options]="opcionesCliente" [(showDropdown)]="showClienteFilter"
-                (apply)="aplicarFiltroCliente($event)" (clear)="limpiarFiltroCliente()">
-              </app-filtro>
+              <app-filtro-previo tipo="cliente" placeholder="Buscar cliente..." [opciones]="opcionesCliente"
+                (aplicarFiltro)="aplicarFiltroCliente($event)" (limpiarFiltro)="limpiarFiltroCliente()">
+              </app-filtro-previo>
             </div>
           </th>
+
           <th style="min-width: 140px;">Acumulado Compra Anticipada</th>
+
           <th style="min-width: 140px;">
             <div class="filter-horizontal-container">
               <span class="filter-label">Elección NIVEL</span>
-              <app-filtro filtroId="eleccion_nivel" [options]="opcionesEleccionNivel" [(showDropdown)]="showEleccionNivelFilter"
-                (apply)="aplicarFiltroEleccionNivel($event)" (clear)="limpiarFiltroEleccionNivel()">
-              </app-filtro>
+              <app-filtro-previo tipo="nivel" placeholder="Buscar nivel..." [opciones]="opcionesEleccionNivel"
+                (aplicarFiltro)="aplicarFiltroEleccionNivel($event)" (limpiarFiltro)="limpiarFiltroEleccionNivel()">
+              </app-filtro-previo>
             </div>
           </th>
+
           <th style="min-width: 110px;">Nivel Cierre Compra Inicial</th>
           <th style="min-width: 120px;">Compra Mínima ANUAL</th>
           <th style="min-width: 80px;">%</th>
@@ -167,55 +173,58 @@
           <td>{{ cliente.acumulado_bold | currency:'USD':'symbol':'1.0-0' }}</td>
         </tr>
 
-        <!-- Separador visual para integrales -->
-        <tr *ngIf="integrales.length > 0" class="separador-integral">
-          <td colspan="39">INTEGRALES</td>
-        </tr>
+        <div *ngIf="mostrarIntegrales">
+          <!-- Separador visual para integrales -->
+          <tr *ngIf="integrales.length > 0" class="separador-integral">
+            <td colspan="39">INTEGRALES</td>
+          </tr>
 
-        <!-- Integrales -->
-        <tr *ngFor="let integral of integrales" class="fila-integral">
-          <td>{{ integral.clave }}</td>
-          <td>{{ integral.evac }}</td>
-          <td>{{ integral.nombre_cliente }}</td>
-          <td>{{ integral.acumulado_anticipado | currency:'USD':'symbol':'1.2-2' }}</td>
-          <td>{{ integral.nivel }}</td>
-          <td></td>
-          <td>{{ integral.compra_minima_anual | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ calculoPorcentajeCompraAnual(integral) }}</td>
-          <td>{{ integral.compra_minima_inicial | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ (integral.avance_global_scott || 0) + (integral.acumulado_syncros || 0) + (integral.acumulado_apparel
-            || 0) + (integral.acumulado_vittoria || 0) | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ calculoPorcentajeCompraInicial(integral) }}</td>
-          <td>{{ integral.compromiso_scott | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ integral.avance_global_scott | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ (integral.avance_global_scott || 0) / (integral.compromiso_scott || 1) | percent:'1.0-0' }}</td>
-          <td>{{ integral.compromiso_jul_ago| currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ integral.avance_jul_ago | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ (integral.avance_jul_ago || 0) / (integral.compromiso_jul_ago || 1) | percent:'1.0-0' }}</td>
-          <td>{{ integral.compromiso_sep_oct | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ integral.avance_sep_oct | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ (integral.avance_sep_oct || 0) / (integral.compromiso_sep_oct || 1) | percent:'1.0-0' }}</td>
-          <td>{{ integral.compromiso_nov_dic | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ integral.avance_nov_dic | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ (integral.avance_nov_dic || 0) / (integral.compromiso_nov_dic || 1) | percent:'1.0-0' }}
-          <td>{{ integral.compromiso_apparel_syncros_vittoria | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ (integral.acumulado_syncros || 0) + (integral.acumulado_apparel || 0) + (integral.acumulado_vittoria ||
-            0) | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ calculoPorcentajeAvanceSynAppVit(integral) }}</td>
-          <td>{{ integral.compromiso_jul_ago_app | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ integral.avance_jul_ago_app | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ (integral.avance_jul_ago_app || 0) / (integral.compromiso_jul_ago_app || 1) | percent:'1.0-0' }}</td>
-          <td>{{ integral.compromiso_sep_oct_app | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ integral.avance_sep_oct_app | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ (integral.avance_sep_oct_app || 0) / (integral.compromiso_sep_oct_app || 1) | percent:'1.0-0' }}</td>
-          <td>{{ integral.compromiso_nov_dic_app | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ integral.avance_nov_dic_app | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ (integral.avance_nov_dic_app || 0) / (integral.compromiso_nov_dic_app || 1) | percent:'1.0-0' }}</td>
-          <td>{{ integral.acumulado_syncros | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ integral.acumulado_apparel | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ integral.acumulado_vittoria | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ integral.acumulado_bold | currency:'USD':'symbol':'1.0-0' }}</td>
-        </tr>
+          <!-- Integrales -->
+          <tr *ngFor="let integral of integrales" class="fila-integral">
+            <td>{{ integral.clave }}</td>
+            <td>{{ integral.evac }}</td>
+            <td>{{ integral.nombre_cliente }}</td>
+            <td>{{ integral.acumulado_anticipado | currency:'USD':'symbol':'1.2-2' }}</td>
+            <td>{{ integral.nivel }}</td>
+            <td></td>
+            <td>{{ integral.compra_minima_anual | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ calculoPorcentajeCompraAnual(integral) }}</td>
+            <td>{{ integral.compra_minima_inicial | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ (integral.avance_global_scott || 0) + (integral.acumulado_syncros || 0) + (integral.acumulado_apparel
+              || 0) + (integral.acumulado_vittoria || 0) | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ calculoPorcentajeCompraInicial(integral) }}</td>
+            <td>{{ integral.compromiso_scott | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ integral.avance_global_scott | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ (integral.avance_global_scott || 0) / (integral.compromiso_scott || 1) | percent:'1.0-0' }}</td>
+            <td>{{ integral.compromiso_jul_ago| currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ integral.avance_jul_ago | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ (integral.avance_jul_ago || 0) / (integral.compromiso_jul_ago || 1) | percent:'1.0-0' }}</td>
+            <td>{{ integral.compromiso_sep_oct | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ integral.avance_sep_oct | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ (integral.avance_sep_oct || 0) / (integral.compromiso_sep_oct || 1) | percent:'1.0-0' }}</td>
+            <td>{{ integral.compromiso_nov_dic | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ integral.avance_nov_dic | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ (integral.avance_nov_dic || 0) / (integral.compromiso_nov_dic || 1) | percent:'1.0-0' }}
+            <td>{{ integral.compromiso_apparel_syncros_vittoria | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ (integral.acumulado_syncros || 0) + (integral.acumulado_apparel || 0) + (integral.acumulado_vittoria
+              ||
+              0) | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ calculoPorcentajeAvanceSynAppVit(integral) }}</td>
+            <td>{{ integral.compromiso_jul_ago_app | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ integral.avance_jul_ago_app | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ (integral.avance_jul_ago_app || 0) / (integral.compromiso_jul_ago_app || 1) | percent:'1.0-0' }}</td>
+            <td>{{ integral.compromiso_sep_oct_app | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ integral.avance_sep_oct_app | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ (integral.avance_sep_oct_app || 0) / (integral.compromiso_sep_oct_app || 1) | percent:'1.0-0' }}</td>
+            <td>{{ integral.compromiso_nov_dic_app | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ integral.avance_nov_dic_app | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ (integral.avance_nov_dic_app || 0) / (integral.compromiso_nov_dic_app || 1) | percent:'1.0-0' }}</td>
+            <td>{{ integral.acumulado_syncros | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ integral.acumulado_apparel | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ integral.acumulado_vittoria | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ integral.acumulado_bold | currency:'USD':'symbol':'1.0-0' }}</td>
+          </tr>
+        </div>
       </tbody>
     </table>
   </div>

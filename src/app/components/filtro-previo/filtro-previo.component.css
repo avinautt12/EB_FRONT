@@ -1,0 +1,228 @@
+.sort-dropdown {
+  position: relative;
+  display: inline-block;
+  width: 100%; /* Cambio aquí */
+  min-width: 120px; /* Nuevo */
+}
+
+
+/* Estilos del botón principal */
+.sort-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Centra los iconos */
+  padding: 6px 12px; /* Ajusta el padding */
+  gap: 4px;
+  min-width: 80px; /* Ancho mínimo para que se vea bien */
+  border-radius: 4px; /* Bordes redondeados */
+  border: 1px solid #dee2e6; /* Define un borde claro */
+  background-color: #ffffff; /* Fondo blanco */
+  outline: none; /* Elimina el outline por defecto */
+  box-shadow: none;
+}
+
+.sort-btn:hover {
+  background-color: #e9ecef;
+  border-color: #ced4da;
+}
+
+.sort-btn i {
+  margin-left: auto;
+  gap: 15px;
+  transition: transform 0.2s ease;
+}
+
+.sort-dropdown.show .sort-btn i.fa-chevron-down {
+  transform: rotate(180deg);
+}
+
+.current-sort {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  /* Cambia esto: */
+  white-space: normal; /* En lugar de nowrap */
+  overflow: visible; /* En lugar de hidden */
+  text-overflow: clip; /* En lugar de ellipsis */
+  max-width: calc(100% - 24px);
+  word-break: break-word; /* Añadido */
+  line-height: 1.4; /* Mejor espaciado para múltiples líneas */
+}
+
+/* Estilos del dropdown - Versión mejorada */
+.filter-options {
+  width: 280px;
+  background-color: white;
+  color: #212529;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  position: absolute;
+  left: 0;
+  z-index: 1050;
+  margin-top: 15px;
+  display: none;
+  flex-direction: column;
+}
+
+.sort-dropdown.show .filter-options {
+  display: flex;
+}
+
+/* Contenedor principal del dropdown con altura flexible */
+.filter-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  max-height: 400px;
+}
+
+/* Estilos para la sección de búsqueda */
+.filter-search {
+  padding: 12px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.filter-search input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+/* Contenedor de items con scroll - Versión mejorada */
+.filter-items-container {
+  padding: 8px 0;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 120px;
+  scrollbar-gutter: stable;
+}
+
+/* Estilo personalizado para el scrollbar */
+.filter-items-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filter-items-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.filter-items-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.filter-items-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.filter-item {
+  padding: 10px 16px;
+  transition: all 0.2s ease;
+  white-space: normal; /* En lugar de nowrap */
+  word-wrap: break-word; /* Permite que las palabras largas se rompan */
+  overflow: visible; /* En lugar de hidden */
+  text-overflow: clip;
+  display: flex;
+  align-items: center;
+}
+
+.filter-item:hover {
+  background-color: #f8f9fa;
+}
+
+.filter-item label {
+  display: flex;
+  align-items: flex-start; /* Ajustado para multilínea */
+  gap: 10px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 14px;
+  white-space: normal; /* Añadido */
+  word-break: break-word; /* Añadido */
+}
+
+.filter-item input[type="checkbox"] {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: #0d6efd;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Estilos para los botones de acción - Versión mejorada */
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  position: sticky;
+  bottom: 0;
+  flex-shrink: 0;
+}
+
+.filter-actions button {
+  min-width: 80px;
+  padding: 8px 16px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 36px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-actions button:first-child {
+  color: #dc3545;
+  background-color: #fff;
+  border-color: #dc3545;
+}
+
+.filter-actions button:first-child:hover {
+  background-color: #f8d7da;
+}
+
+.filter-actions button:nth-child(2) {
+  color: #fff;
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.filter-actions button:nth-child(2):hover {
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
+}
+
+/* Clase para cuando hay pocos items */
+.filter-options.has-few-items .filter-items-container {
+  max-height: none;
+  overflow-y: visible;
+}
+
+/* Estilo para el mensaje de no selecciones */
+.no-selections {
+  padding: 16px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Asegurar que el contenedor de items tenga espacio mínimo */
+.filter-items-container {
+  min-height: 100px;
+}

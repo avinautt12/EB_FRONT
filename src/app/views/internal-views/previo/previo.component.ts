@@ -5,8 +5,9 @@ import { RouterModule } from '@angular/router';
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
 import { ClientesService } from '../../../services/clientes.service';
 import { PrevioService } from '../../../services/previo.service';
-import { FiltroComponent } from '../../../components/filtro/filtro.component';
+import { FiltroPrevioComponent } from '../../../components/filtro-previo/filtro-previo.component';
 import { AlertaService } from '../../../services/alerta.service';
+import * as XLSX from 'xlsx';
 
 interface Cliente {
   clave: string;
@@ -65,7 +66,7 @@ interface ClienteConAcumulado extends Cliente {
 @Component({
   selector: 'app-previo',
   standalone: true,
-  imports: [HomeBarComponent, RouterModule, CommonModule, FormsModule, FiltroComponent],
+  imports: [HomeBarComponent, RouterModule, CommonModule, FormsModule, FiltroPrevioComponent],
   templateUrl: './previo.component.html',
   styleUrl: './previo.component.css'
 })
@@ -74,6 +75,10 @@ export class PrevioComponent implements OnInit {
   clientesOriginal: ClienteConAcumulado[] = [];
   clientesFiltrados: ClienteConAcumulado[] = [];
   clientesPaginados: ClienteConAcumulado[] = [];
+
+  integralesOriginal: ClienteConAcumulado[] = [];
+
+  todosLosDatos: ClienteConAcumulado[] = [];
 
   facturas: FacturaOdoo[] = [];
 
@@ -88,14 +93,23 @@ export class PrevioComponent implements OnInit {
   totalPaginas = 0;
   cargando = true;
 
-  filtros = {
-    clave: '',
-    zona: '',
-    nombre_cliente: '',
-    nivel: '',
-    evac: '',
-    cliente: ''
-  };
+  filtros: {
+    clave: string[];
+    zona: string;
+    nombre_cliente: string;
+    nivel: string[];
+    evac: string[];
+    cliente: string[];
+  } = {
+      clave: [],
+      zona: '',
+      nombre_cliente: '',
+      nivel: [],
+      evac: [],
+      cliente: []
+    };
+
+
   filtroAbierto: string | null = null;
 
   zonasUnicas: string[] = [];
@@ -172,16 +186,17 @@ export class PrevioComponent implements OnInit {
 
       // Luego procesar los integrales
       this.clientesOriginal = this.procesarIntegrales(todosClientes);
+      this.combinarDatos();
 
       this.inicializarOpcionesFiltro();
       this.guardarDatosEnBackend();
 
-      // Configurar filtros y paginación
-      this.zonasUnicas = Array.from(new Set(this.clientesOriginal.map(c => c.zona ?? '').filter(Boolean)));
-      this.nivelesUnicos = Array.from(new Set(this.clientesOriginal.map(c => c.nivel ?? '').filter(Boolean)));
+      // Configurar filtros basados en TODOS los datos
+      this.zonasUnicas = Array.from(new Set(this.todosLosDatos.map(c => c.zona ?? '').filter(Boolean)));
+      this.nivelesUnicos = Array.from(new Set(this.todosLosDatos.map(c => c.nivel ?? '').filter(Boolean)));
 
       // Dentro de ngOnInit(), después de cargar los datos
-      this.opcionesEleccionNivel = Array.from(new Set(this.clientesOriginal.map(c => c.nivel)))
+      this.opcionesEleccionNivel = Array.from(new Set(this.todosLosDatos.map(c => c.nivel)))
         .filter(nivel => nivel) // Filtrar valores nulos/vacíos
         .map(nivel => ({
           value: nivel,
@@ -202,185 +217,102 @@ export class PrevioComponent implements OnInit {
   }
 
   filtrarClientes() {
-    const filtroEvac = this.filtros.evac.toLowerCase();
-    const filtroCliente = this.filtros.cliente.toLowerCase();
-    const filtroNivel = this.filtros.nivel.toLowerCase();
-    const filtroClave = this.filtros.clave.toLowerCase();
+    const filtroEvac = this.filtros.evac;
+    const filtroCliente = this.filtros.cliente;
+    const filtroNivel = this.filtros.nivel;
 
-    // Determinar si debemos mostrar integrales
-    const mostrarIntegrales = this.mostrarIntegrales &&
-      (this.filtros.evac === '' && this.filtros.cliente === '' && this.filtros.clave === '');
+    const filtrar = (cliente: ClienteConAcumulado) => {
+      const claveValida = !this.filtros.clave.length || this.filtros.clave.includes(cliente.clave);
+      const evacValido = !filtroEvac.length || filtroEvac.includes(cliente.evac);
+      const clienteValido = !filtroCliente.length || filtroCliente.includes(cliente.nombre_cliente);
+      const nivelValido = !filtroNivel.length || filtroNivel.includes(cliente.nivel);
+      return claveValida && evacValido && clienteValido && nivelValido;
+    };
 
-    // Filtrar clientes normales
-    const clientesNormalesFiltrados = this.clientesOriginal.filter(cliente => {
-      const zonaValida = this.filtrosCheckbox.zonasSeleccionadas.size === 0 ||
-        this.filtrosCheckbox.zonasSeleccionadas.has(cliente.zona);
+    this.clientesFiltrados = this.todosLosDatos.filter(filtrar);
 
-      const nivelValido = this.filtrosCheckbox.nivelesSeleccionados.size === 0 ||
-        (this.filtros.nivel ?
-          filtroNivel.split('|').some(nivelFiltro =>
-            cliente.nivel?.toLowerCase().includes(nivelFiltro)
-          ) :
-          this.filtrosCheckbox.nivelesSeleccionados.has(cliente.nivel));
-
-      const claveValida = !filtroClave ||
-        filtroClave.split('|').some(claveFiltro =>
-          cliente.clave?.toLowerCase().includes(claveFiltro)
-        );
-
-      const evacValido = !filtroEvac ||
-        filtroEvac.split('|').some(evacFiltro =>
-          cliente.evac?.toLowerCase().includes(evacFiltro)
-        );
-
-      const clienteValido = !filtroCliente ||
-        filtroCliente.split('|').some(clienteFiltro =>
-          cliente.nombre_cliente?.toLowerCase().includes(clienteFiltro)
-        );
-
-      const esParteDeIntegralValido = mostrarIntegrales || !cliente.esParteDeIntegral;
-
-      return claveValida &&
-        zonaValida &&
-        cliente.nombre_cliente?.toLowerCase().includes(this.filtros.nombre_cliente.toLowerCase()) &&
-        nivelValido &&
-        evacValido &&
-        clienteValido &&
-        esParteDeIntegralValido;
-    });
-
-    // Filtrar integrales
-    const integralesFiltrados = (mostrarIntegrales || filtroEvac || filtroCliente || filtroNivel) ?
-      this.integrales.filter(integral => {
-        const zonaValida = this.filtrosCheckbox.zonasSeleccionadas.size === 0 ||
-          this.filtrosCheckbox.zonasSeleccionadas.has(integral.zona);
-
-        const nivelValido = this.filtrosCheckbox.nivelesSeleccionados.size === 0 ||
-          (this.filtros.nivel ?
-            filtroNivel.split('|').some(nivelFiltro =>
-              integral.nivel?.toLowerCase().includes(nivelFiltro)
-            ) :
-            this.filtrosCheckbox.nivelesSeleccionados.has(integral.nivel));
-
-        const claveValida = !filtroClave ||
-          filtroClave.split('|').some(claveFiltro =>
-            integral.clave?.toLowerCase().includes(claveFiltro)
-          );
-
-        const evacValido = !filtroEvac ||
-          filtroEvac.split('|').some(evacFiltro =>
-            integral.evac?.toLowerCase().includes(evacFiltro)
-          );
-
-        const clienteValido = !filtroCliente ||
-          filtroCliente.split('|').some(clienteFiltro =>
-            integral.nombre_cliente?.toLowerCase().includes(clienteFiltro)
-          );
-
-        // Si hay filtro de cliente, mostrar solo el integral que coincide exactamente
-        if (filtroCliente) {
-          return clienteValido && zonaValida && nivelValido && evacValido;
-        }
-
-        // Si no hay filtro de cliente, mostrar todos los integrales que coincidan con otros filtros
-        return zonaValida && nivelValido && evacValido;
-      }) : [];
-
-    // Actualizar las propiedades
-    this.clientesFiltrados = clientesNormalesFiltrados;
-    this.integrales = integralesFiltrados;
-
-    // Calcular paginación
+    // Actualizar paginación para la lista combinada
     this.totalPaginas = Math.ceil(this.clientesFiltrados.length / this.itemsPorPagina);
     this.actualizarPaginado();
   }
 
-  private inicializarOpcionesFiltro(): void {
-    // Obtener todas las claves únicas de los clientes
-    const clavesClientes = this.clientesOriginal.map(c => c.clave);
-    const clavesIntegrales = this.integrales.map(i => i.clave);
-    const clavesUnicas = Array.from(new Set([...clavesClientes, ...clavesIntegrales]));
-    const nombresClientes = this.clientesOriginal.map(c => c.nombre_cliente);
-    const nombresIntegrales = this.integrales.map(i => i.nombre_cliente);
-    const nombresUnicos = Array.from(new Set([...nombresClientes, ...nombresIntegrales]));
+  private combinarDatos(): void {
+    // Combinar TODOS los clientes + integrales
+    this.todosLosDatos = [...this.clientesOriginal, ...this.integralesOriginal];
+  }
 
-    // Crear las opciones para el filtro
+  private combinarDatosParaGuardar(): any[] {
+    // Esta función es para GUARDAR los datos
+    return [...this.clientesOriginal, ...this.integrales];
+  }
+
+  private inicializarOpcionesFiltro(): void {
+    // NUEVO: Usar todosLosDatos en lugar de arrays separados
+    const clavesUnicas = Array.from(new Set(this.todosLosDatos.map(c => c.clave).filter(Boolean)));
     this.opcionesClave = clavesUnicas.map(clave => ({
       value: clave,
       selected: false
     }));
 
-    this.opcionesEvac = Array.from(new Set(this.clientesOriginal.map(c => c.evac))).map(evac => ({
+    const evacsUnicos = Array.from(new Set(this.todosLosDatos.map(c => c.evac).filter(Boolean)));
+    this.opcionesEvac = evacsUnicos.map(evac => ({
       value: evac,
       selected: false
     }));
 
-    this.opcionesCliente = Array.from(new Set(this.clientesOriginal.map(c => c.nombre_cliente))).map(cliente => ({
-      value: cliente,
+    const nombresUnicos = Array.from(new Set(this.todosLosDatos.map(c => c.nombre_cliente).filter(Boolean)));
+    this.opcionesCliente = nombresUnicos.map(nombre => ({
+      value: nombre,
       selected: false
     }));
 
-    this.opcionesCliente = nombresUnicos.map(cliente => ({
-      value: cliente,
+    const nivelesUnicos = Array.from(new Set(this.todosLosDatos.map(c => c.nivel).filter(Boolean)));
+    this.opcionesEleccionNivel = nivelesUnicos.map(nivel => ({
+      value: nivel,
       selected: false
     }));
   }
 
   aplicarFiltroClave(clavesSeleccionadas: string[]): void {
-    // Actualizar el filtro de clave
-    this.filtros.clave = clavesSeleccionadas.join('|');
-    // Si se aplica filtro por clave, ocultar integrales
-    this.mostrarIntegrales = clavesSeleccionadas.length === 0;
+    this.filtros.clave = clavesSeleccionadas;
     this.aplicarFiltros();
   }
 
   aplicarFiltroEvac(evacsSeleccionados: string[]): void {
-    // Actualizar el filtro de evac
-    this.filtros.evac = evacsSeleccionados.join('|');
+    this.filtros.evac = evacsSeleccionados;
     this.aplicarFiltros();
   }
 
   aplicarFiltroCliente(clientesSeleccionados: string[]): void {
-    // Actualizar el filtro de cliente
-    this.filtros.cliente = clientesSeleccionados.join('|');
+    this.filtros.cliente = clientesSeleccionados;
     this.aplicarFiltros();
   }
 
-  // En los métodos para limpiar filtros, volver a mostrar los integrales
   limpiarFiltroClave(): void {
-    this.filtros.clave = '';
-    this.mostrarIntegrales = true;
-    // Limpiar también las selecciones en las opciones
+    this.filtros.clave = [];
     this.opcionesClave.forEach(opcion => opcion.selected = false);
     this.aplicarFiltros();
   }
 
   limpiarFiltroEvac(): void {
-    this.filtros.evac = '';
-    this.mostrarIntegrales = true;
-    // Limpiar también las selecciones en las opciones
+    this.filtros.evac = [];
     this.opcionesEvac.forEach(opcion => opcion.selected = false);
-    // Forzar recarga de todos los integrales
     this.aplicarFiltros();
-    // Recargar la página automáticamente
-    window.location.reload();
   }
 
   limpiarFiltroCliente(): void {
-    this.filtros.cliente = '';
-    this.mostrarIntegrales = true;
-    // Limpiar también las selecciones en las opciones
+    this.filtros.cliente = [];
     this.opcionesCliente.forEach(opcion => opcion.selected = false);
     this.aplicarFiltros();
   }
 
   aplicarFiltroEleccionNivel(nivelesSeleccionados: string[]): void {
-    this.filtros.nivel = nivelesSeleccionados.join('|');
+    this.filtros.nivel = nivelesSeleccionados;
     this.aplicarFiltros();
   }
 
   limpiarFiltroEleccionNivel(): void {
-    this.filtros.nivel = '';
+    this.filtros.nivel = [];
     this.opcionesEleccionNivel.forEach(opcion => opcion.selected = false);
     this.aplicarFiltros();
   }
@@ -611,8 +543,10 @@ export class PrevioComponent implements OnInit {
       return clienteConValores;
     });
 
+    const clientesIndividuales = todosClientesProcesados.filter(cliente => !cliente.esParteDeIntegral);
+
     // 2. Procesar los grupos integrales (para el concentrado)
-    this.integrales = gruposIntegrales.map((grupo, index) => {
+    this.integralesOriginal = gruposIntegrales.map((grupo, index) => {
       const clientesGrupo = todosClientesProcesados.filter(cliente =>
         grupo.claves.includes(cliente.clave) ||
         cliente.nombre_cliente.includes(grupo.nombre)
@@ -651,6 +585,7 @@ export class PrevioComponent implements OnInit {
         compromiso_sep_oct_app: grupo.compromisoSepOctApp,
         compromiso_nov_dic_app: grupo.compromisoNovDicApp,
         esIntegral: true,
+        esParteDeIntegral: false,
         avance_jul_ago: sumaJulAgo,
         avance_sep_oct: sumaSepOct,
         avance_nov_dic: sumaNovDic,
@@ -664,9 +599,8 @@ export class PrevioComponent implements OnInit {
         avance_global_1: avance_global_1,
         grupoIntegral: index + 1
       };
-    });
+    })
 
-    // 3. Devolver TODOS los clientes procesados (incluyendo los que son parte de integrales)
     return todosClientesProcesados;
   }
 
@@ -1257,24 +1191,20 @@ export class PrevioComponent implements OnInit {
   guardarDatosEnBackend() {
     this.cargando = true;
 
-    // Calcular porcentajes antes de enviar
-    const clientesConPorcentajes = this.clientesOriginal.map(cliente =>
-      this.calcularPorcentajes(cliente)
-    );
-    const integralesConPorcentajes = this.integrales.map(integral =>
-      this.calcularPorcentajes(integral)
+    const datosParaGuardar = [...this.clientesOriginal, ...this.integralesOriginal];
+
+    const todosLosDatosConPorcentajes = datosParaGuardar.map(item =>
+      this.calcularPorcentajes(item)
     );
 
-    this.previoService.actualizarPrevio(clientesConPorcentajes, integralesConPorcentajes)
+    this.previoService.actualizarPrevio(todosLosDatosConPorcentajes)
       .subscribe({
         next: (response) => {
-          console.log('Datos actualizados correctamente', response);
           this.cargando = false;
           this.mensajeAlerta = 'Datos actualizados correctamente';
           this.tipoAlerta = 'exito';
         },
         error: (err) => {
-          console.error('Error al actualizar datos', err);
           this.cargando = false;
           this.mensajeAlerta = 'Error al actualizar datos: ' + (err.error?.message || err.message || 'Error desconocido');
           this.tipoAlerta = 'error';
@@ -1343,4 +1273,159 @@ export class PrevioComponent implements OnInit {
     };
   }
 
+  exportarAExcel() {
+    try {
+      this.cargando = true;
+
+      // Llamar al endpoint que ya tiene todos los datos calculados
+      this.previoService.obtenerPrevio().subscribe({
+        next: (datos) => {
+          if (!datos || datos.length === 0) {
+            this.mensajeAlerta = 'No hay datos para exportar';
+            this.tipoAlerta = 'error';
+            this.cargando = false;
+            return;
+          }
+
+          // Función helper para formatear números con comas
+          const formatearNumero = (valor: string | number): string => {
+            const num = typeof valor === 'string' ? parseFloat(valor) : valor;
+            return num.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            });
+          };
+
+          // Función helper para formatear porcentajes
+          const formatearPorcentaje = (valor: string | number): string => {
+            const num = typeof valor === 'string' ? parseFloat(valor) : valor;
+            return `${num}%`;
+          };
+
+          // Mapear los datos al formato deseado para Excel usando el orden especificado
+          const datosParaExcel = datos.map(item => ({
+            'Clave': item.clave || '',
+            'EVAC': item.evac || '',
+            'Cliente': item.nombre_cliente || '',
+            'Acumulado Compra Anticipada': formatearNumero(item.acumulado_anticipado || 0),
+            'Elección NIVEL': item.nivel || '',
+            'Nivel Cierre Compra Inicial': item.nivel_cierre_compra_inicial || '',
+            'Compra Mínima ANUAL': formatearNumero(item.compra_minima_anual || 0),
+            '% Compra Anual': formatearPorcentaje(item.porcentaje_anual || 0),
+            'Compra Mínima INICIAL': formatearNumero(item.compra_minima_inicial || 0),
+            'Avance GLOBAL': formatearNumero(item.avance_global || 0),
+            '% Avance Global': formatearPorcentaje(item.porcentaje_global || 0),
+            'Compromiso SCOTT': formatearNumero(item.compromiso_scott || 0),
+            'Avance GLOBAL SCOTT': formatearNumero(item.avance_global_scott || 0),
+            '% Scott': formatearPorcentaje(item.porcentaje_scott || 0),
+            'Compromiso JUL-AGO': formatearNumero(item.compromiso_jul_ago || 0),
+            'Avance Jul-Ago': formatearNumero(item.avance_jul_ago || 0),
+            '% Jul-Ago': formatearPorcentaje(item.porcentaje_jul_ago || 0),
+            'Compromiso SEPT-OCT': formatearNumero(item.compromiso_sep_oct || 0),
+            'Avance Sep-Oct': formatearNumero(item.avance_sep_oct || 0),
+            '% Sep-Oct': formatearPorcentaje(item.porcentaje_sep_oct || 0),
+            'Compromiso NOV-DIC': formatearNumero(item.compromiso_nov_dic || 0),
+            'Avance Nov-Dic': formatearNumero(item.avance_nov_dic || 0),
+            '% Nov-Dic': formatearPorcentaje(item.porcentaje_nov_dic || 0),
+            'Compromiso APPAREL, SYNCROS, VITTORIA': formatearNumero(item.compromiso_apparel_syncros_vittoria || 0),
+            'Avance GLOBAL App/Syn/Vit': formatearNumero(item.avance_global_apparel_syncros_vittoria || 0),
+            '% App/Syn/Vit': formatearPorcentaje(item.porcentaje_apparel_syncros_vittoria || 0),
+            'Compromiso JUL-AGO App': formatearNumero(item.compromiso_jul_ago_app || 0),
+            'Avance Jul-Ago App': formatearNumero(item.avance_jul_ago_app || 0),
+            '% Jul-Ago App': formatearPorcentaje(item.porcentaje_jul_ago_app || 0),
+            'Compromiso SEPT-OCT App': formatearNumero(item.compromiso_sep_oct_app || 0),
+            'Avance Sep-Oct App': formatearNumero(item.avance_sep_oct_app || 0),
+            '% Sep-Oct App': formatearPorcentaje(item.porcentaje_sep_oct_app || 0),
+            'Compromiso NOV-DIC App': formatearNumero(item.compromiso_nov_dic_app || 0),
+            'Avance Nov-Dic App': formatearNumero(item.avance_nov_dic_app || 0),
+            '% Nov-Dic App': formatearPorcentaje(item.porcentaje_nov_dic_app || 0),
+            'SYNCROS Acumulado': formatearNumero(item.acumulado_syncros || 0),
+            'APPAREL Acumulado': formatearNumero(item.acumulado_apparel || 0),
+            'VITTORIA Acumulado': formatearNumero(item.acumulado_vittoria || 0),
+            'BOLD Acumulado': formatearNumero(item.acumulado_bold || 0)
+          }));
+
+          // Crear el libro de trabajo
+          const ws = XLSX.utils.json_to_sheet(datosParaExcel);
+          const wb = XLSX.utils.book_new();
+
+          // Configurar anchos de columna
+          const columnWidths = [
+            { wch: 12 }, // Clave
+            { wch: 15 }, // EVAC
+            { wch: 30 }, // Cliente
+            { wch: 18 }, // Acumulado Compra Anticipada
+            { wch: 20 }, // Elección NIVEL
+            { wch: 20 }, // Nivel Cierre Compra Inicial
+            { wch: 18 }, // Compra Mínima ANUAL
+            { wch: 12 }, // % Compra Anual
+            { wch: 18 }, // Compra Mínima INICIAL
+            { wch: 15 }, // Avance GLOBAL
+            { wch: 12 }, // % Avance Global
+            { wch: 18 }, // Compromiso SCOTT
+            { wch: 18 }, // Avance GLOBAL SCOTT
+            { wch: 10 }, // % Scott
+            { wch: 18 }, // Compromiso JUL-AGO
+            { wch: 15 }, // Avance Jul-Ago
+            { wch: 12 }, // % Jul-Ago
+            { wch: 18 }, // Compromiso SEPT-OCT
+            { wch: 15 }, // Avance Sep-Oct
+            { wch: 12 }, // % Sep-Oct
+            { wch: 18 }, // Compromiso NOV-DIC
+            { wch: 15 }, // Avance Nov-Dic
+            { wch: 12 }, // % Nov-Dic
+            { wch: 25 }, // Compromiso APPAREL, SYNCROS, VITTORIA
+            { wch: 18 }, // Avance GLOBAL App/Syn/Vit
+            { wch: 12 }, // % App/Syn/Vit
+            { wch: 18 }, // Compromiso JUL-AGO App
+            { wch: 15 }, // Avance Jul-Ago App
+            { wch: 12 }, // % Jul-Ago App
+            { wch: 18 }, // Compromiso SEPT-OCT App
+            { wch: 15 }, // Avance Sep-Oct App
+            { wch: 12 }, // % Sep-Oct App
+            { wch: 18 }, // Compromiso NOV-DIC App
+            { wch: 15 }, // Avance Nov-Dic App
+            { wch: 12 }, // % Nov-Dic App
+            { wch: 18 }, // SYNCROS Acumulado
+            { wch: 18 }, // APPAREL Acumulado
+            { wch: 18 }, // VITTORIA Acumulado
+            { wch: 15 }, // BOLD Acumulado
+          ];
+
+          ws['!cols'] = columnWidths;
+
+          // Agregar la hoja al libro
+          XLSX.utils.book_append_sheet(wb, ws, 'Monitor Previo');
+
+          // Generar el nombre del archivo con fecha y hora
+          const fecha = new Date();
+          const fechaHora = fecha.getFullYear().toString() +
+            ('0' + (fecha.getMonth() + 1)).slice(-2) +
+            ('0' + fecha.getDate()).slice(-2);
+          const nombreArchivo = `previo-${fechaHora}.xlsx`;
+
+          // Guardar el archivo
+          XLSX.writeFile(wb, nombreArchivo);
+
+          // Mostrar mensaje de éxito
+          this.mensajeAlerta = `Datos exportados exitosamente`;
+          this.tipoAlerta = 'exito';
+          this.cargando = false;
+
+        },
+        error: (err) => {
+          console.error('Error al obtener datos para exportar:', err);
+          this.mensajeAlerta = 'Error al obtener los datos para exportar';
+          this.tipoAlerta = 'error';
+          this.cargando = false;
+        }
+      });
+
+    } catch (error) {
+      console.error('Error al exportar a Excel:', error);
+      this.mensajeAlerta = 'Error al exportar los datos a Excel';
+      this.tipoAlerta = 'error';
+      this.cargando = false;
+    }
+  }
 }

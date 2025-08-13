@@ -1,0 +1,49 @@
+<div class="sort-dropdown" [class.show]="showDropdown">
+  <button class="sort-btn" (click)="toggleDropdown($event)">
+    <i class="fas fa-filter"></i>
+    <span *ngIf="hasSelectedOptions" class="current-sort">
+      {{ selectedLabel }}
+    </span>
+    <i class="fas fa-chevron-down"></i>
+  </button>
+
+  <div class="filter-options" [class.has-few-items]="filteredOptions.length <= 5" *ngIf="showDropdown">
+    <div class="filter-content-wrapper">
+
+      <!-- Buscador -->
+      <div class="filter-search">
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          [placeholder]="placeholder"
+          (click)="$event.stopPropagation()"
+        >
+      </div>
+
+      <!-- Lista de opciones -->
+      <div class="filter-items-container">
+        <div *ngIf="filteredOptions.length === 0" class="no-selections">
+          {{ searchTerm ? 'No se encontraron resultados' : 'No hay elementos disponibles' }}
+        </div>
+
+        <div *ngFor="let option of filteredOptions" class="filter-item">
+          <label>
+            <input
+              type="checkbox"
+              [(ngModel)]="option.selected"
+              (click)="$event.stopPropagation()"
+              (change)="onSelectionChange()"
+            >
+            {{ option.value }}
+          </label>
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="filter-actions">
+        <button (click)="limpiar(); $event.stopPropagation()">Limpiar</button>
+        <button (click)="aplicar(); $event.stopPropagation()">Aplicar</button>
+      </div>
+    </div>
+  </div>
+</div>
