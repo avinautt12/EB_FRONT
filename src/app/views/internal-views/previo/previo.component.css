@@ -1,11 +1,14 @@
 /* === CONTENEDOR PRINCIPAL === */
 .monitor-container {
-  min-height: 80vh;
+  min-height: 100vh;
+  /* Ocupa al menos toda la altura de la pantalla */
   padding: 2rem 3rem;
   box-sizing: border-box;
   background-color: #252422;
   color: #FFFCF2;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+  /* Importante para el z-index */
 }
 
 .columna-zona {
@@ -64,6 +67,11 @@ h2 {
   overflow: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  min-width: 1000px;
+  min-height: 400px;
+  /* Altura mínima para el contenedor */
+  position: relative;
+  /* Para el z-index */
 }
 
 .tabla-previo {
@@ -73,6 +81,7 @@ h2 {
   min-width: 1000px;
   overflow-x: hidden;
 }
+
 
 .sticky-th {
   position: sticky;
@@ -84,7 +93,7 @@ h2 {
 
 .tabla-previo thead th {
   border: 1px solid #444;
-  font-size: 0.85rem;
+  font-size: 0.90rem;
   color: #EB5E28;
   padding: 0;
   text-align: center;
@@ -432,18 +441,24 @@ input[type=number]::-webkit-inner-spin-button {
   padding: 8px 0;
 }
 
-.header-with-filter {
+/* Contenedor flex horizontal */
+.filter-horizontal-container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-}
-
-.header-title {
-  text-align: center;
+  flex-direction: row;  /* Elementos en línea */
+  align-items: center;   /* Centrado vertical */
+  gap: 5px;             /* Espacio entre elementos */
   width: 100%;
 }
 
-.header-with-filter app-filtro {
-  margin-top: 5px;
+/* Estilo para el texto */
+.filter-label {
+  white-space: nowrap;  /* Evita saltos de línea */
+  margin-left: 15px;
+  text-align: center;
+}
+
+/* Ajustes para el componente filtro */
+::ng-deep app-filtro {
+  flex-grow: 1;         /* Ocupa el espacio restante */
+  min-width: 80px;      /* Ancho mínimo para el filtro */
 }

@@ -9,6 +9,7 @@
     <button class="btn" [routerLink]="['/metas']"><i class="fas fa-bullseye"></i> Metas</button>
     <button class="btn" [routerLink]="['/graficas']"><i class="fas fa-chart-bar"></i> Gráficas</button>
     <button class="btn" [routerLink]="['/caratulas']"><i class="fas fa-book"></i> Carátulas</button>
+    <button class="btn btn-success" (click)="guardarDatosEnBackend()"><i class="fas fa-save"></i> Guardar Datos</button>
   </div>
 
   <div *ngIf="cargando" class="cargando-spinner">
@@ -21,20 +22,42 @@
   </div>
 
   <div class="tabla-contenedor" *ngIf="!cargando && (clientesPaginados.length > 0 || integrales.length > 0)">
-    <table class="tabla-previo">
+    <table class="tabla-previo" [class.single-row]="clientesFiltrados.length === 1">
       <thead>
         <tr>
-          <th style="min-width: 160px; text-align: center;">
-            <div class="header-with-filter">
-              <div class="header-title">Clave</div>
-              <app-filtro [options]="opcionesClave" (apply)="aplicarFiltroClave($event)" (clear)="limpiarFiltroClave()"
-                filtroId="clave"></app-filtro>
+          <th class="columna-clave" style="min-width: 120px">
+            <div class="filter-horizontal-container">
+              <span class="filter-label">Clave</span>
+              <app-filtro filtroId="clave" [options]="opcionesClave" [(showDropdown)]="showClaveFilter"
+                (apply)="aplicarFiltroClave($event)" (clear)="limpiarFiltroClave()">
+              </app-filtro>
             </div>
           </th>
-          <th style="min-width: 80px;">EVAC</th>
-          <th style="min-width: 250px;">Cliente - Razón Social</th>
+          <th style="min-width: 150px;">
+            <div class="filter-horizontal-container">
+              <span class="filter-label">EVAC</span>
+              <app-filtro filtroId="evac" [options]="opcionesEvac" [(showDropdown)]="showEvacFilter"
+                (apply)="aplicarFiltroEvac($event)" (clear)="limpiarFiltroEvac()">
+              </app-filtro>
+            </div>
+          </th>
+          <th style="min-width: 280px;">
+            <div class="filter-horizontal-container">
+              <span class="filter-label">Cliente</span>
+              <app-filtro filtroId="cliente" [options]="opcionesCliente" [(showDropdown)]="showClienteFilter"
+                (apply)="aplicarFiltroCliente($event)" (clear)="limpiarFiltroCliente()">
+              </app-filtro>
+            </div>
+          </th>
           <th style="min-width: 140px;">Acumulado Compra Anticipada</th>
-          <th style="min-width: 140px;">Elección NIVEL</th>
+          <th style="min-width: 140px;">
+            <div class="filter-horizontal-container">
+              <span class="filter-label">Elección NIVEL</span>
+              <app-filtro filtroId="eleccion_nivel" [options]="opcionesEleccionNivel" [(showDropdown)]="showEleccionNivelFilter"
+                (apply)="aplicarFiltroEleccionNivel($event)" (clear)="limpiarFiltroEleccionNivel()">
+              </app-filtro>
+            </div>
+          </th>
           <th style="min-width: 110px;">Nivel Cierre Compra Inicial</th>
           <th style="min-width: 120px;">Compra Mínima ANUAL</th>
           <th style="min-width: 80px;">%</th>
@@ -146,7 +169,7 @@
 
         <!-- Separador visual para integrales -->
         <tr *ngIf="integrales.length > 0" class="separador-integral">
-          <td colspan="38">INTEGRALES</td>
+          <td colspan="39">INTEGRALES</td>
         </tr>
 
         <!-- Integrales -->

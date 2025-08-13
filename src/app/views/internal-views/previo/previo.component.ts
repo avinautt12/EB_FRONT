@@ -6,6 +6,7 @@ import { HomeBarComponent } from '../../../components/home-bar/home-bar.componen
 import { ClientesService } from '../../../services/clientes.service';
 import { PrevioService } from '../../../services/previo.service';
 import { FiltroComponent } from '../../../components/filtro/filtro.component';
+import { AlertaService } from '../../../services/alerta.service';
 
 interface Cliente {
   clave: string;
@@ -76,6 +77,11 @@ export class PrevioComponent implements OnInit {
 
   facturas: FacturaOdoo[] = [];
 
+  showClaveFilter: boolean = false;
+  showEvacFilter: boolean = false;
+  showClienteFilter: boolean = false;
+  showEleccionNivelFilter: boolean = false;
+
   paginaActual = 1;
   paginaActualTemp = 1;
   itemsPorPagina = 100;
@@ -86,7 +92,9 @@ export class PrevioComponent implements OnInit {
     clave: '',
     zona: '',
     nombre_cliente: '',
-    nivel: ''
+    nivel: '',
+    evac: '',
+    cliente: ''
   };
   filtroAbierto: string | null = null;
 
@@ -101,11 +109,20 @@ export class PrevioComponent implements OnInit {
 
   integrales: ClienteConAcumulado[] = [];
 
+  mostrarIntegrales: boolean = true;
+
   opcionesClave: { value: string; selected: boolean }[] = [];
+  opcionesEvac: { value: string; selected: boolean }[] = [];
+  opcionesCliente: { value: string; selected: boolean }[] = [];
+  opcionesEleccionNivel: { value: string; selected: boolean }[] = [];
+
+  mensajeAlerta: string | null = null;
+  tipoAlerta: 'exito' | 'error' = 'exito';
 
   constructor(
     private clientesService: ClientesService,
-    private previoService: PrevioService
+    private previoService: PrevioService,
+    private alertaService: AlertaService
   ) { }
 
   ngOnInit(): void {
@@ -157,10 +174,19 @@ export class PrevioComponent implements OnInit {
       this.clientesOriginal = this.procesarIntegrales(todosClientes);
 
       this.inicializarOpcionesFiltro();
+      this.guardarDatosEnBackend();
 
       // Configurar filtros y paginación
       this.zonasUnicas = Array.from(new Set(this.clientesOriginal.map(c => c.zona ?? '').filter(Boolean)));
       this.nivelesUnicos = Array.from(new Set(this.clientesOriginal.map(c => c.nivel ?? '').filter(Boolean)));
+
+      // Dentro de ngOnInit(), después de cargar los datos
+      this.opcionesEleccionNivel = Array.from(new Set(this.clientesOriginal.map(c => c.nivel)))
+        .filter(nivel => nivel) // Filtrar valores nulos/vacíos
+        .map(nivel => ({
+          value: nivel,
+          selected: false
+        }));
 
       this.aplicarFiltros();
       this.cargando = false;
@@ -176,52 +202,95 @@ export class PrevioComponent implements OnInit {
   }
 
   filtrarClientes() {
+    const filtroEvac = this.filtros.evac.toLowerCase();
+    const filtroCliente = this.filtros.cliente.toLowerCase();
+    const filtroNivel = this.filtros.nivel.toLowerCase();
+    const filtroClave = this.filtros.clave.toLowerCase();
+
+    // Determinar si debemos mostrar integrales
+    const mostrarIntegrales = this.mostrarIntegrales &&
+      (this.filtros.evac === '' && this.filtros.cliente === '' && this.filtros.clave === '');
+
     // Filtrar clientes normales
     const clientesNormalesFiltrados = this.clientesOriginal.filter(cliente => {
       const zonaValida = this.filtrosCheckbox.zonasSeleccionadas.size === 0 ||
         this.filtrosCheckbox.zonasSeleccionadas.has(cliente.zona);
 
       const nivelValido = this.filtrosCheckbox.nivelesSeleccionados.size === 0 ||
-        this.filtrosCheckbox.nivelesSeleccionados.has(cliente.nivel);
+        (this.filtros.nivel ?
+          filtroNivel.split('|').some(nivelFiltro =>
+            cliente.nivel?.toLowerCase().includes(nivelFiltro)
+          ) :
+          this.filtrosCheckbox.nivelesSeleccionados.has(cliente.nivel));
 
-      const filtroClave = this.filtros.clave.toLowerCase();
       const claveValida = !filtroClave ||
         filtroClave.split('|').some(claveFiltro =>
           cliente.clave?.toLowerCase().includes(claveFiltro)
         );
 
+      const evacValido = !filtroEvac ||
+        filtroEvac.split('|').some(evacFiltro =>
+          cliente.evac?.toLowerCase().includes(evacFiltro)
+        );
+
+      const clienteValido = !filtroCliente ||
+        filtroCliente.split('|').some(clienteFiltro =>
+          cliente.nombre_cliente?.toLowerCase().includes(clienteFiltro)
+        );
+
+      const esParteDeIntegralValido = mostrarIntegrales || !cliente.esParteDeIntegral;
+
       return claveValida &&
         zonaValida &&
         cliente.nombre_cliente?.toLowerCase().includes(this.filtros.nombre_cliente.toLowerCase()) &&
         nivelValido &&
-        cliente.nivel?.toLowerCase().includes(this.filtros.nivel.toLowerCase());
+        evacValido &&
+        clienteValido &&
+        esParteDeIntegralValido;
     });
 
     // Filtrar integrales
-    const integralesFiltrados = this.integrales.filter(integral => {
-      const zonaValida = this.filtrosCheckbox.zonasSeleccionadas.size === 0 ||
-        this.filtrosCheckbox.zonasSeleccionadas.has(integral.zona);
+    const integralesFiltrados = (mostrarIntegrales || filtroEvac || filtroCliente || filtroNivel) ?
+      this.integrales.filter(integral => {
+        const zonaValida = this.filtrosCheckbox.zonasSeleccionadas.size === 0 ||
+          this.filtrosCheckbox.zonasSeleccionadas.has(integral.zona);
 
-      const nivelValido = this.filtrosCheckbox.nivelesSeleccionados.size === 0 ||
-        this.filtrosCheckbox.nivelesSeleccionados.has(integral.nivel);
+        const nivelValido = this.filtrosCheckbox.nivelesSeleccionados.size === 0 ||
+          (this.filtros.nivel ?
+            filtroNivel.split('|').some(nivelFiltro =>
+              integral.nivel?.toLowerCase().includes(nivelFiltro)
+            ) :
+            this.filtrosCheckbox.nivelesSeleccionados.has(integral.nivel));
 
-      const filtroClave = this.filtros.clave.toLowerCase();
-      const claveValida = !filtroClave ||
-        filtroClave.split('|').some(claveFiltro =>
-          integral.clave?.toLowerCase().includes(claveFiltro)
-        );
+        const claveValida = !filtroClave ||
+          filtroClave.split('|').some(claveFiltro =>
+            integral.clave?.toLowerCase().includes(claveFiltro)
+          );
 
-      return claveValida &&
-        zonaValida &&
-        integral.nombre_cliente?.toLowerCase().includes(this.filtros.nombre_cliente.toLowerCase()) &&
-        nivelValido;
-    });
+        const evacValido = !filtroEvac ||
+          filtroEvac.split('|').some(evacFiltro =>
+            integral.evac?.toLowerCase().includes(evacFiltro)
+          );
+
+        const clienteValido = !filtroCliente ||
+          filtroCliente.split('|').some(clienteFiltro =>
+            integral.nombre_cliente?.toLowerCase().includes(clienteFiltro)
+          );
+
+        // Si hay filtro de cliente, mostrar solo el integral que coincide exactamente
+        if (filtroCliente) {
+          return clienteValido && zonaValida && nivelValido && evacValido;
+        }
+
+        // Si no hay filtro de cliente, mostrar todos los integrales que coincidan con otros filtros
+        return zonaValida && nivelValido && evacValido;
+      }) : [];
 
     // Actualizar las propiedades
     this.clientesFiltrados = clientesNormalesFiltrados;
-    this.integrales = integralesFiltrados; // Actualizar la lista de integrales filtrados
+    this.integrales = integralesFiltrados;
 
-    // Calcular paginación solo para clientes normales
+    // Calcular paginación
     this.totalPaginas = Math.ceil(this.clientesFiltrados.length / this.itemsPorPagina);
     this.actualizarPaginado();
   }
@@ -231,10 +300,28 @@ export class PrevioComponent implements OnInit {
     const clavesClientes = this.clientesOriginal.map(c => c.clave);
     const clavesIntegrales = this.integrales.map(i => i.clave);
     const clavesUnicas = Array.from(new Set([...clavesClientes, ...clavesIntegrales]));
+    const nombresClientes = this.clientesOriginal.map(c => c.nombre_cliente);
+    const nombresIntegrales = this.integrales.map(i => i.nombre_cliente);
+    const nombresUnicos = Array.from(new Set([...nombresClientes, ...nombresIntegrales]));
 
     // Crear las opciones para el filtro
     this.opcionesClave = clavesUnicas.map(clave => ({
       value: clave,
+      selected: false
+    }));
+
+    this.opcionesEvac = Array.from(new Set(this.clientesOriginal.map(c => c.evac))).map(evac => ({
+      value: evac,
+      selected: false
+    }));
+
+    this.opcionesCliente = Array.from(new Set(this.clientesOriginal.map(c => c.nombre_cliente))).map(cliente => ({
+      value: cliente,
+      selected: false
+    }));
+
+    this.opcionesCliente = nombresUnicos.map(cliente => ({
+      value: cliente,
       selected: false
     }));
   }
@@ -242,12 +329,59 @@ export class PrevioComponent implements OnInit {
   aplicarFiltroClave(clavesSeleccionadas: string[]): void {
     // Actualizar el filtro de clave
     this.filtros.clave = clavesSeleccionadas.join('|');
+    // Si se aplica filtro por clave, ocultar integrales
+    this.mostrarIntegrales = clavesSeleccionadas.length === 0;
     this.aplicarFiltros();
   }
 
+  aplicarFiltroEvac(evacsSeleccionados: string[]): void {
+    // Actualizar el filtro de evac
+    this.filtros.evac = evacsSeleccionados.join('|');
+    this.aplicarFiltros();
+  }
+
+  aplicarFiltroCliente(clientesSeleccionados: string[]): void {
+    // Actualizar el filtro de cliente
+    this.filtros.cliente = clientesSeleccionados.join('|');
+    this.aplicarFiltros();
+  }
+
+  // En los métodos para limpiar filtros, volver a mostrar los integrales
   limpiarFiltroClave(): void {
-    // Limpiar el filtro de clave
     this.filtros.clave = '';
+    this.mostrarIntegrales = true;
+    // Limpiar también las selecciones en las opciones
+    this.opcionesClave.forEach(opcion => opcion.selected = false);
+    this.aplicarFiltros();
+  }
+
+  limpiarFiltroEvac(): void {
+    this.filtros.evac = '';
+    this.mostrarIntegrales = true;
+    // Limpiar también las selecciones en las opciones
+    this.opcionesEvac.forEach(opcion => opcion.selected = false);
+    // Forzar recarga de todos los integrales
+    this.aplicarFiltros();
+    // Recargar la página automáticamente
+    window.location.reload();
+  }
+
+  limpiarFiltroCliente(): void {
+    this.filtros.cliente = '';
+    this.mostrarIntegrales = true;
+    // Limpiar también las selecciones en las opciones
+    this.opcionesCliente.forEach(opcion => opcion.selected = false);
+    this.aplicarFiltros();
+  }
+
+  aplicarFiltroEleccionNivel(nivelesSeleccionados: string[]): void {
+    this.filtros.nivel = nivelesSeleccionados.join('|');
+    this.aplicarFiltros();
+  }
+
+  limpiarFiltroEleccionNivel(): void {
+    this.filtros.nivel = '';
+    this.opcionesEleccionNivel.forEach(opcion => opcion.selected = false);
     this.aplicarFiltros();
   }
 
@@ -1118,6 +1252,95 @@ export class PrevioComponent implements OnInit {
 
     const porcentaje = (suma / integral.compromiso_apparel_syncros_vittoria) * 100;
     return Math.round(porcentaje) + '%';
+  }
+
+  guardarDatosEnBackend() {
+    this.cargando = true;
+
+    // Calcular porcentajes antes de enviar
+    const clientesConPorcentajes = this.clientesOriginal.map(cliente =>
+      this.calcularPorcentajes(cliente)
+    );
+    const integralesConPorcentajes = this.integrales.map(integral =>
+      this.calcularPorcentajes(integral)
+    );
+
+    this.previoService.actualizarPrevio(clientesConPorcentajes, integralesConPorcentajes)
+      .subscribe({
+        next: (response) => {
+          console.log('Datos actualizados correctamente', response);
+          this.cargando = false;
+          this.mensajeAlerta = 'Datos actualizados correctamente';
+          this.tipoAlerta = 'exito';
+        },
+        error: (err) => {
+          console.error('Error al actualizar datos', err);
+          this.cargando = false;
+          this.mensajeAlerta = 'Error al actualizar datos: ' + (err.error?.message || err.message || 'Error desconocido');
+          this.tipoAlerta = 'error';
+        }
+      });
+  }
+
+  private calcularPorcentajes(cliente: any): any {
+    // Calcular cada porcentaje basado en avance/compromiso
+    const calcular = (avance: number, compromiso: number): number => {
+      if (!compromiso || compromiso === 0) return 0;
+      return Math.round((avance / compromiso) * 100);
+    };
+
+    return {
+      ...cliente,
+      porcentaje_anual: calcular(
+        (cliente.avance_global_scott || 0) +
+        (cliente.acumulado_syncros || 0) +
+        (cliente.acumulado_apparel || 0) +
+        (cliente.acumulado_vittoria || 0),
+        cliente.compra_minima_anual || 1
+      ),
+      porcentaje_global: calcular(
+        (cliente.avance_global_scott || 0) +
+        (cliente.acumulado_syncros || 0) +
+        (cliente.acumulado_apparel || 0) +
+        (cliente.acumulado_vittoria || 0),
+        cliente.compra_minima_inicial || 1
+      ),
+      porcentaje_scott: calcular(
+        cliente.avance_global_scott || 0,
+        cliente.compromiso_scott || 1
+      ),
+      porcentaje_jul_ago: calcular(
+        cliente.avance_jul_ago || 0,
+        cliente.compromiso_jul_ago || 1
+      ),
+      // Repetir para los demás periodos...
+      porcentaje_sep_oct: calcular(
+        cliente.avance_sep_oct || 0,
+        cliente.compromiso_sep_oct || 1
+      ),
+      porcentaje_nov_dic: calcular(
+        cliente.avance_nov_dic || 0,
+        cliente.compromiso_nov_dic || 1
+      ),
+      porcentaje_apparel_syncros_vittoria: calcular(
+        (cliente.acumulado_syncros || 0) +
+        (cliente.acumulado_apparel || 0) +
+        (cliente.acumulado_vittoria || 0),
+        cliente.compromiso_apparel_syncros_vittoria || 1
+      ),
+      porcentaje_jul_ago_app: calcular(
+        cliente.avance_jul_ago_app || 0,
+        cliente.compromiso_jul_ago_app || 1
+      ),
+      porcentaje_sep_oct_app: calcular(
+        cliente.avance_sep_oct_app || 0,
+        cliente.compromiso_sep_oct_app || 1
+      ),
+      porcentaje_nov_dic_app: calcular(
+        cliente.avance_nov_dic_app || 0,
+        cliente.compromiso_nov_dic_app || 1
+      )
+    };
   }
 
 }

@@ -7,29 +7,34 @@
     <i class="fas fa-chevron-down"></i>
   </button>
 
-  <div class="filter-options">
+  <div class="filter-options" [class.single-item]="filteredOptions.length === 1">
     <div class="filter-content-wrapper">
       <div class="filter-search">
-        <input type="text" 
-               [(ngModel)]="searchTerm" 
-               (input)="filterOptions()" 
-               placeholder="Escribe aquí"
-               (click)="$event.stopPropagation()"
-               (keydown.enter)="applyFilter()">
+        <input 
+          type="text" 
+          id="filterSearchInput" 
+          name="filterSearchInput" 
+          [(ngModel)]="searchTerm" 
+          (input)="filterOptions()" 
+          placeholder="Escribe aquí"
+          (click)="$event.stopPropagation()"
+          (keydown.enter)="applyFilter()">
       </div>
       
       <div class="filter-items-container">
-        <!-- Mensaje cuando no hay resultados -->
         <div *ngIf="filteredOptions.length === 0" class="no-selections">
           {{ searchTerm ? 'No se encontraron resultados' : 'No hay elementos seleccionados' }}
         </div>
         
         <div *ngFor="let option of filteredOptions" class="filter-item">
-          <label>
-            <input type="checkbox" 
-                   [(ngModel)]="option.selected"
-                   (change)="onSelectionChange()"
-                   (click)="$event.stopPropagation()">
+          <label [for]="'filterOption_' + option.value">
+            <input 
+              type="checkbox" 
+              [id]="'filterOption_' + option.value" 
+              [name]="'filterOption_' + option.value" 
+              [(ngModel)]="option.selected"
+              (change)="onSelectionChange()"
+              (click)="$event.stopPropagation()">
             {{ option.value }}
           </label>
         </div>
