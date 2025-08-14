@@ -1,0 +1,67 @@
+<app-home-bar></app-home-bar>
+
+<div class="monitor-container">
+    <h2>Multimarcas</h2>
+
+    <div class="acciones-monitor">
+        <button class="btn" [routerLink]="['/previo']"><i class="fas fa-table"></i> Previo</button>
+    </div>
+
+    <div *ngIf="cargando" class="cargando-spinner">
+        <div class="spinner"></div>
+        <p>Cargando...</p>
+    </div>
+
+    <div *ngIf="!cargando && clientesPaginados.length === 0" class="sin-datos">
+        <p>No se pudieron cargar los datos o no hay clientes disponibles.</p>
+    </div>
+
+    <div class="tabla-contenedor" *ngIf="!cargando && clientesPaginados.length > 0">
+        <table class="tabla-previo">
+            <thead>
+                <tr>
+                    <th style="min-width: 120px">
+                        Clave
+                    </th>
+                    <th style="min-width: 110px;">
+                        Evac
+                    </th>
+                    <th style="min-width: 280px;">
+                        Cliente - Razón Social
+                    </th>
+                    <th style="min-width: 120px;">Avance GLOBAL</th>
+                    <th style="min-width: 140px;">Avance GLOBAL SCOTT</th>
+                    <th style="min-width: 140px;">Avance GLOBAL SYNCROS</th>
+                    <th style="min-width: 140px;">Avance GLOBAL APPAREL</th>
+                    <th style="min-width: 140px;">Avance GLOBAL VITTORIA</th>
+                    <th style="min-width: 120px;">BOLD Acumulado</th>
+                    <th style="min-width: 100px;">JULIO</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let cliente of clientesPaginados">
+                    <td>{{ cliente.clave }}</td>
+                    <td>{{ cliente.evac }}</td>
+                    <td>{{ cliente.cliente_razon_social }}</td>
+                    <td>
+                        {{
+                        formatCurrency(
+                        (cliente.avance_global_scott || 0) +
+                        (cliente.avance_global_syncros || 0) +
+                        (cliente.avance_global_apparel || 0) +
+                        (cliente.avance_global_vittoria || 0) +
+                        (cliente.avance_global_bold || 0)
+                        )
+                        }}
+                    </td>
+                    <td>{{ formatCurrency(cliente.avance_global_scott) }}</td>
+                    <td>{{ formatCurrency(cliente.avance_global_syncros) }}</td>
+                    <td>{{ formatCurrency(cliente.avance_global_apparel) }}</td>
+                    <td>{{ formatCurrency(cliente.avance_global_vittoria) }}</td>
+                    <td>{{ formatCurrency(cliente.avance_global_bold) }}</td>
+                    <td>{{ formatCurrency(cliente.total_facturas_julio) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

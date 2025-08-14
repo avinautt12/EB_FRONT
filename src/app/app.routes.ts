@@ -8,6 +8,7 @@ import { EnviarCorreoComponent } from './views/recuperacion/enviar-correo/enviar
 import { VerificarCodigoComponent } from './views/recuperacion/verificar-codigo/verificar-codigo.component';
 import { RestablecerContrasenaComponent } from './views/recuperacion/restablecer-contrasena/restablecer-contrasena.component';
 import { PrevioComponent } from './views/internal-views/previo/previo.component';
+import { MultimarcasComponent } from './views/internal-views/multimarcas/multimarcas.component';
 import { CaratulasComponent } from './views/internal-views/caratulas/caratulas.component';
 import { MetasComponent } from './views/internal-views/metas/metas.component';
 import { DistribuidoresComponent } from './views/internal-views/distribuidores/distribuidores.component';
@@ -29,6 +30,7 @@ export const routes: Routes = [
   { path: 'home', component: HomeComponent, canActivate: [authGuard] },
   { path: 'monitor', component: MonitorComponent, canActivate: [authGuard] },
   { path: 'previo', component: PrevioComponent, canActivate: [authGuard] },
+  { path: 'multimarcas', component: MultimarcasComponent, canActivate: [authGuard] },
   { path: 'metas', component: MetasComponent, canActivate: [authGuard] },
   { path: 'distribuidores', component: DistribuidoresComponent, canActivate: [authGuard] },
   { path: 'caratulas', component: CaratulasComponent, canActivate: [authGuard] },
