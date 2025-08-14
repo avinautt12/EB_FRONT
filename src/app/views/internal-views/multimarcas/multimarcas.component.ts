@@ -805,6 +805,7 @@ export class MultimarcasComponent implements OnInit {
       };
     });
   }
+  
 
   formatCurrency(value: number): string {
     if (value === null || value === undefined) return '$0.00';
