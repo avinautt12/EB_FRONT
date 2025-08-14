@@ -20,14 +20,29 @@
         <table class="tabla-previo">
             <thead>
                 <tr>
-                    <th style="min-width: 120px">
-                        Clave
+                    <th class="columna-clave" style="min-width: 120px">
+                        <div class="filter-horizontal-container">
+                            <span class="filter-label">Clave</span>
+                            <app-filtro-previo tipo="clave" placeholder="Buscar clave..." [opciones]="opcionesClave"
+                                (aplicarFiltro)="aplicarFiltroClave($event)" (limpiarFiltro)="limpiarFiltroClave()">
+                            </app-filtro-previo>
+                        </div>
                     </th>
-                    <th style="min-width: 110px;">
-                        Evac
+                    <th style="min-width: 150px;">
+                        <div class="filter-horizontal-container">
+                            <span class="filter-label">EVAC</span>
+                            <app-filtro-previo tipo="evac" placeholder="Buscar EVAC..." [opciones]="opcionesEvac"
+                                (aplicarFiltro)="aplicarFiltroEvac($event)" (limpiarFiltro)="limpiarFiltroEvac()">
+                            </app-filtro-previo>
+                        </div>
                     </th>
-                    <th style="min-width: 280px;">
-                        Cliente - Razón Social
+                    <th style="min-width: 320px;">
+                        <div class="filter-horizontal-container">
+                            <span class="filter-label">Cliente - Razón Social</span>
+                            <app-filtro-previo tipo="cliente" placeholder="Buscar cliente..." [opciones]="opcionesCliente"
+                                (aplicarFiltro)="aplicarFiltroCliente($event)" (limpiarFiltro)="limpiarFiltroCliente()">
+                            </app-filtro-previo>
+                        </div>
                     </th>
                     <th style="min-width: 120px;">Avance GLOBAL</th>
                     <th style="min-width: 140px;">Avance GLOBAL SCOTT</th>
@@ -36,6 +51,17 @@
                     <th style="min-width: 140px;">Avance GLOBAL VITTORIA</th>
                     <th style="min-width: 120px;">BOLD Acumulado</th>
                     <th style="min-width: 100px;">JULIO</th>
+                    <th style="min-width: 100px;">AGOSTO</th>
+                    <th style="min-width: 100px;">SEPTIEMBRE</th>
+                    <th style="min-width: 100px;">OCTUBRE</th>
+                    <th style="min-width: 100px;">NOVIEMBRE</th>
+                    <th style="min-width: 100px;">DICIEMBRE</th>
+                    <th style="min-width: 100px;">ENERO</th>
+                    <th style="min-width: 100px;">FEBRERO</th>
+                    <th style="min-width: 100px;">MARZO</th>
+                    <th style="min-width: 100px;">ABRIL</th>
+                    <th style="min-width: 100px;">MAYO</th>
+                    <th style="min-width: 100px;">JUNIO</th>
                 </tr>
             </thead>
             <tbody>
@@ -60,6 +86,17 @@
                     <td>{{ formatCurrency(cliente.avance_global_vittoria) }}</td>
                     <td>{{ formatCurrency(cliente.avance_global_bold) }}</td>
                     <td>{{ formatCurrency(cliente.total_facturas_julio) }}</td>
+                    <td>{{ formatCurrency(cliente.total_facturas_agosto) }}</td>
+                    <td>{{ formatCurrency(cliente.total_facturas_septiembre) }}</td>
+                    <td>{{ formatCurrency(cliente.total_facturas_octubre) }}</td>
+                    <td>{{ formatCurrency(cliente.total_facturas_noviembre) }}</td>
+                    <td>{{ formatCurrency(cliente.total_facturas_diciembre) }}</td>
+                    <td>{{ formatCurrency(cliente.total_facturas_enero) }}</td>
+                    <td>{{ formatCurrency(cliente.total_facturas_febrero) }}</td>
+                    <td>{{ formatCurrency(cliente.total_facturas_marzo) }}</td>
+                    <td>{{ formatCurrency(cliente.total_facturas_abril) }}</td>
+                    <td>{{ formatCurrency(cliente.total_facturas_mayo) }}</td>
+                    <td>{{ formatCurrency(cliente.total_facturas_junio) }}</td>
                 </tr>
             </tbody>
         </table>

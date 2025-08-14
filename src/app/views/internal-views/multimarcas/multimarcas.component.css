@@ -1,7 +1,6 @@
 /* === CONTENEDOR PRINCIPAL === */
 .monitor-container {
-    min-height: 100vh;
-    /* Ocupa al menos toda la altura de la pantalla */
+    min-height: 400px;
     padding: 2rem 3rem;
     box-sizing: border-box;
     background-color: #252422;
