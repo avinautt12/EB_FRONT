@@ -1,0 +1,312 @@
+.distribuidores-container {
+    max-width: 700px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background-color: #1e1d1b;
+    font-family: 'Segoe UI', sans-serif;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    text-align: center;
+}
+
+.distribuidores-container h1 {
+    color: #EB5E28;
+    margin-bottom: 0.3rem;
+    font-size: 1.8rem;
+}
+
+.distribuidores-container p {
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.titulo-agg{
+    font-size: 1.2rem;
+}
+
+.distribuidores-input {
+    padding: 0.4rem 0.5rem;
+    margin: 0.5rem 0 1rem;
+    border-radius: 5px;
+    border: none;
+    background-color: #403d39;
+    color: #FFFCF2;
+    font-size: 0.9rem;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+    transition: box-shadow 0.2s ease;
+    margin-bottom: 0.2rem;
+}
+
+.distribuidores-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #565656;
+}
+
+.distribuidores-input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.distribuidores-label {
+    display: block;
+    text-align: left;
+    margin-top: 1rem;
+    font-weight: bold;
+    color: #FFFCF2;
+}
+
+.distribuidores-botones {
+    display: flex;
+    justify-content: center;
+    gap: 0.8rem;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.distribuidores-btn {
+    background-color: #403F3F;
+    color: #FFFCF2;
+    border: none;
+    padding: 0.7rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-right: 10px;
+}
+
+.distribuidores-btn:hover {
+    background-color: #EB5E28;
+    transform: scale(1.05);
+}
+
+.distribuidores-btn-secundario {
+    background-color: #555555;
+}
+
+.distribuidores-btn-secundario:hover {
+    background-color: #EB5E28;
+}
+
+.distribuidores-busqueda {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    margin-top: 30px;
+}
+
+.distribuidores-busqueda input.distribuidores-input {
+    flex: 1;
+    margin: 0;
+    height: 35px;
+}
+
+.distribuidores-busqueda button {
+    margin-top: 0;
+    height: 35px;
+    display: flex;
+    align-items: center;
+}
+
+.distribuidores-sugerencias {
+    position: absolute;
+    left: 0;
+    /* ahora se alinean a la izquierda del contenedor */
+    top: calc(100% + 5px);
+    background-color: #1e1d1b;
+    border: 1px solid #555;
+    border-radius: 5px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    text-align: left;
+    /* alinea el texto a la izquierda */
+}
+
+.distribuidores-sugerencias li {
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.distribuidores-sugerencias li:hover {
+    background-color: #333;
+}
+
+.alerta {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  font-weight: bold;
+  color: #fff;
+  z-index: 9999;
+  animation: fadeInOut 4s ease-in-out;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.alerta.exito {
+  background-color: #28a745;
+}
+
+.alerta.error {
+  background-color: #dc3545;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-10px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+@keyframes girar {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Spinner en el botón */
+.spinner-btn {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #fff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+/* Spinner grande debajo del buscador */
+.spinner-buscando {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #EB5E28;
+  border-top: 3px solid transparent;
+  border-radius: 50%;
+  animation: girar 1s linear infinite;
+  margin: 1rem auto;
+}
+
+/* Spinner genérico */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #ffffff;
+  border-top: 3px solid transparent;
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
+}
+
+/* Contenedor del spinner */
+.spinner-container {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  justify-content: center;
+}
+
+/* Texto junto al spinner */
+.spinner-text {
+  color: #FFFCF2;
+  font-size: 0.95rem;
+}
+
+/* Mensaje si no hay resultados */
+.mensaje-no-encontrado {
+  margin-top: 1rem;
+  color: #ff6b6b;
+  font-weight: bold;
+}
+
+.confirmacion-dialogo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7); /* fondo más oscuro */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem; /* para que no toque los bordes en pantallas chicas */
+}
+
+.confirmacion-contenido {
+  background: #403d39;
+  padding: 1.5rem 2rem; /* un poco menos de padding */
+  border-radius: 10px;
+  max-width: 380px;
+  width: 100%;
+  color: #FFFCF2;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.confirmacion-contenido p {
+  margin-bottom: 1.2rem;
+}
+
+.confirmacion-botones {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.confirmacion-botones button {
+  font-size: 0.9rem;
+  padding: 0.5rem 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.confirmacion-botones .confirmacion {
+  background-color: #403F3F;
+  color: #FFFCF2;
+  border: none;
+}
+
+.confirmacion-botones .confirmacion:hover {
+  background-color: #ff6b2c;
+  transition: background-color 0.3s ease;
+}
+
+.confirmacion-botones .secondary {
+  background-color: #555555;
+  color: #FFFCF2;
+  border: none;
+}
+
+.confirmacion-botones .secondary:hover {
+  background-color: #EB5E28;
+  transition: background-color 0.3s ease;
+}
+
+.eliminar{
+  background: #403F3F;
+}
+
+.eliminar:hover{
+  background: #b5170f;
+  transition: background-color 0.3s ease;
+}
+

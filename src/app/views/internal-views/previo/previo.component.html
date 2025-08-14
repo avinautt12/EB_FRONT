@@ -31,7 +31,8 @@
             <div class="filter-horizontal-container">
               <span class="filter-label">Clave</span>
               <app-filtro-previo tipo="clave" placeholder="Buscar clave..." [opciones]="opcionesClave"
-                (aplicarFiltro)="aplicarFiltroClave($event)" (limpiarFiltro)="limpiarFiltroClave()">
+                [estaActivo]="esFiltroActivo('clave')" (aplicarFiltro)="aplicarFiltroClave($event)"
+                (limpiarFiltro)="limpiarFiltroClave()" (filtroClicked)="toggleFiltro('clave')">
               </app-filtro-previo>
             </div>
           </th>
@@ -40,7 +41,8 @@
             <div class="filter-horizontal-container">
               <span class="filter-label">EVAC</span>
               <app-filtro-previo tipo="evac" placeholder="Buscar EVAC..." [opciones]="opcionesEvac"
-                (aplicarFiltro)="aplicarFiltroEvac($event)" (limpiarFiltro)="limpiarFiltroEvac()">
+                [estaActivo]="esFiltroActivo('evac')" (aplicarFiltro)="aplicarFiltroEvac($event)"
+                (limpiarFiltro)="limpiarFiltroEvac()" (filtroClicked)="toggleFiltro('evac')">
               </app-filtro-previo>
             </div>
           </th>
@@ -49,7 +51,8 @@
             <div class="filter-horizontal-container">
               <span class="filter-label">Cliente</span>
               <app-filtro-previo tipo="cliente" placeholder="Buscar cliente..." [opciones]="opcionesCliente"
-                (aplicarFiltro)="aplicarFiltroCliente($event)" (limpiarFiltro)="limpiarFiltroCliente()">
+                [estaActivo]="esFiltroActivo('cliente')" (aplicarFiltro)="aplicarFiltroCliente($event)"
+                (limpiarFiltro)="limpiarFiltroCliente()" (filtroClicked)="toggleFiltro('cliente')">
               </app-filtro-previo>
             </div>
           </th>
@@ -60,11 +63,11 @@
             <div class="filter-horizontal-container">
               <span class="filter-label">Elección NIVEL</span>
               <app-filtro-previo tipo="nivel" placeholder="Buscar nivel..." [opciones]="opcionesEleccionNivel"
-                (aplicarFiltro)="aplicarFiltroEleccionNivel($event)" (limpiarFiltro)="limpiarFiltroEleccionNivel()">
+                [estaActivo]="esFiltroActivo('nivel')" (aplicarFiltro)="aplicarFiltroEleccionNivel($event)"
+                (limpiarFiltro)="limpiarFiltroEleccionNivel()" (filtroClicked)="toggleFiltro('nivel')">
               </app-filtro-previo>
             </div>
           </th>
-
           <th style="min-width: 110px;">Nivel Cierre Compra Inicial</th>
           <th style="min-width: 120px;">Compra Mínima ANUAL</th>
           <th style="min-width: 80px;">%</th>

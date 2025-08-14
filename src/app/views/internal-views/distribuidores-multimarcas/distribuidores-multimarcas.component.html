@@ -5,11 +5,11 @@
 </div>
 
 <div class="distribuidores-container">
-    <h1>Gestión de Distribuidores</h1>
-    <p>Busca un cliente por clave o nombre, edita o elimina los datos o agrega uno nuevo.</p>
+    <h1>Gestión de Distribuidores Multimarcas</h1>
+    <p>Busca un cliente por clave o razón social, edita o elimina los datos o agrega uno nuevo.</p>
 
-    <button class="distribuidores-btn" [routerLink]="['/previo']">
-        <i class="fas fa-arrow-left"></i> Previo
+    <button class="distribuidores-btn" [routerLink]="['/multimarcas']">
+        <i class="fas fa-arrow-left"></i> Volver
     </button>
 
     <!-- BOTÓN PARA MOSTRAR FORMULARIO DE AGREGAR -->
@@ -17,6 +17,7 @@
         {{ mostrarFormulario ? 'Volver' : 'Agregar Nuevo Cliente' }}
     </button>
 
+    <!-- FORMULARIO DE AGREGAR CLIENTE -->
     <div *ngIf="mostrarFormulario && !cliente">
         <h3 class="titulo-agg">Agregar nuevo cliente</h3>
 
@@ -24,17 +25,12 @@
         <input class="distribuidores-input" type="text" [(ngModel)]="nuevoCliente.clave" required />
 
         <label class="distribuidores-label">EVAC:</label>
-        <select class="distribuidores-input" [(ngModel)]="nuevoCliente.evac" required>
+        <select class="distribuidores-input" [(ngModel)]="nuevoCliente.evac">
             <option *ngFor="let opcion of opcionesEvac" [value]="opcion">{{ opcion }}</option>
         </select>
 
-        <label class="distribuidores-label">Nombre Cliente:</label>
-        <input class="distribuidores-input" type="text" [(ngModel)]="nuevoCliente.nombre_cliente" required />
-
-        <label class="distribuidores-label">Nivel:</label>
-        <select class="distribuidores-input" [(ngModel)]="nuevoCliente.nivel" required>
-            <option *ngFor="let m of nivelesDisponibles" [value]="m.nivel">{{ m.nivel }}</option>
-        </select>
+        <label class="distribuidores-label">Razón Social:</label>
+        <input class="distribuidores-input" type="text" [(ngModel)]="nuevoCliente.cliente_razon_social" required />
 
         <div class="distribuidores-botones">
             <button class="distribuidores-btn" (click)="agregarCliente()">Agregar</button>
@@ -43,7 +39,7 @@
 
     <!-- BUSCADOR CON BOTÓN Y SUGERENCIAS -->
     <div class="distribuidores-busqueda" *ngIf="!mostrarFormulario || cliente">
-        <input class="distribuidores-input" type="text" placeholder="Buscar por clave o nombre..."
+        <input class="distribuidores-input" type="text" placeholder="Buscar por clave o razón social..."
             [(ngModel)]="busqueda" (input)="filtrarSugerencias()" />
 
         <button class="distribuidores-btn" (click)="buscarCliente()" [disabled]="cargando">
@@ -63,7 +59,7 @@
 
     <!-- Mensaje si no se encontró -->
     <p *ngIf="!cargando && cliente === null && intentoBusqueda && !mostrarFormulario" class="mensaje-no-encontrado">
-        No se encontró ningún cliente con esa clave o nombre.
+        No se encontró ningún cliente con esa clave o razón social.
     </p>
 
     <!-- INFO DE CLIENTE SI SE ENCUENTRA -->
@@ -74,43 +70,39 @@
         <input class="distribuidores-input" type="text" [(ngModel)]="cliente.clave" required />
 
         <label class="distribuidores-label">EVAC:</label>
-        <select class="distribuidores-input" [(ngModel)]="cliente.evac" required>
+        <select class="distribuidores-input" [(ngModel)]="cliente.evac">
             <option *ngFor="let opcion of opcionesEvac" [value]="opcion">{{ opcion }}</option>
         </select>
 
-        <label class="distribuidores-label">Nombre Cliente:</label>
-        <input class="distribuidores-input" type="text" [(ngModel)]="cliente.nombre_cliente" required />
-
-        <label class="distribuidores-label">Nivel:</label>
-        <select class="distribuidores-input" [(ngModel)]="cliente.nivel" required>
-            <option *ngFor="let m of nivelesDisponibles" [value]="m.nivel">{{ m.nivel }}</option>
-        </select>
+        <label class="distribuidores-label">Razón Social:</label>
+        <input class="distribuidores-input" type="text" [(ngModel)]="cliente.cliente_razon_social" required />
 
         <div class="distribuidores-botones">
-            <button class="distribuidores-btn" [disabled]="!hayCambios()" (click)="confirmacionVisible = true">
-                Aceptar
+            <button class="distribuidores-btn" [disabled]="!hayCambios()" (click)="confirmarEdicion()">
+                Guardar Cambios
             </button>
-            <button class="distribuidores-btn distribuidor-btn-secundario eliminar"
-                (click)="confirmacionEliminarVisible = true">
-                Eliminar
+            <button class="distribuidores-btn distribuidor-btn-secundario eliminar" (click)="confirmarEliminacion()">
+                Eliminar Cliente
             </button>
         </div>
 
+        <!-- Diálogo de confirmación para edición -->
         <div *ngIf="confirmacionVisible" class="confirmacion-dialogo">
             <div class="confirmacion-contenido">
-                <p>¿Estás seguro que deseas editar a <strong>{{ cliente?.nombre_cliente }}</strong>?</p>
+                <p>¿Estás seguro que deseas editar a <strong>{{ cliente?.cliente_razon_social }}</strong>?</p>
                 <div class="confirmacion-botones">
-                    <button class="confirmacion" (click)="confirmarEdicion()">Sí, editar</button>
+                    <button class="confirmacion" (click)="editarCliente()">Sí, guardar</button>
                     <button class="secondary" (click)="cancelarEdicion()">Cancelar</button>
                 </div>
             </div>
         </div>
 
+        <!-- Diálogo de confirmación para eliminación -->
         <div *ngIf="confirmacionEliminarVisible" class="confirmacion-dialogo">
             <div class="confirmacion-contenido">
-                <p>¿Estás seguro que deseas eliminar a <strong>{{ cliente?.nombre_cliente }}</strong>?</p>
+                <p>¿Estás seguro que deseas eliminar a <strong>{{ cliente?.cliente_razon_social }}</strong>?</p>
                 <div class="confirmacion-botones">
-                    <button class="confirmacion" (click)="confirmarEliminacion()">Sí, eliminar</button>
+                    <button class="confirmacion" (click)="eliminarCliente()">Sí, eliminar</button>
                     <button class="secondary" (click)="cancelarEliminacion()">Cancelar</button>
                 </div>
             </div>

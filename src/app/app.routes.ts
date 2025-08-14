@@ -19,6 +19,7 @@ import { CrearProyeccionUsuariosComponent } from './views/usuarios/crear-proyecc
 import { ProyeccionHistorialComponent } from './views/usuarios/proyeccion-historial/proyeccion-historial.component';
 import { ProyeccionDetallesComponent } from './views/internal-views/proyeccion-detalles/proyeccion-detalles.component';
 import { ProyeccionControlComponent } from './views/internal-views/proyeccion-control/proyeccion-control.component';
+import { DistribuidoresMultimarcasComponent } from './views/internal-views/distribuidores-multimarcas/distribuidores-multimarcas.component';
 
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
@@ -33,6 +34,7 @@ export const routes: Routes = [
   { path: 'multimarcas', component: MultimarcasComponent, canActivate: [authGuard] },
   { path: 'metas', component: MetasComponent, canActivate: [authGuard] },
   { path: 'distribuidores', component: DistribuidoresComponent, canActivate: [authGuard] },
+  { path: 'distribuidores-multimarcas', component: DistribuidoresMultimarcasComponent, canActivate: [authGuard] },
   { path: 'caratulas', component: CaratulasComponent, canActivate: [authGuard] },
   { path: 'usuarios', component: UsuariosComponent, canActivate: [authGuard] },
   { path: 'proyeccion', component: ProyeccionComponent, canActivate: [authGuard] },

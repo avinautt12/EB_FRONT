@@ -1,12 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MultimarcasService } from '../../../services/multimarcas.service';
 import { MonitorOdooService } from '../../../services/monitor-odoo.service';
+import { FiltroService } from '../../../services/filtro.service';
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
 import { finalize } from 'rxjs/operators';
 import { RouterModule } from '@angular/router';
 import { FiltroPrevioComponent } from '../../../components/filtro-previo/filtro-previo.component';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-multimarcas',
@@ -15,7 +17,7 @@ import { FiltroPrevioComponent } from '../../../components/filtro-previo/filtro-
   templateUrl: './multimarcas.component.html',
   styleUrls: ['./multimarcas.component.css']
 })
-export class MultimarcasComponent implements OnInit {
+export class MultimarcasComponent implements OnInit, OnDestroy {
 
   clientesPaginados: any[] = [];
   clientesOriginales: any[] = [];
@@ -32,14 +34,56 @@ export class MultimarcasComponent implements OnInit {
   filtroEvacActivo: string[] = [];
   filtroClienteActivo: string[] = [];
 
+  filtroActivo: string | null = null;
+
   constructor(
     private multimarcasService: MultimarcasService,
-    private monitorOdooService: MonitorOdooService
+    private monitorOdooService: MonitorOdooService,
+    private filtroService: FiltroService
   ) { }
 
   ngOnInit(): void {
     this.cargarDatos();
+
+    this.filtroService.filtroAbierto$.subscribe(filtroId => {
+      this.filtroActivo = filtroId;
+    });
   }
+
+  ngOnDestroy() {
+    this.filtroService.cerrarFiltros();
+  }
+
+  // Métodos para verificar si un filtro está activo
+  esFiltroActivo(tipoFiltro: string): boolean {
+    return this.filtroActivo === `multimarcas-${tipoFiltro}`;
+  }
+
+  // Métodos para manejar clicks específicos de cada filtro
+  toggleFiltroClave() {
+    this.manejarClickFiltro('clave');
+  }
+
+  toggleFiltroEvac() {
+    this.manejarClickFiltro('evac');
+  }
+
+  toggleFiltroCliente() {
+    this.manejarClickFiltro('cliente');
+  }
+
+  manejarClickFiltro(tipoFiltro: string) {
+    const filtroId = `multimarcas-${tipoFiltro}`;
+
+    // Si el filtro ya está abierto, lo cerramos
+    if (this.filtroActivo === filtroId) {
+      this.filtroService.cerrarFiltros();
+    } else {
+      // Si no, abrimos este filtro (esto cerrará automáticamente cualquier otro abierto)
+      this.filtroService.abrirFiltro(filtroId);
+    }
+  }
+
 
   cargarDatos() {
     this.cargando = true;
@@ -49,7 +93,6 @@ export class MultimarcasComponent implements OnInit {
       next: (clientes) => {
         this.clientesOriginales = [...clientes];
         this.clientesPaginados = [...clientes];
-
         this.generarOpcionesFiltros();
 
         // Luego cargamos las facturas
@@ -58,23 +101,8 @@ export class MultimarcasComponent implements OnInit {
         ).subscribe({
           next: (facturas) => {
             this.facturasOriginales = facturas;
-            this.calcularAvanceGlobalScott();
-            this.calcularAvanceGlobalSyncros();
-            this.calcularAvanceGlobalApparel();
-            this.calcularAvanceGlobalVittoria();
-            this.calcularAvanceGlobalBold();
-            this.calcularAvanceGlobalSoloJulio();
-            this.calcularAvanceGlobalSoloAgosto();
-            this.calcularAvanceGlobalSoloSeptiembre();
-            this.calcularAvanceGlobalSoloOctubre();
-            this.calcularAvanceGlobalSoloNoviembre();
-            this.calcularAvanceGlobalSoloDiciembre();
-            this.calcularAvanceGlobalSoloEnero();
-            this.calcularAvanceGlobalSoloFebrero();
-            this.calcularAvanceGlobalSoloMarzo();
-            this.calcularAvanceGlobalSoloAbril();
-            this.calcularAvanceGlobalSoloMayo();
-            this.calcularAvanceGlobalSoloJunio();
+            this.recalcularAvances();
+            this.actualizarDatosEnBackend();
           },
           error: (error) => {
             console.error('Error al cargar facturas:', error);
@@ -204,10 +232,52 @@ export class MultimarcasComponent implements OnInit {
     this.calcularAvanceGlobalSoloJunio();
   }
 
+  actualizarDatosEnBackend() {
+    this.cargando = true;
+
+    // Primero recalcula todos los avances para asegurar datos actualizados
+    this.recalcularAvances();
+
+    // Preparamos los datos para enviar (simplificado)
+    const datosParaEnviar = this.clientesPaginados.map(cliente => {
+      // Crear objeto con todos los campos necesarios
+      const datosCliente: any = {
+        clave: cliente.clave,
+        evac: cliente.evac,
+        cliente_razon_social: cliente.cliente_razon_social
+      };
+
+      // Añadir todos los campos numéricos
+      const camposNumericos = [
+        'avance_global_scott', 'avance_global_syncros', 'avance_global_apparel',
+        'avance_global_vittoria', 'avance_global_bold', 'total_facturas_julio',
+        'total_facturas_agosto', 'total_facturas_septiembre', 'total_facturas_octubre',
+        'total_facturas_noviembre', 'total_facturas_diciembre', 'total_facturas_enero',
+        'total_facturas_febrero', 'total_facturas_marzo', 'total_facturas_abril',
+        'total_facturas_mayo', 'total_facturas_junio'
+      ];
+
+      camposNumericos.forEach(campo => {
+        datosCliente[campo] = cliente[campo] || 0;
+      });
+
+      return datosCliente;
+    });
+
+    // Llamamos al servicio
+    this.multimarcasService.actualizarMultimarcas(datosParaEnviar).subscribe({
+      next: (response) => {
+        this.cargando = false;
+      },
+      error: (error) => {
+        this.cargando = false;
+      }
+    });
+  }
+
   calcularAvanceGlobalScott() {
     const avancesPorCliente = new Map<string, number>();
 
-    // Filtramos facturas SCOTT con apparel NO y dentro del rango de fechas
     const facturasFiltradas = this.facturasOriginales.filter(factura => {
       try {
         const fechaFactura = new Date(factura.fecha_factura);
@@ -224,20 +294,42 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumamos los montos por cliente
     facturasFiltradas.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizamos los clientes con los avances calculados
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        avance_global_scott: avancesPorCliente.get(cliente.clave) || 0
+        avance_global_scott: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        avance_global_scott: avance
       };
     });
   }
@@ -260,20 +352,42 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumamos los montos por cliente
     facturasFiltradas.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizamos los clientes con los avances calculados
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        avance_global_syncros: avancesPorCliente.get(cliente.clave) || 0
+        avance_global_syncros: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        avance_global_syncros: avance
       };
     });
   }
@@ -288,28 +402,58 @@ export class MultimarcasComponent implements OnInit {
         const fechaFin = new Date('2026-06-30');
 
         return factura.apparel === 'SI' &&
+          factura.marca === 'SCOTT' &&
           fechaFactura >= fechaInicio &&
           fechaFactura <= fechaFin;
       } catch (e) {
-        console.warn('Factura con fecha inválida:', factura);
         return false;
       }
     });
 
     // Sumamos los montos por cliente
     facturasFiltradas.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      // Buscar cliente por clave primero
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      // Si no encuentra por clave, buscar por nombre
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        // Usar la clave del cliente encontrado (importante para consistencia)
+        const claveClienteEncontrado = clienteCoincidente.clave;
+
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
+
 
     // Actualizamos los clientes con los avances calculados
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        avance_global_apparel: avancesPorCliente.get(cliente.clave) || 0
+        avance_global_apparel: avance
+      };
+    });
+
+    // También actualizar clientesOriginales para mantener consistencia
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        avance_global_apparel: avance
       };
     });
   }
@@ -332,20 +476,42 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumamos los montos por cliente
     facturasFiltradas.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizamos los clientes con los avances calculados
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        avance_global_vittoria: avancesPorCliente.get(cliente.clave) || 0
+        avance_global_vittoria: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        avance_global_vittoria: avance
       };
     });
   }
@@ -368,20 +534,42 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumamos los montos por cliente
     facturasFiltradas.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizamos los clientes con los avances calculados
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        avance_global_bold: avancesPorCliente.get(cliente.clave) || 0
+        avance_global_bold: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        avance_global_bold: avance
       };
     });
   }
@@ -403,20 +591,42 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumar montos por cliente en lugar de contar facturas
     facturasJulio.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizar clientes
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        total_facturas_julio: avancesPorCliente.get(cliente.clave) || 0
+        total_facturas_julio: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        total_facturas_julio: avance
       };
     });
   }
@@ -438,20 +648,42 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumar montos por cliente en lugar de contar facturas
     facturasAgosto.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizar clientes
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        total_facturas_agosto: avancesPorCliente.get(cliente.clave) || 0
+        total_facturas_agosto: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        total_facturas_agosto: avance
       };
     });
   }
@@ -473,20 +705,42 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumar montos por cliente en lugar de contar facturas
     facturasSeptiembre.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizar clientes
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        total_facturas_septiembre: avancesPorCliente.get(cliente.clave) || 0
+        total_facturas_septiembre: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        total_facturas_septiembre: avance
       };
     });
   }
@@ -508,20 +762,42 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumar montos por cliente en lugar de contar facturas
     facturasOctubre.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizar clientes
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        total_facturas_octubre: avancesPorCliente.get(cliente.clave) || 0
+        total_facturas_octubre: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        total_facturas_octubre: avance
       };
     });
   }
@@ -543,20 +819,42 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumar montos por cliente en lugar de contar facturas
     facturasNoviembre.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizar clientes
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        total_facturas_noviembre: avancesPorCliente.get(cliente.clave) || 0
+        total_facturas_noviembre: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        total_facturas_noviembre: avance
       };
     });
   }
@@ -578,20 +876,42 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumar montos por cliente en lugar de contar facturas
     facturasDiciembre.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizar clientes
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        total_facturas_diciembre: avancesPorCliente.get(cliente.clave) || 0
+        total_facturas_diciembre: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        total_facturas_diciembre: avance
       };
     });
   }
@@ -613,20 +933,42 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumar montos por cliente en lugar de contar facturas
     facturasEnero.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizar clientes
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        total_facturas_enero: avancesPorCliente.get(cliente.clave) || 0
+        total_facturas_enero: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        total_facturas_enero: avance
       };
     });
   }
@@ -648,20 +990,42 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumar montos por cliente en lugar de contar facturas
     facturasFebrero.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizar clientes
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        total_facturas_febrero: avancesPorCliente.get(cliente.clave) || 0
+        total_facturas_febrero: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        total_facturas_febrero: avance
       };
     });
   }
@@ -683,20 +1047,42 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumar montos por cliente en lugar de contar facturas
     facturasMarzo.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizar clientes
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        total_facturas_marzo: avancesPorCliente.get(cliente.clave) || 0
+        total_facturas_marzo: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        total_facturas_marzo: avance
       };
     });
   }
@@ -718,20 +1104,42 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumar montos por cliente en lugar de contar facturas
     facturasAbril.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizar clientes
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        total_facturas_abril: avancesPorCliente.get(cliente.clave) || 0
+        total_facturas_abril: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        total_facturas_abril: avance
       };
     });
   }
@@ -753,20 +1161,42 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumar montos por cliente en lugar de contar facturas
     facturasMayo.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizar clientes
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        total_facturas_mayo: avancesPorCliente.get(cliente.clave) || 0
+        total_facturas_mayo: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        total_facturas_mayo: avance
       };
     });
   }
@@ -788,24 +1218,45 @@ export class MultimarcasComponent implements OnInit {
       }
     });
 
-    // Sumar montos por cliente en lugar de contar facturas
     facturasJunio.forEach(factura => {
-      const claveCliente = factura.contacto_referencia;
+      const claveFactura = factura.contacto_referencia;
+      const nombreFactura = factura.contacto_nombre;
       const monto = parseFloat(factura.venta_total) || 0;
 
-      const totalActual = avancesPorCliente.get(claveCliente) || 0;
-      avancesPorCliente.set(claveCliente, totalActual + monto);
+      let clienteCoincidente = this.clientesOriginales.find(cliente =>
+        cliente.clave === claveFactura
+      );
+
+      if (!clienteCoincidente) {
+        clienteCoincidente = this.clientesOriginales.find(cliente =>
+          cliente.cliente_razon_social &&
+          cliente.cliente_razon_social.trim().toLowerCase() === nombreFactura.trim().toLowerCase()
+        );
+      }
+
+      if (clienteCoincidente) {
+        const claveClienteEncontrado = clienteCoincidente.clave;
+        const totalActual = avancesPorCliente.get(claveClienteEncontrado) || 0;
+        avancesPorCliente.set(claveClienteEncontrado, totalActual + monto);
+      }
     });
 
-    // Actualizar clientes
     this.clientesPaginados = this.clientesPaginados.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
       return {
         ...cliente,
-        total_facturas_junio: avancesPorCliente.get(cliente.clave) || 0
+        total_facturas_junio: avance
+      };
+    });
+
+    this.clientesOriginales = this.clientesOriginales.map(cliente => {
+      const avance = avancesPorCliente.get(cliente.clave) || 0;
+      return {
+        ...cliente,
+        total_facturas_junio: avance
       };
     });
   }
-  
 
   formatCurrency(value: number): string {
     if (value === null || value === undefined) return '$0.00';
@@ -815,5 +1266,142 @@ export class MultimarcasComponent implements OnInit {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(value);
+  }
+
+  /* Excel */
+
+  exportarAExcel() {
+    this.cargando = true;
+
+    this.multimarcasService.getMultimarcasTodo().pipe(
+      finalize(() => this.cargando = false)
+    ).subscribe({
+      next: (data) => {
+        // Preparar los datos para Excel
+        const datosParaExcel = data.map((item: any) => {
+          return {
+            'Clave': item.clave || '',
+            'EVAC': item.evac || '',
+            'Cliente - Razón Social': item.cliente_razon_social || '',
+            'Avance GLOBAL': this.parsearNumero(item.avance_global),
+            'Avance Global Scott': this.parsearNumero(item.avance_global_scott),
+            'Avance Global Syncros': this.parsearNumero(item.avance_global_syncros),
+            'Avance Global Apparel': this.parsearNumero(item.avance_global_apparel),
+            'Avance Global Vittoria': this.parsearNumero(item.avance_global_vittoria),
+            'Avance Global Bold': this.parsearNumero(item.avance_global_bold),
+            'Julio 25': this.parsearNumero(item.total_facturas_julio),
+            'Agosto 25': this.parsearNumero(item.total_facturas_agosto),
+            'Septiembre 25': this.parsearNumero(item.total_facturas_septiembre),
+            'Octubre 25': this.parsearNumero(item.total_facturas_octubre),
+            'Noviembre 25': this.parsearNumero(item.total_facturas_noviembre),
+            'Diciembre 25': this.parsearNumero(item.total_facturas_diciembre),
+            'Enero 26': this.parsearNumero(item.total_facturas_enero),
+            'Febrero 26': this.parsearNumero(item.total_facturas_febrero),
+            'Marzo 26': this.parsearNumero(item.total_facturas_marzo),
+            'Abril 26': this.parsearNumero(item.total_facturas_abril),
+            'Mayo 26': this.parsearNumero(item.total_facturas_mayo),
+            'Junio 26': this.parsearNumero(item.total_facturas_junio)
+          };
+        });
+
+        // Crear libro de Excel
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(datosParaExcel);
+
+        // Aplicar formato y ajustar columnas
+        this.ajustarExcel(ws, datosParaExcel);
+
+        // Agregar hoja al libro
+        XLSX.utils.book_append_sheet(wb, ws, 'Reporte Multimarcas');
+
+        // Generar archivo y descargar
+        const fecha = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(wb, `Reporte_Multimarcas_${fecha}.xlsx`);
+      },
+      error: (error) => {
+        console.error('Error al obtener datos para exportar:', error);
+      }
+    });
+  }
+
+  private parsearNumero(valor: any): number {
+    if (valor === undefined || valor === null || valor === '') return 0;
+    return typeof valor === 'string' ? parseFloat(valor) || 0 : Number(valor) || 0;
+  }
+
+  // Función para formatear números con separadores de miles y 2 decimales
+  private formatearNumero(valor: number): string {
+    return valor.toLocaleString('es-MX', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  // Función para aplicar todos los ajustes al Excel
+  private ajustarExcel(ws: XLSX.WorkSheet, data: any[]) {
+    if (!data.length) return;
+
+    // Definir las columnas que son numéricas
+    const columnasNumericas = [
+      'Avance GLOBAL',
+      'Avance Global Scott', 'Avance Global Syncros', 'Avance Global Apparel',
+      'Avance Global Vittoria', 'Avance Global Bold',
+      'Julio 25', 'Agosto 25', 'Septiembre 25', 'Octubre 25',
+      'Noviembre 25', 'Diciembre 25', 'Enero 26', 'Febrero 26',
+      'Marzo 26', 'Abril 26', 'Mayo 26', 'Junio 26'
+    ];
+
+    // Obtener el rango de celdas
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:Z1');
+
+    // Aplicar formato a las celdas numéricas
+    columnasNumericas.forEach(col => {
+      const colIndex = Object.keys(data[0]).indexOf(col);
+      if (colIndex === -1) return;
+
+      // Aplicar formato solo a las filas de datos (saltando el header)
+      for (let row = range.s.r + 1; row <= range.e.r; row++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIndex });
+        if (ws[cellAddress]) {
+          // Asegurarse de que el valor sea numérico
+          const cellValue = ws[cellAddress].v;
+          if (typeof cellValue === 'number' || !isNaN(parseFloat(cellValue))) {
+            ws[cellAddress].v = typeof cellValue === 'number' ? cellValue : parseFloat(cellValue);
+            ws[cellAddress].t = 'n';
+            ws[cellAddress].z = '#,##0.00';
+          }
+        }
+      }
+    });
+
+    // Ajustar el ancho de las columnas automáticamente
+    const headers = Object.keys(data[0]);
+    const columnWidths: XLSX.ColInfo[] = [];
+
+    headers.forEach((header, i) => {
+      // Calcular el ancho máximo basado en el contenido
+      let maxLength = header.length;
+
+      data.forEach(row => {
+        const value = row[header];
+        let length = 0;
+
+        if (value !== undefined && value !== null) {
+          if (typeof value === 'number') {
+            length = this.formatearNumero(value).length;
+          } else {
+            length = String(value).length;
+          }
+        }
+
+        if (length > maxLength) maxLength = length;
+      });
+
+      // Ajustar el ancho de la columna (añadiendo espacio extra y aplicando límites)
+      columnWidths[i] = { wch: Math.min(Math.max(maxLength + 3, 12), 40) };
+    });
+
+    // Asignar los anchos de columna calculados
+    ws['!cols'] = columnWidths;
   }
 }

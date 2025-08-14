@@ -5,6 +5,8 @@
 
     <div class="acciones-monitor">
         <button class="btn" [routerLink]="['/previo']"><i class="fas fa-table"></i> Previo</button>
+        <button class="btn" (click)="exportarAExcel()"><i class="fas fa-file-excel"></i> Exportar a Excel</button>
+        <button class="btn" [routerLink]="['/distribuidores-multimarcas']"><i class="fas fa-users"></i> Distribuidores Multimarcas</button>
     </div>
 
     <div *ngIf="cargando" class="cargando-spinner">
@@ -20,27 +22,33 @@
         <table class="tabla-previo">
             <thead>
                 <tr>
-                    <th class="columna-clave" style="min-width: 120px">
+                    <th class="columna-clave" style="min-width: 120px; height: 80px;">
                         <div class="filter-horizontal-container">
                             <span class="filter-label">Clave</span>
                             <app-filtro-previo tipo="clave" placeholder="Buscar clave..." [opciones]="opcionesClave"
-                                (aplicarFiltro)="aplicarFiltroClave($event)" (limpiarFiltro)="limpiarFiltroClave()">
+                                [estaActivo]="esFiltroActivo('clave')" (aplicarFiltro)="aplicarFiltroClave($event)"
+                                (limpiarFiltro)="limpiarFiltroClave()" (filtroClicked)="toggleFiltroClave()">
                             </app-filtro-previo>
                         </div>
                     </th>
+
                     <th style="min-width: 150px;">
                         <div class="filter-horizontal-container">
                             <span class="filter-label">EVAC</span>
                             <app-filtro-previo tipo="evac" placeholder="Buscar EVAC..." [opciones]="opcionesEvac"
-                                (aplicarFiltro)="aplicarFiltroEvac($event)" (limpiarFiltro)="limpiarFiltroEvac()">
+                                [estaActivo]="esFiltroActivo('evac')" (aplicarFiltro)="aplicarFiltroEvac($event)"
+                                (limpiarFiltro)="limpiarFiltroEvac()" (filtroClicked)="toggleFiltroEvac()">
                             </app-filtro-previo>
                         </div>
                     </th>
-                    <th style="min-width: 320px;">
+
+                    <th style="min-width: 420px;">
                         <div class="filter-horizontal-container">
                             <span class="filter-label">Cliente - Razón Social</span>
-                            <app-filtro-previo tipo="cliente" placeholder="Buscar cliente..." [opciones]="opcionesCliente"
-                                (aplicarFiltro)="aplicarFiltroCliente($event)" (limpiarFiltro)="limpiarFiltroCliente()">
+                            <app-filtro-previo tipo="cliente" placeholder="Buscar cliente..."
+                                [opciones]="opcionesCliente" [estaActivo]="esFiltroActivo('cliente')"
+                                (aplicarFiltro)="aplicarFiltroCliente($event)" (limpiarFiltro)="limpiarFiltroCliente()"
+                                (filtroClicked)="toggleFiltroCliente()">
                             </app-filtro-previo>
                         </div>
                     </th>
@@ -50,18 +58,18 @@
                     <th style="min-width: 140px;">Avance GLOBAL APPAREL</th>
                     <th style="min-width: 140px;">Avance GLOBAL VITTORIA</th>
                     <th style="min-width: 120px;">BOLD Acumulado</th>
-                    <th style="min-width: 100px;">JULIO</th>
-                    <th style="min-width: 100px;">AGOSTO</th>
-                    <th style="min-width: 100px;">SEPTIEMBRE</th>
-                    <th style="min-width: 100px;">OCTUBRE</th>
-                    <th style="min-width: 100px;">NOVIEMBRE</th>
-                    <th style="min-width: 100px;">DICIEMBRE</th>
-                    <th style="min-width: 100px;">ENERO</th>
-                    <th style="min-width: 100px;">FEBRERO</th>
-                    <th style="min-width: 100px;">MARZO</th>
-                    <th style="min-width: 100px;">ABRIL</th>
-                    <th style="min-width: 100px;">MAYO</th>
-                    <th style="min-width: 100px;">JUNIO</th>
+                    <th style="min-width: 100px;">JULIO 25</th>
+                    <th style="min-width: 100px;">AGOSTO 25</th>
+                    <th style="min-width: 100px;">SEPTIEMBRE 25</th>
+                    <th style="min-width: 100px;">OCTUBRE 25</th>
+                    <th style="min-width: 100px;">NOVIEMBRE 25</th>
+                    <th style="min-width: 100px;">DICIEMBRE 25</th>
+                    <th style="min-width: 100px;">ENERO 26</th>
+                    <th style="min-width: 100px;">FEBRERO 26</th>
+                    <th style="min-width: 100px;">MARZO 26</th>
+                    <th style="min-width: 100px;">ABRIL 26</th>
+                    <th style="min-width: 100px;">MAYO 26</th>
+                    <th style="min-width: 100px;">JUNIO 26</th>
                 </tr>
             </thead>
             <tbody>
@@ -100,6 +108,6 @@
                 </tr>
             </tbody>
         </table>
-        
+
     </div>
 </div>

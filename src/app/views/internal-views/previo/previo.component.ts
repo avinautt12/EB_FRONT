@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
 import { ClientesService } from '../../../services/clientes.service';
 import { PrevioService } from '../../../services/previo.service';
+import { FiltroService } from '../../../services/filtro.service';
 import { FiltroPrevioComponent } from '../../../components/filtro-previo/filtro-previo.component';
 import { AlertaService } from '../../../services/alerta.service';
 import * as XLSX from 'xlsx';
@@ -70,7 +71,16 @@ interface ClienteConAcumulado extends Cliente {
   templateUrl: './previo.component.html',
   styleUrl: './previo.component.css'
 })
-export class PrevioComponent implements OnInit {
+export class PrevioComponent implements OnInit, OnDestroy {
+  @Input() tipo: string = '';
+  @Input() placeholder: string = '';
+  @Input() opciones: any[] = [];
+  @Input() estaActivo: boolean = false;
+
+  @Output() aplicarFiltro = new EventEmitter<any>();
+  @Output() limpiarFiltro = new EventEmitter<void>();
+  @Output() filtroClicked = new EventEmitter<void>();
+
   clientes: Cliente[] = [];
   clientesOriginal: ClienteConAcumulado[] = [];
   clientesFiltrados: ClienteConAcumulado[] = [];
@@ -109,9 +119,6 @@ export class PrevioComponent implements OnInit {
       cliente: []
     };
 
-
-  filtroAbierto: string | null = null;
-
   zonasUnicas: string[] = [];
   nivelesUnicos: string[] = [];
   filtrosCheckbox = {
@@ -133,10 +140,13 @@ export class PrevioComponent implements OnInit {
   mensajeAlerta: string | null = null;
   tipoAlerta: 'exito' | 'error' = 'exito';
 
+  filtroActivo: string | null = null;
+
   constructor(
     private clientesService: ClientesService,
     private previoService: PrevioService,
-    private alertaService: AlertaService
+    private alertaService: AlertaService,
+    private filtroService: FiltroService
   ) { }
 
   ngOnInit(): void {
@@ -145,6 +155,10 @@ export class PrevioComponent implements OnInit {
       this.previoService.getFacturasCalculadas().toPromise()
     ]).then(([clientes, facturas]) => {
       this.facturas = facturas ?? [];
+
+      this.filtroService.filtroAbierto$.subscribe(filtroId => {
+        this.filtroActivo = filtroId;
+      });
 
       // Primero mapear todos los clientes con sus acumulados
       const todosClientes = clientes.map((cliente: Cliente) => {
@@ -209,6 +223,53 @@ export class PrevioComponent implements OnInit {
       console.error('Error al cargar datos:', error);
       this.cargando = false;
     });
+  }
+
+  manejarClickFiltro(tipoFiltro: string) {
+    const filtroId = `previo-${tipoFiltro}`;
+
+    // Si el filtro ya está abierto, lo cerramos
+    if (this.filtroActivo === filtroId) {
+      this.filtroService.cerrarFiltros();
+    } else {
+      // Si no, abrimos este filtro (esto cerrará automáticamente cualquier otro abierto)
+      this.filtroService.abrirFiltro(filtroId);
+    }
+  }
+
+  mostrarFiltroClave() {
+    this.manejarClickFiltro('clave');
+  }
+
+  mostrarFiltroEvac() {
+    this.manejarClickFiltro('evac');
+  }
+
+  mostrarFiltroCliente() {
+    this.manejarClickFiltro('cliente');
+  }
+
+  mostrarFiltroNivel() {
+    this.manejarClickFiltro('nivel');
+  }
+
+  // Métodos para verificar si un filtro está activo
+  esFiltroActivo(tipoFiltro: string): boolean {
+    return this.filtroActivo === `previo-${tipoFiltro}`;
+  }
+
+  ngOnDestroy() {
+    // Cerrar todos los filtros al salir del componente
+    this.filtroService.cerrarFiltros();
+  }
+
+  toggleFiltro(tipoFiltro: string): void {
+    const filtroId = `previo-${tipoFiltro}`;
+    if (this.filtroActivo === filtroId) {
+      this.filtroService.cerrarFiltros();
+    } else {
+      this.filtroService.abrirFiltro(filtroId);
+    }
   }
 
   aplicarFiltros() {

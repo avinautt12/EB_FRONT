@@ -13,12 +13,18 @@ export class FiltroPrevioComponent {
   @Input() tipo!: 'clave' | 'evac' | 'cliente' | 'nivel';
   @Input() placeholder: string = '';
   @Input() opciones: { value: string; selected: boolean }[] = [];
+  @Input() estaActivo: boolean = false;
 
   @Output() aplicarFiltro = new EventEmitter<string[]>();
   @Output() limpiarFiltro = new EventEmitter<void>();
+  @Output() filtroClicked = new EventEmitter<void>();
 
   searchTerm = '';
-  showDropdown = false;
+
+  // Usar estaActivo directamente como el estado del dropdown
+  get showDropdown(): boolean {
+    return this.estaActivo;
+  }
 
   get filteredOptions() {
     return this.searchTerm 
@@ -40,7 +46,8 @@ export class FiltroPrevioComponent {
 
   toggleDropdown(event: Event) {
     event.stopPropagation();
-    this.showDropdown = !this.showDropdown;
+    // Siempre notificar al padre para manejar el toggle
+    this.filtroClicked.emit();
   }
 
   onSelectionChange() {}
@@ -50,13 +57,11 @@ export class FiltroPrevioComponent {
       .filter(op => op.selected)
       .map(op => op.value);
     this.aplicarFiltro.emit(seleccionados);
-    this.showDropdown = false;
   }
 
   limpiar() {
     this.opciones.forEach(op => op.selected = false);
     this.limpiarFiltro.emit();
-    this.showDropdown = false;
     this.searchTerm = '';
   }
 }

@@ -11,7 +11,7 @@ import { HomeBarComponent } from '../../../components/home-bar/home-bar.componen
 @Component({
   selector: 'app-distribuidores',
   standalone: true,
-  imports: [HomeBarComponent, CommonModule, FormsModule,  RouterModule],
+  imports: [HomeBarComponent, CommonModule, FormsModule, RouterModule],
   templateUrl: './distribuidores.component.html',
   styleUrl: './distribuidores.component.css'
 })
@@ -19,12 +19,15 @@ export class DistribuidoresComponent implements OnInit {
   busqueda: string = '';
   cliente: any = null;
   clienteOriginal: any = null;
+
+  opcionesEvac = ['A', 'B']; // Add this line for EVAC options
   nuevoCliente = {
     clave: '',
-    zona: '',
+    evac: 'A', // Changed from zona to evac, with default value
     nombre_cliente: '',
     nivel: ''
   };
+
   mostrarFormulario = false;
   nivelesDisponibles: any[] = [];
 
@@ -57,8 +60,11 @@ export class DistribuidoresComponent implements OnInit {
     if (this.busqueda.trim().length === 0) {
       this.cliente = null;
       this.intentoBusqueda = false;
+      this.mostrarFormulario = false;
       return;
     }
+
+    this.mostrarFormulario = false; // Asegurarse que el formulario esté cerrado
     this.cargando = true;
     this.intentoBusqueda = true;
 
@@ -68,6 +74,9 @@ export class DistribuidoresComponent implements OnInit {
     this.clientesService.buscarCliente(clave).subscribe({
       next: (res) => {
         this.cliente = res;
+        if (this.cliente) {
+          this.clienteOriginal = JSON.stringify(this.cliente);
+        }
         this.cargando = false;
       },
       error: () => {
@@ -75,6 +84,20 @@ export class DistribuidoresComponent implements OnInit {
         this.cargando = false;
       }
     });
+  }
+
+  mostrarFormularioAgregar() {
+    if (this.mostrarFormulario) {
+      // Si ya está mostrando el formulario, lo oculta
+      this.mostrarFormulario = false;
+    } else {
+      // Si no está mostrando el formulario, lo muestra y limpia
+      this.cliente = null;
+      this.mostrarFormulario = true;
+      this.busqueda = '';
+      this.sugerencias = [];
+      this.intentoBusqueda = false;
+    }
   }
 
   // OBTENER NIVELES
@@ -125,9 +148,9 @@ export class DistribuidoresComponent implements OnInit {
   agregarCliente() {
     this.clientesService.agregarCliente(this.nuevoCliente).subscribe({
       next: () => {
-        this.alertaService.mostrarExito('Cliente agregado correctamente'); 
+        this.alertaService.mostrarExito('Cliente agregado correctamente');
         this.mostrarFormulario = false;
-        this.nuevoCliente = { clave: '', zona: '', nombre_cliente: '', nivel: '' };
+        this.nuevoCliente = { clave: '', evac: 'A', nombre_cliente: '', nivel: '' };
       },
       error: (err) => this.alertaService.mostrarError(err.error?.error || 'Error al agregar')
     });

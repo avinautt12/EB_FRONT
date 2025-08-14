@@ -39,14 +39,9 @@ export class ClientesService {
   }
 
   // Agregar un nuevo cliente
-  agregarCliente(cliente: {
-    clave: string;
-    zona: string;
-    nombre_cliente: string;
-    nivel: string;
-  }): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/clientes/agregar`, cliente);
-  }
+  agregarCliente(cliente: { clave: string; evac: string; nombre_cliente: string; nivel: string }): Observable<any> {
+  return this.http.post(`${this.apiUrl}/clientes/agregar`, cliente);
+}
 
   // Editar cliente por ID
   editarCliente(id: number, cliente: {
