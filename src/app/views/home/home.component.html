@@ -1,31 +1,32 @@
 <app-home-bar></app-home-bar>
 
 <div class="home-container">
-  <h1>Panel Principal</h1>
-  <p class="subtexto">Bienvenido a tu panel de control</p>
+  <h1>Inicio Carátulas</h1>
+  <p class="subtexto">Acceso a las diferentes carátulas del sistema</p>
 
   <div class="tarjetas-acciones">
     <div class="tarjeta">
-      <h2>📂 MY26</h2>
-      <p>Visualización y administración de Monitor MY26.</p>
-      <button [routerLink]="['/previo']">Ver MY26</button>
-    </div>
-    <div class="tarjeta">
-      <h2>⇄ Flujo de Efectivo</h2>
-      <p>Visualiza movimientos financieros clave.</p>
-      <button [routerLink]="['/flujo-efectivo']">Ver flujo</button>
+      <h2>📂 Carátula Global</h2>
+      <p>Visualización completa de todas las carátulas.</p>
+      <button [routerLink]="['/caratulas']">Ver Global</button>
     </div>
 
     <div class="tarjeta">
-      <h2>👥 Usuarios</h2>
-      <p>Control de accesos y configuración de roles.</p>
-      <button [routerLink]="['/usuarios']">Administrar</button>
+      <h2>🌎 Carátula EVAC A</h2>
+      <p>Carátulas específicas para el grupo EVAC A.</p>
+      <button [routerLink]="['/caratula-evac-a']">Ver EVAC A</button>
     </div>
 
     <div class="tarjeta">
-      <h2>📉 Proyecciones de Compra Inicial</h2>
-      <p>Pronósticos y planificación de compras.</p>
-      <button [routerLink]="['/proyeccion']">Consultar</button>
+      <h2>🌍 Carátula EVAC B</h2>
+      <p>Carátulas específicas para el grupo EVAC B.</p>
+      <button [routerLink]="['/caratula-evac-b']">Ver EVAC B</button>
+    </div>
+
+    <div class="tarjeta">
+      <h2>↩ Volver</h2>
+      <p>Regresar al menú principal.</p>
+      <button [routerLink]="['/previo']">Regresar</button>
     </div>
   </div>
 </div>

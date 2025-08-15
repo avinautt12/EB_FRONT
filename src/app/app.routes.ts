@@ -10,6 +10,8 @@ import { RestablecerContrasenaComponent } from './views/recuperacion/restablecer
 import { PrevioComponent } from './views/internal-views/previo/previo.component';
 import { MultimarcasComponent } from './views/internal-views/multimarcas/multimarcas.component';
 import { CaratulasComponent } from './views/internal-views/caratulas/caratulas.component';
+import { CaratulaEvacAComponent } from './views/internal-views/caratula-evac-a/caratula-evac-a.component';
+import { CaratulaEvacBComponent } from './views/internal-views/caratula-evac-b/caratula-evac-b.component';
 import { MetasComponent } from './views/internal-views/metas/metas.component';
 import { DistribuidoresComponent } from './views/internal-views/distribuidores/distribuidores.component';
 import { DashboardComponent } from './views/usuarios/dashboard/dashboard.component';
@@ -20,6 +22,7 @@ import { ProyeccionHistorialComponent } from './views/usuarios/proyeccion-histor
 import { ProyeccionDetallesComponent } from './views/internal-views/proyeccion-detalles/proyeccion-detalles.component';
 import { ProyeccionControlComponent } from './views/internal-views/proyeccion-control/proyeccion-control.component';
 import { DistribuidoresMultimarcasComponent } from './views/internal-views/distribuidores-multimarcas/distribuidores-multimarcas.component';
+import { InicioCaratulasComponent } from './views/internal-views/inicio-caratulas/inicio-caratulas.component';
 
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
@@ -36,6 +39,9 @@ export const routes: Routes = [
   { path: 'distribuidores', component: DistribuidoresComponent, canActivate: [authGuard] },
   { path: 'distribuidores-multimarcas', component: DistribuidoresMultimarcasComponent, canActivate: [authGuard] },
   { path: 'caratulas', component: CaratulasComponent, canActivate: [authGuard] },
+  { path: 'inicio-caratulas', component: InicioCaratulasComponent, canActivate: [authGuard] },
+  { path: 'caratula-evac-a', component: CaratulaEvacAComponent, canActivate: [authGuard] },
+  { path: 'caratula-evac-b', component: CaratulaEvacBComponent, canActivate: [authGuard] },
   { path: 'usuarios', component: UsuariosComponent, canActivate: [authGuard] },
   { path: 'proyeccion', component: ProyeccionComponent, canActivate: [authGuard] },
   { path: 'proyeccion/detalles/:id', component: ProyeccionDetallesComponent, canActivate: [authGuard] },
