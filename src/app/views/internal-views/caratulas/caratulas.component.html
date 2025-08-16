@@ -1,15 +1,12 @@
 <app-home-bar></app-home-bar>
 
 <div class="monitor-container">
-    <h2>Monitor Previo de Facturas</h2>
+    <h2>Caratula Evac</h2>
 
     <div class="acciones-monitor">
         <button class="btn btn-secondary" [routerLink]="['/inicio-caratulas']">
             <i class="fas fa-arrow-left"></i> Volver
         </button>
-        <!-- <button class="btn btn-primary" [disabled]="!caratulaSeleccionada" (click)="generarPDF()">
-            <i class="fas fa-file-pdf"></i> Generar PDF
-        </button> -->
     </div>
 
     <!-- Sección de búsqueda mejorada -->
@@ -18,17 +15,18 @@
             <div class="search-input-group">
                 <input type="text" [(ngModel)]="terminoBusqueda" (input)="onInputChange($event)"
                     (focus)="onFocusInput()" (blur)="onBlurInput()" (keydown)="onKeyDown($event)"
-                    placeholder="Buscar por clave (ej: EVAC) o nombre del cliente..." class="buscador-input"
+                    placeholder="Buscar por clave o nombre del cliente..." class="buscador-input"
                     #searchInput [disabled]="isLoading">
 
-                <button class="search-btn" (click)="realizarBusqueda()"
+                <button class="btn search-btn" (click)="realizarBusqueda()"
                     [disabled]="isLoading || !terminoBusqueda.trim()">
                     <i class="fas fa-search" *ngIf="!isLoading"></i>
                     <i class="fas fa-spinner fa-spin" *ngIf="isLoading"></i>
                     {{ isLoading ? 'Buscando...' : 'Buscar' }}
                 </button>
 
-                <button class="clear-btn" (click)="limpiarBusqueda()" *ngIf="terminoBusqueda" title="Limpiar búsqueda">
+                <button class="btn clear-btn" (click)="limpiarBusqueda()" *ngIf="terminoBusqueda"
+                    title="Limpiar búsqueda">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -61,56 +59,54 @@
 
     <div *ngIf="datosCliente && !isLoading">
         <!-- Header del cliente -->
-        <div>
-            <div>
-                <div>
-                    <span>Clave</span>
-                    <span>{{ datosCliente.clave }}</span>
-                </div>
-                <div>
-                    <span>Evac</span>
-                    <span>{{ datosCliente.evac }}</span>
-                </div>
-                <div>
-                    <span>Nombre Cliente</span>
-                    <span>{{ datosCliente.nombre_cliente }}</span>
-                </div>
-                <div>
-                    <span>Nivel</span>
-                    <span>{{ datosCliente.nivel }}</span>
-                </div>
-                <div>
-                    <span>Compra Mínima ANUAL</span>
-                    <span>{{ datosCliente.compra_minima_anual | currency:'USD':'symbol':'1.2-2' }}</span>
-                </div>
+        <div class="client-info">
+            <div class="info-item">
+                <span class="info-label">Clave</span>
+                <span class="info-value">{{ datosCliente.clave }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Evac</span>
+                <span class="info-value">{{ datosCliente.evac }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Nombre Cliente</span>
+                <span class="info-value">{{ datosCliente.nombre_cliente }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Nivel</span>
+                <span class="info-value">{{ datosCliente.nivel }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Compra Mínima ANUAL</span>
+                <span class="info-value">{{ datosCliente.compra_minima_anual | currency:'USD':'symbol':'1.2-2' }}</span>
             </div>
         </div>
 
         <!-- Sección Compromiso BIMESTRAL -->
-        <div>
+        <div class="section">
             <h3>a) Compromiso BIMESTRAL</h3>
 
             <!-- Info del período -->
-            <div>
-                <div>
-                    <span>Periodo - (Julio-Agosto)</span>
-                </div>
-                <div>
-                    <span>Estado:</span>
-                    <span [class.sin-iniciar]="getEstadoPeriodo('Jul-Ago') === 'Sin iniciar'"
-                        [class.en-curso]="getEstadoPeriodo('Jul-Ago') === 'En curso'"
-                        [class.cerrado]="getEstadoPeriodo('Jul-Ago') === 'Cerrado'">
-                        {{ getEstadoPeriodo('Jul-Ago') }}
-                    </span>
-                </div>
-                <div>
-                    <span>Estatus</span>
-                    <span>{{ datosCliente.estatus }}</span>
+            <div class="periodo-header">
+                <div class="periodo-title">Periodo - (Julio-Agosto)</div>
+                <div class="periodo-status">
+                    <div class="status-item">
+                        <span class="status-label">Estado:</span>
+                        <span class="status-value" [class.sin-iniciar]="getEstadoPeriodo('Jul-Ago') === 'Sin iniciar'"
+                            [class.en-curso]="getEstadoPeriodo('Jul-Ago') === 'En curso'"
+                            [class.cerrado]="getEstadoPeriodo('Jul-Ago') === 'Cerrado'">
+                            {{ getEstadoPeriodo('Jul-Ago') }}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Estatus</span>
+                        <span class="status-value">{{ datosCliente.estatus }}</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Tabla de marcas -->
-            <div>
+            <div class="table-container">
                 <table>
                     <thead>
                         <tr>
@@ -144,25 +140,24 @@
                             <td>{{ (datosCliente.compromiso_jul_ago_app - datosCliente.avance_jul_ago_app) |
                                 currency:'USD':'symbol':'1.2-2' }}</td>
                         </tr>
-
                         <tr>
                             <td>Estatus</td>
                             <td>
                                 <ng-container
                                     *ngIf="(datosCliente.compromiso_jul_ago - datosCliente.avance_jul_ago) <= 0; else faltante">
-                                    Cumplido
+                                    <span class="estado-cumplido">Cumplido</span>
                                 </ng-container>
                                 <ng-template #faltante>
-                                    Faltante
+                                    <span class="estado-faltante">Faltante</span>
                                 </ng-template>
                             </td>
                             <td>
                                 <ng-container
                                     *ngIf="(datosCliente.compromiso_jul_ago_app - datosCliente.avance_jul_ago_app) <= 0; else faltante">
-                                    Cumplido
+                                    <span class="estado-cumplido">Cumplido</span>
                                 </ng-container>
                                 <ng-template #faltante>
-                                    Faltante
+                                    <span class="estado-faltante">Faltante</span>
                                 </ng-template>
                             </td>
                         </tr>
@@ -177,26 +172,26 @@
             </div>
 
             <!-- Info del período -->
-            <div>
-                <div>
-                    <span>Periodo - (Septiembre-Octubre)</span>
-                </div>
-                <div>
-                    <span>Estado:</span>
-                    <span [class.sin-iniciar]="getEstadoPeriodo('Sep-Oct') === 'Sin iniciar'"
-                        [class.en-curso]="getEstadoPeriodo('Sep-Oct') === 'En curso'"
-                        [class.cerrado]="getEstadoPeriodo('Sep-Oct') === 'Cerrado'">
-                        {{ getEstadoPeriodo('Sep-Oct') }}
-                    </span>
-                </div>
-                <div>
-                    <span>Estatus</span>
-                    <span>{{ datosCliente.estatus }}</span>
+            <div class="periodo-header">
+                <div class="periodo-title">Periodo - (Septiembre-Octubre)</div>
+                <div class="periodo-status">
+                    <div class="status-item">
+                        <span class="status-label">Estado:</span>
+                        <span class="status-value" [class.sin-iniciar]="getEstadoPeriodo('Sep-Oct') === 'Sin iniciar'"
+                            [class.en-curso]="getEstadoPeriodo('Sep-Oct') === 'En curso'"
+                            [class.cerrado]="getEstadoPeriodo('Sep-Oct') === 'Cerrado'">
+                            {{ getEstadoPeriodo('Sep-Oct') }}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Estatus</span>
+                        <span class="status-value">{{ datosCliente.estatus }}</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Tabla de marcas -->
-            <div>
+            <div class="table-container">
                 <table>
                     <thead>
                         <tr>
@@ -235,19 +230,19 @@
                             <td>
                                 <ng-container
                                     *ngIf="(datosCliente.compromiso_sep_oct - datosCliente.avance_sep_oct) <= 0; else faltante">
-                                    Cumplido
+                                    <span class="estado-cumplido">Cumplido</span>
                                 </ng-container>
                                 <ng-template #faltante>
-                                    Faltante
+                                    <span class="estado-faltante">Faltante</span>
                                 </ng-template>
                             </td>
                             <td>
                                 <ng-container
                                     *ngIf="(datosCliente.compromiso_sep_oct_app - datosCliente.avance_sep_oct_app) <= 0; else faltante">
-                                    Cumplido
+                                    <span class="estado-cumplido">Cumplido</span>
                                 </ng-container>
                                 <ng-template #faltante>
-                                    Faltante
+                                    <span class="estado-faltante">Faltante</span>
                                 </ng-template>
                             </td>
                         </tr>
@@ -262,26 +257,26 @@
             </div>
 
             <!-- Info del período -->
-            <div>
-                <div>
-                    <span>Periodo - (Noviembre-Diciembre)</span>
-                </div>
-                <div>
-                    <span>Estado:</span>
-                    <span [class.sin-iniciar]="getEstadoPeriodo('Nov-Dic') === 'Sin iniciar'"
-                        [class.en-curso]="getEstadoPeriodo('Nov-Dic') === 'En curso'"
-                        [class.cerrado]="getEstadoPeriodo('Nov-Dic') === 'Cerrado'">
-                        {{ getEstadoPeriodo('Nov-Dic') }}
-                    </span>
-                </div>
-                <div>
-                    <span>Estatus</span>
-                    <span>{{ datosCliente.estatus }}</span>
+            <div class="periodo-header">
+                <div class="periodo-title">Periodo - (Noviembre-Diciembre)</div>
+                <div class="periodo-status">
+                    <div class="status-item">
+                        <span class="status-label">Estado:</span>
+                        <span class="status-value" [class.sin-iniciar]="getEstadoPeriodo('Nov-Dic') === 'Sin iniciar'"
+                            [class.en-curso]="getEstadoPeriodo('Nov-Dic') === 'En curso'"
+                            [class.cerrado]="getEstadoPeriodo('Nov-Dic') === 'Cerrado'">
+                            {{ getEstadoPeriodo('Nov-Dic') }}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Estatus</span>
+                        <span class="status-value">{{ datosCliente.estatus }}</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Tabla de marcas -->
-            <div>
+            <div class="table-container">
                 <table>
                     <thead>
                         <tr>
@@ -320,19 +315,19 @@
                             <td>
                                 <ng-container
                                     *ngIf="(datosCliente.compromiso_nov_dic - datosCliente.avance_nov_dic) <= 0; else faltante">
-                                    Cumplido
+                                    <span class="estado-cumplido">Cumplido</span>
                                 </ng-container>
                                 <ng-template #faltante>
-                                    Faltante
+                                    <span class="estado-faltante">Faltante</span>
                                 </ng-template>
                             </td>
                             <td>
                                 <ng-container
                                     *ngIf="(datosCliente.compromiso_nov_dic_app - datosCliente.avance_nov_dic_app) <= 0; else faltante">
-                                    Cumplido
+                                    <span class="estado-cumplido">Cumplido</span>
                                 </ng-container>
                                 <ng-template #faltante>
-                                    Faltante
+                                    <span class="estado-faltante">Faltante</span>
                                 </ng-template>
                             </td>
                         </tr>
@@ -348,37 +343,42 @@
         </div>
 
         <!-- Compra Mínima INICIAL -->
-        <div>
+        <div class="section">
             <h3>b) Compra Mínima INICIAL</h3>
-            <div>
-                <div>
-                    <span>Meta</span>
-                    <span>{{ datosCliente.compra_minima_inicial | currency:'USD':'symbol':'1.2-2' }}</span>
+            <div class="compra-minima">
+                <div class="compra-item">
+                    <div class="compra-label">Meta</div>
+                    <div class="compra-value">{{ datosCliente.compra_minima_inicial | currency:'USD':'symbol':'1.2-2' }}
+                    </div>
                 </div>
-                <div>
-                    <span>Avance</span>
-                    <span>{{ datosCliente.avance_global | currency:'USD':'symbol':'1.2-2' }}</span>
+                <div class="compra-item">
+                    <div class="compra-label">Avance</div>
+                    <div class="compra-value">{{ datosCliente.avance_global | currency:'USD':'symbol':'1.2-2' }}</div>
                 </div>
-                <div>
-                    <span>{{ datosCliente.porcentaje_global }}%</span>
+                <div class="compra-item">
+                    <div class="compra-label">Porcentaje</div>
+                    <div class="compra-porcentaje">{{ datosCliente.porcentaje_global }}%</div>
                 </div>
             </div>
         </div>
 
         <!-- Compra Mínima ANUAL -->
-        <div>
+        <div class="section">
             <h3>c) Compra Mínima ANUAL</h3>
-            <div>
-                <div>
-                    <span>Meta</span>
-                    <span>{{ datosCliente.compra_minima_anual | currency:'USD':'symbol':'1.2-2' }}</span>
+            <div class="compra-minima">
+                <div class="compra-item">
+                    <div class="compra-label">Meta</div>
+                    <div class="compra-value">{{ datosCliente.compra_minima_anual | currency:'USD':'symbol':'1.2-2' }}
+                    </div>
                 </div>
-                <div>
-                    <span>Avance</span>
-                    <span>{{ datosCliente.acumulado_anticipado | currency:'USD':'symbol':'1.2-2' }}</span>
+                <div class="compra-item">
+                    <div class="compra-label">Avance</div>
+                    <div class="compra-value">{{ datosCliente.acumulado_anticipado | currency:'USD':'symbol':'1.2-2' }}
+                    </div>
                 </div>
-                <div>
-                    <span>{{ datosCliente.porcentaje_anual }}%</span>
+                <div class="compra-item">
+                    <div class="compra-label">Porcentaje</div>
+                    <div class="compra-porcentaje">{{ datosCliente.porcentaje_anual }}%</div>
                 </div>
             </div>
         </div>

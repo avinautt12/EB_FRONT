@@ -1,1 +1,101 @@
-<p>caratula-evac-a works!</p>
+<app-home-bar></app-home-bar>
+
+<div class="caratula-evac-container">
+    <h2>Carátula EVAC-A</h2>
+
+    <div class="acciones-caratula">
+        <button class="btn btn-secondary" [routerLink]="['/inicio-caratulas']">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+    </div>
+
+    <div class="caratula-content">
+        <!-- Fecha en la esquina superior derecha -->
+        <div class="fecha-header">
+            <span>{{ obtenerFechaHoy() }}</span>
+            <div class="semana-info">
+                <span>{{ obtenerSemanaISO() }}</span>
+                <span>{{ obtenerDiaTemporada() }}</span>
+            </div>
+        </div>
+
+        <!-- Sección EB y MY25 -->
+        <div class="seccion-principal">
+            <div class="tabla-principal">
+                <!-- Header -->
+                <div class="fila-header">
+                    <div class="col-categoria"></div>
+                    <div class="col-numero">Meta</div>
+                    <div class="col-numero header-verde">Acumulado Real</div>
+                    <div class="col-numero header-amarillo">Avance Proyectado</div>
+                    <div class="col-porcentaje">%</div>
+                </div>
+
+                <!-- Fila EB -->
+                <div class="fila-data">
+                    <div class="col-categoria categoria-eb">EB</div>
+                    <div class="col-numero">{{ obtenerMetaTotal() }}</div>
+                    <div class="col-numero verde">{{ obtenerAcumuladoTotal() }}</div>
+                    <div class="col-numero">{{ obtenerAvanceProyectadoTotalFormateado() }}</div>
+                    <div class="col-porcentaje verde-claro">{{ calcularPorcentajeEB() }}</div>
+                </div>
+
+                <!-- Filas MY25 -->
+                <div class="fila-data">
+                    <div class="col-categoria categoria-my25" rowspan="2">MY25</div>
+                    <div class="col-numero">{{ my25_monto1 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero verde">{{ my25_monto3 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero">{{ avance_proyectado_monto1 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-porcentaje verde-claro">{{ calcularPorcentajeMonto1() }}</div>
+                </div>
+
+                <div class="fila-data">
+                    <div class="col-categoria"></div>
+                    <div class="col-numero">{{ my25_monto2 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero verde">{{ my25_monto4 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero">{{ avance_proyectado_monto2 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-porcentaje verde-claro">{{ calcularPorcentajeMonto2() }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección b) Línea -->
+        <div class="seccion-linea">
+            <h3 class="seccion-titulo">b) Línea</h3>
+
+            <!-- Header con % AVANCE PROYECTADO -->
+            <div class="avance-proyectado-header">
+                <span>% AVANCE PROYECTADO</span>
+            </div>
+
+            <div class="tabla-linea">
+                <!-- Header línea -->
+                <div class="fila-header-linea">
+                    <div class="col-categoria-linea"></div>
+                    <div class="col-numero-linea">Meta</div>
+                    <div class="col-numero-linea header-verde">Acumulado Real</div>
+                    <div class="col-numero-linea header-amarillo">Avance Proyectado</div>
+                    <div class="col-porcentaje-linea">%</div>
+                </div>
+
+                <!-- SCOTT -->
+                <div class="fila-categoria scott-row">
+                    <div class="col-categoria-linea categoria-scott">SCOTT</div>
+                    <div class="col-numero-linea">$ </div>
+                    <div class="col-numero-linea verde">$ </div>
+                    <div class="col-numero-linea">$ </div>
+                    <div class="col-porcentaje-linea verde-claro">%</div>
+                </div>
+
+                <!-- APPAREL, SYNCROS, VITTORIA -->
+                <div class="fila-categoria apparel-row">
+                    <div class="col-categoria-linea categoria-apparel">APPAREL, SYNCROS, VITTORIA</div>
+                    <div class="col-numero-linea">$ </div>
+                    <div class="col-numero-linea verde">$ </div>
+                    <div class="col-numero-linea">$ </div>
+                    <div class="col-porcentaje-linea verde-claro">%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

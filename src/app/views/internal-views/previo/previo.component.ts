@@ -633,6 +633,8 @@ export class PrevioComponent implements OnInit, OnDestroy {
       const acumuladoBold = clientesGrupo.reduce((sum, c) => sum + (c.acumulado_bold || 0), 0);
       const avance_global_1 = clientesGrupo.reduce((sum, c) => sum + (c.avance_global_1 || 0), 0);
 
+      const avanceGlobal = sumaScott + acumuladoSyncros + acumuladoApparel + acumuladoVittoria + acumuladoBold;
+
       return {
         clave: grupo.nombreIntegral,
         zona: clientesGrupo[0]?.zona || '',
@@ -664,6 +666,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
         acumulado_vittoria: acumuladoVittoria,
         acumulado_bold: acumuladoBold,
         avance_global_1: avance_global_1,
+        avance_global: avanceGlobal,
         grupoIntegral: index + 1
       };
     })

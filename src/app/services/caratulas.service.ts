@@ -46,21 +46,21 @@ export class CaratulasService {
       .pipe(
         map(response => {
           console.log('Respuesta sugerencias:', response);
-          
+
           let datos: any[] = [];
-          
+
           // La respuesta debe ser un array directo según tu Flask endpoint
           if (Array.isArray(response)) {
             datos = response;
           }
-          
+
           // Filtrar por el término de búsqueda
           const terminoLower = termino.toLowerCase().trim();
-          const resultadosFiltrados = datos.filter(item => 
+          const resultadosFiltrados = datos.filter(item =>
             item.clave?.toLowerCase().includes(terminoLower) ||
             item.nombre_cliente?.toLowerCase().includes(terminoLower)
           );
-          
+
           // Mapear a la estructura esperada
           return resultadosFiltrados.slice(0, 10).map(item => ({
             clave: item.clave || '',
@@ -86,11 +86,11 @@ export class CaratulasService {
     }
 
     let params = new HttpParams();
-    
+
     if (clave) {
       params = params.set('clave', clave.trim().toUpperCase());
     }
-    
+
     if (nombreCliente) {
       params = params.set('nombre_cliente', nombreCliente.trim());
     }
@@ -141,7 +141,7 @@ export class CaratulasService {
    */
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Ha ocurrido un error desconocido';
-    
+
     if (error.error instanceof ErrorEvent) {
       // Error del lado del cliente
       errorMessage = `Error: ${error.error.message}`;
@@ -180,7 +180,7 @@ export class CaratulasService {
    */
   validarFormatoClave(clave: string): boolean {
     if (!clave) return false;
-    
+
     // Formato: 2-5 letras seguidas de números opcionales
     const formatoClave = /^[A-Z]{2,5}\d*$/i;
     return formatoClave.test(clave.trim());
@@ -193,10 +193,15 @@ export class CaratulasService {
    */
   limpiarTerminoBusqueda(termino: string): string {
     if (!termino) return '';
-    
+
     return termino
       .trim()
       .replace(/\s+/g, ' ') // Reemplazar múltiples espacios por uno solo
       .substring(0, 100); // Limitar longitud
   }
+
+  getClientesEvacA(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/clientes_a`);
+  }
+
 }

@@ -1,0 +1,141 @@
+<app-home-bar></app-home-bar>
+
+<div class="caratula-global-container">
+    <h2>Carátula Global</h2>
+
+    <div class="acciones-caratula">
+        <button class="btn btn-secondary" [routerLink]="['/inicio-caratulas']">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+    </div>
+
+    <div class="caratula-content">
+        <!-- Fecha en la esquina superior derecha -->
+        <div class="fecha-header">
+            <span>16/08/2025</span>
+            <div class="semana-info">
+                <span>33</span>
+                <span>7</span>
+            </div>
+        </div>
+
+        <!-- Sección General -->
+        <div class="seccion-general">
+            <h3 class="seccion-titulo">a) General</h3>
+            
+            <div class="tabla-general">
+                <div class="fila-header">
+                    <div class="col-categoria">Meta</div>
+                    <div class="col-numero">Acumulado Real</div>
+                    <div class="col-numero">Avance Proyectado</div>
+                    <div class="col-porcentaje">%</div>
+                    <div class="col-meta">Acumulado real vs Meta</div>
+                </div>
+
+                <div class="fila-data">
+                    <div class="col-categoria categoria-comercializadora">
+                        <span>Meta Gral. Comercializadora</span>
+                    </div>
+                    <div class="col-numero">$ 185,000,000.00</div>
+                    <div class="col-numero positivo">$ 23,557,306.76</div>
+                    <div class="col-numero">$ 24,903,846.15</div>
+                    <div class="col-porcentaje negativo">-5%</div>
+                </div>
+
+                <div class="fila-separador"></div>
+
+                <div class="fila-data">
+                    <div class="col-categoria categoria-cumplimiento">
+                        <span>Meta Cumplimiento Categoría</span>
+                    </div>
+                    <div class="col-numero">$ 88,130,000.00</div>
+                    <div class="col-numero positivo">$ 14,698,503.99</div>
+                    <div class="col-numero">$ 11,863,653.85</div>
+                    <div class="col-porcentaje positivo">24%</div>
+                </div>
+
+                <div class="fila-data">
+                    <div class="col-categoria"></div>
+                    <div class="col-numero">$ 18,450,000.00</div>
+                    <div class="col-numero positivo">$ 2,291,767.53</div>
+                    <div class="col-numero">$ 2,483,653.85</div>
+                    <div class="col-porcentaje negativo">-8%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección Específico -->
+        <div class="seccion-especifico">
+            <h3 class="seccion-titulo">b) Específico</h3>
+            
+            <div class="tabla-especifico">
+                <div class="fila-header-especifico">
+                    <div class="col-categoria-esp"></div>
+                    <div class="col-numero-esp">Meta</div>
+                    <div class="col-numero-esp">Acumulado Real</div>
+                    <div class="col-numero-esp">Avance Proyectado</div>
+                    <div class="col-avance">% AVANCE META GRAL.</div>
+                    <div class="col-avance">% AVANCE PROYECTADO</div>
+                </div>
+
+                <div class="fila-categoria scott">
+                    <div class="col-categoria-esp categoria-scott">SCOTT</div>
+                    <div class="col-numero-esp">$ 149,767,431.98</div>
+                    <div class="col-numero-esp">$ -</div>
+                    <div class="col-numero-esp">$ 20,161,000.46</div>
+                    <div class="col-avance">0%</div>
+                    <div class="col-avance negativo-total">-100%</div>
+                    <div class="col-avance negativo-total">-100%</div>
+                </div>
+
+                <div class="fila-categoria apparel">
+                    <div class="col-categoria-esp categoria-apparel">APPAREL</div>
+                    <div class="col-numero-esp">$ 19,148,964.64</div>
+                    <div class="col-numero-esp">$ -</div>
+                    <div class="col-numero-esp">$ 2,577,745.24</div>
+                    <div class="col-avance">0%</div>
+                    <div class="col-avance negativo-total">-100%</div>
+                    <div class="col-avance negativo-total">-100%</div>
+                </div>
+
+                <div class="fila-categoria syncros">
+                    <div class="col-categoria-esp categoria-syncros">SYNCROS</div>
+                    <div class="col-numero-esp">$ 8,773,351.06</div>
+                    <div class="col-numero-esp">$ -</div>
+                    <div class="col-numero-esp">$ 1,181,028.03</div>
+                    <div class="col-avance">0%</div>
+                    <div class="col-avance negativo-total">-100%</div>
+                    <div class="col-avance negativo-total">-100%</div>
+                </div>
+
+                <div class="fila-categoria vittoria">
+                    <div class="col-categoria-esp categoria-vittoria">VITTORIA</div>
+                    <div class="col-numero-esp">$ 7,310,252.32</div>
+                    <div class="col-numero-esp">$ -</div>
+                    <div class="col-numero-esp">$ 984,072.43</div>
+                    <div class="col-avance">0%</div>
+                    <div class="col-avance negativo-total">-100%</div>
+                    <div class="col-avance negativo-total">-100%</div>
+                </div>
+
+                <div class="fila-categoria otros">
+                    <div class="col-categoria-esp categoria-otros">Otros / Productos Antiguos</div>
+                    <div class="col-numero-esp"></div>
+                    <div class="col-numero-esp amarillo">$ -</div>
+                    <div class="col-numero-esp"></div>
+                    <div class="col-avance"></div>
+                    <div class="col-avance error">#DIV/0!</div>
+                </div>
+
+                <div class="fila-diferencia">
+                    <div class="col-categoria-esp">Diferencia</div>
+                    <div class="col-numero-esp"></div>
+                    <div class="col-numero-esp">$ -</div>
+                    <div class="col-numero-esp">$ 23,557,306.76</div>
+                    <div class="col-avance"></div>
+                    <div class="col-avance"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

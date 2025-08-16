@@ -10,9 +10,6 @@
   --border-radius: 8px;
   --box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
   --transition: all 0.3s ease;
-  --verde-header: #90EE90;
-  --amarillo-header: #FFD700;
-  --verde-claro: #C8E6C9;
 }
 
 body {
@@ -23,7 +20,7 @@ body {
 }
 
 /* Contenedor principal */
-.caratula-evac-container {
+.caratula-global-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
@@ -32,7 +29,7 @@ body {
   box-shadow: var(--box-shadow);
 }
 
-.caratula-evac-container h2 {
+.caratula-global-container h2 {
   color: #EB5E28;
   font-size: 2rem;
   margin-bottom: 1.5rem;
@@ -42,7 +39,7 @@ body {
   padding-bottom: 0.5rem;
 }
 
-.caratula-evac-container h2::after {
+.caratula-global-container h2::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -74,6 +71,7 @@ body {
   font-size: 0.9rem;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   text-decoration: none;
+  border-radius: 8px;
 }
 
 .btn-secondary {
@@ -118,111 +116,103 @@ body {
   line-height: 1.2;
 }
 
-/* Tabla Principal (EB y MY25) */
-.tabla-principal {
-  margin-bottom: 2rem;
-}
-
-.fila-header, .fila-data {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr 1.5fr 1.5fr 1fr;
-  gap: 0.5rem;
-  align-items: center;
-  padding: 0.5rem;
-  border-bottom: 1px solid #ddd;
-  min-height: 2.5rem;
-}
-
-.fila-header {
-  background-color: #f8f9fa;
-  font-weight: bold;
-  text-align: center;
-}
-
-.header-verde {
-  background-color: var(--verde-header) !important;
-  color: #333;
-}
-
-.header-amarillo {
-  background-color: var(--amarillo-header) !important;
-  color: #333;
-}
-
-/* Categorías */
-.categoria-eb {
-  color: #EB5E28;
-  font-weight: bold;
-  text-align: center;
-}
-
-.categoria-my25 {
-  color: #2E86C1;
-  font-weight: bold;
-  text-align: center;
-}
-
-/* Colores para valores */
-.verde {
-  background-color: var(--verde-header);
-  color: #333;
-  padding: 0.25rem;
-  border-radius: 4px;
-  text-align: right;
-}
-
-.verde-claro {
-  background-color: var(--verde-claro);
-  color: #333;
-  padding: 0.25rem;
-  border-radius: 4px;
-  text-align: center;
-}
-
-/* Sección Línea */
-.seccion-linea {
-  margin-top: 2rem;
-}
-
+/* Títulos de sección */
 .seccion-titulo {
   color: #EB5E28;
   font-size: 1.2rem;
   font-weight: bold;
   margin-bottom: 1rem;
+  margin-top: 1.5rem;
 }
 
-.avance-proyectado-header {
-  text-align: right;
-  margin-bottom: 0.5rem;
-  font-weight: bold;
-  color: #666;
-  font-size: 0.9rem;
+.seccion-titulo:first-child {
+  margin-top: 0;
 }
 
-/* Tabla Línea */
-.tabla-linea {
-  margin-bottom: 1rem;
+/* Tabla General */
+.tabla-general {
+  margin-bottom: 2rem;
 }
 
-.fila-header-linea, 
-.fila-categoria {
+.fila-header, .fila-data {
   display: grid;
-  grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr 1fr;
-  gap: 0.5rem;
+  grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr 0.8fr 1.5fr;
+  gap: 1rem;
   align-items: center;
   padding: 0.5rem;
   border-bottom: 1px solid #ddd;
-  min-height: 2.5rem;
 }
 
-.fila-header-linea {
-  background-color: #f8f9fa;
+.fila-header {
+  background-color: #333;
+  color: white;
   font-weight: bold;
   text-align: center;
 }
 
-/* Categorías específicas */
-.categoria-scott {
+.fila-data {
+  min-height: 2.5rem;
+}
+
+.fila-separador {
+  height: 10px;
+}
+
+/* Categorías con colores */
+.categoria-comercializadora {
+  color: #EB5E28;
+  font-weight: bold;
+}
+
+.categoria-cumplimiento {
+  color: #2E86C1;
+  font-weight: bold;
+}
+
+/* Colores para valores */
+.positivo {
+  background-color: #d4edda !important;
+  color: #155724;
+  padding: 0.25rem;
+  border-radius: 4px;
+}
+
+.negativo {
+  background-color: #f8d7da !important;
+  color: white;
+  background-color: #dc3545 !important;
+  padding: 0.25rem;
+  border-radius: 4px;
+  text-align: center;
+}
+
+/* Tabla Específico */
+.tabla-especifico {
+  margin-bottom: 2rem;
+}
+
+.fila-header-especifico, 
+.fila-categoria, 
+.fila-diferencia {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.2fr 1.5fr 1fr 1fr 1fr;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.4rem;
+  border-bottom: 1px solid #ddd;
+  min-height: 2rem;
+}
+
+.fila-header-especifico {
+  background-color: #333;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+/* Categorías específicas con colores de fondo */
+.scott .categoria-scott {
   background-color: #6c757d;
   color: white;
   padding: 0.5rem;
@@ -231,7 +221,7 @@ body {
   border-radius: 4px;
 }
 
-.categoria-apparel {
+.apparel .categoria-apparel {
   background-color: #ffc107;
   color: #333;
   padding: 0.5rem;
@@ -240,30 +230,86 @@ body {
   border-radius: 4px;
 }
 
+.syncros .categoria-syncros {
+  background-color: #28a745;
+  color: white;
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.vittoria .categoria-vittoria {
+  background-color: #8B4513;
+  color: white;
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.otros .categoria-otros {
+  background-color: #17a2b8;
+  color: white;
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.negativo-total {
+  background-color: #dc3545 !important;
+  color: white !important;
+  padding: 0.25rem;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.amarillo {
+  background-color: #ffc107;
+  color: #333;
+  padding: 0.25rem;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.error {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.fila-diferencia {
+  font-weight: bold;
+  border-top: 2px solid #333;
+}
+
 /* Alineación de columnas */
-.col-numero, .col-numero-linea {
+.col-numero, .col-numero-esp {
   text-align: right;
   font-family: monospace;
 }
 
-.col-porcentaje, .col-porcentaje-linea {
+.col-porcentaje, .col-avance {
   text-align: center;
 }
 
 /* Responsivo */
 @media (max-width: 768px) {
-  .caratula-evac-container {
-    padding: 1rem;
-  }
-  
   .caratula-content {
     padding: 1rem;
   }
   
-  .fila-header, .fila-data, 
-  .fila-header-linea, .fila-categoria {
+  .fila-header, .fila-data {
     grid-template-columns: 1fr;
-    gap: 0.25rem;
+    gap: 0.5rem;
+    text-align: left;
+  }
+  
+  .fila-header-especifico, 
+  .fila-categoria, 
+  .fila-diferencia {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
     text-align: left;
   }
   
@@ -274,9 +320,5 @@ body {
     border-left: none;
     border-bottom: 1px solid #ddd;
     padding: 1rem 0;
-  }
-  
-  .avance-proyectado-header {
-    text-align: center;
   }
 }
