@@ -126,8 +126,7 @@
             }}
           </td>
           <td>{{ cliente.compra_minima_inicial | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ (cliente.avance_global_scott || 0) + (cliente.acumulado_syncros || 0) + (cliente.acumulado_apparel ||
-            0) + (cliente.acumulado_vittoria || 0) | currency:'USD':'symbol':'1.0-0' }}</td>
+          <td>{{ cliente.avance_global | currency:'USD':'symbol':'1.0-0' }}</td>
           <td>
             {{
             (
@@ -151,8 +150,7 @@
           <td>{{ cliente.avance_nov_dic | currency:'USD':'symbol':'1.0-0' }}</td>
           <td>{{ (cliente.avance_nov_dic || 0) / (cliente.compromiso_nov_dic || 1) | percent:'1.0-0' }}</td>
           <td>{{ cliente.compromiso_apparel_syncros_vittoria | currency:'USD':'symbol':'1.0-0' }}</td>
-          <td>{{ (cliente.acumulado_syncros || 0) + (cliente.acumulado_apparel || 0) + (cliente.acumulado_vittoria || 0)
-            | currency:'USD':'symbol':'1.0-0' }}</td>
+          <td>{{ cliente.avance_global_apparel_syncros_vittoria | currency:'USD':'symbol':'1.0-0' }}</td>
           <td>
             {{
             (
@@ -194,8 +192,7 @@
             <td>{{ integral.compra_minima_anual | currency:'USD':'symbol':'1.0-0' }}</td>
             <td>{{ calculoPorcentajeCompraAnual(integral) }}</td>
             <td>{{ integral.compra_minima_inicial | currency:'USD':'symbol':'1.0-0' }}</td>
-            <td>{{ (integral.avance_global_scott || 0) + (integral.acumulado_syncros || 0) + (integral.acumulado_apparel
-              || 0) + (integral.acumulado_vittoria || 0) | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ integral.avance_global | currency:'USD':'symbol':'1.0-0' }}</td>
             <td>{{ calculoPorcentajeCompraInicial(integral) }}</td>
             <td>{{ integral.compromiso_scott | currency:'USD':'symbol':'1.0-0' }}</td>
             <td>{{ integral.avance_global_scott | currency:'USD':'symbol':'1.0-0' }}</td>

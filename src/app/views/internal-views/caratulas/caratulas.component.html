@@ -4,129 +4,390 @@
     <h2>Monitor Previo de Facturas</h2>
 
     <div class="acciones-monitor">
-        <button class="btn" [routerLink]="['/inicio-caratulas']">
+        <button class="btn btn-secondary" [routerLink]="['/inicio-caratulas']">
             <i class="fas fa-arrow-left"></i> Volver
         </button>
-        <button class="btn">
+        <!-- <button class="btn btn-primary" [disabled]="!caratulaSeleccionada" (click)="generarPDF()">
             <i class="fas fa-file-pdf"></i> Generar PDF
-        </button>
+        </button> -->
     </div>
 
-    <div class="contenedor-principal">
-        <!-- Cuadro derecho con buscador y datos del partner -->
-        <div class="cuadro-buscador">
-            <div class="buscador-container">
-                <input type="text" placeholder="Ingrese clave..." class="buscador-input">
-                <button class="btn buscador-btn">
-                    <i class="fas fa-search"></i> Buscar
+    <!-- Sección de búsqueda mejorada -->
+    <div class="search-section">
+        <div class="search-container">
+            <div class="search-input-group">
+                <input type="text" [(ngModel)]="terminoBusqueda" (input)="onInputChange($event)"
+                    (focus)="onFocusInput()" (blur)="onBlurInput()" (keydown)="onKeyDown($event)"
+                    placeholder="Buscar por clave (ej: EVAC) o nombre del cliente..." class="buscador-input"
+                    #searchInput [disabled]="isLoading">
+
+                <button class="search-btn" (click)="realizarBusqueda()"
+                    [disabled]="isLoading || !terminoBusqueda.trim()">
+                    <i class="fas fa-search" *ngIf="!isLoading"></i>
+                    <i class="fas fa-spinner fa-spin" *ngIf="isLoading"></i>
+                    {{ isLoading ? 'Buscando...' : 'Buscar' }}
+                </button>
+
+                <button class="clear-btn" (click)="limpiarBusqueda()" *ngIf="terminoBusqueda" title="Limpiar búsqueda">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            <!-- Contenedor de datos del partner -->
-            <div class="partner-data-container">
-                <div class="partner-header">
-                    <div class="partner-info">
-                        <div><strong>Clave:</strong> F4271</div>
-                        <div><strong>Zona:</strong> Norte</div>
-                        <div><strong>Razón Social:</strong> Juan Manuel Ruscho Rangel</div>
+            <!-- Dropdown de sugerencias mejorado -->
+            <div *ngIf="mostrarSugerencias && sugerenciasFiltradas.length > 0" class="sugerencias-dropdown">
+                <div *ngFor="let sugerencia of sugerenciasFiltradas" class="sugerencia-item"
+                    (mousedown)="seleccionarSugerencia(sugerencia)">
+                    <div class="sugerencia-content">
+                        <span class="sugerencia-nombre">{{ sugerencia.razon_social || sugerencia.nombre_cliente
+                            }}</span>
+                        <span class="sugerencia-clave">({{ sugerencia.clave }})</span>
                     </div>
-                    <div class="partner-tier">
-                        <h3>Partner Elite Plus</h3>
-                    </div>
-                </div>
-
-                <div class="compromiso-section">
-                    <h4>Compromiso ANUAL</h4>
-                    <div class="compromiso-total">$5,920,000</div>
-                </div>
-
-                <div class="compromiso-lineas">
-                    <h4>a) Compromiso por Línea</h4>
-                    <table class="lineas-table">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th>SCOTT</th>
-                                <th>APPAREL</th>
-                                <th>SYNCROS</th>
-                                <th>VITTORIA</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Meta</td>
-                                <td>$5,250,000.00</td>
-                                <td>$340,000.00</td>
-                                <td>$200,000.00</td>
-                                <td>$180,000.00</td>
-                            </tr>
-                            <tr>
-                                <td>Avance</td>
-                                <td>$2,494,366.62</td>
-                                <td>$283,206.24</td>
-                                <td>$195,149.46</td>
-                                <td>$121,036.79</td>
-                            </tr>
-                            <tr>
-                                <td>%</td>
-                                <td>11%</td>
-                                <td>7%</td>
-                                <td>9%</td>
-                                <td>9%</td>
-                            </tr>
-                            <tr>
-                                <td>Importe Faltante</td>
-                                <td>$-1,014,366.62</td>
-                                <td>$101,793.76</td>
-                                <td>$4,950.54</td>
-                                <td>$8,963.21</td>
-                            </tr>
-                            <tr class="estatus-row">
-                                <td>Estatus</td>
-                                <td class="cumplida">Cumplida</td>
-                                <td class="faltante">Faltante</td>
-                                <td class="faltante">Faltante</td>
-                                <td class="faltante">Faltante</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <div class="faltante-acumulado">
-                        <strong>Importe faltante acumulado:</strong> $115,607.51
-                    </div>
-                </div>
-
-                <div class="compra-minima">
-                    <h4>b) Compra Mínima ANUAL</h4>
-                    <table class="minima-table">
-                        <tr>
-                            <th>Meta</th>
-                            <th>Avance</th>
-                        </tr>
-                        <tr>
-                            <td>$5,920,000</td>
-                            <td>$6,818,759</td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" class="porcentaje">115%</td>
-                        </tr>
-                    </table>
-                </div>
-
-                <div class="transito-section">
-                    <h4>c) Mercancía en TRÁNSITO</h4>
-                    <table class="transito-table">
-                        <tr>
-                            <th>Productos</th>
-                            <td>#N/A</td>
-                        </tr>
-                        <tr>
-                            <th>Total</th>
-                            <td>#N/A</td>
-                        </tr>
-                    </table>
                 </div>
             </div>
         </div>
+
+        <!-- Mensaje de error -->
+        <div *ngIf="error" class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            {{ error }}
+        </div>
+
+        <!-- Indicador de carga -->
+        <div *ngIf="isLoading" class="loading-message">
+            <i class="fas fa-spinner fa-spin"></i>
+            Cargando información...
+        </div>
+    </div>
+
+    <div *ngIf="datosCliente && !isLoading">
+        <!-- Header del cliente -->
+        <div>
+            <div>
+                <div>
+                    <span>Clave</span>
+                    <span>{{ datosCliente.clave }}</span>
+                </div>
+                <div>
+                    <span>Evac</span>
+                    <span>{{ datosCliente.evac }}</span>
+                </div>
+                <div>
+                    <span>Nombre Cliente</span>
+                    <span>{{ datosCliente.nombre_cliente }}</span>
+                </div>
+                <div>
+                    <span>Nivel</span>
+                    <span>{{ datosCliente.nivel }}</span>
+                </div>
+                <div>
+                    <span>Compra Mínima ANUAL</span>
+                    <span>{{ datosCliente.compra_minima_anual | currency:'USD':'symbol':'1.2-2' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección Compromiso BIMESTRAL -->
+        <div>
+            <h3>a) Compromiso BIMESTRAL</h3>
+
+            <!-- Info del período -->
+            <div>
+                <div>
+                    <span>Periodo - (Julio-Agosto)</span>
+                </div>
+                <div>
+                    <span>Estado:</span>
+                    <span [class.sin-iniciar]="getEstadoPeriodo('Jul-Ago') === 'Sin iniciar'"
+                        [class.en-curso]="getEstadoPeriodo('Jul-Ago') === 'En curso'"
+                        [class.cerrado]="getEstadoPeriodo('Jul-Ago') === 'Cerrado'">
+                        {{ getEstadoPeriodo('Jul-Ago') }}
+                    </span>
+                </div>
+                <div>
+                    <span>Estatus</span>
+                    <span>{{ datosCliente.estatus }}</span>
+                </div>
+            </div>
+
+            <!-- Tabla de marcas -->
+            <div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>SCOTT</th>
+                            <th>APPAREL, SYNCROS, VITTORIA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Compromiso</td>
+                            <td>{{ datosCliente.compromiso_jul_ago | currency:'USD':'symbol':'1.2-2' }}</td>
+                            <td>{{ datosCliente.compromiso_jul_ago_app | currency:'USD':'symbol':'1.2-2' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Avance</td>
+                            <td>{{ datosCliente.avance_jul_ago| currency:'USD':'symbol':'1.2-2' }}</td>
+                            <td>{{ datosCliente.avance_jul_ago_app | currency:'USD':'symbol':'1.2-2' }}</td>
+                        </tr>
+                        <tr>
+                            <td>%</td>
+                            <td>{{ datosCliente.porcentaje_jul_ago }}%</td>
+                            <td>{{ datosCliente.porcentaje_jul_ago_app }}%</td>
+                        </tr>
+                        <tr>
+                            <td>Importe Faltante</td>
+                            <td>
+                                {{ (datosCliente.compromiso_jul_ago - datosCliente.avance_jul_ago) |
+                                currency:'USD':'symbol':'1.2-2' }}
+                            </td>
+                            <td>{{ (datosCliente.compromiso_jul_ago_app - datosCliente.avance_jul_ago_app) |
+                                currency:'USD':'symbol':'1.2-2' }}</td>
+                        </tr>
+
+                        <tr>
+                            <td>Estatus</td>
+                            <td>
+                                <ng-container
+                                    *ngIf="(datosCliente.compromiso_jul_ago - datosCliente.avance_jul_ago) <= 0; else faltante">
+                                    Cumplido
+                                </ng-container>
+                                <ng-template #faltante>
+                                    Faltante
+                                </ng-template>
+                            </td>
+                            <td>
+                                <ng-container
+                                    *ngIf="(datosCliente.compromiso_jul_ago_app - datosCliente.avance_jul_ago_app) <= 0; else faltante">
+                                    Cumplido
+                                </ng-container>
+                                <ng-template #faltante>
+                                    Faltante
+                                </ng-template>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Importe Faltante Acumulado</td>
+                            <td colspan="2">
+                                {{ getImporteFaltanteAcumuladoJulAgo() | currency:'USD':'symbol':'1.2-2' }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Info del período -->
+            <div>
+                <div>
+                    <span>Periodo - (Septiembre-Octubre)</span>
+                </div>
+                <div>
+                    <span>Estado:</span>
+                    <span [class.sin-iniciar]="getEstadoPeriodo('Sep-Oct') === 'Sin iniciar'"
+                        [class.en-curso]="getEstadoPeriodo('Sep-Oct') === 'En curso'"
+                        [class.cerrado]="getEstadoPeriodo('Sep-Oct') === 'Cerrado'">
+                        {{ getEstadoPeriodo('Sep-Oct') }}
+                    </span>
+                </div>
+                <div>
+                    <span>Estatus</span>
+                    <span>{{ datosCliente.estatus }}</span>
+                </div>
+            </div>
+
+            <!-- Tabla de marcas -->
+            <div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>SCOTT</th>
+                            <th>APPAREL, SYNCROS, VITTORIA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Compromiso</td>
+                            <td>{{ datosCliente.compromiso_sep_oct | currency:'USD':'symbol':'1.2-2' }}</td>
+                            <td>{{ datosCliente.compromiso_sep_oct_app | currency:'USD':'symbol':'1.2-2' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Avance</td>
+                            <td>{{ datosCliente.avance_sep_oct | currency:'USD':'symbol':'1.2-2' }}</td>
+                            <td>{{ datosCliente.avance_sep_oct_app | currency:'USD':'symbol':'1.2-2' }}</td>
+                        </tr>
+                        <tr>
+                            <td>%</td>
+                            <td>{{ datosCliente.porcentaje_sep_oct }}%</td>
+                            <td>{{ datosCliente.porcentaje_sep_oct_app }}%</td>
+                        </tr>
+                        <tr>
+                            <td>Importe Faltante</td>
+                            <td>
+                                {{ (datosCliente.compromiso_sep_oct - datosCliente.avance_sep_oct) |
+                                currency:'USD':'symbol':'1.2-2' }}
+                            </td>
+                            <td>{{ (datosCliente.compromiso_sep_oct_app - datosCliente.avance_sep_oct_app) |
+                                currency:'USD':'symbol':'1.2-2' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Estatus</td>
+                            <td>
+                                <ng-container
+                                    *ngIf="(datosCliente.compromiso_sep_oct - datosCliente.avance_sep_oct) <= 0; else faltante">
+                                    Cumplido
+                                </ng-container>
+                                <ng-template #faltante>
+                                    Faltante
+                                </ng-template>
+                            </td>
+                            <td>
+                                <ng-container
+                                    *ngIf="(datosCliente.compromiso_sep_oct_app - datosCliente.avance_sep_oct_app) <= 0; else faltante">
+                                    Cumplido
+                                </ng-container>
+                                <ng-template #faltante>
+                                    Faltante
+                                </ng-template>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Importe Faltante Acumulado</td>
+                            <td colspan="2">
+                                {{ getImporteFaltanteAcumuladoSepOct() | currency:'USD':'symbol':'1.2-2' }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Info del período -->
+            <div>
+                <div>
+                    <span>Periodo - (Noviembre-Diciembre)</span>
+                </div>
+                <div>
+                    <span>Estado:</span>
+                    <span [class.sin-iniciar]="getEstadoPeriodo('Nov-Dic') === 'Sin iniciar'"
+                        [class.en-curso]="getEstadoPeriodo('Nov-Dic') === 'En curso'"
+                        [class.cerrado]="getEstadoPeriodo('Nov-Dic') === 'Cerrado'">
+                        {{ getEstadoPeriodo('Nov-Dic') }}
+                    </span>
+                </div>
+                <div>
+                    <span>Estatus</span>
+                    <span>{{ datosCliente.estatus }}</span>
+                </div>
+            </div>
+
+            <!-- Tabla de marcas -->
+            <div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>SCOTT</th>
+                            <th>APPAREL, SYNCROS, VITTORIA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Compromiso</td>
+                            <td>{{ datosCliente.compromiso_nov_dic | currency:'USD':'symbol':'1.2-2' }}</td>
+                            <td>{{ datosCliente.compromiso_nov_dic_app | currency:'USD':'symbol':'1.2-2' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Avance</td>
+                            <td>{{ datosCliente.avance_nov_dic | currency:'USD':'symbol':'1.2-2' }}</td>
+                            <td>{{ datosCliente.avance_nov_dic_app | currency:'USD':'symbol':'1.2-2' }}</td>
+                        </tr>
+                        <tr>
+                            <td>%</td>
+                            <td>{{ datosCliente.porcentaje_nov_dic }}%</td>
+                            <td>{{ datosCliente.porcentaje_nov_dic_app }}%</td>
+                        </tr>
+                        <tr>
+                            <td>Importe Faltante</td>
+                            <td>
+                                {{ (datosCliente.compromiso_nov_dic - datosCliente.avance_nov_dic) |
+                                currency:'USD':'symbol':'1.2-2' }}
+                            </td>
+                            <td>{{ (datosCliente.compromiso_nov_dic_app - datosCliente.avance_nov_dic_app) |
+                                currency:'USD':'symbol':'1.2-2' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Estatus</td>
+                            <td>
+                                <ng-container
+                                    *ngIf="(datosCliente.compromiso_nov_dic - datosCliente.avance_nov_dic) <= 0; else faltante">
+                                    Cumplido
+                                </ng-container>
+                                <ng-template #faltante>
+                                    Faltante
+                                </ng-template>
+                            </td>
+                            <td>
+                                <ng-container
+                                    *ngIf="(datosCliente.compromiso_nov_dic_app - datosCliente.avance_nov_dic_app) <= 0; else faltante">
+                                    Cumplido
+                                </ng-container>
+                                <ng-template #faltante>
+                                    Faltante
+                                </ng-template>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Importe Faltante Acumulado</td>
+                            <td colspan="2">
+                                {{ getImporteFaltanteAcumuladoNovDic() | currency:'USD':'symbol':'1.2-2' }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Compra Mínima INICIAL -->
+        <div>
+            <h3>b) Compra Mínima INICIAL</h3>
+            <div>
+                <div>
+                    <span>Meta</span>
+                    <span>{{ datosCliente.compra_minima_inicial | currency:'USD':'symbol':'1.2-2' }}</span>
+                </div>
+                <div>
+                    <span>Avance</span>
+                    <span>{{ datosCliente.avance_global | currency:'USD':'symbol':'1.2-2' }}</span>
+                </div>
+                <div>
+                    <span>{{ datosCliente.porcentaje_global }}%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compra Mínima ANUAL -->
+        <div>
+            <h3>c) Compra Mínima ANUAL</h3>
+            <div>
+                <div>
+                    <span>Meta</span>
+                    <span>{{ datosCliente.compra_minima_anual | currency:'USD':'symbol':'1.2-2' }}</span>
+                </div>
+                <div>
+                    <span>Avance</span>
+                    <span>{{ datosCliente.acumulado_anticipado | currency:'USD':'symbol':'1.2-2' }}</span>
+                </div>
+                <div>
+                    <span>{{ datosCliente.porcentaje_anual }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensaje cuando no hay resultados -->
+    <div *ngIf="!datosCliente && !isLoading && terminoBusqueda && !error" class="no-results">
+        <i class="fas fa-search"></i>
+        <p>No se encontraron resultados para "{{ terminoBusqueda }}"</p>
+        <small>Intenta con una clave o el nombre completo del cliente</small>
     </div>
 </div>

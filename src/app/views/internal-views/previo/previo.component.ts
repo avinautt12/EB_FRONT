@@ -41,11 +41,13 @@ interface ClienteConAcumulado extends Cliente {
   grupoIntegral?: number;
   compra_minima_anual?: number;
   compra_minima_inicial?: number;
+  avance_global?: number;
   compromiso_scott?: number;
   compromiso_jul_ago?: number;
   compromiso_sep_oct?: number;
   compromiso_nov_dic?: number;
   compromiso_apparel_syncros_vittoria?: number;
+  avance_global_apparel_syncros_vittoria?: number;
   compromiso_jul_ago_app?: number;
   compromiso_sep_oct_app?: number;
   compromiso_nov_dic_app?: number;
@@ -175,6 +177,8 @@ export class PrevioComponent implements OnInit, OnDestroy {
           acumulado_apparel,
           acumulado_vittoria,
           acumulado_bold,
+          avance_global_apparel_syncros_vittoria,
+          avance_global
           //avance_global_1
         } = this.calcularAcumulados(cliente, this.facturas);
         const fechaInicio = this.obtenerFechaInicio(cliente);
@@ -193,6 +197,8 @@ export class PrevioComponent implements OnInit, OnDestroy {
           acumulado_apparel: acumulado_apparel,
           acumulado_vittoria: acumulado_vittoria,
           acumulado_bold: acumulado_bold,
+          avance_global_apparel_syncros_vittoria: avance_global_apparel_syncros_vittoria,
+          avance_global: avance_global,
           //avance_global_1: avance_global_1,
           fecha_inicio_calculo: fechaInicio.toISOString().split('T')[0]
         };
@@ -838,7 +844,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
     avance_sep_oct: number, avance_nov_dic: number, avance_jul_ago_app: number,
     avance_sep_oct_app: number, avance_nov_dic_app: number,
     acumulado_syncros: number, acumulado_apparel: number, acumulado_vittoria: number,
-    acumulado_bold: number
+    acumulado_bold: number, avance_global_apparel_syncros_vittoria: number, avance_global: number
   } {
     const clave = cliente.clave;
     const fechaInicio = this.obtenerFechaInicio(cliente);
@@ -875,6 +881,14 @@ export class PrevioComponent implements OnInit, OnDestroy {
     const acumulado = facturasCliente.reduce((total, factura) => total + (+factura.venta_total || 0), 0);
     const acumuladoScott = facturasScott.reduce((total, factura) => total + (+factura.venta_total || 0), 0);
 
+    const avance_global_apparel_syncros_vittoria = (acumuladoSyncros || 0) +
+      (acumuladoApparel || 0) +
+      (acumuladoVittoria || 0);
+
+    const avance_global = (acumuladoScott || 0) + (acumuladoSyncros || 0) +
+      (acumuladoApparel || 0) +
+      (acumuladoVittoria || 0);
+
     return {
       acumulado,
       scott: acumuladoScott,
@@ -887,7 +901,9 @@ export class PrevioComponent implements OnInit, OnDestroy {
       acumulado_syncros: acumuladoSyncros,
       acumulado_apparel: acumuladoApparel,
       acumulado_vittoria: acumuladoVittoria,
-      acumulado_bold: acumuladoBold
+      acumulado_bold: acumuladoBold,
+      avance_global_apparel_syncros_vittoria,
+      avance_global
     };
   }
 
@@ -1254,9 +1270,9 @@ export class PrevioComponent implements OnInit, OnDestroy {
 
     const datosParaGuardar = [...this.clientesOriginal, ...this.integralesOriginal];
 
-    const todosLosDatosConPorcentajes = datosParaGuardar.map(item =>
-      this.calcularPorcentajes(item)
-    );
+    const todosLosDatosConPorcentajes = datosParaGuardar.map(item => {
+      return this.calcularPorcentajes(item);
+    });
 
     this.previoService.actualizarPrevio(todosLosDatosConPorcentajes)
       .subscribe({
@@ -1304,7 +1320,6 @@ export class PrevioComponent implements OnInit, OnDestroy {
         cliente.avance_jul_ago || 0,
         cliente.compromiso_jul_ago || 1
       ),
-      // Repetir para los demás periodos...
       porcentaje_sep_oct: calcular(
         cliente.avance_sep_oct || 0,
         cliente.compromiso_sep_oct || 1

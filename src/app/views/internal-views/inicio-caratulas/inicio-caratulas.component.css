@@ -90,8 +90,52 @@
   .tarjetas-acciones {
     grid-template-columns: 1fr;
   }
-  
+
   .home-container {
     padding: 1rem;
   }
+}
+
+.header-section {
+  text-align: center;
+  margin-bottom: 2rem;
+  /* Elimina position: relative si estaba presente */
+}
+
+.back-button {
+  display: inline-flex;
+  justify-content: center;
+  margin: 1rem auto;
+  background: #474646;
+  color: #FFFCF2;
+  padding: 0.9rem 1.3rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.back-button:hover {
+  background-color: #FF6B2C;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.tarjeta-icono {
+  width: auto;
+  height: auto;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tarjeta-icono i {
+  font-size: 2rem;
+  color: #ffffff;
+  padding: 0.5rem;
 }
