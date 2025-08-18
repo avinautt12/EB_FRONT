@@ -1,1 +1,130 @@
-<p>caratula-evac-b works!</p>
+<app-home-bar></app-home-bar>
+
+<div class="caratula-evac-container">
+    <h2>Carátula EVAC-B</h2>
+
+      <div class="acciones-monitor">
+        <button class="btn btn-secondary" [routerLink]="['/inicio-caratulas']">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+    </div>
+    
+    <div class="caratula-content">
+        <!-- Fecha en la esquina superior derecha -->
+        <div class="fecha-header-mejorada">
+            <div class="fecha-principal">
+                {{ obtenerFechaHoy() }}
+            </div>
+            <div class="semana-info-mejorada">
+                <div class="info-linea">Semana ISO: {{ obtenerSemanaISO() }}</div>
+                <div class="info-linea">Día: {{ obtenerDiaTemporada() }}</div>
+            </div>
+        </div>
+
+        <!-- Sección EB y MY25 -->
+        <div class="seccion-principal">
+            <div class="tabla-principal">
+                <!-- Header -->
+                <div class="fila-header">
+                    <div class="col-categoria"></div>
+                    <div class="col-numero">Meta</div>
+                    <div class="col-numero">Acumulado Real</div>
+                    <div class="col-numero">Avance Proyectado</div>
+                    <div class="col-porcentaje">%</div>
+                </div>
+
+                <!-- Fila EB -->
+                <div class="fila-data">
+                    <div class="col-categoria categoria-eb">EB</div>
+                    <div class="col-numero">{{ obtenerMetaTotal() }}</div>
+                    <div class="col-numero verde">{{ obtenerAcumuladoTotal() }}</div>
+                    <div class="col-numero">{{ obtenerAvanceProyectadoTotalFormateado() }}</div>
+                    <div class="col-porcentaje verde-claro">{{ calcularPorcentajeEB() }}</div>
+                </div>
+
+                <!-- Filas MY25 -->
+                <div class="fila-data">
+                    <div class="col-categoria categoria-my25" rowspan="2">MY25</div>
+                    <div class="col-numero">{{ my25_monto1 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero verde">{{ my25_monto3 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero">{{ avance_proyectado_monto1 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-porcentaje verde-claro">{{ calcularPorcentajeMonto1() }}</div>
+                </div>
+
+                <div class="fila-data">
+                    <div class="col-categoria"></div>
+                    <div class="col-numero">{{ my25_monto2 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero verde">{{ my25_monto4 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero">{{ avance_proyectado_monto2 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-porcentaje verde-claro">{{ calcularPorcentajeMonto2() }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección b) Línea -->
+        <div class="seccion-linea">
+            <h3 class="seccion-titulo">b) Línea</h3>
+
+            <div class="tabla-linea">
+                <!-- Header línea -->
+                <div class="fila-header-linea">
+                    <div class="col-categoria-linea"></div>
+                    <div class="col-numero-linea">Meta</div>
+                    <div class="col-numero-linea">Acumulado Real</div>
+                    <div class="col-numero-linea">Avance Proyectado</div>
+                    <div class="col-porcentaje-linea">%</div>
+                </div>
+
+                <!-- SCOTT -->
+                <div class="fila-categoria scott-row">
+                    <div class="col-categoria-linea categoria-scott">SCOTT</div>
+                    <div class="col-numero-linea">{{ montoCompromisoScott | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero-linea verde">{{ avanceGlobalScott | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero-linea">{{ avance_proyectado_scott | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-porcentaje-linea verde-claro">{{ calcularPorcentajeScott() }}</div>
+                </div>
+
+                <!-- APPAREL, SYNCROS, VITTORIA -->
+                <div class="fila-categoria apparel-row">
+                    <div class="col-categoria-linea categoria-apparel">APPAREL, SYNCROS, VITTORIA</div>
+                    <div class="col-numero-linea">{{ montoCompromisoApparel | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero-linea verde">{{ avanceGlobaApparel | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero-linea">{{ avance_proyectado_apparel | currency:'USD':'symbol':'1.2-2' }}
+                    </div>
+                    <div class="col-porcentaje-linea verde-claro">{{ calcularPorcentajeApparel() }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección c) Clientes -->
+        <div class="seccion-clientes">
+            <h3 class="seccion-titulo">Clientes</h3>
+
+            <div class="tabla-clientes">
+                <!-- Header -->
+                <div class="fila-header-clientes">
+                    <div class="col-nombre">NOMBRE</div>
+                    <div class="col-nivel">NIVEL</div>
+                    <div class="col-compromiso">COMPROMISO ANUAL</div>
+                    <div class="col-acumulado">ACUMULADO REAL</div>
+                    <div class="col-proyectado">AVANCE PROYECTADO SEMANAL</div>
+                    <div class="col-diferencia">DIFERENCIA</div>
+                </div>
+
+                <!-- Filas de datos -->
+                <div class="fila-cliente" *ngFor="let cliente of clientes">
+                    <div class="col-nombre">{{ cliente.nombre_cliente }}</div>
+                    <div class="col-nivel">{{ cliente.nivel }}</div>
+                    <div class="col-compromiso">{{ cliente.compra_minima_anual | currency:'USD':'symbol':'1.2-2' }}
+                    </div>
+                    <div class="col-acumulado verde">{{ cliente.acumulado_anticipado | currency:'USD':'symbol':'1.2-2'
+                        }}</div>
+                    <div class="col-proyectado">{{ calcularAvanceProyectadoCliente(cliente.compra_minima_anual) |
+                        currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-diferencia">{{ calcularDiferencia(cliente) | currency:'USD':'symbol':'1.2-2' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

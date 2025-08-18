@@ -5,6 +5,14 @@ import { HomeBarComponent } from "../../../components/home-bar/home-bar.componen
 import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
 
+interface Cliente {
+  nombre_cliente: string;
+  nivel: string;
+  compra_minima_anual: number;
+  acumulado_anticipado: number;
+  avance_proyectado?: number;
+}
+
 @Component({
   selector: 'app-caratula-evac-a',
   imports: [CommonModule, RouterModule, HomeBarComponent],
@@ -24,6 +32,15 @@ export class CaratulaEvacAComponent implements OnInit {
   my25_monto4 = 0;
   avance_proyectado_monto1 = 0;
   avance_proyectado_monto2 = 0;
+
+  montoCompromisoApparel = 0;
+  montoCompromisoScott = 0;
+
+  avanceGlobalScott = 0;
+  avanceGlobaApparel = 0;
+
+  avance_proyectado_scott = 0;
+  avance_proyectado_apparel = 0;
 
   constructor(private caratulasService: CaratulasService, private router: Router) { }
 
@@ -76,6 +93,7 @@ export class CaratulaEvacAComponent implements OnInit {
   }
 
   calcularAvanceProyectadoMonto1(): void {
+    const semanaActual = this.obtenerSemanaISO();
     if (this.my25_monto1 === 0) return;
 
     const semanasTranscurridas = this.obtenerSemanasTranscurridas();
@@ -97,6 +115,65 @@ export class CaratulaEvacAComponent implements OnInit {
     this.avance_proyectado_monto2 = Math.round(this.avance_proyectado_monto2 * 100) / 100;
   }
 
+  calcularAvanceProyectadoScott(): void {
+    if (!this.montoCompromisoScott) return;
+
+    const semanasTranscurridas = this.obtenerSemanasTranscurridas();
+    const semanasEnTemporada = 52;
+
+    // Avance proyectado BASADO ÚNICAMENTE EN EL COMPROMISO SCOTT
+    this.avance_proyectado_scott = (semanasTranscurridas / semanasEnTemporada) * this.montoCompromisoScott;
+    this.avance_proyectado_scott = Math.round(this.avance_proyectado_scott * 100) / 100;
+  }
+
+  calcularAvanceProyectadoApparel(): void {
+    if (!this.montoCompromisoApparel) return;
+
+    const semanasTranscurridas = this.obtenerSemanasTranscurridas();
+    const semanasEnTemporada = 52;
+
+    // Cálculo basado en el compromiso Apparel (igual que con Scott)
+    this.avance_proyectado_apparel = (semanasTranscurridas / semanasEnTemporada) * this.montoCompromisoApparel;
+    this.avance_proyectado_apparel = Math.round(this.avance_proyectado_apparel * 100) / 100;
+  }
+
+  calcularPorcentajeScott(): string {
+    if (!this.avance_proyectado_scott || this.avance_proyectado_scott === 0) return "0%";
+
+    const resultado = (this.avanceGlobalScott / this.avance_proyectado_scott) - 1;
+    const porcentaje = Math.round(resultado * 100);  // Convierte a porcentaje (ej: 0.15 → 15%)
+
+    return `${porcentaje}%`;
+  }
+
+  calcularPorcentajeApparel(): string {
+    if (!this.avance_proyectado_apparel || this.avance_proyectado_apparel === 0) return "0%";
+
+    const resultado = (this.avanceGlobaApparel / this.avance_proyectado_apparel) - 1;
+    const porcentaje = Math.round(resultado * 100);
+
+    return `${porcentaje}%`;
+  }
+
+  // Método para calcular el avance proyectado semanal por cliente
+  calcularAvanceProyectadoCliente(compraMinimaAnual: number): number {
+    if (!compraMinimaAnual) return 0;
+
+    const semanasTranscurridas = this.obtenerSemanasTranscurridas();
+    const semanasEnTemporada = 52;
+
+    const avanceProyectado = (semanasTranscurridas / semanasEnTemporada) * compraMinimaAnual;
+    return Math.round(avanceProyectado * 100) / 100;
+  }
+
+  calcularDiferencia(cliente: any): number {
+    const avanceProyectado = this.calcularAvanceProyectadoCliente(cliente.compra_minima_anual);
+    const acumuladoReal = cliente.acumulado_anticipado;
+
+    // =SI(J30>H30, (J30-H30), 0)
+    return avanceProyectado > acumuladoReal ? avanceProyectado - acumuladoReal : 0;
+  }
+
   recargarClientes(): void {
     this.cargarClientes();
   }
@@ -112,6 +189,66 @@ export class CaratulaEvacAComponent implements OnInit {
     this.obtenerAcumuladoTotal();
     this.calcularAvanceProyectadoTotal();
     this.calcularPorcentajeEB();
+
+    this.calcularCompromisoApparel();
+    this.calcularCompromisoScott();
+    this.calcularAvanceGlobalScott();
+    this.calcularAvanceGlobalApparel();
+
+    this.calcularAvanceProyectadoScott();
+    this.calcularAvanceProyectadoApparel();
+    this.calcularPorcentajeScott();
+    this.calcularPorcentajeApparel();
+
+  }
+
+  calcularCompromisoApparel(): void {
+    this.montoCompromisoApparel = 0; // Asegúrate de definir esta variable en tu clase
+
+    this.clientes.forEach(cliente => {
+      const compromiso = cliente.compromiso_apparel_syncros_vittoria || 0;
+      this.montoCompromisoApparel += compromiso;
+    });
+
+    // Redondear a 2 decimales
+    this.montoCompromisoApparel = Math.round(this.montoCompromisoApparel * 100) / 100;
+  }
+
+  calcularAvanceGlobalScott(): void {
+    this.avanceGlobalScott = 0; // Asegúrate de definir esta variable en tu clase
+
+    this.clientes.forEach(cliente => {
+      const compromiso = cliente.avance_global_scott || 0;
+      this.avanceGlobalScott += compromiso;
+    });
+
+    // Redondear a 2 decimales
+    this.avanceGlobalScott = Math.round(this.avanceGlobalScott * 100) / 100;
+  }
+
+  calcularAvanceGlobalApparel(): void {
+    this.avanceGlobaApparel = 0; // Asegúrate de definir esta variable en tu clase
+
+    this.clientes.forEach(cliente => {
+      const compromiso = cliente.avance_global_apparel_syncros_vittoria || 0;
+      this.avanceGlobaApparel += compromiso;
+    });
+
+    // Redondear a 2 decimales
+    this.avanceGlobaApparel = Math.round(this.avanceGlobaApparel * 100) / 100;
+  }
+
+  calcularCompromisoScott(): void {
+    // Primero asegúrate que los otros montos están calculados
+    this.calcularMonto1();
+    this.calcularMonto2();
+    this.calcularCompromisoApparel();
+
+    // Realiza el cálculo una sola vez fuera del bucle
+    this.montoCompromisoScott = (this.my25_monto1 + this.my25_monto2) - this.montoCompromisoApparel;
+
+    // Redondear a 2 decimales
+    this.montoCompromisoScott = Math.round(this.montoCompromisoScott * 100) / 100;
   }
 
   // Método para calcular monto1 (Partner, Partner Elite, Partner Elite Plus)

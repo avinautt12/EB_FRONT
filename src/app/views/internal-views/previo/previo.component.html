@@ -207,9 +207,7 @@
             <td>{{ integral.avance_nov_dic | currency:'USD':'symbol':'1.0-0' }}</td>
             <td>{{ (integral.avance_nov_dic || 0) / (integral.compromiso_nov_dic || 1) | percent:'1.0-0' }}
             <td>{{ integral.compromiso_apparel_syncros_vittoria | currency:'USD':'symbol':'1.0-0' }}</td>
-            <td>{{ (integral.acumulado_syncros || 0) + (integral.acumulado_apparel || 0) + (integral.acumulado_vittoria
-              ||
-              0) | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ (integral.avance_global_apparel_syncros_vittoria) | currency:'USD':'symbol':'1.0-0' }}</td>
             <td>{{ calculoPorcentajeAvanceSynAppVit(integral) }}</td>
             <td>{{ integral.compromiso_jul_ago_app | currency:'USD':'symbol':'1.0-0' }}</td>
             <td>{{ integral.avance_jul_ago_app | currency:'USD':'symbol':'1.0-0' }}</td>

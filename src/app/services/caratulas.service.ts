@@ -204,4 +204,8 @@ export class CaratulasService {
     return this.http.get<any>(`${this.apiUrl}/clientes_a`);
   }
 
+  getClientesEvacB(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/clientes_b`);
+  }
+
 }

@@ -635,6 +635,8 @@ export class PrevioComponent implements OnInit, OnDestroy {
 
       const avanceGlobal = sumaScott + acumuladoSyncros + acumuladoApparel + acumuladoVittoria + acumuladoBold;
 
+      const avanceGlobalApparel = acumuladoSyncros + acumuladoApparel + acumuladoVittoria + acumuladoBold;
+
       return {
         clave: grupo.nombreIntegral,
         zona: clientesGrupo[0]?.zona || '',
@@ -667,6 +669,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
         acumulado_bold: acumuladoBold,
         avance_global_1: avance_global_1,
         avance_global: avanceGlobal,
+        avance_global_apparel_syncros_vittoria: avanceGlobalApparel,
         grupoIntegral: index + 1
       };
     })
@@ -1070,101 +1073,149 @@ export class PrevioComponent implements OnInit, OnDestroy {
 
   private calcularAcumuladoSyncros(cliente: Cliente, facturas: FacturaOdoo[]): number {
     const clave = cliente.clave;
-    const fechaInicio = this.obtenerFechaInicio(cliente); // <-- fecha de inicio real
+    const nombreCliente = cliente.nombre_cliente?.toUpperCase() || '';
+    const fechaInicio = this.obtenerFechaInicio(cliente);
     const fechaFin = new Date('2026-06-30');
 
     const facturasValidas = facturas.filter(factura => {
-      const esClienteCorrecto =
+      // Coincidencia por clave (exacta o con sufijo -CA)
+      const coincideClave =
         factura.contacto_referencia === clave ||
         factura.contacto_referencia === `${clave}-CA`;
 
+      // Coincidencia por nombre (búsqueda aproximada)
+      const coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
+        nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+
+      // Filtros adicionales
       const fechaFactura = new Date(factura.fecha_factura);
       const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
+      const esProductoValido = factura.marca === 'SYNCROS';
 
-      const esProductoValido =
-        factura.marca === 'SYNCROS';
+      // Caso especial para "BROTHERS BIKE"
+      if (clave === 'LC657' || nombreCliente.includes('BROTHERS BIKE')) {
+        return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
+      }
 
-      return esClienteCorrecto && enRangoFechas && esProductoValido;
+      if (clave === 'KC612' || nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ')) {
+        return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
+      }
+
+      return coincideClave && enRangoFechas && esProductoValido;
     });
 
-    return facturasValidas.reduce(
-      (total, factura) => total + (Number(factura.venta_total) || 0),
-      0
+    return this.redondearDecimales(
+      facturasValidas.reduce((total, factura) => total + (Number(factura.venta_total) || 0), 0)
     );
+  }
+
+  // Método genérico para redondear
+  private redondearDecimales(valor: number): number {
+    return Math.round(valor * 100) / 100;
   }
 
   private calcularAcumuladoApparel(cliente: Cliente, facturas: FacturaOdoo[]): number {
     const clave = cliente.clave;
-    const fechaInicio = this.obtenerFechaInicio(cliente); // <-- fecha de inicio real
+    const nombreCliente = cliente.nombre_cliente?.toUpperCase() || '';
+    const fechaInicio = this.obtenerFechaInicio(cliente);
     const fechaFin = new Date('2026-06-30');
 
     const facturasValidas = facturas.filter(factura => {
-      const esClienteCorrecto =
+      const coincideClave =
         factura.contacto_referencia === clave ||
         factura.contacto_referencia === `${clave}-CA`;
 
+      const coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
+        nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+
       const fechaFactura = new Date(factura.fecha_factura);
       const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
+      const esProductoValido = factura.apparel === 'SI';
 
-      const esProductoValido =
-        factura.apparel === 'SI';
+      // Caso especial para Brothers Bike
+      if (clave === 'LC657' || nombreCliente.includes('BROTHERS BIKE')) {
+        return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
+      }
 
-      return esClienteCorrecto && enRangoFechas && esProductoValido;
+      if (clave === 'KC612' || nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ')) {
+        return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
+      }
+
+      return coincideClave && enRangoFechas && esProductoValido;
     });
 
-    return facturasValidas.reduce(
-      (total, factura) => total + (Number(factura.venta_total) || 0),
-      0
+    return this.redondearDecimales(
+      facturasValidas.reduce((total, factura) => total + (Number(factura.venta_total) || 0), 0)
     );
   }
 
   private calcularAcumuladoVittoria(cliente: Cliente, facturas: FacturaOdoo[]): number {
     const clave = cliente.clave;
-    const fechaInicio = this.obtenerFechaInicio(cliente); // <-- fecha de inicio real
+    const nombreCliente = cliente.nombre_cliente?.toUpperCase() || '';
+    const fechaInicio = this.obtenerFechaInicio(cliente);
     const fechaFin = new Date('2026-06-30');
 
     const facturasValidas = facturas.filter(factura => {
-      const esClienteCorrecto =
+      const coincideClave =
         factura.contacto_referencia === clave ||
         factura.contacto_referencia === `${clave}-CA`;
 
+      const coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
+        nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+
       const fechaFactura = new Date(factura.fecha_factura);
       const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
+      const esProductoValido = factura.marca === 'VITTORIA';
 
-      const esProductoValido =
-        factura.marca === 'VITTORIA';
+      // Caso especial para Brothers Bike
+      if (clave === 'LC657' || nombreCliente.includes('BROTHERS BIKE')) {
+        return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
+      }
 
-      return esClienteCorrecto && enRangoFechas && esProductoValido;
+      if (clave === 'KC612' || nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ')) {
+        return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
+      }
+
+      return coincideClave && enRangoFechas && esProductoValido;
     });
 
-    return facturasValidas.reduce(
-      (total, factura) => total + (Number(factura.venta_total) || 0),
-      0
+    return this.redondearDecimales(
+      facturasValidas.reduce((total, factura) => total + (Number(factura.venta_total) || 0), 0)
     );
   }
 
   private calcularAcumuladoBold(cliente: Cliente, facturas: FacturaOdoo[]): number {
     const clave = cliente.clave;
-    const fechaInicio = this.obtenerFechaInicio(cliente); // <-- fecha de inicio real
+    const nombreCliente = cliente.nombre_cliente?.toUpperCase() || '';
+    const fechaInicio = this.obtenerFechaInicio(cliente);
     const fechaFin = new Date('2026-06-30');
 
     const facturasValidas = facturas.filter(factura => {
-      const esClienteCorrecto =
+      const coincideClave =
         factura.contacto_referencia === clave ||
         factura.contacto_referencia === `${clave}-CA`;
 
+      const coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
+        nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+
       const fechaFactura = new Date(factura.fecha_factura);
       const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
+      const esProductoValido = factura.marca === 'BOLD';
 
-      const esProductoValido =
-        factura.marca === 'BOLD';
+      // Caso especial para Brothers Bike
+      if (clave === 'LC657' || nombreCliente.includes('BROTHERS BIKE')) {
+        return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
+      }
 
-      return esClienteCorrecto && enRangoFechas && esProductoValido;
+      if (clave === 'KC612' || nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ')) {
+        return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
+      }
+
+      return coincideClave && enRangoFechas && esProductoValido;
     });
 
-    return facturasValidas.reduce(
-      (total, factura) => total + (Number(factura.venta_total) || 0),
-      0
+    return this.redondearDecimales(
+      facturasValidas.reduce((total, factura) => total + (Number(factura.venta_total) || 0), 0)
     );
   }
 

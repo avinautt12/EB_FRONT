@@ -24,9 +24,10 @@ body {
 
 /* Contenedor principal */
 .caratula-evac-container {
+  position: relative;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 20px;
   background-color: #1e1d1b;
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
@@ -55,12 +56,6 @@ body {
 }
 
 /* Botones */
-.acciones-caratula {
-  display: flex;
-  justify-content: flex-start;
-  margin-bottom: 2rem;
-}
-
 .btn {
   display: inline-flex;
   align-items: center;
@@ -73,39 +68,67 @@ body {
   transition: var(--transition);
   font-size: 0.9rem;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  text-decoration: none;
+  margin-bottom: 20px;
 }
 
 .btn-secondary {
   background-color: #403F3F;
   color: #FFFCF2;
+  transition: all 0.3s ease;
+  border-radius: 8px;
 }
 
 .btn-secondary:hover {
   background-color: #EB5E28;
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
 /* Contenido principal */
 .caratula-content {
-  background: white;
+  background: var(--dark-color);
   padding: 2rem;
   border-radius: var(--border-radius);
-  position: relative;
-  color: #333;
   box-shadow: var(--box-shadow);
+  color: var(--light-color);
 }
 
-/* Fecha en esquina superior derecha */
-.fecha-header {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  text-align: right;
-  font-size: 0.9rem;
+/* Header de fecha mejorado */
+.fecha-header-mejorada {
+  position: relative;
+  text-align: center;
+  padding: 15px;
+  background-color: #f8f8f8;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  /* Espacio antes de la tabla */
+  width: fit-content;
+  margin-left: auto;
+  z-index: 10;
+}
+
+/* Estilos tipográficos (mantén los que ya tienes) */
+.fecha-principal {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 5px;
   color: #333;
-  border-left: 2px solid #333;
-  padding-left: 1rem;
+}
+
+.semana-info-mejorada {
+  font-size: 0.9em;
+  color: #555;
+}
+
+.info-linea {
+  margin: 3px 0;
+}
+
+.fila-header,
+.fila-header-linea {
+  background-color: #555 !important;
+  color: var(--light-color) !important;
 }
 
 .semana-info {
@@ -123,7 +146,8 @@ body {
   margin-bottom: 2rem;
 }
 
-.fila-header, .fila-data {
+.fila-header,
+.fila-data {
   display: grid;
   grid-template-columns: 1fr 1.5fr 1.5fr 1.5fr 1fr;
   gap: 0.5rem;
@@ -151,15 +175,13 @@ body {
 
 /* Categorías */
 .categoria-eb {
-  color: #EB5E28;
+  color: var(--primary-color);
   font-weight: bold;
-  text-align: center;
 }
 
 .categoria-my25 {
   color: #2E86C1;
   font-weight: bold;
-  text-align: center;
 }
 
 /* Colores para valores */
@@ -204,7 +226,7 @@ body {
   margin-bottom: 1rem;
 }
 
-.fila-header-linea, 
+.fila-header-linea,
 .fila-categoria {
   display: grid;
   grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr 1fr;
@@ -241,13 +263,15 @@ body {
 }
 
 /* Alineación de columnas */
-.col-numero, .col-numero-linea {
+.col-numero,
+.col-numero-linea {
   text-align: right;
-  font-family: monospace;
 }
 
-.col-porcentaje, .col-porcentaje-linea {
+.col-porcentaje,
+.col-porcentaje-linea {
   text-align: center;
+  color: #ffffff;
 }
 
 /* Responsivo */
@@ -255,28 +279,201 @@ body {
   .caratula-evac-container {
     padding: 1rem;
   }
-  
+
   .caratula-content {
-    padding: 1rem;
+    position: relative;
+    /* Esto es crucial */
+    width: 100%;
+    min-height: 100vh;
+    /* O ajusta según necesites */
+    padding: 20px;
+    /* Espacio interno general */
   }
-  
-  .fila-header, .fila-data, 
-  .fila-header-linea, .fila-categoria {
+
+  .fila-header,
+  .fila-data,
+  .fila-header-linea,
+  .fila-categoria {
     grid-template-columns: 1fr;
     gap: 0.25rem;
     text-align: left;
   }
-  
-  .fecha-header {
-    position: static;
-    text-align: center;
-    margin-bottom: 1rem;
-    border-left: none;
-    border-bottom: 1px solid #ddd;
-    padding: 1rem 0;
-  }
-  
+
   .avance-proyectado-header {
     text-align: center;
+  }
+}
+
+/* Estilos para la tabla de clientes */
+.seccion-clientes {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: var(--secondary-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+}
+
+.tabla-clientes {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.fila-header-clientes,
+.fila-cliente {
+  display: flex;
+  padding: 12px 0;
+  border-bottom: 1px solid #555;
+}
+
+.fila-header-clientes {
+  font-weight: bold;
+  background-color: #555;
+  color: var(--light-color);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.col-nombre {
+  flex: 2;
+  padding-left: 15px;
+  color: var(--light-color);
+}
+
+.col-nivel {
+  flex: 1;
+  color: var(--light-color);
+}
+
+.col-compromiso,
+.col-acumulado,
+.col-proyectado,
+.col-diferencia {
+  flex: 1.5;
+  text-align: right;
+  padding-right: 15px;
+  color: var(--light-color);
+}
+
+.fila-cliente:hover {
+  background-color: rgba(235, 94, 40, 0.1);
+}
+
+/* Mantener consistencia con estilos existentes */
+.verde {
+  color: var(--success-color);
+  font-weight: 500;
+}
+
+/* Estilos para la nueva columna */
+.col-diferencia {
+  flex: 1.2;
+  text-align: right;
+  padding-right: 15px;
+}
+
+.rojo {
+  color: var(--danger-color);
+  font-weight: 500;
+}
+
+/* Ajuste de anchos para mantener la proporción */
+.col-nombre {
+  flex: 2;
+}
+
+.col-nivel {
+  flex: 0.8;
+
+  /* Estilos generales con tema oscuro */
+  :root {
+    --primary-color: #EB5E28;
+    --secondary-color: #403d39;
+    --success-color: #28a745;
+    --warning-color: #f39c12;
+    --danger-color: #dc3545;
+    --light-color: #FFFCF2;
+    --dark-color: #1e1d1b;
+    --border-radius: 8px;
+    --box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    --transition: all 0.3s ease;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1e1d1b;
+    color: #FFFCF2;
+    line-height: 1.6;
+  }
+
+  /* Contenedor principal */
+  .monitor-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: #1e1d1b;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+  }
+
+  /* Título principal */
+  .monitor-container h2 {
+    color: #EB5E28;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-weight: 700;
+    position: relative;
+    padding-bottom: 0.5rem;
+  }
+
+  .monitor-container h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 4px;
+    background: var(--primary-color);
+    border-radius: 2px;
+  }
+
+  /* Spinner */
+  .spinner-container {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1rem;
+    justify-content: center;
+  }
+
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid #EB5E28;
+    border-top: 3px solid transparent;
+    border-radius: 50%;
+    animation: girar 0.8s linear infinite;
+  }
+
+  .spinner-text {
+    color: #FFFCF2;
+    font-size: 0.95rem;
+  }
+
+  @keyframes girar {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .col-compromiso,
+  .col-acumulado,
+  .col-proyectado {
+    flex: 1.3;
   }
 }
