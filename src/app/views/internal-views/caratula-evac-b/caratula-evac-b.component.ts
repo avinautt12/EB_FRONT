@@ -58,11 +58,87 @@ export class CaratulaEvacBComponent implements OnInit {
         this.clientes = data;
         this.calcularMontos();
         this.loading = false;
+        this.actualizarDatosCaratula();
       },
       error: (error) => {
         this.error = 'Error al cargar los clientes';
         this.loading = false;
         console.error('Error:', error);
+      }
+    });
+  }
+
+  actualizarDatosCaratula(): void {
+    if (this.clientes.length === 0) {
+      console.warn('No hay datos de clientes cargados');
+      return;
+    }
+
+    this.loading = true;
+    this.error = null;
+
+    this.calcularMontos();
+
+    // Calcular valores totales para EB
+    const metaEB = this.clientes.reduce((sum, cliente) => sum + (cliente.compra_minima_anual || 0), 0);
+    const acumuladoEB = this.clientes.reduce((sum, cliente) => sum + (cliente.acumulado_anticipado || 0), 0);
+    const avanceProyectadoEB = this.clientes.reduce((sum, cliente) => {
+      return sum + this.calcularAvanceProyectadoCliente(cliente.compra_minima_anual);
+    }, 0);
+
+    // Calcular porcentajes
+    const porcentajeEB = this.calcularPorcentajeEB();
+    const porcentajeMY25_1 = this.calcularPorcentajeMonto1();
+    const porcentajeMY25_2 = this.calcularPorcentajeMonto2();
+    const porcentajeScott = this.calcularPorcentajeScott();
+    const porcentajeApparel = this.calcularPorcentajeApparel();
+
+    // Preparar datos para enviar
+    const datos = [
+      {
+        categoria: 'EB',
+        meta: metaEB,
+        acumulado_real: acumuladoEB,
+        avance_proyectado: avanceProyectadoEB,
+        porcentaje: parseFloat(porcentajeEB.replace('%', '')) || 0
+      },
+      {
+        categoria: 'MY25',
+        meta: this.my25_monto1,
+        acumulado_real: this.my25_monto3,
+        avance_proyectado: this.avance_proyectado_monto1,
+        porcentaje: parseFloat(porcentajeMY25_1.replace('%', '')) || 0
+      },
+      {
+        categoria: 'MY25_2',
+        meta: this.my25_monto2,
+        acumulado_real: this.my25_monto4,
+        avance_proyectado: this.avance_proyectado_monto2,
+        porcentaje: parseFloat(porcentajeMY25_2.replace('%', '')) || 0
+      },
+      {
+        categoria: 'SCOTT',
+        meta: this.montoCompromisoScott,
+        acumulado_real: this.avanceGlobalScott,
+        avance_proyectado: this.avance_proyectado_scott,
+        porcentaje: parseFloat(porcentajeScott.replace('%', '')) || 0
+      },
+      {
+        categoria: 'APPAREL',
+        meta: this.montoCompromisoApparel,
+        acumulado_real: this.avanceGlobaApparel,
+        avance_proyectado: this.avance_proyectado_apparel,
+        porcentaje: parseFloat(porcentajeApparel.replace('%', '')) || 0
+      }
+    ];
+
+    this.caratulasService.actualizarCaratulaEvacB(datos).subscribe({
+      next: (response) => {
+        this.loading = false;
+      },
+      error: (error) => {
+        this.loading = false;
+        this.error = 'Error al actualizar los datos: ' + (error.error?.error || error.message);
       }
     });
   }

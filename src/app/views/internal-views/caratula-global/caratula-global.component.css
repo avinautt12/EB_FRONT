@@ -286,7 +286,6 @@ body {
 /* Alineación de columnas */
 .col-numero, .col-numero-esp {
   text-align: right;
-  font-family: monospace;
 }
 
 .col-porcentaje, .col-avance {

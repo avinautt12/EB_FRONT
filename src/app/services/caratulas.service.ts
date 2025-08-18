@@ -208,4 +208,29 @@ export class CaratulasService {
     return this.http.get<any>(`${this.apiUrl}/clientes_b`);
   }
 
+  actualizarCaratulaEvacA(datos: any[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/caratula_evac_a`, datos)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  actualizarCaratulaEvacB(datos: any[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/caratula_evac_b`, datos)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  getDatosEvacA(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/datos_evac_a`);
+  }
+
+  getDatosEvacB(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/datos_evac_b`);
+  }
+
+  getDatosPrevio(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/datos_previo`);
+  }
 }

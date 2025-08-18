@@ -11,18 +11,20 @@
 
     <div class="caratula-content">
         <!-- Fecha en la esquina superior derecha -->
-        <div class="fecha-header">
-            <span>16/08/2025</span>
-            <div class="semana-info">
-                <span>33</span>
-                <span>7</span>
+        <div class="fecha-header-mejorada">
+            <div class="fecha-principal">
+                {{ obtenerFechaHoy() }}
+            </div>
+            <div class="semana-info-mejorada">
+                <div class="info-linea">Semana ISO: {{ obtenerSemanaISO() }}</div>
+                <div class="info-linea">Día: {{ obtenerDiaTemporada() }}</div>
             </div>
         </div>
 
         <!-- Sección General -->
         <div class="seccion-general">
             <h3 class="seccion-titulo">a) General</h3>
-            
+
             <div class="tabla-general">
                 <div class="fila-header">
                     <div class="col-categoria">Meta</div>
@@ -36,10 +38,10 @@
                     <div class="col-categoria categoria-comercializadora">
                         <span>Meta Gral. Comercializadora</span>
                     </div>
-                    <div class="col-numero">$ 185,000,000.00</div>
-                    <div class="col-numero positivo">$ 23,557,306.76</div>
-                    <div class="col-numero">$ 24,903,846.15</div>
-                    <div class="col-porcentaje negativo">-5%</div>
+                    <div class="col-numero">{{ metaPrincipal | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero positivo">{{ acumuladoGeneral | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero">{{ avance_proyectado_monto3 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-porcentaje negativo">{{ porcentajeMonto1 | percent:'1.0-0' }}</div>
                 </div>
 
                 <div class="fila-separador"></div>
@@ -48,18 +50,18 @@
                     <div class="col-categoria categoria-cumplimiento">
                         <span>Meta Cumplimiento Categoría</span>
                     </div>
-                    <div class="col-numero">$ 88,130,000.00</div>
-                    <div class="col-numero positivo">$ 14,698,503.99</div>
-                    <div class="col-numero">$ 11,863,653.85</div>
-                    <div class="col-porcentaje positivo">24%</div>
+                    <div class="col-numero">{{ totalMetaMY25 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero positivo">{{ totalAcumulado | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero">{{ avance_proyectado_monto1 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-porcentaje positivo">{{ porcentajeMonto2 | percent:'1.0-0' }}</div>
                 </div>
 
                 <div class="fila-data">
                     <div class="col-categoria"></div>
-                    <div class="col-numero">$ 18,450,000.00</div>
-                    <div class="col-numero positivo">$ 2,291,767.53</div>
-                    <div class="col-numero">$ 2,483,653.85</div>
-                    <div class="col-porcentaje negativo">-8%</div>
+                    <div class="col-numero">{{ totalMetaMY25_2 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero positivo">{{ totalAcumulado_2 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero">{{ avance_proyectado_monto2 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-porcentaje negativo">{{ porcentajeMonto3 | percent:'1.0-0' }}</div>
                 </div>
             </div>
         </div>
@@ -67,7 +69,7 @@
         <!-- Sección Específico -->
         <div class="seccion-especifico">
             <h3 class="seccion-titulo">b) Específico</h3>
-            
+
             <div class="tabla-especifico">
                 <div class="fila-header-especifico">
                     <div class="col-categoria-esp"></div>

@@ -1,18 +1,268 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CaratulasService } from '../../../services/caratulas.service';
+import { MultimarcasService } from '../../../services/multimarcas.service';
 import { HomeBarComponent } from "../../../components/home-bar/home-bar.component";
 import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-caratula-global',
+  standalone: true,
   imports: [HomeBarComponent, CommonModule, RouterModule],
   templateUrl: './caratula-global.component.html',
   styleUrl: './caratula-global.component.css'
 })
-export class CaratulaGlobalComponent {
+export class CaratulaGlobalComponent implements OnInit {
+  totalMetaMY25: number = 0;
+  totalMetaMY25_2: number = 0;
 
-  constructor(private caratulasService: CaratulasService, private router: Router) {}
+  totalAcumulado: number = 0;
+  totalAcumulado_2: number = 0;
 
+  proyectadoMonto1: number = 0;
+  avance_proyectado_monto1: number = 0;
+  avance_proyectado_monto2: number = 0;
+  avance_proyectado_monto3: number = 0;
+
+  semanasTranscurridas: number = 0;
+  semanasEnTemporada: number = 52;
+
+  acumuladoGeneral: number = 0;
+
+  metaPrincipal = 185000000.00;
+
+  porcentajeMonto1: number | null = null;
+  porcentajeMonto2: number | null = null;
+  porcentajeMonto3: number | null = null;
+
+  constructor(
+    private caratulasService: CaratulasService,
+    private router: Router,
+    private multimarcasService: MultimarcasService
+  ) { }
+
+  ngOnInit(): void {
+    this.semanasTranscurridas = this.obtenerSemanasTranscurridas();
+    this.calculateTotalMeta();
+    this.calculateTotalMeta2();
+    this.calculateTotalAcumulado();
+    this.calculateTotalAcumulado2();
+
+    this.calculateAcumuladoGeneral();
+    this.calcularProyectadoMonto3();
+  }
+
+  obtenerFechaHoy(): string {
+    const opciones: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    };
+    return new Date().toLocaleDateString('es-ES', opciones);
+  }
+
+  obtenerDiaTemporada(): number {
+    const semanaISO = this.obtenerSemanaISO();
+    return semanaISO - 26;
+  }
+
+
+  calculateTotalMeta(): void {
+    forkJoin([
+      this.caratulasService.getDatosEvacA(),
+      this.caratulasService.getDatosEvacB()
+    ]).subscribe({
+      next: ([datosA, datosB]) => {
+        const my25A = datosA.find((item: any) => item.categoria === 'MY25');
+        const my25B = datosB.find((item: any) => item.categoria === 'MY25');
+
+        if (my25A && my25B) {
+          this.totalMetaMY25 = my25A.meta + my25B.meta;
+          this.calcularProyectadoMonto1();
+        } else {
+          console.error('No se encontraron datos MY25 en uno o ambos conjuntos');
+        }
+      },
+      error: (err) => {
+        console.error('Error al obtener los datos:', err);
+      }
+    });
+  }
+
+  calculateTotalMeta2(): void {
+    forkJoin([
+      this.caratulasService.getDatosEvacA(),
+      this.caratulasService.getDatosEvacB()
+    ]).subscribe({
+      next: ([datosA, datosB]) => {
+        const my25A = datosA.find((item: any) => item.categoria === 'MY25_2');
+        const my25B = datosB.find((item: any) => item.categoria === 'MY25_2');
+
+        if (my25A && my25B) {
+          this.totalMetaMY25_2 = my25A.meta + my25B.meta;
+          this.calcularProyectadoMonto2();
+        } else {
+          console.error('No se encontraron datos MY25 en uno o ambos conjuntos');
+        }
+      },
+      error: (err) => {
+        console.error('Error al obtener los datos:', err);
+      }
+    });
+  }
+
+  calculateTotalAcumulado(): void {
+    forkJoin([
+      this.caratulasService.getDatosEvacA(),
+      this.caratulasService.getDatosEvacB()
+    ]).subscribe({
+      next: ([datosA, datosB]) => {
+        const my25A = datosA.find((item: any) => item.categoria === 'MY25');
+        const my25B = datosB.find((item: any) => item.categoria === 'MY25');
+
+        if (my25A && my25B) {
+          this.totalAcumulado = my25A.acumulado_real + my25B.acumulado_real;
+          this.calcularPorcentajeMonto2();
+        } else {
+          console.error('No se encontraron datos MY25 en uno o ambos conjuntos');
+        }
+      },
+      error: (err) => {
+        console.error('Error al obtener los datos:', err);
+      }
+    });
+  }
+
+  calculateTotalAcumulado2(): void {
+    forkJoin([
+      this.caratulasService.getDatosEvacA(),
+      this.caratulasService.getDatosEvacB()
+    ]).subscribe({
+      next: ([datosA, datosB]) => {
+        const my25A = datosA.find((item: any) => item.categoria === 'MY25_2');
+        const my25B = datosB.find((item: any) => item.categoria === 'MY25_2');
+
+        if (my25A && my25B) {
+          this.totalAcumulado_2 = my25A.acumulado_real + my25B.acumulado_real;
+          this.calcularPorcentajeMonto3();
+        } else {
+          console.error('No se encontraron datos MY25 en uno o ambos conjuntos');
+        }
+      },
+      error: (err) => {
+        console.error('Error al obtener los datos:', err);
+      }
+    });
+  }
+
+  obtenerSemanaISO(fecha: Date = new Date()): number {
+    const date = new Date(fecha.getTime());
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+    const week1 = new Date(date.getFullYear(), 0, 4);
+    return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+  }
+
+  obtenerSemanasTranscurridas(): number {
+    const semanaActual = this.obtenerSemanaISO();
+    const semanaInicioTemporada = 26;
+
+    if (semanaActual < semanaInicioTemporada) {
+      return (52 - semanaInicioTemporada) + semanaActual;
+    }
+    return semanaActual - semanaInicioTemporada;
+  }
+
+  calcularProyectadoMonto1(): void {
+    if (this.totalMetaMY25 === 0) return;
+
+    this.avance_proyectado_monto1 = (this.semanasTranscurridas / this.semanasEnTemporada) * this.totalMetaMY25;
+    this.avance_proyectado_monto1 = Math.round(this.avance_proyectado_monto1 * 100) / 100;
+    this.calcularPorcentajeMonto1();
+  }
+
+  calcularProyectadoMonto2(): void {
+    if (this.totalMetaMY25_2 === 0) return;
+
+    this.avance_proyectado_monto2 = (this.semanasTranscurridas / this.semanasEnTemporada) * this.totalMetaMY25_2;
+    this.avance_proyectado_monto2 = Math.round(this.avance_proyectado_monto2 * 100) / 100;
+  }
+
+  calcularProyectadoMonto3(): void {
+    if (this.metaPrincipal === 0) return;
+
+    this.avance_proyectado_monto3 = (this.semanasTranscurridas / this.semanasEnTemporada) * this.metaPrincipal;
+    this.avance_proyectado_monto3 = Math.round(this.avance_proyectado_monto3 * 100) / 100;
+  }
+
+  calculateAcumuladoGeneral(): void {
+
+    forkJoin([
+      this.caratulasService.getDatosPrevio(),
+      this.multimarcasService.getMultimarcasTodo()
+    ]).subscribe({
+      next: ([datosPrevio, multimarcas]) => {
+        try {
+          const sumPrevio = datosPrevio.reduce((total: number, item: any) => {
+            return total + (Number(item.acumulado_anticipado) || 0);
+          }, 0);
+
+          const sumMultimarcas = multimarcas.reduce((total: number, item: any) => {
+            return total + (Number(item.avance_global) || 0);
+          }, 0);
+
+          this.acumuladoGeneral = sumPrevio + sumMultimarcas;
+          this.calcularPorcentajeMonto1();
+          console.log('Acumulado calculado:', this.acumuladoGeneral); // Debug
+        } catch (e) {
+          console.error('Error procesando datos:', e);
+        }
+      },
+      error: (err) => {
+        console.error('Error en servicios:', err);
+      }
+    });
+  }
+
+  calcularPorcentajeMonto1(): void {
+    if (this.acumuladoGeneral === null ||
+      this.avance_proyectado_monto3 === null ||
+      this.avance_proyectado_monto3 === 0) {
+      this.porcentajeMonto1 = null;
+      return;
+    }
+
+    const valorCalculado = (this.acumuladoGeneral / this.avance_proyectado_monto3) - 1;
+
+    this.porcentajeMonto1 = Math.round(valorCalculado * 100) / 100;
+  }
+
+    calcularPorcentajeMonto2(): void {
+    if (this.totalAcumulado=== null ||
+      this.avance_proyectado_monto1 === null ||
+      this.avance_proyectado_monto1 === 0) {
+      this.porcentajeMonto1 = null;
+      return;
+    }
+
+    const valorCalculado = (this.totalAcumulado / this.avance_proyectado_monto1) - 1;
+
+    this.porcentajeMonto2 = Math.round(valorCalculado * 100) / 100;
+  }
+
+  calcularPorcentajeMonto3(): void {
+    if (this.totalAcumulado_2=== null ||
+      this.avance_proyectado_monto2 === null ||
+      this.avance_proyectado_monto2 === 0) {
+      this.porcentajeMonto3 = null;
+      return;
+    }
+
+    const valorCalculado = (this.totalAcumulado_2 / this.avance_proyectado_monto2) - 1;
+
+    this.porcentajeMonto3 = Math.round(valorCalculado * 100) / 100;
+  }
 }
