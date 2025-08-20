@@ -3,12 +3,12 @@
 <div class="caratula-evac-container">
     <h2>Carátula EVAC-B</h2>
 
-      <div class="acciones-monitor">
+    <div class="acciones-monitor">
         <button class="btn btn-secondary" [routerLink]="['/inicio-caratulas']">
             <i class="fas fa-arrow-left"></i> Volver
         </button>
     </div>
-    
+
     <div class="caratula-content">
         <!-- Fecha en la esquina superior derecha -->
         <div class="fecha-header-mejorada">
@@ -37,7 +37,7 @@
                 <div class="fila-data">
                     <div class="col-categoria categoria-eb">EB</div>
                     <div class="col-numero">{{ obtenerMetaTotal() }}</div>
-                    <div class="col-numero verde">{{ obtenerAcumuladoTotal() }}</div>
+                    <div class="col-numero verde">{{ acumuladoTotalCalculado || '$0.00' }}</div>
                     <div class="col-numero">{{ obtenerAvanceProyectadoTotalFormateado() }}</div>
                     <div class="col-porcentaje verde-claro">{{ calcularPorcentajeEB() }}</div>
                 </div>

@@ -37,7 +37,7 @@ export class DistribuidoresMultimarcasComponent implements OnInit {
   sugerencias: string[] = [];
   todosLosClientes: { id: number, clave: string, cliente_razon_social: string }[] = [];
 
-  opcionesEvac = ['A', 'B'];
+  opcionesEvac = ['A', 'B', 'C', 'D', 'E'];
 
   constructor(
     private multimarcasService: MultimarcasService,

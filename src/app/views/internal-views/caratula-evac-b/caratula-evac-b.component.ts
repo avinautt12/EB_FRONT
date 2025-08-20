@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CaratulasService } from '../../../services/caratulas.service';
 import { HomeBarComponent } from "../../../components/home-bar/home-bar.component";
+import { MonitorOdooService } from '../../../services/monitor-odoo.service';
 import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
 
@@ -42,11 +43,33 @@ export class CaratulaEvacBComponent implements OnInit {
   avance_proyectado_scott = 0;
   avance_proyectado_apparel = 0;
 
-  constructor(private caratulasService: CaratulasService, private router: Router) { }
+  facturas: any[] = [];
+
+  acumuladoTotalCalculado: string = '$0.00';
+  facturasLoaded: boolean = false;
+
+  constructor(private caratulasService: CaratulasService,
+    private router: Router,
+    private monitorOdooService: MonitorOdooService) { }
 
   ngOnInit(): void {
     this.cargarClientes();
+    this.cargarFacturas();
     this.calcularMontos();
+  }
+
+  cargarFacturas(): void {
+    this.monitorOdooService.getFacturas().subscribe({
+      next: (facturas) => {
+        this.facturas = facturas;
+        this.facturasLoaded = true;
+        this.acumuladoTotalCalculado = this.obtenerAcumuladoTotal();
+      },
+      error: (error) => {
+        console.error('Error al cargar facturas:', error);
+        this.facturasLoaded = true; // Asegurar que no quede en estado de carga
+      }
+    });
   }
 
   cargarClientes(): void {
@@ -275,7 +298,6 @@ export class CaratulaEvacBComponent implements OnInit {
     this.calcularAvanceProyectadoApparel();
     this.calcularPorcentajeScott();
     this.calcularPorcentajeApparel();
-
   }
 
   calcularCompromisoApparel(): void {
@@ -528,7 +550,47 @@ export class CaratulaEvacBComponent implements OnInit {
   }
 
   obtenerAcumuladoTotal(): string {
-    return this.formatearMoneda(this.my25_monto3 + this.my25_monto4);
+    if (!this.facturasLoaded || this.facturas.length === 0) {
+      return this.formatearMoneda(this.my25_monto3 + this.my25_monto4);
+    }
+
+    try {
+      const facturasFiltradas = this.facturas.filter((factura: any) => {
+        // Verificación más robusta de EVAC
+        if (!factura.evac || factura.evac.toString().trim() !== 'B Multimarcas') {
+          return false;
+        }
+
+        // Manejo seguro de fechas
+        let fechaFactura: Date;
+        try {
+          fechaFactura = new Date(factura.fecha_factura);
+          if (isNaN(fechaFactura.getTime())) {
+            console.warn('Fecha inválida:', factura.fecha_factura);
+            return false;
+          }
+        } catch (e) {
+          console.warn('Error al parsear fecha:', factura.fecha_factura, e);
+          return false;
+        }
+
+        const fechaInicio = new Date('2025-07-01T00:00:00');
+        const fechaFin = new Date('2026-06-30T23:59:59');
+
+        return fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
+      });
+
+      const sumaVentaTotal = facturasFiltradas.reduce((suma: number, factura: any) => {
+        return suma + (parseFloat(factura.venta_total) || 0);
+      }, 0);
+
+      const total = this.my25_monto3 + this.my25_monto4 + sumaVentaTotal;
+      return this.formatearMoneda(total);
+
+    } catch (error) {
+      console.error('Error al calcular acumulado:', error);
+      return this.formatearMoneda(this.my25_monto3 + this.my25_monto4);
+    }
   }
 
   formatearMoneda(valor: number): string {

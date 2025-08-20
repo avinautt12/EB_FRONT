@@ -20,10 +20,10 @@ export class DistribuidoresComponent implements OnInit {
   cliente: any = null;
   clienteOriginal: any = null;
 
-  opcionesEvac = ['A', 'B']; // Add this line for EVAC options
+  opcionesEvac = ['A', 'B', 'C', 'D', 'E']; // Add this line for EVAC options
   nuevoCliente = {
     clave: '',
-    evac: 'A', // Changed from zona to evac, with default value
+    evac: 'A', 
     nombre_cliente: '',
     nivel: ''
   };

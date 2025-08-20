@@ -37,22 +37,72 @@ export class CaratulaGlobalComponent implements OnInit {
   porcentajeMonto2: number | null = null;
   porcentajeMonto3: number | null = null;
 
+  metaVittorria: number = 0;
+  metaSyncros: number = 0;
+  metaApparel: number = 0;
+  metaScott: number = 0;
+
+  proyectadoVittoria: number = 0;
+  proyectadoSyncros: number = 0;
+  proyectadoApparel: number = 0;
+  proyectadoScott: number = 0;
+
+  acumuladoScott: number = 0;
+  acumuladoApparel: number = 0;
+
+  porcentajeScott: number | null = null;
+  porcentajeApparel: number | null = null;
+  porcentajeScott_2: number | null = null;
+  porcentajeApparel_2: number | null = null;
+
+  diferencia1: number = 0;
+
   constructor(
     private caratulasService: CaratulasService,
     private router: Router,
     private multimarcasService: MultimarcasService
   ) { }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.semanasTranscurridas = this.obtenerSemanasTranscurridas();
-    this.calculateTotalMeta();
-    this.calculateTotalMeta2();
-    this.calculateTotalAcumulado();
-    this.calculateTotalAcumulado2();
 
-    this.calculateAcumuladoGeneral();
+    // Primero cargar todos los datos necesarios
+    await Promise.all([
+      this.calculateTotalMeta(),
+      this.calculateTotalMeta2(),
+      this.calculateTotalAcumulado(),
+      this.calculateTotalAcumulado2(),
+      this.calculateAcumuladoGeneral(),
+      this.calculateAcumuladoScott(),  // Asegurar que esto se complete
+      this.calculateAcumuladoApparel()
+    ]);
+
+    // Luego calcular metadatos
+    this.calcularMetaVittoria();
+    this.calcularMetaSyncros();
+    await this.calcularMetaApparel(); // Esperar porque es async
+    this.calcularMetaScott();         // Depende de metaApparel
+
+    // Finalmente calcular proyecciones y porcentajes
     this.calcularProyectadoMonto3();
+    this.calcularPorcentajeMonto2();
+    this.calcularProyectadoVittoria();
+    this.calcularProyectadoSyncros();
+    this.calcularProyectadoApparel();
+    this.calcularProyectadoScott();
+    this.calcularPorcentajeScott(); // Ahora se ejecuta al final con todos los datos disponibles
+    this.calcularPorcentajeApparel();
+
+    this.calcularPorcentajeScott_2();
+    this.calcularPorcentajeApparel_2();
+
+    this.calcularDiferencia1();
   }
+
+  calcularDiferencia1(): void {
+    this.diferencia1 = this.acumuladoGeneral - (this.acumuladoScott + this.acumuladoApparel);
+  }
+
 
   obtenerFechaHoy(): string {
     const opciones: Intl.DateTimeFormatOptions = {
@@ -68,7 +118,6 @@ export class CaratulaGlobalComponent implements OnInit {
     const semanaISO = this.obtenerSemanaISO();
     return semanaISO - 26;
   }
-
 
   calculateTotalMeta(): void {
     forkJoin([
@@ -90,6 +139,79 @@ export class CaratulaGlobalComponent implements OnInit {
         console.error('Error al obtener los datos:', err);
       }
     });
+  }
+
+  calcularMetaVittoria(): void {
+    this.metaVittorria = 3655126.16 * 2;
+  }
+
+  calcularMetaSyncros(): void {
+    this.metaSyncros = 4874083.92 * 1.8;
+  }
+
+  calcularMetaApparel(): void {
+    this.caratulasService.getDatosPrevio().subscribe({
+      next: (datosPrevio) => {
+        try {
+          this.metaApparel = datosPrevio.reduce((total: number, item: any) => {
+            return total + (Number(item.compromiso_apparel_syncros_vittoria) || 0);
+          }, 0);
+
+          this.calcularMetaScott();
+          this.calcularProyectadoApparel();
+          this.calcularPorcentajeApparel();
+          this.calcularPorcentajeApparel_2();
+
+        } catch (e) {
+          console.error('Error calculando meta apparel:', e);
+          this.metaApparel = 0;
+          this.calcularMetaScott();
+          this.calcularProyectadoApparel();
+        }
+      },
+      error: (err) => {
+        console.error('Error obteniendo datos previos:', err);
+        this.metaApparel = 0;
+      }
+    });
+  }
+
+  calcularMetaScott(): void {
+    const metaApparelValue = Number(this.metaApparel) || 0;
+
+    this.metaScott = this.metaPrincipal - metaApparelValue;
+
+    this.calcularProyectadoScott();
+    this.calcularPorcentajeScott();
+    this.calcularPorcentajeScott_2();
+  }
+
+  calcularProyectadoVittoria(): void {
+    if (this.metaVittorria === 0) return;
+
+    this.proyectadoVittoria = (this.semanasTranscurridas / this.semanasEnTemporada) * this.metaVittorria;
+    this.proyectadoVittoria = Math.round(this.proyectadoVittoria * 100) / 100;
+  }
+
+  calcularProyectadoSyncros(): void {
+    if (this.metaSyncros === 0) return;
+
+    this.proyectadoSyncros = (this.semanasTranscurridas / this.semanasEnTemporada) * this.metaSyncros;
+    this.proyectadoSyncros = Math.round(this.proyectadoSyncros * 100) / 100;
+  }
+
+  calcularProyectadoApparel(): void {
+    if (this.metaApparel === 0) return;
+
+    this.proyectadoApparel = (this.semanasTranscurridas / this.semanasEnTemporada) * this.metaApparel;
+    this.proyectadoApparel = Math.round(this.proyectadoApparel * 100) / 100;
+  }
+
+  calcularProyectadoScott(): void {
+    if (this.metaScott === 0) return;
+
+    this.proyectadoScott = (this.semanasTranscurridas / this.semanasEnTemporada) * this.metaScott;
+    this.proyectadoScott = Math.round(this.proyectadoScott * 100) / 100;
   }
 
   calculateTotalMeta2(): void {
@@ -199,7 +321,6 @@ export class CaratulaGlobalComponent implements OnInit {
   }
 
   calculateAcumuladoGeneral(): void {
-
     forkJoin([
       this.caratulasService.getDatosPrevio(),
       this.multimarcasService.getMultimarcasTodo()
@@ -215,8 +336,80 @@ export class CaratulaGlobalComponent implements OnInit {
           }, 0);
 
           this.acumuladoGeneral = sumPrevio + sumMultimarcas;
+
           this.calcularPorcentajeMonto1();
-          console.log('Acumulado calculado:', this.acumuladoGeneral); // Debug
+
+        } catch (e) {
+          console.error('Error procesando datos:', e);
+        }
+      },
+      error: (err) => {
+        console.error('Error en servicios:', err);
+      }
+    });
+  }
+
+  calculateAcumuladoScott(): void {
+    forkJoin([
+      this.caratulasService.getDatosPrevio(),
+      this.multimarcasService.getMultimarcasTodo()
+    ]).subscribe({
+      next: ([datosPrevio, multimarcas]) => {
+        try {
+          const sumPrevio = datosPrevio.reduce((total: number, item: any) => {
+            return total + (Number(item.avance_global_scott) || 0);
+          }, 0);
+
+          const sumMultimarcas = multimarcas.reduce((total: number, item: any) => {
+            return total + (Number(item.avance_global_scott) || 0);
+          }, 0);
+
+          this.acumuladoScott = sumPrevio + sumMultimarcas; // Asignación a acumuladoScott
+
+          this.calcularPorcentajeMonto1(); // Si aún necesitas esta función
+          this.calcularPorcentajeScott();  // Y esta también
+          this.calcularPorcentajeScott_2();
+
+          this.calcularDiferencia1();
+
+        } catch (e) {
+          console.error('Error procesando datos:', e);
+        }
+      },
+      error: (err) => {
+        console.error('Error en servicios:', err);
+      }
+    });
+  }
+
+  calculateAcumuladoApparel(): void {
+    forkJoin([
+      this.caratulasService.getDatosPrevio(),
+      this.multimarcasService.getMultimarcasTodo()
+    ]).subscribe({
+      next: ([datosPrevio, multimarcas]) => {
+        try {
+          // Suma en datosPrevio: solo 'avance_global_apparel_syncros_vittoria'
+          const sumPrevio = datosPrevio.reduce((total: number, item: any) => {
+            return total + (Number(item.avance_global_apparel_syncros_vittoria) || 0);
+          }, 0);
+
+          // Suma en multimarcas: 3 campos
+          const sumMultimarcas = multimarcas.reduce((total: number, item: any) => {
+            const sumItem =
+              (Number(item.avance_global_vittoria) || 0) +
+              (Number(item.avance_global_syncros) || 0) +
+              (Number(item.avance_global_apparel) || 0);
+            return total + sumItem;
+          }, 0);
+
+          const totalApparel = sumPrevio + sumMultimarcas;
+
+          this.acumuladoApparel = totalApparel;
+
+          this.calcularPorcentajeApparel();
+          this.calcularPorcentajeApparel_2();
+
         } catch (e) {
           console.error('Error procesando datos:', e);
         }
@@ -240,8 +433,8 @@ export class CaratulaGlobalComponent implements OnInit {
     this.porcentajeMonto1 = Math.round(valorCalculado * 100) / 100;
   }
 
-    calcularPorcentajeMonto2(): void {
-    if (this.totalAcumulado=== null ||
+  calcularPorcentajeMonto2(): void {
+    if (this.totalAcumulado === null ||
       this.avance_proyectado_monto1 === null ||
       this.avance_proyectado_monto1 === 0) {
       this.porcentajeMonto1 = null;
@@ -254,7 +447,7 @@ export class CaratulaGlobalComponent implements OnInit {
   }
 
   calcularPorcentajeMonto3(): void {
-    if (this.totalAcumulado_2=== null ||
+    if (this.totalAcumulado_2 === null ||
       this.avance_proyectado_monto2 === null ||
       this.avance_proyectado_monto2 === 0) {
       this.porcentajeMonto3 = null;
@@ -264,5 +457,51 @@ export class CaratulaGlobalComponent implements OnInit {
     const valorCalculado = (this.totalAcumulado_2 / this.avance_proyectado_monto2) - 1;
 
     this.porcentajeMonto3 = Math.round(valorCalculado * 100) / 100;
+  }
+
+  calcularPorcentajeScott(): void {
+    if (this.proyectadoScott === null || this.proyectadoScott === 0 || this.acumuladoScott === null) {
+      this.porcentajeScott = null;
+      return;
+    }
+
+    // Cálculo: (acumulado/proyectado) - 1 y convertido a porcentaje
+    const porcentaje = ((this.acumuladoScott / this.proyectadoScott) - 1) * 100;
+
+    // Redondear al entero más cercano
+    this.porcentajeScott = Math.round(porcentaje);
+
+  }
+
+  calcularPorcentajeApparel(): void {
+    if (this.proyectadoApparel === null || this.proyectadoApparel === 0 || this.acumuladoApparel === null) {
+      this.porcentajeApparel = null;
+      return;
+    }
+
+    const porcentaje = ((this.acumuladoApparel / this.proyectadoApparel) - 1) * 100;
+
+    this.porcentajeApparel = Math.round(porcentaje);
+
+  }
+
+  calcularPorcentajeScott_2(): void {
+    if (this.metaScott === null || this.metaScott === 0 || this.acumuladoScott === null) {
+      this.porcentajeScott_2 = null; // ✅ Asignar a _2
+      return;
+    }
+
+    const porcentaje = ((this.acumuladoScott / this.metaScott) - 1) * 100;
+    this.porcentajeScott_2 = Math.round(porcentaje); // ✅ Asignar a _2
+  }
+
+  calcularPorcentajeApparel_2(): void {
+    if (this.metaApparel === null || this.metaApparel === 0 || this.acumuladoApparel === null) {
+      this.porcentajeApparel_2 = null; // ✅ Asignar a _2
+      return;
+    }
+
+    const porcentaje = ((this.acumuladoApparel / this.metaApparel) - 1) * 100;
+    this.porcentajeApparel_2 = Math.round(porcentaje); // ✅ Asignar a _2
   }
 }

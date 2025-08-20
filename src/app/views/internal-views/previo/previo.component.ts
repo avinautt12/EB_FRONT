@@ -1101,6 +1101,10 @@ export class PrevioComponent implements OnInit, OnDestroy {
         return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
       }
 
+      if (clave === 'FD324' || nombreCliente.includes('JOSE ANGEL DIAZ CORTES')) {
+        return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
+      }
+
       return coincideClave && enRangoFechas && esProductoValido;
     });
 
@@ -1141,6 +1145,10 @@ export class PrevioComponent implements OnInit, OnDestroy {
         return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
       }
 
+      if (clave === 'FD324' || nombreCliente.includes('JOSE ANGEL DIAZ CORTES')) {
+        return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
+      }
+
       return coincideClave && enRangoFechas && esProductoValido;
     });
 
@@ -1176,6 +1184,10 @@ export class PrevioComponent implements OnInit, OnDestroy {
         return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
       }
 
+      if (clave === 'FD324' || nombreCliente.includes('JOSE ANGEL DIAZ CORTES')) {
+        return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
+      }
+
       return coincideClave && enRangoFechas && esProductoValido;
     });
 
@@ -1208,6 +1220,10 @@ export class PrevioComponent implements OnInit, OnDestroy {
       }
 
       if (clave === 'KC612' || nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ')) {
+        return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
+      }
+
+      if (clave === 'FD324' || nombreCliente.includes('JOSE ANGEL DIAZ CORTES')) {
         return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
       }
 
