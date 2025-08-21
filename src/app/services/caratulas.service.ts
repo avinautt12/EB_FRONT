@@ -33,40 +33,44 @@ export class CaratulasService {
    * @param termino - Término de búsqueda
    * @returns Observable con las sugerencias
    */
-  obtenerSugerencias(termino: string): Observable<SugerenciaCliente[]> {
-    if (!termino || termino.length < 2) {
-      return new Observable(observer => {
-        observer.next([]);
-        observer.complete();
-      });
-    }
-
-    // Usar el endpoint /nombres_caratula para obtener todas las sugerencias
+  obtenerSugerencias(termino?: string): Observable<SugerenciaCliente[]> {
     return this.http.get<any>(`${this.apiUrl}/nombres_caratula`)
       .pipe(
         map(response => {
           console.log('Respuesta sugerencias:', response);
 
           let datos: any[] = [];
-
-          // La respuesta debe ser un array directo según tu Flask endpoint
           if (Array.isArray(response)) {
             datos = response;
           }
 
-          // Filtrar por el término de búsqueda
+          // Si no hay término o está vacío, devolver todos para el cache
+          if (!termino || termino.trim().length === 0) {
+            return datos.map(item => ({
+              clave: item.clave || '',
+              razon_social: item.nombre_cliente || '',
+              nombre_cliente: item.nombre_cliente || '',
+              evac: item.clave || '',
+              nivel_firmado: item.nivel || ''
+            }));
+          }
+
+          // Si hay término, filtrar normalmente
+          if (termino.length < 2) {
+            return [];
+          }
+
           const terminoLower = termino.toLowerCase().trim();
           const resultadosFiltrados = datos.filter(item =>
             item.clave?.toLowerCase().includes(terminoLower) ||
             item.nombre_cliente?.toLowerCase().includes(terminoLower)
           );
 
-          // Mapear a la estructura esperada
           return resultadosFiltrados.slice(0, 10).map(item => ({
             clave: item.clave || '',
             razon_social: item.nombre_cliente || '',
             nombre_cliente: item.nombre_cliente || '',
-            ga400: item.clave || '',
+            evac: item.clave || '',
             nivel_firmado: item.nivel || ''
           }));
         }),

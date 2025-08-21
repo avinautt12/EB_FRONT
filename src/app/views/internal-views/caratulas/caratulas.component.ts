@@ -7,6 +7,8 @@ import { CaratulasService } from '../../../services/caratulas.service';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { Subject, of, EMPTY, Observable } from 'rxjs';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface SugerenciaCliente {
   clave: string;
@@ -68,6 +70,7 @@ interface DatosCliente {
 })
 export class CaratulasComponent implements OnInit {
   @ViewChild('searchInput') searchInput!: ElementRef;
+  @ViewChild('contentToExport', { static: false }) contentToExport!: ElementRef;
 
   terminoBusqueda: string = '';
   sugerenciasFiltradas: SugerenciaCliente[] = [];
@@ -79,19 +82,25 @@ export class CaratulasComponent implements OnInit {
   isLoading = false;
   error: string | null = null;
 
+  loadingCache = false;
+
   private searchSubject = new Subject<string>();
-  private isSearchingDirectly = false; // Flag para distinguir búsqueda directa vs sugerencias
+  private isSearchingDirectly = false;
+
+  private allClientes: SugerenciaCliente[] = [];
+  private cacheLoaded = false;
 
   constructor(private caratulasService: CaratulasService, private router: Router) { }
 
   ngOnInit() {
     this.initializeSearch();
+    this.loadAllClientes();
   }
 
   private initializeSearch() {
     // Configurar búsqueda con debounce para sugerencias
     this.searchSubject.pipe(
-      debounceTime(300),
+      debounceTime(50),
       distinctUntilChanged(),
       switchMap(term => {
         // Si es búsqueda directa, no obtener sugerencias
@@ -100,14 +109,21 @@ export class CaratulasComponent implements OnInit {
           return EMPTY;
         }
 
-        if (!term || term.length < 2) {
+        if (!term || term.length < 1) {
           this.sugerenciasFiltradas = [];
           this.mostrarSugerencias = false;
           return EMPTY;
         }
 
-        // Solo obtener sugerencias si no estamos haciendo búsqueda directa
-        return this.obtenerSugerencias(term);
+        if (this.cacheLoaded && this.allClientes.length > 0) {
+          const resultados = this.filtrarClientesLocalmente(term);
+          this.sugerenciasFiltradas = resultados;
+          this.mostrarSugerencias = resultados.length > 0;
+          return EMPTY; // No llamar al servicio
+        } else {
+          // Llamar al servicio si no tenemos cache
+          return this.obtenerSugerencias(term);
+        }
       }),
       catchError(error => {
         console.error('Error en búsqueda de sugerencias:', error);
@@ -116,13 +132,53 @@ export class CaratulasComponent implements OnInit {
         return of([]);
       })
     ).subscribe(sugerencias => {
-      this.sugerenciasFiltradas = sugerencias || [];
-      this.mostrarSugerencias = this.sugerenciasFiltradas.length > 0;
+      if (sugerencias && sugerencias.length > 0) {
+        this.sugerenciasFiltradas = sugerencias;
+        this.mostrarSugerencias = true;
+      }
     });
   }
 
+  private loadAllClientes() {
+    // Llamar sin parámetro o con string vacío para obtener todos
+    this.caratulasService.obtenerSugerencias('').subscribe({
+      next: (clientes) => {
+        this.allClientes = clientes || [];
+        this.cacheLoaded = true;
+      },
+      error: (error) => {
+        console.error('Error al cargar cache de clientes:', error);
+        this.cacheLoaded = false;
+        // Fallback: intentar cargar con un carácter que devuelva muchos resultados
+        this.caratulasService.obtenerSugerencias('A').subscribe({
+          next: (clientesFallback) => {
+            this.allClientes = clientesFallback || [];
+            this.cacheLoaded = true;
+          },
+          error: (errorFallback) => {
+            console.error('Error en fallback también:', errorFallback);
+            this.cacheLoaded = false;
+          }
+        });
+      }
+    });
+  }
+  private filtrarClientesLocalmente(termino: string): SugerenciaCliente[] {
+    const terminoLower = termino.toLowerCase();
+
+    return this.allClientes.filter(cliente => {
+      const clave = (cliente.clave || '').toLowerCase();
+      const razonSocial = (cliente.razon_social || '').toLowerCase();
+      const nombreCliente = (cliente.nombre_cliente || '').toLowerCase();
+
+      // Buscar coincidencias en clave, razón social o nombre
+      return clave.includes(terminoLower) ||
+        razonSocial.includes(terminoLower) ||
+        nombreCliente.includes(terminoLower);
+    }).slice(0, 10); // Limitar a 10 resultados para mejor performance
+  }
+
   private obtenerSugerencias(termino: string): Observable<SugerenciaCliente[]> {
-    // Asegúrate de que este método del servicio esté implementado correctamente
     return this.caratulasService.obtenerSugerencias(termino);
   }
 
@@ -137,22 +193,41 @@ export class CaratulasComponent implements OnInit {
       this.sugerenciasFiltradas = [];
       this.mostrarSugerencias = false;
       this.caratulaSeleccionada = false;
+      this.isSearchingDirectly = false; // RESETEAR FLAG
       return;
     }
 
-    // Emitir al subject para obtener sugerencias con debounce
-    // Solo si no estamos en modo de búsqueda directa
+    // RESETEAR el flag cuando el usuario empiece a escribir de nuevo
+    if (this.caratulaSeleccionada) {
+      this.isSearchingDirectly = false;
+      this.caratulaSeleccionada = false;
+      this.datosCliente = null;
+    }
+
+    // Si tenemos cache cargado, filtrar inmediatamente
+    if (this.cacheLoaded && !this.isSearchingDirectly) {
+      const resultados = this.filtrarClientesLocalmente(valor);
+      this.sugerenciasFiltradas = resultados;
+      this.mostrarSugerencias = resultados.length > 0;
+      return; // No continuar con el Subject
+    }
+
+    // Emitir al subject para búsqueda con servicio
     if (!this.isSearchingDirectly) {
       this.searchSubject.next(valor);
     }
   }
 
   onFocusInput() {
-    // Solo mostrar sugerencias si hay datos y no estamos cargando
-    if (this.terminoBusqueda.trim().length >= 2 &&
-      this.sugerenciasFiltradas.length > 0 &&
-      !this.isLoading) {
-      this.mostrarSugerencias = true;
+    const termino = this.terminoBusqueda.trim();
+    if (termino.length >= 1 && !this.caratulaSeleccionada) {
+      if (this.cacheLoaded) {
+        const resultados = this.filtrarClientesLocalmente(termino);
+        this.sugerenciasFiltradas = resultados;
+        this.mostrarSugerencias = resultados.length > 0;
+      } else if (this.sugerenciasFiltradas.length > 0) {
+        this.mostrarSugerencias = true;
+      }
     }
   }
 
@@ -172,6 +247,17 @@ export class CaratulasComponent implements OnInit {
     if (event.key === 'Escape') {
       this.mostrarSugerencias = false;
       this.searchInput.nativeElement.blur();
+    }
+
+    // Agregar navegación con flechas en sugerencias
+    if (event.key === 'ArrowDown' && this.mostrarSugerencias) {
+      event.preventDefault();
+      // Aquí podrías implementar navegación con teclado
+    }
+
+    if (event.key === 'ArrowUp' && this.mostrarSugerencias) {
+      event.preventDefault();
+      // Aquí podrías implementar navegación con teclado
     }
   }
 
@@ -210,31 +296,23 @@ export class CaratulasComponent implements OnInit {
     this.error = null;
     this.mostrarSugerencias = false;
 
-    // Validar que tenemos al menos un parámetro
     if (!clave && !nombreCliente) {
       this.error = 'Se requiere clave o nombre del cliente';
       this.isLoading = false;
+      this.isSearchingDirectly = false; // RESETEAR
       return;
     }
 
-    console.log('Buscando cliente:', { clave, nombreCliente });
-
     this.caratulasService.buscarCaratulas(clave, nombreCliente).subscribe({
       next: (response: any) => {
-        console.log('Respuesta del servicio:', response);
 
-        // Manejar diferentes tipos de respuesta
         let datos: any = null;
 
-        // Verificar si la respuesta tiene una estructura específica
         if (response && response.success && response.data) {
-          // Estructura: { success: true, data: [...] }
           datos = Array.isArray(response.data) ? response.data[0] : response.data;
         } else if (Array.isArray(response)) {
-          // Respuesta directa como array
           datos = response[0];
         } else if (response && typeof response === 'object') {
-          // Respuesta directa como objeto
           datos = response;
         }
 
@@ -242,18 +320,19 @@ export class CaratulasComponent implements OnInit {
           this.datosCliente = this.procesarDatosCliente(datos);
           this.caratulaSeleccionada = true;
           this.error = null;
-          console.log('Datos procesados:', this.datosCliente);
         } else {
           this.datosCliente = null;
           this.caratulaSeleccionada = false;
           this.error = 'No se encontraron datos para este cliente';
         }
+
         this.isLoading = false;
+        // IMPORTANTE: Resetear flag después de completar búsqueda
+        this.isSearchingDirectly = false;
       },
       error: (error: any) => {
         console.error('Error al obtener datos del cliente:', error);
 
-        // Mejorar el manejo de errores
         let mensajeError = 'No se encontraron datos para este cliente';
         if (error.error && error.error.message) {
           mensajeError = error.error.message;
@@ -269,13 +348,29 @@ export class CaratulasComponent implements OnInit {
         this.datosCliente = null;
         this.caratulaSeleccionada = false;
         this.isLoading = false;
+        // IMPORTANTE: Resetear flag en caso de error también
+        this.isSearchingDirectly = false;
       }
     });
   }
 
-  private procesarDatosCliente(datos: any): DatosCliente {
-    console.log('Procesando datos desde Flask:', datos);
+  onInputKeyup(event: KeyboardEvent) {
+    // Si el usuario presiona Backspace o Delete y el campo queda vacío
+    if ((event.key === 'Backspace' || event.key === 'Delete') && !this.terminoBusqueda.trim()) {
+      this.resetearBusqueda();
+    }
+  }
 
+  private resetearBusqueda() {
+    this.datosCliente = null;
+    this.sugerenciasFiltradas = [];
+    this.mostrarSugerencias = false;
+    this.caratulaSeleccionada = false;
+    this.isSearchingDirectly = false;
+    this.error = null;
+  }
+
+  private procesarDatosCliente(datos: any): DatosCliente {
     // Mapear los campos exactos que devuelve tu API Flask
     const metaScott = this.parseNumber(datos.compromiso_scott || '0');
     const avanceScott = this.parseNumber(datos.avance_global_scott || '0');
@@ -365,7 +460,7 @@ export class CaratulasComponent implements OnInit {
     this.mostrarSugerencias = false;
     this.error = null;
     this.caratulaSeleccionada = false;
-    this.isSearchingDirectly = false;
+    this.isSearchingDirectly = false; // IMPORTANTE: Resetear flag
 
     if (this.searchInput) {
       this.searchInput.nativeElement.focus();
@@ -450,15 +545,206 @@ export class CaratulasComponent implements OnInit {
     // 3. Si estamos DENTRO del periodo
     return 'En curso';
   }
-  
+
+  getImporteFaltanteScottJulAgo(): number {
+    if (!this.datosCliente) return 0;
+    const diferencia = this.datosCliente.compromiso_jul_ago - this.datosCliente.avance_jul_ago;
+    return Math.max(0, diferencia);
+  }
+
+  getSobranteScottJulAgo(): number {
+    if (!this.datosCliente) return 0;
+    const diferencia = this.datosCliente.compromiso_jul_ago - this.datosCliente.avance_jul_ago;
+    return diferencia < 0 ? Math.abs(diferencia) : 0;
+  }
+
+  getImporteFaltanteApparelJulAgo(): number {
+    if (!this.datosCliente) return 0;
+    const diferencia = this.datosCliente.compromiso_jul_ago_app - this.datosCliente.avance_jul_ago_app;
+    return Math.max(0, diferencia);
+  }
+
+  getSobranteApparelJulAgo(): number {
+    if (!this.datosCliente) return 0;
+    const diferencia = this.datosCliente.compromiso_jul_ago_app - this.datosCliente.avance_jul_ago_app;
+    return diferencia < 0 ? Math.abs(diferencia) : 0;
+  }
+
+  getImporteFaltanteScottSepOct(): number {
+    if (!this.datosCliente) return 0;
+    const diferencia = this.datosCliente.compromiso_sep_oct - this.datosCliente.avance_sep_oct;
+    return Math.max(0, diferencia);
+  }
+
+  getSobranteScottSepOct(): number {
+    if (!this.datosCliente) return 0;
+    const diferencia = this.datosCliente.compromiso_sep_oct - this.datosCliente.avance_sep_oct;
+    return diferencia < 0 ? Math.abs(diferencia) : 0;
+  }
+
+  getImporteFaltanteApparelSepOct(): number {
+    if (!this.datosCliente) return 0;
+    const diferencia = this.datosCliente.compromiso_sep_oct_app - this.datosCliente.avance_sep_oct_app;
+    return Math.max(0, diferencia);
+  }
+
+  getSobranteApparelSepOct(): number {
+    if (!this.datosCliente) return 0;
+    const diferencia = this.datosCliente.compromiso_sep_oct_app - this.datosCliente.avance_sep_oct_app;
+    return diferencia < 0 ? Math.abs(diferencia) : 0;
+  }
+
+  getImporteFaltanteScottNovDic(): number {
+    if (!this.datosCliente) return 0;
+    const diferencia = this.datosCliente.compromiso_nov_dic - this.datosCliente.avance_nov_dic;
+    return Math.max(0, diferencia);
+  }
+
+  getSobranteScottNovDic(): number {
+    if (!this.datosCliente) return 0;
+    const diferencia = this.datosCliente.compromiso_nov_dic - this.datosCliente.avance_nov_dic;
+    return diferencia < 0 ? Math.abs(diferencia) : 0;
+  }
+
+  getImporteFaltanteApparelNovDic(): number {
+    if (!this.datosCliente) return 0;
+    const diferencia = this.datosCliente.compromiso_nov_dic_app - this.datosCliente.avance_nov_dic_app;
+    return Math.max(0, diferencia);
+  }
+
+  getSobranteApparelNovDic(): number {
+    if (!this.datosCliente) return 0;
+    const diferencia = this.datosCliente.compromiso_nov_dic_app - this.datosCliente.avance_nov_dic_app;
+    return diferencia < 0 ? Math.abs(diferencia) : 0;
+  }
+
   generarPDF() {
     if (!this.datosCliente) {
       this.error = 'No hay datos para generar PDF';
       return;
     }
 
-    console.log('Generando PDF para:', this.datosCliente.clave);
-    // Aquí implementarías la lógica para generar el PDF
-    // Podrías llamar a otro método del servicio o usar una librería como jsPDF
+    // Obtener el elemento que contiene solo la información a exportar
+    const element = document.getElementById('pdf-content');
+
+    if (!element) {
+      this.error = 'No se puede generar el PDF en este momento';
+      return;
+    }
+
+    // Añadir clase específica para PDF
+    element.classList.add('pdf-mode');
+
+    // Ocultar elementos que no deben aparecer en el PDF
+    this.hideElementsForPDF();
+
+    // Pequeño retraso para asegurar que el DOM se actualice
+    setTimeout(() => {
+      html2canvas(element, {
+        scale: 2, // Mayor calidad
+        useCORS: true,
+        logging: false
+      }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 180; // Reducir ancho para que no ocupe toda la página
+        const pageHeight = 295; // Alto A4 en mm
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        // Centrar horizontalmente (210 - 180)/2 = 15mm de margen
+        pdf.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        // Añadir páginas adicionales si el contenido es muy largo
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+
+        // Restaurar los elementos ocultos y quitar clase PDF
+        this.showElementsAfterPDF();
+        element.classList.remove('pdf-mode');
+
+        // Guardar el PDF
+        const clave = this.datosCliente ? this.datosCliente.clave : 'cliente';
+        pdf.save(`Caratula_${clave}_${new Date().toISOString().split('T')[0]}.pdf`);
+      }).catch(error => {
+        console.error('Error al generar PDF:', error);
+        this.error = 'Error al generar el PDF';
+        this.showElementsAfterPDF();
+        element.classList.remove('pdf-mode');
+      });
+    }, 500);
+  }
+
+  private hideElementsForPDF() {
+    // Ocultar elementos que no deben aparecer en el PDF
+    const elementsToHide = [
+      '.search-section',
+      '.acciones-monitor',
+      '.home-bar-container',
+      'app-home-bar'
+    ];
+
+    elementsToHide.forEach(selector => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(el => {
+        (el as HTMLElement).style.display = 'none';
+      });
+    });
+  }
+
+  private showElementsAfterPDF() {
+    // Mostrar elementos que fueron ocultos para el PDF
+    const elementsToShow = [
+      '.search-section',
+      '.acciones-monitor',
+      '.home-bar-container',
+      'app-home-bar'
+    ];
+
+    elementsToShow.forEach(selector => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(el => {
+        (el as HTMLElement).style.display = '';
+      });
+    });
+  }
+
+  getMesActual(): number {
+    return new Date().getMonth() + 1; // getMonth() devuelve 0-11, sumamos 1
+  }
+
+  // Función para determinar si debe mostrar el período Sep-Oct
+  mostrarPeriodoSepOct(): boolean {
+    const mesActual = this.getMesActual();
+    // Mostrar si estamos en septiembre (9) o después
+    return mesActual >= 9;
+  }
+
+  // Función para determinar si debe mostrar el período Nov-Dic
+  mostrarPeriodoNovDic(): boolean {
+    const mesActual = this.getMesActual();
+    // Mostrar si estamos en noviembre (11) o después
+    return mesActual >= 11;
+  }
+
+  // Función alternativa más específica si quieres controlar por rangos exactos
+  mostrarPeriodoPorFechas(): { sepOct: boolean, novDic: boolean } {
+    const hoy = new Date();
+    const mes = hoy.getMonth() + 1;
+    const dia = hoy.getDate();
+
+    return {
+      // Sep-Oct: mostrar desde el 1 de septiembre
+      sepOct: mes >= 9,
+
+      // Nov-Dic: mostrar desde el 1 de noviembre  
+      novDic: mes >= 11
+    };
   }
 }

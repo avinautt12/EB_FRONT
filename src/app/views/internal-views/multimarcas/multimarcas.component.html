@@ -4,7 +4,9 @@
     <h2>Multimarcas</h2>
 
     <div class="acciones-monitor">
-        <button class="btn" [routerLink]="['/previo']"><i class="fas fa-table"></i> Previo</button>
+        <button class="btn btn-secondary" [routerLink]="['/previo']">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
         <button class="btn" (click)="exportarAExcel()"><i class="fas fa-file-excel"></i> Exportar a Excel</button>
         <button class="btn" [routerLink]="['/distribuidores-multimarcas']"><i class="fas fa-users"></i> Distribuidores Multimarcas</button>
     </div>
