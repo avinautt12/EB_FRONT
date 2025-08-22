@@ -20,12 +20,14 @@ export class DistribuidoresComponent implements OnInit {
   cliente: any = null;
   clienteOriginal: any = null;
 
-  opcionesEvac = ['A', 'B', 'C', 'D', 'E']; // Add this line for EVAC options
+  opcionesEvac = ['A', 'B', 'C', 'D', 'E', 'GO']; // Add this line for EVAC options
   nuevoCliente = {
     clave: '',
-    evac: 'A', 
+    evac: 'A',
     nombre_cliente: '',
-    nivel: ''
+    nivel: '',
+    f_inicio: '',
+    f_fin: ''
   };
 
   mostrarFormulario = false;
@@ -64,7 +66,7 @@ export class DistribuidoresComponent implements OnInit {
       return;
     }
 
-    this.mostrarFormulario = false; // Asegurarse que el formulario esté cerrado
+    this.mostrarFormulario = false;
     this.cargando = true;
     this.intentoBusqueda = true;
 
@@ -75,6 +77,14 @@ export class DistribuidoresComponent implements OnInit {
       next: (res) => {
         this.cliente = res;
         if (this.cliente) {
+          // FORMATEAR FECHAS PARA LOS INPUTS DATE
+          if (this.cliente.f_inicio) {
+            this.cliente.f_inicio = this.formatearFechaParaInput(this.cliente.f_inicio);
+          }
+          if (this.cliente.f_fin) {
+            this.cliente.f_fin = this.formatearFechaParaInput(this.cliente.f_fin);
+          }
+
           this.clienteOriginal = JSON.stringify(this.cliente);
         }
         this.cargando = false;
@@ -84,6 +94,26 @@ export class DistribuidoresComponent implements OnInit {
         this.cargando = false;
       }
     });
+  }
+
+  // Añadir este método helper
+  private formatearFechaParaInput(fecha: string): string {
+    // Si ya está en formato YYYY-MM-DD, dejarlo igual
+    if (fecha && fecha.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return fecha;
+    }
+
+    // Si es un objeto Date o string con formato diferente, convertirlo
+    try {
+      const dateObj = new Date(fecha);
+      if (!isNaN(dateObj.getTime())) {
+        return dateObj.toISOString().split('T')[0];
+      }
+    } catch (e) {
+      console.error('Error formateando fecha:', e);
+    }
+
+    return fecha; // Devolver original si no se puede formatear
   }
 
   mostrarFormularioAgregar() {
@@ -132,25 +162,49 @@ export class DistribuidoresComponent implements OnInit {
     this.busqueda = sugerencia;
     this.sugerencias = [];
 
-    // const match = sugerencia.match(/\(([^)]+)\)$/);
-    // const clave = match ? match[1] : sugerencia;
+    const match = sugerencia.match(/\(([^)]+)\)$/);
+    const clave = match ? match[1] : sugerencia;
 
-    // this.clientesService.buscarCliente(clave).subscribe({
-    //   next: (res) => {
-    //     this.cliente = res;
-    //   },
-    //   error: () => {
-    //     this.cliente = null;
-    //   }
-    // });
+    this.clientesService.buscarCliente(clave).subscribe({
+      next: (res) => {
+        this.cliente = res;
+        if (this.cliente) {
+          // FORMATEAR FECHAS TAMBIÉN AQUÍ
+          if (this.cliente.f_inicio) {
+            this.cliente.f_inicio = this.formatearFechaParaInput(this.cliente.f_inicio);
+          }
+          if (this.cliente.f_fin) {
+            this.cliente.f_fin = this.formatearFechaParaInput(this.cliente.f_fin);
+          }
+          this.clienteOriginal = JSON.stringify(this.cliente);
+        }
+      },
+      error: () => {
+        this.cliente = null;
+      }
+    });
   }
 
   agregarCliente() {
-    this.clientesService.agregarCliente(this.nuevoCliente).subscribe({
+    // Validar que las fechas tengan formato correcto
+    const clienteParaEnviar = {
+      ...this.nuevoCliente,
+      f_inicio: this.nuevoCliente.f_inicio || null,
+      f_fin: this.nuevoCliente.f_fin || null
+    };
+
+    this.clientesService.agregarCliente(clienteParaEnviar).subscribe({
       next: () => {
         this.alertaService.mostrarExito('Cliente agregado correctamente');
         this.mostrarFormulario = false;
-        this.nuevoCliente = { clave: '', evac: 'A', nombre_cliente: '', nivel: '' };
+        this.nuevoCliente = {
+          clave: '',
+          evac: 'A',
+          nombre_cliente: '',
+          nivel: '',
+          f_inicio: '',
+          f_fin: ''
+        };
       },
       error: (err) => this.alertaService.mostrarError(err.error?.error || 'Error al agregar')
     });
@@ -161,9 +215,18 @@ export class DistribuidoresComponent implements OnInit {
   }
 
   confirmarEdicion() {
-    this.clientesService.editarCliente(this.cliente.id, this.cliente).subscribe({
+    // Crear una copia del cliente con las fechas en formato correcto para el backend
+    const clienteParaEnviar = {
+      ...this.cliente,
+      f_inicio: this.cliente.f_inicio ? this.cliente.f_inicio : null,
+      f_fin: this.cliente.f_fin ? this.cliente.f_fin : null
+    };
+
+    this.clientesService.editarCliente(this.cliente.id, clienteParaEnviar).subscribe({
       next: () => {
         this.alertaService.mostrarExito('Cliente editado correctamente');
+
+        // Actualizar el original con las fechas formateadas
         this.clienteOriginal = JSON.stringify(this.cliente);
         this.confirmacionVisible = false;
       },

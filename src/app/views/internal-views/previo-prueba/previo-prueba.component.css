@@ -1,6 +1,7 @@
 /* === CONTENEDOR PRINCIPAL === */
 .monitor-container {
   min-height: 100vh;
+  /* Ocupa al menos toda la altura de la pantalla */
   padding: 2rem 3rem;
   box-sizing: border-box;
   background-color: #252422;
@@ -93,7 +94,7 @@ h2 {
 .tabla-previo thead th {
   border: 1px solid #444;
   font-size: 0.90rem;
-  color: #ffffff;
+  color: #EB5E28;
   padding: 0;
   text-align: center;
 }
@@ -464,130 +465,4 @@ input[type=number]::-webkit-inner-spin-button {
   /* Ocupa el espacio restante */
   min-width: 80px;
   /* Ancho mínimo para el filtro */
-}
-
-/* === ESTILOS DE CUMPLIMIENTO VISUAL === */
-
-/* Contenedor para celdas de porcentaje con indicador visual */
-.percentage-cell {
-  position: relative;
-  padding: 0.4rem !important;
-  min-width: 80px;
-}
-
-/* Barra de progreso dentro de la celda */
-.progress-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  border-radius: 4px;
-  opacity: 0.3;
-  z-index: 1;
-  transition: all 0.3s ease;
-}
-
-/* Texto del porcentaje encima de la barra */
-.progress-text {
-  position: relative;
-  z-index: 2;
-  font-weight: 600;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-}
-
-/* Colores para diferentes rangos de cumplimiento */
-.progress-excellent {
-  background-color: rgba(34, 197, 94, 0.4);
-}
-
-.progress-very-good {
-  background-color: rgba(132, 204, 22, 0.4);
-}
-
-.progress-good {
-  background-color: rgba(234, 179, 8, 0.4);
-}
-
-.progress-warning {
-  background-color: rgba(249, 115, 22, 0.4);
-}
-
-.progress-danger {
-  background-color: rgba(239, 68, 68, 0.4);
-}
-
-/* Texto según el cumplimiento */
-.text-excellent {
-  color: #22c55e !important;
-}
-
-.text-very-good {
-  color: #84cc16 !important;
-}
-
-.text-good {
-  color: #eab308 !important;
-}
-
-.text-warning {
-  color: #f97316 !important;
-}
-
-.text-danger {
-  color: #ef4444 !important;
-}
-
-/* Iconos de estado */
-.status-icon {
-  margin-left: 4px;
-  font-size: 0.7rem;
-}
-
-/* Hover effects para las barras */
-.percentage-cell:hover .progress-bar {
-  opacity: 0.6;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-/* Estilos especiales para metas anuales e iniciales */
-.meta-anual {
-  background: #1d57a9;
-}
-
-.meta-inicial {
-  background: linear-gradient(45deg, rgba(0, 92, 200, 0.1), rgba(0, 92, 200, 0.05));
-  border-left: 3px solid #005CC8;
-}
-
-/* Agrupación visual para compromisos relacionados */
-.grupo-scott {
-  border-top: 2px solid rgba(255, 107, 44, 0.5);
-  background: rgba(255, 107, 44, 0.05);
-}
-
-.grupo-apparel {
-  border-top: 2px solid rgba(132, 204, 22, 0.5);
-  background: rgba(132, 204, 22, 0.05);
-}
-
-/* Leyenda de colores */
-.compliance-legend {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  font-size: 0.8rem;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.legend-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
 }

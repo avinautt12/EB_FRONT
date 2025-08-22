@@ -24,6 +24,7 @@ import { ProyeccionControlComponent } from './views/internal-views/proyeccion-co
 import { DistribuidoresMultimarcasComponent } from './views/internal-views/distribuidores-multimarcas/distribuidores-multimarcas.component';
 import { InicioCaratulasComponent } from './views/internal-views/inicio-caratulas/inicio-caratulas.component';
 import { CaratulaGlobalComponent } from './views/internal-views/caratula-global/caratula-global.component';
+import { PrevioPruebaComponent } from './views/internal-views/previo-prueba/previo-prueba.component';
 
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
@@ -35,6 +36,7 @@ export const routes: Routes = [
   { path: 'home', component: HomeComponent, canActivate: [authGuard] },
   { path: 'monitor', component: MonitorComponent, canActivate: [authGuard] },
   { path: 'previo', component: PrevioComponent, canActivate: [authGuard] },
+  { path: 'previo-prueba', component: PrevioPruebaComponent, canActivate: [authGuard] },
   { path: 'multimarcas', component: MultimarcasComponent, canActivate: [authGuard] },
   { path: 'metas', component: MetasComponent, canActivate: [authGuard] },
   { path: 'distribuidores', component: DistribuidoresComponent, canActivate: [authGuard] },

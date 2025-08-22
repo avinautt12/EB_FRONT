@@ -71,15 +71,13 @@ interface ClienteConAcumulado extends Cliente {
 }
 
 @Component({
-  selector: 'app-previo',
+  selector: 'app-previo-prueba',
   standalone: true,
   imports: [HomeBarComponent, RouterModule, CommonModule, FormsModule, FiltroPrevioComponent],
-  templateUrl: './previo.component.html',
-  styleUrl: './previo.component.css'
+  templateUrl: './previo-prueba.component.html',
+  styleUrl: './previo-prueba.component.css'
 })
-export class PrevioComponent implements OnInit, OnDestroy {
-  Math = Math;
-
+export class PrevioPruebaComponent implements OnInit, OnDestroy {
   @Input() tipo: string = '';
   @Input() placeholder: string = '';
   @Input() opciones: any[] = [];
@@ -686,12 +684,6 @@ export class PrevioComponent implements OnInit, OnDestroy {
     })
 
     return todosClientesProcesados;
-  }
-
-  calcularAvanceGlobal(cliente: any): number {
-    const avanceGlobal = (cliente.avance_global_scott || 0) +
-      (cliente.avance_global_apparel_syncros_vittoria || 0);
-    return avanceGlobal;
   }
 
   calcularCompraMinimaPorNivel(nivel: string): number {
@@ -1590,73 +1582,5 @@ export class PrevioComponent implements OnInit, OnDestroy {
       this.tipoAlerta = 'error';
       this.cargando = false;
     }
-  }
-
-  getPercentageValue(cliente: any, tipo: string): number {
-    switch (tipo) {
-      case 'anual':
-        return ((cliente?.avance_global_scott || 0) +
-          (cliente?.acumulado_syncros || 0) +
-          (cliente?.acumulado_apparel || 0) +
-          (cliente?.acumulado_vittoria || 0)) / (cliente?.compra_minima_anual || 1) * 100;
-      case 'inicial':
-        return ((cliente.avance_global_scott || 0) +
-          (cliente.acumulado_syncros || 0) +
-          (cliente.acumulado_apparel || 0) +
-          (cliente.acumulado_vittoria || 0)) / (cliente.compra_minima_inicial || 1) * 100;
-      case 'scott':
-        return (cliente.avance_global_scott || 0) / (cliente.compromiso_scott || 1) * 100;
-      case 'scott_jul_ago':
-        return (cliente.avance_jul_ago || 0) / (cliente.compromiso_jul_ago || 1) * 100;
-      case 'scott_sep_oct':
-        return (cliente.avance_sep_oct || 0) / (cliente.compromiso_sep_oct || 1) * 100;
-      case 'scott_nov_dic':
-        return (cliente.avance_nov_dic || 0) / (cliente.compromiso_nov_dic || 1) * 100;
-      case 'apparel_global':
-        return ((cliente.acumulado_syncros || 0) +
-          (cliente.acumulado_apparel || 0) +
-          (cliente.acumulado_vittoria || 0)) / (cliente.compromiso_apparel_syncros_vittoria || 1) * 100;
-      case 'apparel_jul_ago':
-        return (cliente.avance_jul_ago_app || 0) / (cliente.compromiso_jul_ago_app || 1) * 100;
-      case 'apparel_sep_oct':
-        return (cliente.avance_sep_oct_app || 0) / (cliente.compromiso_sep_oct_app || 1) * 100;
-      case 'apparel_nov_dic':
-        return (cliente.avance_nov_dic_app || 0) / (cliente.compromiso_nov_dic_app || 1) * 100;
-      default:
-        return 0;
-    }
-  }
-
-  getProgressClass(percentage: number): string {
-    if (percentage >= 100) return 'progress-excellent';
-    if (percentage >= 80) return 'progress-very-good';
-    if (percentage >= 60) return 'progress-good';
-    if (percentage >= 40) return 'progress-warning';
-    return 'progress-danger';
-  }
-
-  getTextClass(percentage: number): string {
-    if (percentage >= 100) return 'text-excellent';
-    if (percentage >= 80) return 'text-very-good';
-    if (percentage >= 60) return 'text-good';
-    if (percentage >= 40) return 'text-warning';
-    return 'text-danger';
-  }
-
-  getStatusIcon(percentage: number): string {
-    if (percentage >= 100) return 'fa-trophy status-icon';
-    if (percentage >= 80) return 'fa-arrow-up status-icon';
-    if (percentage >= 60) return 'fa-arrow-right status-icon';
-    if (percentage >= 40) return 'fa-exclamation-triangle status-icon';
-    return 'fa-exclamation-circle status-icon';
-  }
-
-  getTooltipText(cliente: any, tipo: string): string {
-    const percentage = this.getPercentageValue(cliente, tipo);
-    if (percentage >= 100) return 'Excelente cumplimiento';
-    if (percentage >= 80) return 'Muy buen progreso';
-    if (percentage >= 60) return 'Buen avance';
-    if (percentage >= 40) return 'Requiere atención';
-    return 'Crítico - necesita mejora';
   }
 }

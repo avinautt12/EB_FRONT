@@ -36,6 +36,12 @@
             <option *ngFor="let m of nivelesDisponibles" [value]="m.nivel">{{ m.nivel }}</option>
         </select>
 
+        <label class="distribuidores-label">Fecha Inicio:</label>
+        <input class="distribuidores-input" type="date" [(ngModel)]="nuevoCliente.f_inicio" />
+
+        <label class="distribuidores-label">Fecha Fin:</label>
+        <input class="distribuidores-input" type="date" [(ngModel)]="nuevoCliente.f_fin" />
+
         <div class="distribuidores-botones">
             <button class="distribuidores-btn" (click)="agregarCliente()">Agregar</button>
         </div>
@@ -85,6 +91,12 @@
         <select class="distribuidores-input" [(ngModel)]="cliente.nivel" required>
             <option *ngFor="let m of nivelesDisponibles" [value]="m.nivel">{{ m.nivel }}</option>
         </select>
+
+        <label class="distribuidores-label">Fecha Inicio:</label>
+        <input class="distribuidores-input" type="date" [(ngModel)]="cliente.f_inicio" />
+
+        <label class="distribuidores-label">Fecha Fin:</label>
+        <input class="distribuidores-input" type="date" [(ngModel)]="cliente.f_fin" />
 
         <div class="distribuidores-botones">
             <button class="distribuidores-btn" [disabled]="!hayCambios()" (click)="confirmacionVisible = true">
