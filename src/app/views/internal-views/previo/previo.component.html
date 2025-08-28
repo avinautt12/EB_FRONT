@@ -14,7 +14,6 @@
     </button>
   </div>
 
-  <!-- Agregar esto después de .acciones-monitor y antes de *ngIf="cargando" -->
   <div class="compliance-legend">
     <div class="legend-item">
       <div class="legend-color progress-excellent"></div>
@@ -81,7 +80,7 @@
             </div>
           </th>
 
-          <th style="min-width: 140px;">Acumulado Compra Anticipada</th>
+          <th style="min-width: 160px;">Acumulado Compra Anticipada</th>
 
           <th style="min-width: 140px;">
             <div class="filter-horizontal-container">
@@ -93,39 +92,39 @@
             </div>
           </th>
           <th style="min-width: 110px;">Nivel Cierre Compra Inicial</th>
-          <th style="min-width: 120px;">Compra Mínima ANUAL</th>
+          <th style="min-width: 150px;">Compra Mínima ANUAL</th>
           <th style="min-width: 80px;">%</th>
-          <th style="min-width: 120px;"> Compra Mínima INICIAL</th>
-          <th style="min-width: 80px;">Avance GLOBAL</th>
+          <th style="min-width: 150px;"> Compra Mínima INICIAL</th>
+          <th style="min-width: 150px;">Avance GLOBAL</th>
           <th style="min-width: 80px;">%</th>
-          <th style="min-width: 120px;">Compromiso SCOTT</th>
-          <th style="min-width: 120px;">Avance GLOBAL SCOTT</th>
+          <th style="min-width: 150px;">Compromiso BICICLETAS</th>
+          <th style="min-width: 150px;">Avance GLOBAL BICICLETAS</th>
           <th style="min-width: 80px;">%</th>
-          <th style="min-width: 100px;">Compromiso JUL-AGO</th>
-          <th style="min-width: 100px;">Avance</th>
+          <th style="min-width: 150px;">Compromiso JUL-AGO</th>
+          <th style="min-width: 150px;">Avance</th>
           <th style="min-width: 80px;">%</th>
-          <th style="min-width: 100px;">Compromiso SEPT-OCT</th>
-          <th style="min-width: 120px;">Avance</th>
+          <th style="min-width: 150px;">Compromiso SEPT-OCT</th>
+          <th style="min-width: 150px;">Avance</th>
           <th style="min-width: 80px;">%</th>
-          <th style="min-width: 100px;">Compromiso NOV-DIC</th>
-          <th style="min-width: 120px;">Avance</th>
+          <th style="min-width: 150px;">Compromiso NOV-DIC</th>
+          <th style="min-width: 150px;">Avance</th>
           <th style="min-width: 80px;">%</th>
-          <th style="min-width: 120px;">Compromiso APPAREL, SYNCROS, VITTORIA</th>
-          <th style="min-width: 120px;">Avance GLOBAL</th>
+          <th style="min-width: 150px;">Compromiso APPAREL, SYNCROS, VITTORIA</th>
+          <th style="min-width: 150px;">Avance GLOBAL</th>
           <th style="min-width: 80px;">%</th>
-          <th style="min-width: 100px;">Compromiso JUL-AGO</th>
-          <th style="min-width: 120px;">Avance</th>
+          <th style="min-width: 150px;">Compromiso JUL-AGO</th>
+          <th style="min-width: 150px;">Avance</th>
           <th style="min-width: 80px;">%</th>
-          <th style="min-width: 100px;">Compromiso SEPT-OCT</th>
-          <th style="min-width: 120px;">Avance</th>
+          <th style="min-width: 150px;">Compromiso SEPT-OCT</th>
+          <th style="min-width: 150px;">Avance</th>
           <th style="min-width: 80px;">%</th>
-          <th style="min-width: 100px;">Compromiso NOV-DIC</th>
-          <th style="min-width: 120px;">Avance</th>
+          <th style="min-width: 150px;">Compromiso NOV-DIC</th>
+          <th style="min-width: 150px;">Avance</th>
           <th style="min-width: 80px;">%</th>
-          <th style="min-width: 100px;">SYNCROS Acumulado</th>
-          <th style="min-width: 120px;">APPAREL Acumulado</th>
-          <th style="min-width: 120px;">VITTORIA Acumulado</th>
-          <th style="min-width: 120px;">BOLD Acumulado</th>
+          <th style="min-width: 130px;">SYNCROS Acumulado</th>
+          <th style="min-width: 130px;">APPAREL Acumulado</th>
+          <th style="min-width: 130px;">VITTORIA Acumulado</th>
+          <th style="min-width: 130px;">BOLD Acumulado</th>
         </tr>
       </thead>
       <tbody>
@@ -133,7 +132,9 @@
         <tr *ngFor="let cliente of clientesPaginados">
           <td>{{ cliente.clave }}</td>
           <td>{{ cliente.evac }}</td>
-          <td>{{ cliente.nombre_cliente }}</td>
+          <td class="nombre-cliente" (mouseenter)="mostrarTooltip($event, cliente)" (mouseleave)="ocultarTooltip()">
+            {{ cliente.nombre_cliente }}
+          </td>
           <td>{{ cliente.acumulado_anticipado | currency:'USD':'symbol':'1.2-2' }}</td>
           <td>{{ cliente.nivel }}</td>
           <td></td>
@@ -257,7 +258,7 @@
             <td>{{ integral.compromiso_jul_ago| currency:'USD':'symbol':'1.0-0' }}</td>
             <td>{{ integral.avance_jul_ago | currency:'USD':'symbol':'1.0-0' }}</td>
             <td>{{ (integral.avance_jul_ago || 0) / (integral.compromiso_jul_ago || 1) | percent:'1.0-0' }}</td>
-            <td>{{ integral.compromiso_sep_oct | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td>{{ integral.compromiso_sep_oct | currency:'USD':'symbol:'1.0-0' }}</td>
             <td>{{ integral.avance_sep_oct | currency:'USD':'symbol':'1.0-0' }}</td>
             <td>{{ (integral.avance_sep_oct || 0) / (integral.compromiso_sep_oct || 1) | percent:'1.0-0' }}</td>
             <td>{{ integral.compromiso_nov_dic | currency:'USD':'symbol':'1.0-0' }}</td>
@@ -281,6 +282,46 @@
             <td>{{ integral.acumulado_bold | currency:'USD':'symbol':'1.0-0' }}</td>
           </tr>
         </div>
+
+        <tr class="fila-totales">
+          <td colspan="3" class="texto-total">TOTALES</td>
+          <td>{{ totales.acumulado_anticipado | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td></td>
+          <td></td>
+          <td>{{ totales.compra_minima_anual | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td></td>
+          <td>{{ totales.compra_minima_inicial | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ totales.avance_global | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td></td>
+          <td>{{ totales.compromiso_scott | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ totales.avance_global_scott | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td></td>
+          <td>{{ totales.compromiso_jul_ago | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ totales.avance_jul_ago | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td></td>
+          <td>{{ totales.compromiso_sep_oct | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ totales.avance_sep_oct | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td></td>
+          <td>{{ totales.compromiso_nov_dic | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ totales.avance_nov_dic | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td></td>
+          <td>{{ totales.compromiso_apparel_syncros_vittoria | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ totales.avance_global_apparel_syncros_vittoria | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td></td>
+          <td>{{ totales.compromiso_jul_ago_app | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ totales.avance_jul_ago_app | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td></td>
+          <td>{{ totales.compromiso_sep_oct_app | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ totales.avance_sep_oct_app | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td></td>
+          <td>{{ totales.compromiso_nov_dic_app | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ totales.avance_nov_dic_app | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td></td>
+          <td>{{ totales.acumulado_syncros | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ totales.acumulado_apparel | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ totales.acumulado_vittoria | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ totales.acumulado_bold | currency:'USD':'symbol':'1.2-2' }}</td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -298,3 +339,6 @@
     <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">Última »</button>
   </div>
 </div>
+
+<app-tooltip *ngIf="clienteParaTooltip" [cliente]="clienteParaTooltip" [position]="tooltipPosition">
+</app-tooltip>

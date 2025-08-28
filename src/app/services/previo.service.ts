@@ -22,4 +22,8 @@ export class PrevioService {
   obtenerPrevio(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/obtener_previo`);
   }
+
+  obtenerPrevioSinIntegrales(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/obtener_previo_int`);
+  }
 }

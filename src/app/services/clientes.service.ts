@@ -57,4 +57,8 @@ export class ClientesService {
   eliminarCliente(id: number): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/clientes/eliminar/${id}`);
   }
+
+  ObtenerFechasClientes(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/clientes_fechas`);
+  }
 }

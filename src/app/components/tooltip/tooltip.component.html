@@ -1,0 +1,11 @@
+<div class="custom-tooltip debug-border" 
+     *ngIf="showTooltip"
+     [style.left.px]="position.x + 10"
+     [style.top.px]="getTooltipTopPosition()"
+     [class.tooltip-above]="shouldShowAbove()">
+  <div class="tooltip-content debug-bg">
+    <div *ngIf="!tooltipContent">Cargando información...</div>
+    <div *ngIf="tooltipContent" [innerHTML]="tooltipContent"></div>
+    <div>Cliente: {{cliente?.nombre_cliente}}</div>
+  </div>
+</div>

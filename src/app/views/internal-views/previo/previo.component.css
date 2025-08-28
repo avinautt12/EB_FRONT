@@ -115,7 +115,7 @@ h2 {
   padding: 0.6rem;
   text-align: center;
   color: #fff;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   word-break: break-word;
 }
 
@@ -590,4 +590,23 @@ input[type=number]::-webkit-inner-spin-button {
   width: 16px;
   height: 16px;
   border-radius: 3px;
+}
+
+/* Estilos para la fila de totales */
+.fila-totales {
+  background-color: #58585b;
+  border-top: 2px solid #4b4e52;
+}
+
+.fila-totales td {
+  padding: 8px;
+  text-align: center;
+  font-size: 1rem;
+  background-color: #c46b2c;
+}
+
+.texto-total {
+  text-align: center !important;
+  font-size: 1rem;
+  color: #007bff;
 }
