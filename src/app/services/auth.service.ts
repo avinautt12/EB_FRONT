@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, BehaviorSubject } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -10,6 +11,10 @@ export class AuthService {
 
   private logoutSubject = new Subject<void>();
   public onLogout$ = this.logoutSubject.asObservable();
+
+  private authState = new BehaviorSubject<boolean>(this.isLoggedIn());
+  public authState$ = this.authState.asObservable();
+
   private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) { }
@@ -18,13 +23,25 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/registro`, user);
   }
 
-  login(credentials: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, credentials);
+   login(credentials: any): Observable<{ token: string }> {
+    return this.http.post<{ token: string }>(`${this.apiUrl}/login`, credentials).pipe(
+      tap(response => {
+        if (response.token) {
+          this.setToken(response.token);
+          this.authState.next(true); // ← Emitir nuevo estado
+        }
+      })
+    );
   }
 
   logout(): Observable<any> {
-    this.logoutSubject.next();
-    return this.http.post(`${this.apiUrl}/logout`, {});
+    return this.http.post(`${this.apiUrl}/logout`, {}).pipe(
+      tap(() => {
+        this.clearToken();
+        this.logoutSubject.next();
+        this.authState.next(false); // ← Emitir nuevo estado
+      })
+    );
   }
 
   enviarCodigoActivacion(correo: string): Observable<any> {

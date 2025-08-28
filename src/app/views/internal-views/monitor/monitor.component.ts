@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, ViewChild, ElementRef, HostListener, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -42,6 +42,8 @@ interface Factura {
 export class MonitorComponent {
   @ViewChild('inputArchivo') inputArchivo!: ElementRef<HTMLInputElement>;
   @ViewChild('dialogoExportar') dialogoExportar!: ElementRef;
+
+  @Output() onInit = new EventEmitter<void>(); 
 
   facturas: Factura[] = [];
   facturasFiltradas: Factura[] = [];
@@ -152,6 +154,8 @@ export class MonitorComponent {
 
   ngOnInit() {
     this.obtenerFacturas();
+
+    this.onInit.emit();
   }
 
   obtenerFacturas() {

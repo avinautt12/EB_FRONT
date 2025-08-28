@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CaratulasService } from '../../../services/caratulas.service';
 import { HomeBarComponent } from "../../../components/home-bar/home-bar.component";
@@ -23,11 +23,13 @@ interface CaratulaData {
 
 @Component({
   selector: 'app-caratula-evac-a',
+  standalone: true,
   imports: [CommonModule, RouterModule, HomeBarComponent],
   templateUrl: './caratula-evac-a.component.html',
   styleUrl: './caratula-evac-a.component.css'
 })
 export class CaratulaEvacAComponent implements OnInit {
+  @Output() onInit = new EventEmitter<void>();
 
   meta = ''
   clientes: any[] = [];
@@ -55,6 +57,7 @@ export class CaratulaEvacAComponent implements OnInit {
   ngOnInit(): void {
     this.cargarClientes();
     this.calcularMontos();
+    this.onInit.emit();
   }
 
   cargarClientes(): void {

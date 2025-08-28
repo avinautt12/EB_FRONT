@@ -87,6 +87,8 @@ interface ClienteConAcumulado extends Cliente {
 })
 
 export class PrevioComponent implements OnInit, OnDestroy {
+  @Output() onInit = new EventEmitter<void>();
+
   datosPrevio: any[] = [];
 
   tooltipPosition: { x: number, y: number } = { x: 0, y: 0 };
@@ -297,9 +299,13 @@ export class PrevioComponent implements OnInit, OnDestroy {
 
       this.aplicarFiltros();
       this.cargando = false;
+      this.onInit.emit();
+
     }).catch(error => {
       console.error('Error al cargar datos:', error);
       this.cargando = false;
+
+      this.onInit.emit();
     });
 
     this.previoService.obtenerPrevio().subscribe({
