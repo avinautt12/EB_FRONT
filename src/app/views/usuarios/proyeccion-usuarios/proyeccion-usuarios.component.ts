@@ -61,12 +61,14 @@ export class ProyeccionUsuariosComponent implements OnInit {
   }
 
   manejarClickCrear() {
-    if (this.yaProyectado) {
-      this.alertaService.mostrarError('Ya has enviado tu proyección. Solo puedes realizarla una vez.');
-      return;
-    }
+    // if (this.yaProyectado) {
+    //   this.alertaService.mostrarError('Ya has enviado tu proyección. Solo puedes realizarla una vez.');
+    //   return;
+    // }
 
-    this.router.navigate(['/usuarios/crear-proyeccion']);
+    this.alertaService.mostrarError('Ya no se pueden enviar proyecciones.');
+
+    //this.router.navigate(['/usuarios/crear-proyeccion']);
   }
 
 

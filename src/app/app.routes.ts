@@ -25,6 +25,7 @@ import { DistribuidoresMultimarcasComponent } from './views/internal-views/distr
 import { InicioCaratulasComponent } from './views/internal-views/inicio-caratulas/inicio-caratulas.component';
 import { CaratulaGlobalComponent } from './views/internal-views/caratula-global/caratula-global.component';
 import { PrevioPruebaComponent } from './views/internal-views/previo-prueba/previo-prueba.component';
+import { CaratulaUsuariosComponent } from './views/usuarios/caratula-usuarios/caratula-usuarios.component';
 
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
@@ -57,5 +58,6 @@ export const routes: Routes = [
   { path: 'usuarios/proyeccion-compras', component: ProyeccionUsuariosComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/crear-proyeccion', component: CrearProyeccionUsuariosComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/proyeccion-historial', component: ProyeccionHistorialComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/caratula', component: CaratulaUsuariosComponent, canActivate: [usuarioGuard] },
   { path: '**', redirectTo: '' }
 ];

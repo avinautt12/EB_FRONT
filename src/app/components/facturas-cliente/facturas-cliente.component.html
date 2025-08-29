@@ -1,0 +1,93 @@
+<div class="modal-overlay" [class.open]="isOpen" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h2>Facturas del Cliente</h2>
+            <button class="close-button" (click)="closeModal()">×</button>
+        </div>
+
+        <div class="modal-body">
+            <!-- Barra de acciones -->
+            <div class="acciones-monitor">
+                <button (click)="exportarExcel()">
+                    <i class="fas fa-file-export"></i> Exportar Excel
+                </button>
+            </div>
+
+            <!-- Spinner carga -->
+            <div *ngIf="cargando" class="cargando-spinner">
+                <div class="spinner"></div>
+                <p>Cargando facturas...</p>
+            </div>
+
+            <!-- Mensaje sin datos -->
+            <div *ngIf="!cargando && facturasPaginadas.length === 0" class="sin-datos">
+                <p>No se encontraron facturas para este cliente.</p>
+            </div>
+
+            <!-- Tabla facturas -->
+            <div *ngIf="!cargando && facturasPaginadas.length > 0" class="tabla-contenedor">
+                <table class="tabla-facturas">
+                    <thead>
+                        <tr>
+                            <th>Número Factura</th>
+                            <th>Referencia</th>
+                            <th>Producto</th>
+                            <th>Ref. Contacto</th>
+                            <th>Nombre Contacto</th>
+                            <th>Fecha</th>
+                            <th>Precio Unit.</th>
+                            <th>Cantidad</th>
+                            <th>Total</th>
+                            <th>Marca</th>
+                            <th>Subcategoría</th>
+                            <th>ERIDE</th>
+                            <th>APPAREL</th>
+                            <th>EVAC</th>
+                            <th>Categoría</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let factura of facturasPaginadas">
+                            <td>{{ factura.numero_factura }}</td>
+                            <td>{{ factura.referencia_interna }}</td>
+                            <td>{{ factura.nombre_producto }}</td>
+                            <td>{{ factura.contacto_referencia }}</td>
+                            <td>{{ factura.contacto_nombre }}</td>
+                            <td>{{ formatearFecha(factura.fecha_factura) }}</td>
+                            <td>{{ formatearMoneda(factura.precio_unitario) }}</td>
+                            <td>{{ factura.cantidad }}</td>
+                            <td>{{ formatearMoneda(factura.venta_total) }}</td>
+                            <td>{{ factura.marca }}</td>
+                            <td>{{ factura.subcategoria }}</td>
+                            <td>{{ factura.eride }}</td>
+                            <td>{{ factura.apparel }}</td>
+                            <td>{{ factura.evac }}</td>
+                            <td>{{ factura.categoria_producto }}</td>
+                            <td>{{ factura.estado_factura }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            <div class="paginador" *ngIf="facturasFiltradas.length > elementosPorPagina">
+                <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1">
+                    <i class="fas fa-angle-double-left"></i>
+                </button>
+                <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">
+                    <i class="fas fa-angle-left"></i>
+                </button>
+                <span class="info-pagina">
+                    Página <strong>{{ paginaActual }}</strong> de <strong>{{ totalPaginas }}</strong>
+                </span>
+                <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">
+                    <i class="fas fa-angle-right"></i>
+                </button>
+                <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">
+                    <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

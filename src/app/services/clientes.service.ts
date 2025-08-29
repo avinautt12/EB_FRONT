@@ -40,8 +40,8 @@ export class ClientesService {
 
   // Agregar un nuevo cliente
   agregarCliente(cliente: { clave: string; evac: string; nombre_cliente: string; nivel: string }): Observable<any> {
-  return this.http.post(`${this.apiUrl}/clientes/agregar`, cliente);
-}
+    return this.http.post(`${this.apiUrl}/clientes/agregar`, cliente);
+  }
 
   // Editar cliente por ID
   editarCliente(id: number, cliente: {
@@ -60,5 +60,12 @@ export class ClientesService {
 
   ObtenerFechasClientes(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/clientes_fechas`);
+  }
+
+  getFacturasCliente(): Observable<any> {
+    const token = localStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
+
+    return this.http.get<any>(`${this.apiUrl}/facturas-cliente`, { headers });
   }
 }
