@@ -212,6 +212,10 @@ export class CaratulasService {
     return this.http.get<any>(`${this.apiUrl}/clientes_b`);
   }
 
+  getClientesEvacGO(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/clientes_go`);
+  }
+
   actualizarCaratulaEvacA(datos: any[]): Observable<any> {
     return this.http.post(`${this.apiUrl}/caratula_evac_a`, datos)
       .pipe(

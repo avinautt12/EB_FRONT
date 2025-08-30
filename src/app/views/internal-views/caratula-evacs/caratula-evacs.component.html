@@ -1,0 +1,163 @@
+<app-home-bar></app-home-bar>
+
+<div class="caratula-evac-container">
+    <h2>Carátula EVACs</h2>
+
+    <div class="acciones-monitor">
+        <button class="btn btn-secondary" [routerLink]="['/inicio-caratulas']">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+    </div>
+
+    <!-- Fecha en la esquina superior derecha -->
+    <div class="fecha-header-mejorada">
+        <div class="fecha-principal">
+            {{ obtenerFechaHoy() }}
+        </div>
+        <div class="semana-info-mejorada">
+            <div class="info-linea">Semana ISO: {{ obtenerSemanaISO() }}</div>
+            <div class="info-linea">Día: {{ obtenerDiaTemporada() }}</div>
+        </div>
+    </div>
+
+    <!-- Filtros de fecha -->
+    <div class="filtros-fecha">
+        <h3>Filtrar por fecha</h3>
+        <div class="controles-fecha">
+            <div class="control-fecha">
+                <label for="fechaInicio">Desde:</label>
+                <input type="date" id="fechaInicio" [(ngModel)]="fechaInicio" (change)="aplicarFiltros()">
+            </div>
+            <div class="control-fecha">
+                <label for="fechaFin">Hasta:</label>
+                <input type="date" id="fechaFin" [(ngModel)]="fechaFin" (change)="aplicarFiltros()">
+            </div>
+            <button class="btn btn-filtrar" (click)="aplicarFiltros()">
+                <i class="fas fa-filter"></i> Aplicar Filtro
+            </button>
+        </div>
+    </div>
+
+    <!-- Totales generales -->
+    <div class="totales-generales" *ngIf="!loading">
+        <h3>Totales Generales</h3>
+        <div class="grid-totales">
+            <div class="total-item">
+                <span class="total-label">Total General:</span>
+                <span class="total-valor">{{ totalGeneral | currency:'USD':'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="total-item">
+                <span class="total-label">SCOTT (No Apparel):</span>
+                <span class="total-valor">{{ totalScott | currency:'USD':'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="total-item">
+                <span class="total-label">APPAREL:</span>
+                <span class="total-valor">{{ totalApparel | currency:'USD':'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="total-item">
+                <span class="total-label">VITTORIA:</span>
+                <span class="total-valor">{{ totalVittoria | currency:'USD':'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="total-item">
+                <span class="total-label">SYNCROS:</span>
+                <span class="total-valor">{{ totalSyncros | currency:'USD':'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="total-item">
+                <span class="total-label">BOLD:</span>
+                <span class="total-valor">{{ totalBold | currency:'USD':'symbol':'1.2-2' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spinner de carga -->
+    <div class="spinner-container" *ngIf="loading">
+        <div class="spinner"></div>
+        <span class="spinner-text">Cargando clientes...</span>
+    </div>
+
+    <div class="spinner-container" *ngIf="loadingFacturas">
+        <div class="spinner"></div>
+        <span class="spinner-text">Cargando facturas...</span>
+    </div>
+
+    <!-- Contenedor de las tres tablas -->
+    <div class="tablas-evacs-container" *ngIf="!loading && !loadingFacturas">
+        <!-- Tabla EVAC A -->
+        <div class="tabla-evac">
+            <h3 class="titulo-tabla-evac">EVAC A</h3>
+            <div class="contenedor-tabla">
+                <div class="fila-header-tabla">
+                    <div class="columna-nombre">NOMBRE DEL CLIENTE</div>
+                    <div class="columna-total">Total</div>
+                    <div class="columna-total">SCOTT</div>
+                    <div class="columna-total">APPAREL</div>
+                    <div class="columna-total">VITTORIA</div>
+                    <div class="columna-total">SYNCROS</div>
+                    <div class="columna-total">BOLD</div>
+                </div>
+                <div class="fila-cliente-tabla" *ngFor="let cliente of clientesA">
+                    <div class="columna-nombre">{{ cliente.nombre_cliente }}</div>
+                    <div class="columna-total">{{ cliente.totalGeneral | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="columna-total">{{ cliente.totalScott | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="columna-total">{{ cliente.totalApparel | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="columna-total">{{ cliente.totalVittoria | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="columna-total">{{ cliente.totalSyncros | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="columna-total">{{ cliente.totalBold | currency:'USD':'symbol':'1.2-2' }}</div>
+                </div>
+                <div class="total-clientes">Total: {{ clientesA.length }} clientes</div>
+            </div>
+        </div>
+
+        <!-- Tabla EVAC B -->
+        <div class="tabla-evac">
+            <h3 class="titulo-tabla-evac">EVAC B</h3>
+            <div class="contenedor-tabla">
+                <div class="fila-header-tabla">
+                    <div class="columna-nombre">NOMBRE DEL CLIENTE</div>
+                    <div class="columna-total">Total</div>
+                    <div class="columna-total">SCOTT</div>
+                    <div class="columna-total">APPAREL</div>
+                    <div class="columna-total">VITTORIA</div>
+                    <div class="columna-total">SYNCROS</div>
+                    <div class="columna-total">BOLD</div>
+                </div>
+                <div class="fila-cliente-tabla" *ngFor="let cliente of clientesB">
+                    <div class="columna-nombre">{{ cliente.nombre_cliente }}</div>
+                    <div class="columna-total">{{ cliente.totalGeneral | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="columna-total">{{ cliente.totalScott | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="columna-total">{{ cliente.totalApparel | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="columna-total">{{ cliente.totalVittoria | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="columna-total">{{ cliente.totalSyncros | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="columna-total">{{ cliente.totalBold | currency:'USD':'symbol':'1.2-2' }}</div>
+                </div>
+                <div class="total-clientes">Total: {{ clientesB.length }} clientes</div>
+            </div>
+        </div>
+
+        <!-- Tabla EVAC GO -->
+        <div class="tabla-evac">
+            <h3 class="titulo-tabla-evac">EVAC GO</h3>
+            <div class="contenedor-tabla">
+                <div class="fila-header-tabla">
+                    <div class="columna-nombre">NOMBRE DEL CLIENTE</div>
+                    <div class="columna-total">Total</div>
+                    <div class="columna-total">SCOTT</div>
+                    <div class="columna-total">APPAREL</div>
+                    <div class="columna-total">VITTORIA</div>
+                    <div class="columna-total">SYNCROS</div>
+                    <div class="columna-total">BOLD</div>
+                </div>
+                <div class="fila-cliente-tabla" *ngFor="let cliente of clientesGO">
+                    <div class="columna-nombre">{{ cliente.nombre_cliente }}</div>
+                    <div class="columna-total">{{ cliente.totalGeneral | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="columna-total">{{ cliente.totalScott | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="columna-total">{{ cliente.totalApparel | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="columna-total">{{ cliente.totalVittoria | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="columna-total">{{ cliente.totalSyncros | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="columna-total">{{ cliente.totalBold | currency:'USD':'symbol':'1.2-2' }}</div>
+                </div>
+                <div class="total-clientes">Total: {{ clientesGO.length }} distribuidores</div>
+            </div>
+        </div>
+    </div>
+</div>

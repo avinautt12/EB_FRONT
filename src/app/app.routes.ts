@@ -26,6 +26,7 @@ import { InicioCaratulasComponent } from './views/internal-views/inicio-caratula
 import { CaratulaGlobalComponent } from './views/internal-views/caratula-global/caratula-global.component';
 import { PrevioPruebaComponent } from './views/internal-views/previo-prueba/previo-prueba.component';
 import { CaratulaUsuariosComponent } from './views/usuarios/caratula-usuarios/caratula-usuarios.component';
+import { CaratulaEvacsComponent } from './views/internal-views/caratula-evacs/caratula-evacs.component';
 
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
@@ -47,6 +48,7 @@ export const routes: Routes = [
   { path: 'caratula-evac-a', component: CaratulaEvacAComponent, canActivate: [authGuard] },
   { path: 'caratula-evac-b', component: CaratulaEvacBComponent, canActivate: [authGuard] },
   { path: 'caratula-global', component: CaratulaGlobalComponent, canActivate: [authGuard] },
+  { path: 'caratula-evacs', component: CaratulaEvacsComponent, canActivate: [authGuard] },
   { path: 'usuarios', component: UsuariosComponent, canActivate: [authGuard] },
   { path: 'proyeccion', component: ProyeccionComponent, canActivate: [authGuard] },
   { path: 'proyeccion/detalles/:id', component: ProyeccionDetallesComponent, canActivate: [authGuard] },

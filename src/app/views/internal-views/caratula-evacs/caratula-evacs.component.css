@@ -1,0 +1,538 @@
+/* Variables CSS optimizadas */
+:root {
+    --primary-color: #EB5E28;
+    --primary-dark: #D45322;
+    --secondary-color: #403d39;
+    --secondary-light: #4A4742;
+    --success-color: #28a745;
+    --warning-color: #f39c12;
+    --danger-color: #dc3545;
+    --light-color: #FFFCF2;
+    --dark-color: #1e1d1b;
+    --darker-color: #151412;
+    --border-color: #555;
+    --text-muted: #AAA;
+    --border-radius: 6px;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --transition: all 0.2s ease;
+}
+
+/* Estilos generales con tema oscuro */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--darker-color);
+    color: var(--light-color);
+    line-height: 1.4;
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
+}
+
+/* Contenedor principal optimizado */
+.caratula-evac-container {
+    position: relative;
+    width: 98%;
+    margin: 10px auto;
+    padding: 15px;
+    background-color: var(--dark-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.caratula-evac-container h2 {
+    color: var(--primary-color);
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-weight: 700;
+    position: relative;
+    padding-bottom: 0.4rem;
+}
+
+.caratula-evac-container h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 2px;
+}
+
+.acciones-monitor {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+/* Botones más compactos */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.85rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    margin: 0 auto 15px auto;
+    text-align: center;
+}
+
+.btn-secondary {
+    background-color: #403F3F;
+    color: #FFFCF2;
+    transition: all 0.2s ease;
+    border-radius: 6px;
+}
+
+.btn-secondary:hover {
+    background-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Header de fecha más compacto */
+.fecha-header-mejorada {
+    position: relative;
+    text-align: center;
+    padding: 10px;
+    background-color: #f8f8f8;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 15px;
+    width: fit-content;
+    margin-left: auto;
+    z-index: 10;
+}
+
+.fecha-principal {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 3px;
+    color: #333;
+}
+
+.semana-info-mejorada {
+    font-size: 0.8em;
+    color: #555;
+}
+
+.info-linea {
+    margin: 2px 0;
+}
+
+/* Spinner más pequeño */
+.spinner-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    justify-content: center;
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--primary-color);
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: girar 0.8s linear infinite;
+}
+
+.spinner-text {
+    color: var(--light-color);
+    font-size: 0.85rem;
+}
+
+@keyframes girar {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Estilos específicos para el componente de carátula EVACs optimizados */
+.tablas-evacs-container {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    justify-content: space-between;
+}
+
+.tabla-evac {
+    flex: 1;
+    background-color: var(--secondary-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    min-width: 0;
+}
+
+.titulo-tabla-evac {
+    background-color: var(--primary-color);
+    color: var(--light-color);
+    padding: 12px 15px;
+    margin: 0;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Contenedor de tabla optimizado con mejor espaciado */
+.contenedor-tabla {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    overflow-x: auto;
+}
+
+.fila-header-tabla {
+    background-color: #555;
+    padding: 12px 15px;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    font-size: 0.9rem;
+    display: flex;
+    gap: 15px;
+    min-width: fit-content;
+}
+
+.fila-cliente-tabla {
+    padding: 10px 15px;
+    border-bottom: 1px solid #555;
+    transition: var(--transition);
+    font-size: 0.85rem;
+    display: flex;
+    gap: 15px;
+    min-width: fit-content;
+    align-items: center;
+}
+
+.fila-cliente-tabla:hover {
+    background-color: rgba(235, 94, 40, 0.1);
+}
+
+/* MEJORA ESPECIAL: Columnas con mejor espaciado y word-break */
+.columna-nombre {
+    color: var(--light-color);
+    flex: 2;
+    min-width: 180px;
+    max-width: 250px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    padding-right: 10px;
+}
+
+.columna-total {
+    flex: 1;
+    min-width: 100px;
+    text-align: right;
+    font-weight: 500;
+    padding: 0 5px;
+}
+
+.total-clientes {
+    padding: 12px 15px;
+    background-color: #242321;
+    text-align: center;
+    font-weight: bold;
+    color: var(--light-color);
+    font-size: 0.9rem;
+    width: 100%;
+    min-width: max-content;
+    box-sizing: border-box;
+}
+
+/* Estilos para los filtros de fecha - Diseño coherente con tablas */
+.filtros-fecha {
+    background-color: var(--secondary-color);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 15px;
+    box-shadow: var(--box-shadow);
+    border: 1px solid var(--border-color);
+}
+
+.filtros-fecha h3 {
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.controles-fecha {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.control-fecha {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 180px;
+}
+
+.control-fecha label {
+    margin-bottom: 5px;
+    color: var(--light-color);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.control-fecha input {
+    padding: 8px 10px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    background-color: var(--dark-color);
+    color: var(--light-color);
+    font-size: 0.85rem;
+    transition: var(--transition);
+}
+
+.control-fecha input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(235, 94, 40, 0.2);
+}
+
+.btn-filtrar {
+    background-color: var(--primary-color);
+    color: var(--light-color);
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--transition);
+    align-self: flex-end;
+    margin-bottom: 2px;
+}
+
+.btn-filtrar:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+/* Estilos para los totales generales - Diseño coherente con tablas */
+.totales-generales {
+    background-color: var(--secondary-color);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 15px;
+    box-shadow: var(--box-shadow);
+    border: 1px solid var(--border-color);
+}
+
+.totales-generales h3 {
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.grid-totales {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 10px;
+}
+
+.total-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background-color: var(--dark-color);
+    border-radius: var(--border-radius);
+    border-left: 3px solid var(--primary-color);
+    transition: var(--transition);
+}
+
+.total-item:hover {
+    background-color: #2a2927;
+}
+
+.total-label {
+    color: var(--light-color);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.total-valor {
+    color: #90EE90;
+    font-weight: 700;
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Responsive optimizado */
+@media (max-width: 1200px) {
+    .tablas-evacs-container {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .tabla-evac {
+        width: 100%;
+    }
+
+    .caratula-evac-container {
+        width: 99%;
+        padding: 10px;
+    }
+
+    .columna-nombre {
+        min-width: 150px;
+        max-width: 200px;
+    }
+
+    .columna-total {
+        min-width: 80px;
+    }
+}
+
+@media (max-width: 992px) {
+    .tablas-evacs-container {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .tabla-evac {
+        margin-bottom: 15px;
+    }
+
+    .caratula-evac-container {
+        padding: 10px;
+    }
+
+    .caratula-evac-container h2 {
+        font-size: 1.4rem;
+    }
+
+    .fecha-header-mejorada {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .grid-totales {
+        grid-template-columns: 1fr;
+    }
+
+    .fila-header-tabla,
+    .fila-cliente-tabla {
+        gap: 10px;
+        padding: 10px 12px;
+    }
+
+    .columna-nombre {
+        min-width: 120px;
+        max-width: 180px;
+        font-size: 0.8rem;
+    }
+
+    .columna-total {
+        min-width: 70px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .controles-fecha {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .control-fecha {
+        width: 100%;
+    }
+
+    .btn-filtrar {
+        align-self: stretch;
+        margin-top: 5px;
+    }
+
+    .fila-header-tabla,
+    .fila-cliente-tabla {
+        min-width: 800px;
+    }
+
+    body {
+        font-size: 13px;
+    }
+
+    .columna-nombre {
+        min-width: 140px;
+        max-width: 160px;
+    }
+}
+
+@media (max-width: 480px) {
+    .caratula-evac-container h2 {
+        font-size: 1.2rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .fila-header-tabla,
+    .fila-cliente-tabla {
+        min-width: 700px;
+        padding: 8px 10px;
+    }
+
+    .columna-nombre {
+        min-width: 120px;
+        max-width: 140px;
+        font-size: 0.75rem;
+    }
+
+    .columna-total {
+        min-width: 60px;
+        font-size: 0.75rem;
+    }
+
+    .titulo-tabla-evac {
+        padding: 10px 12px;
+        font-size: 1rem;
+    }
+}
+
+/* Mejoras específicas para tablas */
+.tabla-scroll {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.tabla-evac {
+    min-width: 300px;
+}
+
+/* Asegurar que los números se alineen correctamente */
+.columna-total {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Mejorar la legibilidad de los valores monetarios */
+.columna-total {
+    letter-spacing: 0.5px;
+}
