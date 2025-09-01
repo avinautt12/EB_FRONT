@@ -1,0 +1,166 @@
+<app-home-bar></app-home-bar>
+
+<div *ngIf="mensajeAlerta" class="alerta" [ngClass]="tipoAlerta">
+    {{ mensajeAlerta }}
+</div>
+
+<div class="distribuidores-container">
+    <h1>Gestión de Integrales</h1>
+    <p>Busca un integral por nombre, edita o elimina integrales, o agrega uno nuevo.</p>
+
+    <button class="distribuidores-btn" [routerLink]="['/distribuidores']">
+        <i class="fas fa-arrow-left"></i> Volver
+    </button>
+
+    <!-- BOTÓN PARA MOSTRAR FORMULARIO DE AGREGAR -->
+    <button class="distribuidores-btn" (click)="mostrarFormularioAgregar()">
+        {{ mostrarFormulario ? 'Volver' : 'Agregar Nuevo Integral' }}
+    </button>
+
+    <!-- FORMULARIO AGREGAR GRUPO -->
+    <div *ngIf="mostrarFormulario && !grupoSeleccionado">
+        <h3 class="titulo-agg">Agregar nuevo grupo integral</h3>
+
+        <label class="distribuidores-label">Nombre del Grupo:</label>
+        <input class="distribuidores-input" type="text" [(ngModel)]="nuevoGrupo.nombre_grupo" required />
+
+        <div class="distribuidores-botones">
+            <button class="distribuidores-btn" (click)="agregarGrupo()">Agregar Grupo</button>
+        </div>
+    </div>
+
+    <!-- BUSCADOR DE GRUPOS -->
+    <div class="distribuidores-busqueda" *ngIf="!mostrarFormulario || grupoSeleccionado">
+        <input class="distribuidores-input" type="text" placeholder="Buscar integral por nombre..." [(ngModel)]="busqueda"
+            (input)="filtrarSugerencias()" />
+
+        <button class="distribuidores-btn" (click)="buscarGrupo()" [disabled]="cargando">
+            <ng-container *ngIf="!cargando">Buscar</ng-container>
+            <ng-container *ngIf="cargando">
+                <span class="spinner-btn"></span> Buscando...
+            </ng-container>
+        </button>
+
+        <!-- SUGERENCIAS -->
+        <ul class="distribuidores-sugerencias" *ngIf="sugerencias.length > 0">
+            <li *ngFor="let sugerencia of sugerencias" (click)="seleccionarSugerencia(sugerencia)">
+                {{ sugerencia }}
+            </li>
+        </ul>
+    </div>
+
+    <!-- Mensaje si no se encontró -->
+    <p *ngIf="!cargando && !grupoSeleccionado && intentoBusqueda && !mostrarFormulario" class="mensaje-no-encontrado">
+        No se encontró ningún grupo con ese nombre.
+    </p>
+
+    <!-- INFO DEL GRUPO SI SE ENCUENTRA -->
+    <div *ngIf="grupoSeleccionado">
+        <h3>Información del Grupo</h3>
+
+        <label class="distribuidores-label">Nombre del Grupo:</label>
+        <input class="distribuidores-input" type="text" [(ngModel)]="grupoSeleccionado.nombre_grupo" required />
+
+        <div class="distribuidores-botones">
+            <button class="distribuidores-btn" (click)="confirmarEdicion()">
+                Editar Grupo
+            </button>
+            <button class="distribuidores-btn distribuidor-btn-secundario eliminar" (click)="confirmarEliminacion()">
+                Eliminar Grupo
+            </button>
+            <button class="distribuidores-btn" (click)="mostrarFormularioAsignarCliente()">
+                Asignar Cliente
+            </button>
+        </div>
+
+        <div *ngIf="mostrarAsignarCliente" class="asignar-cliente-form">
+            <h4>Asignar Cliente al Grupo</h4>
+
+            <label class="distribuidores-label">Buscar Cliente:</label>
+            <div class="distribuidores-busqueda">
+                <input class="distribuidores-input" type="text" placeholder="Buscar cliente por clave o nombre..."
+                    [(ngModel)]="busquedaClienteAsignar" (input)="filtrarSugerenciasClientes()" />
+                <button class="distribuidores-btn" (click)="buscarClienteParaAsignar()">Buscar</button>
+
+                <!-- SUGERENCIAS DE CLIENTES -->
+                <ul class="distribuidores-sugerencias" *ngIf="sugerenciasClientes.length > 0">
+                    <li *ngFor="let sugerencia of sugerenciasClientes"
+                        (click)="seleccionarSugerenciaCliente(sugerencia)">
+                        {{ sugerencia }}
+                    </li>
+                </ul>
+            </div>
+
+            <div *ngIf="clienteParaAsignar" class="cliente-encontrado">
+                <p><strong>Cliente encontrado:</strong> {{ clienteParaAsignar.nombre_cliente }} ({{
+                    clienteParaAsignar.clave }})</p>
+                <button class="distribuidores-btn" (click)="asignarCliente()">Asignar al Grupo</button>
+            </div>
+        </div>
+
+        <!-- LISTA DE CLIENTES DEL GRUPO -->
+        <div *ngIf="clientesGrupo.length > 0">
+            <h4>Clientes en este Grupo</h4>
+            <table class="tabla-clientes">
+                <thead>
+                    <tr>
+                        <th>Clave</th>
+                        <th>Nombre</th>
+                        <th>EVAC</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let cliente of clientesGrupo">
+                        <td>{{ cliente.clave }}</td>
+                        <td>{{ cliente.nombre_cliente }}</td>
+                        <td>{{ cliente.evac }}</td>
+                        <td>
+                            <!-- CAMBIO AQUÍ: ahora llama a confirmarRemoverCliente en lugar de removerCliente -->
+                            <button class="btn-remover" (click)="confirmarRemoverCliente(cliente.id)">
+                                Remover
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div *ngIf="clientesGrupo.length === 0">
+            <p class="mensaje-no-encontrado">No hay clientes en este grupo.</p>
+        </div>
+
+        <!-- CONFIRMACIÓN PARA EDITAR GRUPO -->
+        <div *ngIf="confirmacionVisible" class="confirmacion-dialogo">
+            <div class="confirmacion-contenido">
+                <p>¿Estás seguro que deseas editar el grupo <strong>{{ grupoSeleccionado.nombre_grupo }}</strong>?</p>
+                <div class="confirmacion-botones">
+                    <button class="confirmacion" (click)="editarGrupo()">Sí, editar</button>
+                    <button class="secondary" (click)="cancelarEdicion()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONFIRMACIÓN PARA ELIMINAR GRUPO -->
+        <div *ngIf="confirmacionEliminarVisible" class="confirmacion-dialogo">
+            <div class="confirmacion-contenido">
+                <p>¿Estás seguro que deseas eliminar el grupo <strong>{{ grupoSeleccionado.nombre_grupo }}</strong>?</p>
+                <div class="confirmacion-botones">
+                    <button class="confirmacion" (click)="eliminarGrupo()">Sí, eliminar</button>
+                    <button class="secondary" (click)="cancelarEliminacion()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NUEVA CONFIRMACIÓN PARA REMOVER CLIENTE -->
+        <div *ngIf="confirmacionRemoverClienteVisible" class="confirmacion-dialogo">
+            <div class="confirmacion-contenido">
+                <p>¿Estás seguro que deseas remover este cliente del grupo?</p>
+                <div class="confirmacion-botones">
+                    <button class="confirmacion" (click)="removerCliente()">Sí, remover</button>
+                    <button class="secondary" (click)="cancelarRemoverCliente()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -6,6 +6,7 @@ import { MonitorOdooService } from '../../../services/monitor-odoo.service';
 import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import * as XLSX from 'xlsx'
 
 @Component({
   selector: 'app-caratula-evacs',
@@ -27,6 +28,9 @@ export class CaratulaEvacsComponent implements OnInit {
 
   // Totales generales
   totalGeneral: number = 0;
+  totalEvacA: number = 0;
+  totalEvacB: number = 0;
+  totalEvacGO: number = 0;
   totalScott: number = 0;
   totalApparel: number = 0;
   totalVittoria: number = 0;
@@ -37,7 +41,7 @@ export class CaratulaEvacsComponent implements OnInit {
     private caratulasService: CaratulasService,
     private monitorOdooService: MonitorOdooService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.establecerFechasPorDefecto();
@@ -48,7 +52,7 @@ export class CaratulaEvacsComponent implements OnInit {
     const hoy = new Date();
     // Establecer el primer día del mes actual como fecha inicial
     const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-    
+
     this.fechaInicio = this.formatearFecha(primerDiaMes);
     this.fechaFin = this.formatearFecha(hoy);
   }
@@ -62,11 +66,11 @@ export class CaratulaEvacsComponent implements OnInit {
 
   cargarClientes(): void {
     this.loading = true;
-    
+
     // Cargar clientes de EVAC A
     this.caratulasService.getClientesEvacA().subscribe({
       next: (data) => {
-        this.clientesA = data.filter((cliente: any) => 
+        this.clientesA = data.filter((cliente: any) =>
           !cliente.clave.includes('Integral')
         ).map((cliente: any) => this.inicializarTotalesCliente(cliente));
         this.verificarCargaCompleta();
@@ -80,7 +84,7 @@ export class CaratulaEvacsComponent implements OnInit {
     // Cargar clientes de EVAC B
     this.caratulasService.getClientesEvacB().subscribe({
       next: (data) => {
-        this.clientesB = data.filter((cliente: any) => 
+        this.clientesB = data.filter((cliente: any) =>
           !cliente.clave.includes('Integral')
         ).map((cliente: any) => this.inicializarTotalesCliente(cliente));
         this.verificarCargaCompleta();
@@ -94,7 +98,7 @@ export class CaratulaEvacsComponent implements OnInit {
     // Cargar clientes de EVAC GO
     this.caratulasService.getClientesEvacGO().subscribe({
       next: (data) => {
-        this.clientesGO = data.filter((cliente: any) => 
+        this.clientesGO = data.filter((cliente: any) =>
           !cliente.clave.includes('Integral')
         ).map((cliente: any) => this.inicializarTotalesCliente(cliente));
         this.verificarCargaCompleta();
@@ -147,6 +151,9 @@ export class CaratulaEvacsComponent implements OnInit {
   procesarFacturas(): void {
     // Reiniciar totales
     this.totalGeneral = 0;
+    this.totalEvacA = 0;
+    this.totalEvacB = 0;
+    this.totalEvacGO = 0;
     this.totalScott = 0;
     this.totalApparel = 0;
     this.totalVittoria = 0;
@@ -159,13 +166,46 @@ export class CaratulaEvacsComponent implements OnInit {
     // Filtrar facturas por fecha
     const facturasFiltradas = this.filtrarFacturasPorFecha();
 
-    // Procesar clientes de cada EVAC
-    this.procesarClientesConFacturas(this.clientesA, facturasFiltradas);
-    this.procesarClientesConFacturas(this.clientesB, facturasFiltradas);
-    this.procesarClientesConFacturas(this.clientesGO, facturasFiltradas);
+    // Procesar cada EVAC y obtener sus totales
+    this.totalEvacA = this.procesarYCalcularTotalEvac(this.clientesA, facturasFiltradas);
+    this.totalEvacB = this.procesarYCalcularTotalEvac(this.clientesB, facturasFiltradas);
+    this.totalEvacGO = this.procesarYCalcularTotalEvac(this.clientesGO, facturasFiltradas);
 
     // Calcular totales generales
     this.calcularTotalesGenerales(facturasFiltradas);
+  }
+
+  // Nueva función que procesa los clientes y retorna el total del EVAC
+  procesarYCalcularTotalEvac(clientes: any[], facturas: any[]): number {
+    let totalEvac = 0;
+
+    clientes.forEach(cliente => {
+      // Buscar facturas por clave (prioridad) y luego por nombre
+      const facturasCliente = facturas.filter(factura => {
+        // Verificar si la clave coincide
+        const claveCoincide = factura.contacto_referencia === cliente.clave;
+
+        // Verificar si el nombre coincide (búsqueda parcial)
+        const nombreCoincide = factura.contacto_nombre &&
+          cliente.nombre_cliente &&
+          factura.contacto_nombre.toLowerCase().includes(cliente.nombre_cliente.toLowerCase());
+
+        return claveCoincide || nombreCoincide;
+      });
+
+      // Calcular totales para este cliente
+      cliente.totalGeneral = this.calcularTotalGeneral(facturasCliente);
+      cliente.totalScott = this.calcularTotalScott(facturasCliente);
+      cliente.totalApparel = this.calcularTotalApparel(facturasCliente);
+      cliente.totalVittoria = this.calcularTotalVittoria(facturasCliente);
+      cliente.totalSyncros = this.calcularTotalSyncros(facturasCliente);
+      cliente.totalBold = this.calcularTotalBold(facturasCliente);
+
+      // Sumar al total del EVAC
+      totalEvac += cliente.totalGeneral;
+    });
+
+    return totalEvac;
   }
 
   reiniciarTotalesClientes(): void {
@@ -213,30 +253,30 @@ export class CaratulaEvacsComponent implements OnInit {
     });
   }
 
-  procesarClientesConFacturas(clientes: any[], facturas: any[]): void {
-    clientes.forEach(cliente => {
-      // Buscar facturas por clave (prioridad) y luego por nombre
-      const facturasCliente = facturas.filter(factura => {
-        // Verificar si la clave coincide
-        const claveCoincide = factura.contacto_referencia === cliente.clave;
-        
-        // Verificar si el nombre coincide (búsqueda parcial)
-        const nombreCoincide = factura.contacto_nombre && 
-                              cliente.nombre_cliente &&
-                              factura.contacto_nombre.toLowerCase().includes(cliente.nombre_cliente.toLowerCase());
-        
-        return claveCoincide || nombreCoincide;
-      });
+  // procesarClientesConFacturas(clientes: any[], facturas: any[]): void {
+  //   clientes.forEach(cliente => {
+  //     // Buscar facturas por clave (prioridad) y luego por nombre
+  //     const facturasCliente = facturas.filter(factura => {
+  //       // Verificar si la clave coincide
+  //       const claveCoincide = factura.contacto_referencia === cliente.clave;
 
-      // Calcular totales para este cliente
-      cliente.totalGeneral = this.calcularTotalGeneral(facturasCliente);
-      cliente.totalScott = this.calcularTotalScott(facturasCliente);
-      cliente.totalApparel = this.calcularTotalApparel(facturasCliente);
-      cliente.totalVittoria = this.calcularTotalVittoria(facturasCliente);
-      cliente.totalSyncros = this.calcularTotalSyncros(facturasCliente);
-      cliente.totalBold = this.calcularTotalBold(facturasCliente);
-    });
-  }
+  //       // Verificar si el nombre coincide (búsqueda parcial)
+  //       const nombreCoincide = factura.contacto_nombre &&
+  //         cliente.nombre_cliente &&
+  //         factura.contacto_nombre.toLowerCase().includes(cliente.nombre_cliente.toLowerCase());
+
+  //       return claveCoincide || nombreCoincide;
+  //     });
+
+  //     // Calcular totales para este cliente
+  //     cliente.totalGeneral = this.calcularTotalGeneral(facturasCliente);
+  //     cliente.totalScott = this.calcularTotalScott(facturasCliente);
+  //     cliente.totalApparel = this.calcularTotalApparel(facturasCliente);
+  //     cliente.totalVittoria = this.calcularTotalVittoria(facturasCliente);
+  //     cliente.totalSyncros = this.calcularTotalSyncros(facturasCliente);
+  //     cliente.totalBold = this.calcularTotalBold(facturasCliente);
+  //   });
+  // }
 
   calcularTotalGeneral(facturas: any[]): number {
     return facturas.reduce((total, factura) => total + this.obtenerValorNumerico(factura.venta_total), 0);
@@ -311,7 +351,137 @@ export class CaratulaEvacsComponent implements OnInit {
     const fechaInicio = new Date(new Date().getFullYear(), 6, 1);
     const hoy = new Date();
     const diffTime = Math.abs(hoy.getTime() - fechaInicio.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return `Día ${diffDays}`;
+  }
+
+  exportarExcel(): void {
+    const workbook = XLSX.utils.book_new();
+    
+    // 1. Hoja de Metadatos y Filtros
+    this.crearHojaMetadatos(workbook);
+    
+    // 2. Hoja de Resumen de Totales
+    this.crearHojaResumenTotales(workbook);
+    
+    // 3. Hojas para cada EVAC
+    this.crearHojaEvac(workbook, 'EVAC A', this.clientesA);
+    this.crearHojaEvac(workbook, 'EVAC B', this.clientesB);
+    this.crearHojaEvac(workbook, 'EVAC GO', this.clientesGO);
+    
+    // Generar el archivo Excel
+    XLSX.writeFile(workbook, `Caratula_EVACs_${this.formatearFechaExcel(new Date())}.xlsx`);
+  }
+
+  private crearHojaMetadatos(workbook: XLSX.WorkBook): void {
+    const metadata = [
+      ['CARÁTULA EVACs - REPORTE'],
+      [''],
+      ['Fecha de generación:', new Date().toLocaleString('es-MX')],
+      ['Período filtrado:', `${this.fechaInicio} al ${this.fechaFin}`],
+      [''],
+      ['Filtros aplicados:'],
+      ['Desde:', this.fechaInicio],
+      ['Hasta:', this.fechaFin],
+      [''],
+      ['Totales generales del período:'],
+      ['Total General:', { v: this.totalGeneral, t: 'n', z: '#,##0.00' }],
+      ['Total EVAC A:', { v: this.totalEvacA, t: 'n', z: '#,##0.00' }],
+      ['Total EVAC B:', { v: this.totalEvacB, t: 'n', z: '#,##0.00' }],
+      ['Total EVAC GO:', { v: this.totalEvacGO, t: 'n', z: '#,##0.00' }],
+      [''],
+      ['Totales por marca:'],
+      ['SCOTT (No Apparel):', { v: this.totalScott, t: 'n', z: '#,##0.00' }],
+      ['APPAREL:', { v: this.totalApparel, t: 'n', z: '#,##0.00' }],
+      ['VITTORIA:', { v: this.totalVittoria, t: 'n', z: '#,##0.00' }],
+      ['SYNCROS:', { v: this.totalSyncros, t: 'n', z: '#,##0.00' }],
+      ['BOLD:', { v: this.totalBold, t: 'n', z: '#,##0.00' }]
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(metadata);
+    
+    // Estilos básicos para la hoja de metadatos
+    ws['!cols'] = [{ wch: 20 }, { wch: 15 }];
+    
+    XLSX.utils.book_append_sheet(workbook, ws, 'Datos');
+  }
+
+  private crearHojaResumenTotales(workbook: XLSX.WorkBook): void {
+    const resumenData = [
+      ['RESUMEN DE TOTALES'],
+      [''],
+      ['TOTAL GENERAL', { v: this.totalGeneral, t: 'n', z: '#,##0.00' }],
+      [''],
+      ['TOTALES POR EVAC'],
+      ['EVAC A', { v: this.totalEvacA, t: 'n', z: '#,##0.00' }],
+      ['EVAC B', { v: this.totalEvacB, t: 'n', z: '#,##0.00' }],
+      ['EVAC GO', { v: this.totalEvacGO, t: 'n', z: '#,##0.00' }],
+      [''],
+      ['TOTALES POR MARCA'],
+      ['SCOTT (No Apparel)', { v: this.totalScott, t: 'n', z: '#,##0.00' }],
+      ['APPAREL', { v: this.totalApparel, t: 'n', z: '#,##0.00' }],
+      ['VITTORIA', { v: this.totalVittoria, t: 'n', z: '#,##0.00' }],
+      ['SYNCROS', { v: this.totalSyncros, t: 'n', z: '#,##0.00' }],
+      ['BOLD', { v: this.totalBold, t: 'n', z: '#,##0.00' }]
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(resumenData);
+    
+    // Formato de columnas
+    ws['!cols'] = [{ wch: 20 }, { wch: 15 }];
+    
+    XLSX.utils.book_append_sheet(workbook, ws, 'Resumen Totales');
+  }
+
+  private crearHojaEvac(workbook: XLSX.WorkBook, nombreEvac: string, clientes: any[]): void {
+    const datos: any[] = [  // ← Cambiar a any[]
+        [nombreEvac],
+        [''],
+        ['NOMBRE DEL CLIENTE', 'TOTAL', 'SCOTT', 'APPAREL', 'VITTORIA', 'SYNCROS', 'BOLD']
+    ];
+
+    // Agregar datos de clientes
+    clientes.forEach(cliente => {
+        datos.push([
+            cliente.nombre_cliente,
+            { v: cliente.totalGeneral, t: 'n', z: '#,##0.00' },
+            { v: cliente.totalScott, t: 'n', z: '#,##0.00' },
+            { v: cliente.totalApparel, t: 'n', z: '#,##0.00' },
+            { v: cliente.totalVittoria, t: 'n', z: '#,##0.00' },
+            { v: cliente.totalSyncros, t: 'n', z: '#,##0.00' },
+            { v: cliente.totalBold, t: 'n', z: '#,##0.00' }
+        ]);
+    });
+
+    // Agregar total al final - CORREGIDO
+    datos.push(['']);
+    datos.push(['TOTAL CLIENTES:', clientes.length]);
+    datos.push(['TOTAL MONETARIO:', 
+        { v: clientes.reduce((sum, cl) => sum + cl.totalGeneral, 0), t: 'n', z: '#,##0.00' }
+    ]);
+
+    const ws = XLSX.utils.aoa_to_sheet(datos);
+    
+    // Ajustar anchos de columnas
+    ws['!cols'] = [
+        { wch: 40 }, // Nombre cliente
+        { wch: 15 }, // Total
+        { wch: 15 }, // Scott
+        { wch: 15 }, // Apparel
+        { wch: 15 }, // Vittoria
+        { wch: 15 }, // Syncros
+        { wch: 15 }  // Bold
+    ];
+    
+    XLSX.utils.book_append_sheet(workbook, ws, nombreEvac);
+}
+
+  private formatearFechaExcel(fecha: Date): string {
+    const año = fecha.getFullYear();
+    const mes = ('0' + (fecha.getMonth() + 1)).slice(-2);
+    const dia = ('0' + fecha.getDate()).slice(-2);
+    const horas = ('0' + fecha.getHours()).slice(-2);
+    const minutos = ('0' + fecha.getMinutes()).slice(-2);
+    return `${año}${mes}${dia}_${horas}${minutos}`;
   }
 }

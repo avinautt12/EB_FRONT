@@ -1,7 +1,7 @@
 <div class="modal-overlay" [class.open]="isOpen" (click)="closeModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
         <div class="modal-header">
-            <h2>Facturas del Cliente</h2>
+            <h2>Detalles de Compra</h2>
             <button class="close-button" (click)="closeModal()">×</button>
         </div>
 
@@ -30,10 +30,8 @@
                     <thead>
                         <tr>
                             <th>Número Factura</th>
-                            <th>Referencia</th>
+                            <th>Clave producto</th>
                             <th>Producto</th>
-                            <th>Ref. Contacto</th>
-                            <th>Nombre Contacto</th>
                             <th>Fecha</th>
                             <th>Precio Unit.</th>
                             <th>Cantidad</th>
@@ -42,9 +40,6 @@
                             <th>Subcategoría</th>
                             <th>ERIDE</th>
                             <th>APPAREL</th>
-                            <th>EVAC</th>
-                            <th>Categoría</th>
-                            <th>Estado</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -52,8 +47,6 @@
                             <td>{{ factura.numero_factura }}</td>
                             <td>{{ factura.referencia_interna }}</td>
                             <td>{{ factura.nombre_producto }}</td>
-                            <td>{{ factura.contacto_referencia }}</td>
-                            <td>{{ factura.contacto_nombre }}</td>
                             <td>{{ formatearFecha(factura.fecha_factura) }}</td>
                             <td>{{ formatearMoneda(factura.precio_unitario) }}</td>
                             <td>{{ factura.cantidad }}</td>
@@ -62,9 +55,6 @@
                             <td>{{ factura.subcategoria }}</td>
                             <td>{{ factura.eride }}</td>
                             <td>{{ factura.apparel }}</td>
-                            <td>{{ factura.evac }}</td>
-                            <td>{{ factura.categoria_producto }}</td>
-                            <td>{{ factura.estado_factura }}</td>
                         </tr>
                     </tbody>
                 </table>

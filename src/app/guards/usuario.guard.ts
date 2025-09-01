@@ -13,25 +13,45 @@ export const usuarioGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
     'recuperacion/restablecer-contrasena'];
 
   if (!token) {
+    // No está logueado
     if (rutasPublicas.includes(ruta)) {
       return true;
-    } else {
-      router.navigate(['/login']);
-      return false;
     }
+    router.navigate(['/login']);
+    return false;
   }
 
   try {
     const decodedToken: any = jwtDecode(token);
 
-    if (decodedToken.rol === 2) {
-      return true;
-    } else {
-      router.navigate(['/home']); // o donde quieras mandar al admin si entra a vista usuario
+    // Si está en ruta pública estando logueado, redirige según su rol
+    if (rutasPublicas.includes(ruta)) {
+      if (decodedToken.rol === 1) {
+        router.navigate(['/home']);
+      } else if (decodedToken.rol === 2) {
+        router.navigate(['/usuarios/dashboard']);
+      }
       return false;
     }
+
+    // SOLO Usuario (rol 2) puede acceder a rutas protegidas por usuarioGuard
+    if (decodedToken.rol === 2) {
+      return true;
+    }
+    
+    // Si es Admin (rol 1) intenta acceder a ruta de Usuario
+    if (decodedToken.rol === 1) {
+      router.navigate(['/home']);
+      return false;
+    }
+    
+    // Rol no reconocido
+    localStorage.removeItem('token');
+    router.navigate(['/login']);
+    return false;
+    
   } catch (error) {
-    console.error('Token inválido o error al decodificar:', error);
+    localStorage.removeItem('token');
     router.navigate(['/login']);
     return false;
   }

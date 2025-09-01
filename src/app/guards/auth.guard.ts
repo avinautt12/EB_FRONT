@@ -12,32 +12,46 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
     'recuperacion/verificar-codigo', 
     'recuperacion/restablecer-contrasena'];
 
-  if (token) {
-    // Si quiere entrar a una ruta pública estando logueado
-    if (rutasPublicas.includes(ruta)) {
-      try {
-        const decoded: any = jwtDecode(token);
-        if (decoded.rol === 1) {
-          router.navigate(['/home']);
-        } else if (decoded.rol === 2) {
-          router.navigate(['/usuarios/dashboard']);
-        } else {
-          router.navigate(['/login']);
-        }
-        return false;
-      } catch (e) {
-        router.navigate(['/login']);
-        return false;
-      }
-    }
-
-    return true; // puede acceder a rutas protegidas
-  } else {
+  if (!token) {
     // No está logueado
     if (rutasPublicas.includes(ruta)) {
       return true;
     }
+    router.navigate(['/login']);
+    return false;
+  }
 
+  try {
+    const decoded: any = jwtDecode(token);
+    
+    // Si está en ruta pública estando logueado, redirige según su rol
+    if (rutasPublicas.includes(ruta)) {
+      if (decoded.rol === 1) {
+        router.navigate(['/home']);
+      } else if (decoded.rol === 2) {
+        router.navigate(['/usuarios/dashboard']);
+      }
+      return false;
+    }
+
+    // SOLO Admin (rol 1) puede acceder a rutas protegidas por authGuard
+    if (decoded.rol === 1) {
+      return true;
+    }
+    
+    // Si es Usuario (rol 2) intenta acceder a ruta de Admin
+    if (decoded.rol === 2) {
+      router.navigate(['/usuarios/dashboard']);
+      return false;
+    }
+    
+    // Rol no reconocido
+    localStorage.removeItem('token');
+    router.navigate(['/login']);
+    return false;
+    
+  } catch (e) {
+    localStorage.removeItem('token');
     router.navigate(['/login']);
     return false;
   }

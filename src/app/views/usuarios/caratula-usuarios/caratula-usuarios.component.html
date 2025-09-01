@@ -1,7 +1,7 @@
 <app-top-bar-usuarios></app-top-bar-usuarios>
 
 <div class="monitor-container">
-    <h2>Caratula Evac</h2>
+    <h2>Caratula</h2>
 
     <div class="acciones-monitor">
         <button class="btn btn-secondary" [routerLink]="['/usuarios/dashboard']">
@@ -12,7 +12,7 @@
         </button>
         <!-- En tu template (html) del componente actual -->
         <button class="btn btn-secondary" (click)="mostrarFacturas = true" [disabled]="!datosCliente">
-            <i class="fas fa-print"></i> Facturas
+            <i class="fas fa-print"></i> Detalle de Compras
         </button>
 
         <!-- Agrega el componente del modal al final de tu template -->

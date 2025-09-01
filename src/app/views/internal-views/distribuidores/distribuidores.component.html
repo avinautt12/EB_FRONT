@@ -17,6 +17,10 @@
         {{ mostrarFormulario ? 'Volver' : 'Agregar Nuevo Cliente' }}
     </button>
 
+    <button class="distribuidores-btn" [routerLink]="['/integrales']">
+        <i class="fas fa-users"></i> Integrales
+    </button>
+
     <div *ngIf="mostrarFormulario && !cliente">
         <h3 class="titulo-agg">Agregar nuevo cliente</h3>
 
