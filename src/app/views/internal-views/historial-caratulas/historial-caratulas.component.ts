@@ -5,11 +5,13 @@ import { HomeBarComponent } from '../../../components/home-bar/home-bar.componen
 import { FiltroComponent } from '../../../components/filtro/filtro.component';
 import { FiltroFechaComponent } from '../../../components/filtro-fecha/filtro-fecha.component';
 import { EmailService, HistorialCaratula } from '../../../services/email.service';
+import { RouterModule } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-historial-caratulas',
   standalone: true,
-  imports: [CommonModule, FormsModule, HomeBarComponent, FiltroComponent, FiltroFechaComponent],
+  imports: [CommonModule, FormsModule, HomeBarComponent, FiltroComponent, FiltroFechaComponent, RouterModule],
   templateUrl: './historial-caratulas.component.html',
   styleUrls: ['./historial-caratulas.component.css']
 })
@@ -49,7 +51,10 @@ export class HistorialCaratulasComponent implements OnInit {
   showClienteFilter = false;
   showCorreoFilter = false;
 
-  constructor(private emailService: EmailService) { }
+  constructor(
+    private emailService: EmailService,
+    private router: Router
+  ) { }
 
   ngOnInit() {
     this.cargarHistorial();

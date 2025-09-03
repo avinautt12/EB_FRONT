@@ -3,6 +3,12 @@
 <div class="monitor-container">
     <h2>Historial de Carátulas Enviadas</h2>
 
+     <div class="acciones-monitor">
+        <button class="btn btn-secondary" [routerLink]="['/inicio-caratulas']">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+    </div>
+
     <!-- Loading -->
     <div *ngIf="isLoading" class="cargando-spinner">
         <div class="spinner"></div>
