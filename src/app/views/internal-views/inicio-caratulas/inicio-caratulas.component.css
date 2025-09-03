@@ -102,10 +102,15 @@
   /* Elimina position: relative si estaba presente */
 }
 
+.acciones {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+}
+
 .back-button {
   display: inline-flex;
   justify-content: center;
-  margin: 1rem auto;
   background: #474646;
   color: #FFFCF2;
   padding: 0.9rem 1.3rem;
@@ -113,7 +118,6 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.9rem;
-  gap: 0.5rem;
   transition: all 0.3s ease;
   font-weight: 500;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

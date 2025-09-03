@@ -4,11 +4,14 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
 import { CaratulasService } from '../../../services/caratulas.service';
+import { AlertaService } from '../../../services/alerta.service';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { Subject, of, EMPTY, Observable } from 'rxjs';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+
+import { EmailService, EmailData, EmailConfig } from '../../../services/email.service';
 
 interface SugerenciaCliente {
   clave: string;
@@ -90,11 +93,195 @@ export class CaratulasComponent implements OnInit {
   private allClientes: SugerenciaCliente[] = [];
   private cacheLoaded = false;
 
-  constructor(private caratulasService: CaratulasService, private router: Router) { }
+  mostrarModalEmail: boolean = false;
+  emailDestinatario: string = '';
+  mensajePersonalizado: string = '';
+  enviandoEmail: boolean = false;
+
+  mensajeAlerta: string = '';
+  tipoAlerta: string = '';
+
+  configuracionEmail: EmailConfig | null = null;
+
+  constructor(
+    private caratulasService: CaratulasService,
+    private router: Router,
+    private emailService: EmailService,
+    private alertaService: AlertaService
+  ) { }
 
   ngOnInit() {
     this.initializeSearch();
     this.loadAllClientes();
+    this.verificarConfiguracionEmail();
+  }
+
+  abrirModalEmail() {
+    if (!this.datosCliente) {
+      this.mostrarError('Primero debe seleccionar un cliente');
+      return;
+    }
+
+    this.emailDestinatario = '';
+    this.mensajePersonalizado = '';
+    this.mostrarModalEmail = true;
+  }
+
+  cerrarModalEmail() {
+    this.mostrarModalEmail = false;
+    this.enviandoEmail = false;
+  }
+
+  async enviarCaratulaPorEmail() {
+    if (!this.emailDestinatario || !this.datosCliente) {
+      this.mostrarError('Debe ingresar un email destinatario');
+      return;
+    }
+
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.emailDestinatario)) {
+      this.mostrarError('Por favor ingrese un email válido');
+      return;
+    }
+
+    // Verificar que tenemos token
+    const token = localStorage.getItem('token');
+    if (!token) {
+      this.mostrarError('No se encontró token de autenticación. Por favor, inicie sesión nuevamente.');
+      return;
+    }
+
+    this.enviandoEmail = true;
+
+    try {
+      // 1. Generar PDF como base64
+      const pdfBase64 = await this.generarPdfComoBase64();
+
+      // 2. Preparar datos para enviar
+      const emailData: EmailData = {
+        to: this.emailDestinatario,
+        cliente_nombre: this.datosCliente.nombre_cliente,
+        clave: this.datosCliente.clave,
+        pdf_base64: pdfBase64,
+        mensaje_personalizado: this.mensajePersonalizado
+      };
+
+      // 3. Enviar al backend
+      this.emailService.enviarCaratulaPdf(emailData).subscribe({
+        next: (response) => {
+          this.enviandoEmail = false;
+          this.mostrarModalEmail = false;
+          this.mostrarExito(`Carátula enviada correctamente desde ${response.enviado_desde}`);
+        },
+        error: (error) => {
+          this.enviandoEmail = false;
+          console.error('Error al enviar email:', error);
+
+          let mensajeError = 'Error al enviar el email';
+          if (error.error?.error) {
+            mensajeError = error.error.error;
+          } else if (error.status === 401) {
+            mensajeError = 'Error de autenticación. Token inválido o expirado.';
+          } else if (error.status === 500) {
+            mensajeError = 'Error del servidor al procesar el envío.';
+          }
+
+          this.mostrarError(mensajeError);
+        }
+      });
+
+    } catch (error: any) {
+      this.enviandoEmail = false;
+      console.error('Error al generar PDF:', error);
+      this.mostrarError(error.message || 'Error al generar el PDF para enviar');
+    }
+  }
+
+  private async generarPdfComoBase64(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const element = document.getElementById('pdf-content');
+      if (!element) {
+        reject(new Error('Elemento no encontrado'));
+        return;
+      }
+
+      element.classList.add('pdf-mode');
+      this.hideElementsForPDF();
+
+      setTimeout(() => {
+        html2canvas(element, {
+          scale: 1, // escala reducida
+          useCORS: true,
+          logging: false
+        }).then(canvas => {
+          // Convertir a JPEG con calidad 0.6 para reducir tamaño
+          const imgData = canvas.toDataURL('image/jpeg', 0.6);
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const imgWidth = 140; // ancho menor para reducir tamaño
+          const pageHeight = 295;
+          const imgHeight = canvas.height * imgWidth / canvas.width;
+          let heightLeft = imgHeight;
+          let position = 0;
+
+          pdf.addImage(imgData, 'JPEG', 35, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+
+          while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'JPEG', 35, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+          }
+
+          const pdfBase64 = pdf.output('datauristring').split(',')[1];
+
+          this.showElementsAfterPDF();
+          element.classList.remove('pdf-mode');
+
+          // Validar tamaño base64 antes de enviar
+          const sizeInBytes = (pdfBase64.length * 3) / 4;
+          if (sizeInBytes > 20 * 1024 * 1024) { // 20 MB límite prudente
+            reject(new Error('El PDF es demasiado grande para enviar por email.'));
+            return;
+          }
+
+          resolve(pdfBase64);
+        }).catch(error => {
+          this.showElementsAfterPDF();
+          element.classList.remove('pdf-mode');
+          reject(error);
+        });
+      }, 500);
+    });
+  }
+
+  private mostrarError(mensaje: string) {
+    this.alertaService.mostrarError(mensaje);
+    this.error = mensaje;
+    setTimeout(() => this.error = null, 5000);
+  }
+
+  private mostrarExito(mensaje: string) {
+    this.alertaService.mostrarExito(mensaje);
+  }
+
+  private verificarConfiguracionEmail() {
+    this.emailService.verificarConfiguracion().subscribe({
+      next: (config: any) => {
+        this.configuracionEmail = config;
+        console.log('Configuración de email detectada:', config);
+      },
+      error: (error) => {
+        console.error('Error al verificar configuración de email:', error);
+        // Configuración por defecto en caso de error
+        this.configuracionEmail = {
+          configurado: false,
+          email_remitente: 'No disponible',
+          usuario_actual: 'Error de conexión'
+        };
+      }
+    });
   }
 
   private initializeSearch() {

@@ -4,9 +4,18 @@
     <div class="header-section">
         <h1>Inicio Carátulas</h1>
         <p class="subtexto">Acceso a las diferentes carátulas del sistema</p>
-        <button class="back-button" [routerLink]="['/previo']">
-            <i class="fas fa-arrow-left"></i> Volver
-        </button>
+
+        <div class="acciones">
+
+            <button class="back-button" [routerLink]="['/previo']">
+                <i class="fas fa-arrow-left"></i>&nbsp;Volver
+            </button>
+
+            <button class="back-button" [routerLink]="['/historial-caratulas']">
+                Historial Carátulas
+            </button>
+
+        </div>
     </div>
 
     <div class="tarjetas-acciones">
