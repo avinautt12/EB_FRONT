@@ -128,6 +128,7 @@
             <h3 class="titulo-tabla-evac">EVAC A</h3>
             <div class="contenedor-tabla">
                 <div class="fila-header-tabla">
+                    <div class="columna-clave">CLAVE</div>
                     <div class="columna-nombre">NOMBRE DEL CLIENTE</div>
                     <div class="columna-total">Total</div>
                     <div class="columna-total">SCOTT</div>
@@ -137,6 +138,7 @@
                     <div class="columna-total">BOLD</div>
                 </div>
                 <div class="fila-cliente-tabla" *ngFor="let cliente of clientesA">
+                    <div class="columna-clave">{{ cliente.clave }}</div>
                     <div class="columna-nombre">{{ cliente.nombre_cliente }}</div>
                     <div class="columna-total">{{ cliente.totalGeneral | currency:'USD':'symbol':'1.2-2' }}</div>
                     <div class="columna-total">{{ cliente.totalScott | currency:'USD':'symbol':'1.2-2' }}</div>
@@ -154,6 +156,7 @@
             <h3 class="titulo-tabla-evac">EVAC B</h3>
             <div class="contenedor-tabla">
                 <div class="fila-header-tabla">
+                    <div class="columna-clave">CLAVE</div>
                     <div class="columna-nombre">NOMBRE DEL CLIENTE</div>
                     <div class="columna-total">Total</div>
                     <div class="columna-total">SCOTT</div>
@@ -163,6 +166,7 @@
                     <div class="columna-total">BOLD</div>
                 </div>
                 <div class="fila-cliente-tabla" *ngFor="let cliente of clientesB">
+                    <div class="columna-clave">{{ cliente.clave }}</div>
                     <div class="columna-nombre">{{ cliente.nombre_cliente }}</div>
                     <div class="columna-total">{{ cliente.totalGeneral | currency:'USD':'symbol':'1.2-2' }}</div>
                     <div class="columna-total">{{ cliente.totalScott | currency:'USD':'symbol':'1.2-2' }}</div>
@@ -180,6 +184,7 @@
             <h3 class="titulo-tabla-evac">EVAC GO</h3>
             <div class="contenedor-tabla">
                 <div class="fila-header-tabla">
+                    <div class="columna-clave">CLAVE</div>
                     <div class="columna-nombre">NOMBRE DEL CLIENTE</div>
                     <div class="columna-total">Total</div>
                     <div class="columna-total">SCOTT</div>
@@ -189,6 +194,7 @@
                     <div class="columna-total">BOLD</div>
                 </div>
                 <div class="fila-cliente-tabla" *ngFor="let cliente of clientesGO">
+                    <div class="columna-clave">{{ cliente.clave }}</div>
                     <div class="columna-nombre">{{ cliente.nombre_cliente }}</div>
                     <div class="columna-total">{{ cliente.totalGeneral | currency:'USD':'symbol':'1.2-2' }}</div>
                     <div class="columna-total">{{ cliente.totalScott | currency:'USD':'symbol':'1.2-2' }}</div>

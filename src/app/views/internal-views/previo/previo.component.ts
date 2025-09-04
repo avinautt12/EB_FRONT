@@ -669,7 +669,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
         compraMinimaInicial: 3590000,
         compromisoScott: 4950000,
         compromisoJulAgo: 1061775,
-        compromisoSepOct: 2808000,
+        compromisoSepOct: 3071250,
         compromisoNovDic: 2808000,
         compromisoSynApaVit: 750000,
         compromisoJulAgoApp: 123750,
@@ -1411,11 +1411,10 @@ export class PrevioComponent implements OnInit, OnDestroy {
         const fechaFactura = new Date(factura.fecha_factura);
         const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
 
-        // Verificar criterios de producto
-        const esProductoValido = factura.apparel === 'NO' &&
-          (factura.marca === 'SCOTT' ||
-            factura.categoria_producto?.includes('SCOTT') ||
-            factura.nombre_producto?.includes('SCOTT'));
+        const esProductoValido =
+          factura.marca === 'SYNCROS' ||
+          factura.marca === 'VITTORIA' ||
+          factura.apparel === 'SI';
 
         // Lógica especial para cada caso
         let esValida;
@@ -1439,11 +1438,10 @@ export class PrevioComponent implements OnInit, OnDestroy {
         const fechaFactura = new Date(factura.fecha_factura);
         const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
 
-        // Verificar criterios de producto
-        const esProductoValido = factura.apparel === 'NO' &&
-          (factura.marca === 'SCOTT' ||
-            factura.categoria_producto?.includes('SCOTT') ||
-            factura.nombre_producto?.includes('SCOTT'));
+        const esProductoValido =
+          factura.marca === 'SYNCROS' ||
+          factura.marca === 'VITTORIA' ||
+          factura.apparel === 'SI';
 
         return esClienteCorrecto && enRangoFechas && esProductoValido;
       });
@@ -1464,18 +1462,20 @@ export class PrevioComponent implements OnInit, OnDestroy {
           const fechaFactura = new Date(factura.fecha_factura);
           const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
 
-          // Verificar criterios de producto
-          const esProductoValido = factura.apparel === 'NO' &&
-            (factura.marca === 'SCOTT' ||
-              factura.categoria_producto?.includes('SCOTT') ||
-              factura.nombre_producto?.includes('SCOTT'));
+          const esProductoValido =
+            factura.marca === 'SYNCROS' ||
+            factura.marca === 'VITTORIA' ||
+            factura.apparel === 'SI';
 
           return coincideNombre && enRangoFechas && esProductoValido;
         });
       }
     }
 
-    return facturasValidas.reduce((total, factura) => total + (+factura.venta_total || 0), 0);
+    return facturasValidas.reduce(
+      (total, factura) => total + (Number(factura.venta_total) || 0),
+      0
+    );
   }
 
   private calcularAvanceNovDicApp(cliente: Cliente, facturas: FacturaOdoo[]): number {

@@ -180,18 +180,22 @@ export class CaratulaEvacsComponent implements OnInit {
     let totalEvac = 0;
 
     clientes.forEach(cliente => {
-      // Buscar facturas por clave (prioridad) y luego por nombre
-      const facturasCliente = facturas.filter(factura => {
-        // Verificar si la clave coincide
-        const claveCoincide = factura.contacto_referencia === cliente.clave;
+      // PRIMERO: Buscar por clave exacta (máxima prioridad)
+      let facturasCliente = facturas.filter(factura =>
+        factura.contacto_referencia === cliente.clave
+      );
 
-        // Verificar si el nombre coincide (búsqueda parcial)
-        const nombreCoincide = factura.contacto_nombre &&
-          cliente.nombre_cliente &&
-          factura.contacto_nombre.toLowerCase().includes(cliente.nombre_cliente.toLowerCase());
-
-        return claveCoincide || nombreCoincide;
-      });
+      // SEGUNDO: Si no hay resultados por clave, buscar por nombre COMPLETO exacto
+      if (facturasCliente.length === 0) {
+        const nombreCliente = cliente.nombre_cliente?.toLowerCase().trim() || '';
+        
+        facturasCliente = facturas.filter(factura => {
+          const nombreFactura = factura.contacto_nombre?.toLowerCase().trim() || '';
+          
+          // Coincidencia exacta de nombre completo
+          return nombreFactura === nombreCliente;
+        });
+      }
 
       // Calcular totales para este cliente
       cliente.totalGeneral = this.calcularTotalGeneral(facturasCliente);
@@ -252,31 +256,6 @@ export class CaratulaEvacsComponent implements OnInit {
       return fechaFactura >= inicio && fechaFactura <= fin;
     });
   }
-
-  // procesarClientesConFacturas(clientes: any[], facturas: any[]): void {
-  //   clientes.forEach(cliente => {
-  //     // Buscar facturas por clave (prioridad) y luego por nombre
-  //     const facturasCliente = facturas.filter(factura => {
-  //       // Verificar si la clave coincide
-  //       const claveCoincide = factura.contacto_referencia === cliente.clave;
-
-  //       // Verificar si el nombre coincide (búsqueda parcial)
-  //       const nombreCoincide = factura.contacto_nombre &&
-  //         cliente.nombre_cliente &&
-  //         factura.contacto_nombre.toLowerCase().includes(cliente.nombre_cliente.toLowerCase());
-
-  //       return claveCoincide || nombreCoincide;
-  //     });
-
-  //     // Calcular totales para este cliente
-  //     cliente.totalGeneral = this.calcularTotalGeneral(facturasCliente);
-  //     cliente.totalScott = this.calcularTotalScott(facturasCliente);
-  //     cliente.totalApparel = this.calcularTotalApparel(facturasCliente);
-  //     cliente.totalVittoria = this.calcularTotalVittoria(facturasCliente);
-  //     cliente.totalSyncros = this.calcularTotalSyncros(facturasCliente);
-  //     cliente.totalBold = this.calcularTotalBold(facturasCliente);
-  //   });
-  // }
 
   calcularTotalGeneral(facturas: any[]): number {
     return facturas.reduce((total, factura) => total + this.obtenerValorNumerico(factura.venta_total), 0);
@@ -378,7 +357,7 @@ export class CaratulaEvacsComponent implements OnInit {
       ['CARÁTULA EVACs - REPORTE'],
       [''],
       ['Fecha de generación:', new Date().toLocaleString('es-MX')],
-      ['Período filtrado:', `${this.fechaInicio} al ${this.fechaFin}`],
+      // ['Período filtrado:', `${this.fechaInicio} al ${this.fechaFin}`],
       [''],
       ['Filtros aplicados:'],
       ['Desde:', this.fechaInicio],
@@ -434,15 +413,16 @@ export class CaratulaEvacsComponent implements OnInit {
   }
 
   private crearHojaEvac(workbook: XLSX.WorkBook, nombreEvac: string, clientes: any[]): void {
-    const datos: any[] = [  // ← Cambiar a any[]
+    const datos: any[] = [
         [nombreEvac],
         [''],
-        ['NOMBRE DEL CLIENTE', 'TOTAL', 'SCOTT', 'APPAREL', 'VITTORIA', 'SYNCROS', 'BOLD']
+        ['CLAVE', 'NOMBRE DEL CLIENTE', 'TOTAL', 'SCOTT', 'APPAREL', 'VITTORIA', 'SYNCROS', 'BOLD']
     ];
 
     // Agregar datos de clientes
     clientes.forEach(cliente => {
         datos.push([
+            cliente.clave,
             cliente.nombre_cliente,
             { v: cliente.totalGeneral, t: 'n', z: '#,##0.00' },
             { v: cliente.totalScott, t: 'n', z: '#,##0.00' },
@@ -453,7 +433,7 @@ export class CaratulaEvacsComponent implements OnInit {
         ]);
     });
 
-    // Agregar total al final - CORREGIDO
+    // Agregar total al final
     datos.push(['']);
     datos.push(['TOTAL CLIENTES:', clientes.length]);
     datos.push(['TOTAL MONETARIO:', 
@@ -464,17 +444,18 @@ export class CaratulaEvacsComponent implements OnInit {
     
     // Ajustar anchos de columnas
     ws['!cols'] = [
-        { wch: 40 }, // Nombre cliente
-        { wch: 15 }, // Total
-        { wch: 15 }, // Scott
-        { wch: 15 }, // Apparel
-        { wch: 15 }, // Vittoria
-        { wch: 15 }, // Syncros
-        { wch: 15 }  // Bold
+        { wch: 10 },  // Clave
+        { wch: 35 },  // Nombre cliente
+        { wch: 15 },  // Total
+        { wch: 15 },  // Scott
+        { wch: 15 },  // Apparel
+        { wch: 15 },  // Vittoria
+        { wch: 15 },  // Syncros
+        { wch: 15 }   // Bold
     ];
     
     XLSX.utils.book_append_sheet(workbook, ws, nombreEvac);
-}
+  }
 
   private formatearFechaExcel(fecha: Date): string {
     const año = fecha.getFullYear();
