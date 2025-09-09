@@ -3,9 +3,13 @@
 <div class="monitor-container">
     <h2>Historial de Carátulas Enviadas</h2>
 
-     <div class="acciones-monitor">
+    <div class="acciones-monitor">
         <button class="btn btn-secondary" [routerLink]="['/inicio-caratulas']">
             <i class="fas fa-arrow-left"></i> Volver
+        </button>
+
+        <button class="btn btn-secondary" (click)="exportarAExcel()">
+            <i class="fas fa-file-excel"></i> Exportar a Excel
         </button>
     </div>
 
@@ -101,11 +105,6 @@
 
     <!-- Paginación -->
     <div *ngIf="historialFiltrado.length > 0 && !isLoading" class="paginacion-container">
-        <div class="paginador-info">
-            <span>Mostrando {{ historialPaginado.length }} de {{ historialFiltrado.length }} registros</span>
-            <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
-        </div>
-
         <div class="paginador-controles">
             <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1" class="btn-paginacion">
                 <i class="fas fa-angle-double-left"></i> Primera

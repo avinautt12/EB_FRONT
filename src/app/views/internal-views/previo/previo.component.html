@@ -91,7 +91,7 @@
               </app-filtro-previo>
             </div>
           </th>
-          <th style="min-width: 110px;">Nivel Cierre Compra Inicial</th>
+          <th style="min-width: 130px;">Cumplimiento de compra minima inicial</th>
           <th style="min-width: 150px;">Compra Mínima ANUAL</th>
           <th style="min-width: 80px;">%</th>
           <th style="min-width: 150px;"> Compra Mínima INICIAL</th>
@@ -137,7 +137,7 @@
           </td>
           <td>{{ cliente.acumulado_anticipado | currency:'USD':'symbol':'1.2-2' }}</td>
           <td>{{ cliente.nivel }}</td>
-          <td></td>
+          <td>{{ verificarCumplimientoCompraInicial(cliente) }}</td>
           <td>{{ cliente.compra_minima_anual | currency:'USD':'symbol':'1.0-0' }}</td>
           <td class="percentage-cell" [attr.data-tooltip]="getTooltipText(cliente, 'anual')">
             <div class="progress-bar" [ngClass]="getProgressClass(getPercentageValue(cliente, 'anual'))"
@@ -246,7 +246,7 @@
             <td>{{ integral.nombre_cliente }}</td>
             <td>{{ integral.acumulado_anticipado | currency:'USD':'symbol':'1.2-2' }}</td>
             <td>{{ integral.nivel }}</td>
-            <td></td>
+            <td>{{ verificarCumplimientoCompraInicial(integral) }}</td>
             <td>{{ integral.compra_minima_anual | currency:'USD':'symbol':'1.0-0' }}</td>
             <td>{{ calculoPorcentajeCompraAnual(integral) }}</td>
             <td>{{ integral.compra_minima_inicial | currency:'USD':'symbol':'1.0-0' }}</td>

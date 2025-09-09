@@ -1211,53 +1211,164 @@ export class PrevioComponent implements OnInit, OnDestroy {
 
   private calcularAvanceSepOct(cliente: Cliente, facturas: FacturaOdoo[]): number {
     const clave = cliente.clave;
+    const nombreCliente = cliente.nombre_cliente?.toUpperCase() || '';
     const fechaInicio = new Date('2025-09-01');
     const fechaFin = new Date('2025-10-31');
 
-    const facturasValidas = facturas.filter(factura => {
-      // Verificar cliente
-      const esClienteCorrecto = factura.contacto_referencia === clave ||
-        factura.contacto_referencia === `${clave}-CA`;
+    const esCasoEspecial = nombreCliente.includes('BROTHERS BIKE') ||
+      nombreCliente.includes('NARUCO') ||
+      clave === 'KC612' ||
+      clave === 'FD324' ||
+      nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ') ||
+      nombreCliente.includes('JOSE ANGEL DIAZ CORTES') ||
+      nombreCliente.includes('JUAN MANUEL RUACHO RANGEL');
 
-      // Verificar fechas
-      const fechaFactura = new Date(factura.fecha_factura);
-      const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
+    let facturasValidas;
 
-      // Verificar criterios de producto
-      const esProductoValido = factura.apparel === 'NO' &&
-        (factura.marca === 'SCOTT' ||
-          factura.categoria_producto?.includes('SCOTT') ||
-          factura.nombre_producto?.includes('SCOTT'));
+    if (esCasoEspecial) {
+      facturasValidas = facturas.filter(factura => {
+        const coincideClave = factura.contacto_referencia === clave;
 
-      return esClienteCorrecto && enRangoFechas && esProductoValido;
-    });
+        let coincideNombre = false;
+        if (nombreCliente.includes('BROTHERS BIKE')) {
+          coincideNombre = factura.contacto_nombre?.toUpperCase().includes('BROTHERS BIKE');
+        } else if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
+          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
+            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+        } else {
+          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
+            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+        }
+
+        const fechaFactura = new Date(factura.fecha_factura);
+        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
+        const esProductoValido = this.esFacturaProductoValido(factura);
+
+        if (nombreCliente.includes('BROTHERS BIKE')) {
+          return coincideNombre && enRangoFechas && esProductoValido;
+        } else if (nombreCliente.includes('NARUCO') && ['LC625', 'LC626', 'LC627'].includes(clave)) {
+          return coincideClave && enRangoFechas && esProductoValido;
+        } else {
+          return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
+        }
+      });
+    } else {
+      facturasValidas = facturas.filter(factura => {
+        const esClienteCorrecto = factura.contacto_referencia === clave || factura.contacto_referencia === `${clave}-CA`;
+        const fechaFactura = new Date(factura.fecha_factura);
+        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
+        const esProductoValido = this.esFacturaProductoValido(factura);
+        return esClienteCorrecto && enRangoFechas && esProductoValido;
+      });
+
+      // Si la búsqueda por clave no tiene resultados, intentamos con el nombre del cliente
+      if (facturasValidas.length === 0) {
+        const facturasPorNombre = facturas.filter(factura => {
+          let coincideNombre = false;
+          if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
+            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
+              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+          } else if (!nombreCliente.includes('NARUCO')) {
+            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
+              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+          }
+          const fechaFactura = new Date(factura.fecha_factura);
+          const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
+          const esProductoValido = this.esFacturaProductoValido(factura);
+          return coincideNombre && enRangoFechas && esProductoValido;
+        });
+        facturasValidas = facturasPorNombre;
+      }
+    }
 
     return facturasValidas.reduce((total, factura) => total + (+factura.venta_total || 0), 0);
   }
 
+  private esFacturaProductoValido(factura: FacturaOdoo): boolean {
+    const esMarcaScott = factura.marca === 'SCOTT';
+    const esApparelNo = factura.apparel === 'NO';
+    const categoria = factura.categoria_producto?.toUpperCase() || '';
+    const categoriaContieneScott = categoria.includes('SCOTT');
+    const categoriaNoContieneApparel = !categoria.includes('APPAREL');
+    const esCategoriaValida = categoriaContieneScott && categoriaNoContieneApparel;
+    const nombreProducto = factura.nombre_producto?.toUpperCase() || '';
+    const nombreProductoContieneScott = nombreProducto.includes('SCOTT');
+
+    return esMarcaScott &&
+      esApparelNo &&
+      (esCategoriaValida || nombreProductoContieneScott);
+  }
+
   private calcularAvanceNovDic(cliente: Cliente, facturas: FacturaOdoo[]): number {
     const clave = cliente.clave;
+    const nombreCliente = cliente.nombre_cliente?.toUpperCase() || '';
     const fechaInicio = new Date('2025-11-01');
     const fechaFin = new Date('2025-12-31');
 
+    const esCasoEspecial = nombreCliente.includes('BROTHERS BIKE') ||
+      nombreCliente.includes('NARUCO') ||
+      clave === 'KC612' ||
+      clave === 'FD324' ||
+      nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ') ||
+      nombreCliente.includes('JOSE ANGEL DIAZ CORTES') ||
+      nombreCliente.includes('JUAN MANUEL RUACHO RANGEL');
 
-    const facturasValidas = facturas.filter(factura => {
-      // Verificar cliente
-      const esClienteCorrecto = factura.contacto_referencia === clave ||
-        factura.contacto_referencia === `${clave}-CA`;
+    let facturasValidas;
 
-      // Verificar fechas
-      const fechaFactura = new Date(factura.fecha_factura);
-      const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
+    if (esCasoEspecial) {
+      facturasValidas = facturas.filter(factura => {
+        const coincideClave = factura.contacto_referencia === clave;
 
-      // Verificar criterios de producto
-      const esProductoValido = factura.apparel === 'NO' &&
-        (factura.marca === 'SCOTT' ||
-          factura.categoria_producto?.includes('SCOTT') ||
-          factura.nombre_producto?.includes('SCOTT'));
+        let coincideNombre = false;
+        if (nombreCliente.includes('BROTHERS BIKE')) {
+          coincideNombre = factura.contacto_nombre?.toUpperCase().includes('BROTHERS BIKE');
+        } else if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
+          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
+            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+        } else {
+          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
+            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+        }
 
-      return esClienteCorrecto && enRangoFechas && esProductoValido;
-    });
+        const fechaFactura = new Date(factura.fecha_factura);
+        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
+        const esProductoValido = this.esFacturaProductoValido(factura);
+
+        if (nombreCliente.includes('BROTHERS BIKE')) {
+          return coincideNombre && enRangoFechas && esProductoValido;
+        } else if (nombreCliente.includes('NARUCO') && ['LC625', 'LC626', 'LC627'].includes(clave)) {
+          return coincideClave && enRangoFechas && esProductoValido;
+        } else {
+          return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
+        }
+      });
+    } else {
+      facturasValidas = facturas.filter(factura => {
+        const esClienteCorrecto = factura.contacto_referencia === clave || factura.contacto_referencia === `${clave}-CA`;
+        const fechaFactura = new Date(factura.fecha_factura);
+        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
+        const esProductoValido = this.esFacturaProductoValido(factura);
+        return esClienteCorrecto && enRangoFechas && esProductoValido;
+      });
+
+      if (facturasValidas.length === 0) {
+        const facturasPorNombre = facturas.filter(factura => {
+          let coincideNombre = false;
+          if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
+            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
+              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+          } else if (!nombreCliente.includes('NARUCO')) {
+            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
+              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+          }
+          const fechaFactura = new Date(factura.fecha_factura);
+          const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
+          const esProductoValido = this.esFacturaProductoValido(factura);
+          return coincideNombre && enRangoFechas && esProductoValido;
+        });
+        facturasValidas = facturasPorNombre;
+      }
+    }
 
     return facturasValidas.reduce((total, factura) => total + (+factura.venta_total || 0), 0);
   }
@@ -2088,7 +2199,6 @@ export class PrevioComponent implements OnInit, OnDestroy {
     try {
       this.cargando = true;
 
-      // Llamar al endpoint que ya tiene todos los datos calculados
       this.previoService.obtenerPrevio().subscribe({
         next: (datos) => {
           if (!datos || datos.length === 0) {
@@ -2113,14 +2223,14 @@ export class PrevioComponent implements OnInit, OnDestroy {
             return `${num}%`;
           };
 
-          // Mapear los datos al formato deseado para Excel usando el orden especificado
+          // Mapear los datos al formato deseado para Excel
           const datosParaExcel = datos.map(item => ({
             'Clave': item.clave || '',
             'EVAC': item.evac || '',
             'Cliente': item.nombre_cliente || '',
             'Acumulado Compra Anticipada': formatearNumero(item.acumulado_anticipado || 0),
             'Elección NIVEL': item.nivel || '',
-            'Nivel Cierre Compra Inicial': item.nivel_cierre_compra_inicial || '',
+            'Cumplimiento de compra minima inicial': this.verificarCumplimientoCompraInicial(item),
             'Compra Mínima ANUAL': formatearNumero(item.compra_minima_anual || 0),
             '% Compra Anual': formatearPorcentaje(item.porcentaje_anual || 0),
             'Compra Mínima INICIAL': formatearNumero(item.compra_minima_inicial || 0),
@@ -2156,69 +2266,32 @@ export class PrevioComponent implements OnInit, OnDestroy {
             'BOLD Acumulado': formatearNumero(item.acumulado_bold || 0)
           }));
 
-          // Crear el libro de trabajo
           const ws = XLSX.utils.json_to_sheet(datosParaExcel);
           const wb = XLSX.utils.book_new();
 
-          // Configurar anchos de columna
-          const columnWidths = [
-            { wch: 12 }, // Clave
-            { wch: 15 }, // EVAC
-            { wch: 30 }, // Cliente
-            { wch: 18 }, // Acumulado Compra Anticipada
-            { wch: 20 }, // Elección NIVEL
-            { wch: 20 }, // Nivel Cierre Compra Inicial
-            { wch: 18 }, // Compra Mínima ANUAL
-            { wch: 12 }, // % Compra Anual
-            { wch: 18 }, // Compra Mínima INICIAL
-            { wch: 15 }, // Avance GLOBAL
-            { wch: 12 }, // % Avance Global
-            { wch: 18 }, // Compromiso SCOTT
-            { wch: 18 }, // Avance GLOBAL SCOTT
-            { wch: 10 }, // % Scott
-            { wch: 18 }, // Compromiso JUL-AGO
-            { wch: 15 }, // Avance Jul-Ago
-            { wch: 12 }, // % Jul-Ago
-            { wch: 18 }, // Compromiso SEPT-OCT
-            { wch: 15 }, // Avance Sep-Oct
-            { wch: 12 }, // % Sep-Oct
-            { wch: 18 }, // Compromiso NOV-DIC
-            { wch: 15 }, // Avance Nov-Dic
-            { wch: 12 }, // % Nov-Dic
-            { wch: 25 }, // Compromiso APPAREL, SYNCROS, VITTORIA
-            { wch: 18 }, // Avance GLOBAL App/Syn/Vit
-            { wch: 12 }, // % App/Syn/Vit
-            { wch: 18 }, // Compromiso JUL-AGO App
-            { wch: 15 }, // Avance Jul-Ago App
-            { wch: 12 }, // % Jul-Ago App
-            { wch: 18 }, // Compromiso SEPT-OCT App
-            { wch: 15 }, // Avance Sep-Oct App
-            { wch: 12 }, // % Sep-Oct App
-            { wch: 18 }, // Compromiso NOV-DIC App
-            { wch: 15 }, // Avance Nov-Dic App
-            { wch: 12 }, // % Nov-Dic App
-            { wch: 18 }, // SYNCROS Acumulado
-            { wch: 18 }, // APPAREL Acumulado
-            { wch: 18 }, // VITTORIA Acumulado
-            { wch: 15 }, // BOLD Acumulado
-          ];
+          // ===> LÓGICA PARA CALCULAR ANCHOS DINÁMICOS <===
+          const anchosDeColumna = Object.keys(datosParaExcel[0]).map(header => {
+            const anchoMaximo = datosParaExcel.reduce((max, row) => {
+              const valor = row[header as keyof typeof row];
+              const longitud = String(valor).length;
+              return Math.max(max, longitud);
+            }, header.length); // Comienza con la longitud del encabezado
+            return { wch: anchoMaximo + 2 }; // Añade un espacio extra
+          });
 
-          ws['!cols'] = columnWidths;
+          ws['!cols'] = anchosDeColumna;
+          // ===> FIN DE LA LÓGICA DE ANCHOS DINÁMICOS <===
 
-          // Agregar la hoja al libro
           XLSX.utils.book_append_sheet(wb, ws, 'Monitor Previo');
 
-          // Generar el nombre del archivo con fecha y hora
           const fecha = new Date();
           const fechaHora = fecha.getFullYear().toString() +
             ('0' + (fecha.getMonth() + 1)).slice(-2) +
             ('0' + fecha.getDate()).slice(-2);
           const nombreArchivo = `previo-${fechaHora}.xlsx`;
 
-          // Guardar el archivo
           XLSX.writeFile(wb, nombreArchivo);
 
-          // Mostrar mensaje de éxito
           this.mensajeAlerta = `Datos exportados exitosamente`;
           this.tipoAlerta = 'exito';
           this.cargando = false;
@@ -2769,5 +2842,16 @@ export class PrevioComponent implements OnInit, OnDestroy {
     return 0;
   }
 
+  verificarCumplimientoCompraInicial(cliente: ClienteConAcumulado): string {
+    // 1. Obtener los valores de forma segura, convirtiendo a número y estableciendo 0 si no son válidos
+    const avanceGlobal = this.limpiarNumero(cliente.avance_global);
+    const compraMinima = this.limpiarNumero(cliente.compra_minima_inicial);
 
+    // 2. Realizar la comparación estricta
+    if (avanceGlobal >= compraMinima && compraMinima > 0) {
+      return 'SI';
+    }
+
+    return 'NO';
+  }
 }

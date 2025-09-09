@@ -66,27 +66,48 @@
                 </div>
             </div>
 
-            <!-- Sección Compromiso BIMESTRAL -->
             <div class="section">
                 <h3>a) Compromiso BIMESTRAL</h3>
 
-                <!-- Info del período -->
-                <div class="periodo-header">
-                    <div class="periodo-title">Periodo - (Julio-Agosto)</div>
+                <div *ngIf="debeMostrarPeriodo('Jul-Ago')" class="periodo-header">
+                    <div class="periodo-title">Periodo - Julio-Agosto</div>
                     <div class="periodo-status">
                         <div class="status-item">
                             <span class="status-label">Estado:</span>
-                            <span class="status-value"
-                                [class.sin-iniciar]="getEstadoPeriodo('Jul-Ago') === 'Sin iniciar'"
-                                [class.en-curso]="getEstadoPeriodo('Jul-Ago') === 'En curso'"
-                                [class.cerrado]="getEstadoPeriodo('Jul-Ago') === 'Cerrado'">
+                            <span class="status-value" [class.cerrado]="getEstadoPeriodo('Jul-Ago') === 'Cerrado'"
+                                [class.en-curso]="getEstadoPeriodo('Jul-Ago') === 'En curso'">
                                 {{ getEstadoPeriodo('Jul-Ago') }}
                             </span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tabla de marcas -->
+                <div *ngIf="debeMostrarPeriodo('Sep-Oct')" class="periodo-header">
+                    <div class="periodo-title">Periodo - Septiembre-Octubre</div>
+                    <div class="periodo-status">
+                        <div class="status-item">
+                            <span class="status-label">Estado:</span>
+                            <span class="status-value" [class.cerrado]="getEstadoPeriodo('Sep-Oct') === 'Cerrado'"
+                                [class.en-curso]="getEstadoPeriodo('Sep-Oct') === 'En curso'">
+                                {{ getEstadoPeriodo('Sep-Oct') }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div *ngIf="debeMostrarPeriodo('Nov-Dic')" class="periodo-header">
+                    <div class="periodo-title">Periodo - Noviembre-Diciembre</div>
+                    <div class="periodo-status">
+                        <div class="status-item">
+                            <span class="status-label">Estado:</span>
+                            <span class="status-value" [class.cerrado]="getEstadoPeriodo('Nov-Dic') === 'Cerrado'"
+                                [class.en-curso]="getEstadoPeriodo('Nov-Dic') === 'En curso'">
+                                {{ getEstadoPeriodo('Nov-Dic') }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="table-container">
                     <table>
                         <thead>
@@ -98,257 +119,45 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Compromiso</td>
-                                <td>{{ datosCliente.compromiso_jul_ago | currency:'USD':'symbol':'1.2-2' }}</td>
-                                <td>{{ datosCliente.compromiso_jul_ago_app | currency:'USD':'symbol':'1.2-2' }}</td>
+                                <td>Compromiso Acumulado</td>
+                                <td>{{ getCompromisoAcumuladoScott() | currency:'USD':'symbol':'1.2-2' }}</td>
+                                <td>{{ getCompromisoAcumuladoApparel() | currency:'USD':'symbol':'1.2-2' }}</td>
                             </tr>
                             <tr>
-                                <td>Avance</td>
-                                <td>{{ datosCliente.avance_jul_ago| currency:'USD':'symbol':'1.2-2' }}</td>
-                                <td>{{ datosCliente.avance_jul_ago_app | currency:'USD':'symbol':'1.2-2' }}</td>
+                                <td>Avance Acumulado</td>
+                                <td>{{ getAvanceAcumuladoScott() | currency:'USD':'symbol':'1.2-2' }}</td>
+                                <td>{{ getAvanceAcumuladoApparel() | currency:'USD':'symbol':'1.2-2' }}</td>
                             </tr>
                             <tr>
-                                <td>%</td>
-                                <td>{{ datosCliente.porcentaje_jul_ago }}%</td>
-                                <td>{{ datosCliente.porcentaje_jul_ago_app }}%</td>
-                            </tr>
-                            <tr>
-                                <td>Importe Faltante</td>
-                                <td>
-                                    {{ getImporteFaltanteScottJulAgo() |
-                                    currency:'USD':'symbol':'1.2-2' }}
-                                </td>
-                                <td>{{ getImporteFaltanteApparelJulAgo() |
-                                    currency:'USD':'symbol':'1.2-2' }}</td>
-                            </tr>
-                            <tr
-                                *ngIf="getImporteFaltanteScottJulAgo() === 0 || getImporteFaltanteApparelJulAgo() === 0">
-                                <td>Sobrante</td>
-                                <td>
-                                    {{ getSobranteScottJulAgo() | currency:'USD':'symbol':'1.2-2' }}
-                                </td>
-                                <td>
-                                    {{ getSobranteApparelJulAgo() | currency:'USD':'symbol':'1.2-2' }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Estatus</td>
-                                <td>
-                                    <ng-container
-                                        *ngIf="(datosCliente.compromiso_jul_ago - datosCliente.avance_jul_ago) <= 0; else faltante">
-                                        <span class="estado-cumplido">Cumplido</span>
-                                    </ng-container>
-                                    <ng-template #faltante>
-                                        <span class="estado-faltante">Faltante</span>
-                                    </ng-template>
-                                </td>
-                                <td>
-                                    <ng-container
-                                        *ngIf="(datosCliente.compromiso_jul_ago_app - datosCliente.avance_jul_ago_app) <= 0; else faltante">
-                                        <span class="estado-cumplido">Cumplido</span>
-                                    </ng-container>
-                                    <ng-template #faltante>
-                                        <span class="estado-faltante">Faltante</span>
-                                    </ng-template>
-                                </td>
+                                <td>% Acumulado</td>
+                                <td>{{ getPorcentajeAcumuladoScott() }}%</td>
+                                <td>{{ getPorcentajeAcumuladoApparel() }}%</td>
                             </tr>
                             <tr>
                                 <td>Importe Faltante Acumulado</td>
-                                <td colspan="2">
-                                    {{ getImporteFaltanteAcumuladoJulAgo() | currency:'USD':'symbol':'1.2-2' }}
+                                <td>{{ getFaltanteAcumuladoScott() | currency:'USD':'symbol':'1.2-2' }}</td>
+                                <td>{{ getFaltanteAcumuladoApparel() | currency:'USD':'symbol':'1.2-2' }}</td>
+                            </tr>
+                            <tr *ngIf="getSobranteAcumuladoScott() > 0 || getSobranteAcumuladoApparel() > 0">
+                                <td>Sobrante Acumulado</td>
+                                <td>{{ getSobranteAcumuladoScott() | currency:'USD':'symbol':'1.2-2' }}</td>
+                                <td>{{ getSobranteAcumuladoApparel() | currency:'USD':'symbol':'1.2-2' }}</td>
+                            </tr>
+                            <tr>
+                                <td>Estatus Acumulado</td>
+                                <td>
+                                    <span [class.estado-cumplido]="getFaltanteAcumuladoScott() <= 0"
+                                        [class.estado-faltante]="getFaltanteAcumuladoScott() > 0">
+                                        {{ getFaltanteAcumuladoScott() <= 0 ? 'Cumplido' : 'Faltante' }} </span>
+                                </td>
+                                <td>
+                                    <span [class.estado-cumplido]="getFaltanteAcumuladoApparel() <= 0"
+                                        [class.estado-faltante]="getFaltanteAcumuladoApparel() > 0">
+                                        {{ getFaltanteAcumuladoApparel() <= 0 ? 'Cumplido' : 'Faltante' }} </span>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
-                </div>
-
-                <div *ngIf="mostrarPeriodoSepOct()">
-                    <!-- Info del período -->
-                    <div class="periodo-header">
-                        <div class="periodo-title">Periodo - (Septiembre-Octubre)</div>
-                        <div class="periodo-status">
-                            <div class="status-item">
-                                <span class="status-label">Estado:</span>
-                                <span class="status-value"
-                                    [class.sin-iniciar]="getEstadoPeriodo('Sep-Oct') === 'Sin iniciar'"
-                                    [class.en-curso]="getEstadoPeriodo('Sep-Oct') === 'En curso'"
-                                    [class.cerrado]="getEstadoPeriodo('Sep-Oct') === 'Cerrado'">
-                                    {{ getEstadoPeriodo('Sep-Oct') }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tabla de marcas -->
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>SCOTT</th>
-                                    <th>APPAREL, SYNCROS, VITTORIA</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Compromiso</td>
-                                    <td>{{ datosCliente.compromiso_sep_oct | currency:'USD':'symbol':'1.2-2' }}</td>
-                                    <td>{{ datosCliente.compromiso_sep_oct_app | currency:'USD':'symbol':'1.2-2' }}</td>
-                                </tr>
-                                <tr>
-                                    <td>Avance</td>
-                                    <td>{{ datosCliente.avance_sep_oct | currency:'USD':'symbol':'1.2-2' }}</td>
-                                    <td>{{ datosCliente.avance_sep_oct_app | currency:'USD':'symbol':'1.2-2' }}</td>
-                                </tr>
-                                <tr>
-                                    <td>%</td>
-                                    <td>{{ datosCliente.porcentaje_sep_oct }}%</td>
-                                    <td>{{ datosCliente.porcentaje_sep_oct_app }}%</td>
-                                </tr>
-                                <tr>
-                                    <td>Importe Faltante</td>
-                                    <td>
-                                        {{ getImporteFaltanteScottSepOct() |
-                                        currency:'USD':'symbol':'1.2-2' }}
-                                    </td>
-                                    <td>{{ getImporteFaltanteApparelSepOct() |
-                                        currency:'USD':'symbol':'1.2-2' }}</td>
-                                </tr>
-                                <tr
-                                    *ngIf="getImporteFaltanteScottSepOct() === 0 || getImporteFaltanteApparelSepOct() === 0">
-                                    <td>Sobrante</td>
-                                    <td>
-                                        {{ getSobranteScottSepOct() | currency:'USD':'symbol':'1.2-2' }}
-                                    </td>
-                                    <td>
-                                        {{ getSobranteApparelSepOct() | currency:'USD':'symbol':'1.2-2' }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                <tr>
-                                    <td>Estatus</td>
-                                    <td>
-                                        <ng-container
-                                            *ngIf="(datosCliente.compromiso_sep_oct - datosCliente.avance_sep_oct) <= 0; else faltante">
-                                            <span class="estado-cumplido">Cumplido</span>
-                                        </ng-container>
-                                        <ng-template #faltante>
-                                            <span class="estado-faltante">Faltante</span>
-                                        </ng-template>
-                                    </td>
-                                    <td>
-                                        <ng-container
-                                            *ngIf="(datosCliente.compromiso_sep_oct_app - datosCliente.avance_sep_oct_app) <= 0; else faltante">
-                                            <span class="estado-cumplido">Cumplido</span>
-                                        </ng-container>
-                                        <ng-template #faltante>
-                                            <span class="estado-faltante">Faltante</span>
-                                        </ng-template>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Importe Faltante Acumulado</td>
-                                    <td colspan="2">
-                                        {{ getImporteFaltanteAcumuladoSepOct() | currency:'USD':'symbol':'1.2-2' }}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div *ngIf="mostrarPeriodoNovDic()">
-                    <!-- Info del período -->
-                    <div class="periodo-header">
-                        <div class="periodo-title">Periodo - (Noviembre-Diciembre)</div>
-                        <div class="periodo-status">
-                            <div class="status-item">
-                                <span class="status-label">Estado:</span>
-                                <span class="status-value"
-                                    [class.sin-iniciar]="getEstadoPeriodo('Nov-Dic') === 'Sin iniciar'"
-                                    [class.en-curso]="getEstadoPeriodo('Nov-Dic') === 'En curso'"
-                                    [class.cerrado]="getEstadoPeriodo('Nov-Dic') === 'Cerrado'">
-                                    {{ getEstadoPeriodo('Nov-Dic') }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tabla de marcas -->
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>SCOTT</th>
-                                    <th>APPAREL, SYNCROS, VITTORIA</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Compromiso</td>
-                                    <td>{{ datosCliente.compromiso_nov_dic | currency:'USD':'symbol':'1.2-2' }}</td>
-                                    <td>{{ datosCliente.compromiso_nov_dic_app | currency:'USD':'symbol':'1.2-2' }}</td>
-                                </tr>
-                                <tr>
-                                    <td>Avance</td>
-                                    <td>{{ datosCliente.avance_nov_dic | currency:'USD':'symbol':'1.2-2' }}</td>
-                                    <td>{{ datosCliente.avance_nov_dic_app | currency:'USD':'symbol':'1.2-2' }}</td>
-                                </tr>
-                                <tr>
-                                    <td>%</td>
-                                    <td>{{ datosCliente.porcentaje_nov_dic }}%</td>
-                                    <td>{{ datosCliente.porcentaje_nov_dic_app }}%</td>
-                                </tr>
-                                <tr>
-                                    <td>Importe Faltante</td>
-                                    <td>
-                                        {{ getImporteFaltanteScottNovDic() |
-                                        currency:'USD':'symbol':'1.2-2' }}
-                                    </td>
-                                    <td>{{ getImporteFaltanteApparelNovDic() |
-                                        currency:'USD':'symbol':'1.2-2' }}</td>
-                                </tr>
-                                <tr
-                                    *ngIf="getImporteFaltanteScottNovDic() === 0 || getImporteFaltanteApparelNovDic() === 0">
-                                    <td>Sobrante</td>
-                                    <td>
-                                        {{ getSobranteScottNovDic() | currency:'USD':'symbol':'1.2-2' }}
-                                    </td>
-                                    <td>
-                                        {{ getSobranteApparelNovDic() | currency:'USD':'symbol':'1.2-2' }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Estatus</td>
-                                    <td>
-                                        <ng-container
-                                            *ngIf="(datosCliente.compromiso_nov_dic - datosCliente.avance_nov_dic) <= 0; else faltante">
-                                            <span class="estado-cumplido">Cumplido</span>
-                                        </ng-container>
-                                        <ng-template #faltante>
-                                            <span class="estado-faltante">Faltante</span>
-                                        </ng-template>
-                                    </td>
-                                    <td>
-                                        <ng-container
-                                            *ngIf="(datosCliente.compromiso_nov_dic_app - datosCliente.avance_nov_dic_app) <= 0; else faltante">
-                                            <span class="estado-cumplido">Cumplido</span>
-                                        </ng-container>
-                                        <ng-template #faltante>
-                                            <span class="estado-faltante">Faltante</span>
-                                        </ng-template>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Importe Faltante Acumulado</td>
-                                    <td colspan="2">
-                                        {{ getImporteFaltanteAcumuladoNovDic() | currency:'USD':'symbol':'1.2-2' }}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
             </div>
 
@@ -370,29 +179,6 @@
                     <div class="compra-item">
                         <div class="compra-label">Porcentaje</div>
                         <div class="compra-porcentaje">{{ datosCliente.porcentaje_global }}%</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Compra Mínima ANUAL -->
-            <div class="section">
-                <h3>c) Compra Mínima ANUAL</h3>
-                <div class="compra-minima">
-                    <div class="compra-item">
-                        <div class="compra-label">Meta</div>
-                        <div class="compra-value">{{ datosCliente.compra_minima_anual | currency:'USD':'symbol':'1.2-2'
-                            }}
-                        </div>
-                    </div>
-                    <div class="compra-item">
-                        <div class="compra-label">Avance</div>
-                        <div class="compra-value">{{ datosCliente.acumulado_anticipado | currency:'USD':'symbol':'1.2-2'
-                            }}
-                        </div>
-                    </div>
-                    <div class="compra-item">
-                        <div class="compra-label">Porcentaje</div>
-                        <div class="compra-porcentaje">{{ datosCliente.porcentaje_anual }}%</div>
                     </div>
                 </div>
             </div>

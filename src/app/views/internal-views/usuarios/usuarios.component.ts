@@ -7,6 +7,7 @@ import { SocketService } from '../../../services/socket.service';
 import { AlertaService } from '../../../services/alerta.service';
 import { ClientesService } from '../../../services/clientes.service';
 import { AlertaComponent } from '../../../components/alerta/alerta.component';
+import { FiltroComponent } from '../../../components/filtro/filtro.component';
 
 interface Usuario {
   id: number | null;
@@ -15,8 +16,8 @@ interface Usuario {
   nombre: string;
   correo: string;
   rol: string;
-  cliente_nombre?: string | null; // Nombre del cliente asociado, si aplica
-  cliente_id?: number;
+  cliente_nombre?: string | null;
+  cliente_id?: number | null;
   activo: boolean;
 }
 
@@ -25,10 +26,18 @@ interface ClienteNombre {
   nombre_cliente: string;
 }
 
+interface FiltroOpciones {
+  clave: any[];
+  nombre: any[];
+  correo: any[];
+  usuario: any[];
+  rol: any[];
+}
+
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, FormsModule, HomeBarComponent, AlertaComponent],
+  imports: [CommonModule, FormsModule, HomeBarComponent, AlertaComponent, FiltroComponent],
   templateUrl: './usuarios.component.html',
   styleUrls: ['./usuarios.component.css']
 })
@@ -64,13 +73,35 @@ export class UsuariosComponent implements OnInit {
   mensajeAlerta: string | null = null;
   tipoAlerta: 'exito' | 'error' = 'exito';
 
-  filtros = {
-    clave: '',
-    nombre: '',
-    correo: '',
-    usuario: '',
-    rol: ''
+  // Eliminamos los filtros antiguos de búsqueda por texto
+  // filtros = {
+  //   clave: '',
+  //   nombre: '',
+  //   correo: '',
+  //   usuario: '',
+  //   rol: ''
+  // };
+
+  filtroOpciones: FiltroOpciones = {
+    clave: [],
+    nombre: [],
+    correo: [],
+    usuario: [],
+    rol: []
   };
+
+  filtrosAplicados: any = {
+    clave: [],
+    nombre: [],
+    correo: [],
+    usuario: [],
+    rol: []
+  };
+
+  get filtrosActivos(): boolean {
+    // Corregimos el error de tipo añadiendo anotación de tipo
+    return (Object.values(this.filtrosAplicados) as any[]).some((filtro: any[]) => filtro.length > 0);
+  }
 
   paginaActual = 1;
   usuariosPorPagina = 25;
@@ -102,7 +133,6 @@ export class UsuariosComponent implements OnInit {
       },
       error: () => console.error('Error al obtener clientes')
     });
-
   }
 
   cargarUsuarios(): void {
@@ -114,7 +144,8 @@ export class UsuariosComponent implements OnInit {
           rol: u.rol === 'Administrador' ? this.ROLES.ADMIN.backendValue : this.ROLES.USUARIO.backendValue
         }));
         this.cargandoUsuarios = false;
-        this.filtrarUsuarios(); // inicializa usuariosFiltrados con todos
+        this.prepararOpcionesFiltros();
+        this.filtrarUsuarios();
       },
       error: (error) => {
         console.error('Error al cargar usuarios:', error);
@@ -123,32 +154,78 @@ export class UsuariosComponent implements OnInit {
     });
   }
 
+  prepararOpcionesFiltros(): void {
+    // Preparar opciones para cada filtro
+    this.filtroOpciones.clave = Array.from(new Set(this.usuarios.map(u => u.id?.toString() || '')))
+      .filter(id => id)
+      .map(id => ({ value: id, selected: false }));
+
+    this.filtroOpciones.nombre = Array.from(new Set(this.usuarios.map(u => u.nombre)))
+      .filter(nombre => nombre)
+      .map(nombre => ({ value: nombre, selected: false }));
+
+    this.filtroOpciones.correo = Array.from(new Set(this.usuarios.map(u => u.correo)))
+      .filter(correo => correo)
+      .map(correo => ({ value: correo, selected: false }));
+
+    this.filtroOpciones.usuario = Array.from(new Set(this.usuarios.map(u => u.usuario)))
+      .filter(usuario => usuario)
+      .map(usuario => ({ value: usuario, selected: false }));
+
+    this.filtroOpciones.rol = Array.from(new Set(this.usuarios.map(u => u.rol)))
+      .filter(rol => rol)
+      .map(rol => ({
+        value: rol === this.ROLES.ADMIN.backendValue ? this.ROLES.ADMIN.display : this.ROLES.USUARIO.display,
+        selected: false
+      }));
+  }
+
+  aplicarFiltro(campo: string, valores: string[]): void {
+    this.filtrosAplicados[campo] = valores;
+    this.filtrarUsuarios();
+  }
+
+  limpiarFiltro(campo: string): void {
+    this.filtrosAplicados[campo] = [];
+    this.filtrarUsuarios();
+  }
+
+  limpiarTodosFiltros(): void {
+    Object.keys(this.filtrosAplicados).forEach(campo => {
+      this.filtrosAplicados[campo] = [];
+    });
+    this.filtrarUsuarios();
+  }
+
   get totalPaginas(): number {
     return Math.ceil(this.usuariosFiltrados.length / this.usuariosPorPagina);
   }
 
-  filtrarUsuarios() {
+  filtrarUsuarios(): void {
     this.paginaActual = 1;
 
-    this.usuariosFiltrados = this.usuarios.filter(u => {
-      // Protege todos los campos que usan toLowerCase()
-      const nombre = typeof u.nombre === 'string' ? u.nombre : '';
-      const correo = typeof u.correo === 'string' ? u.correo : '';
-      const usuarioStr = typeof u.usuario === 'string' ? u.usuario : '';
-      const rol = typeof u.rol === 'string' ? u.rol : '';
-
-      // Protege también el filtro de clave (ID)
-      const claveFiltro = typeof this.filtros.clave === 'string' ? this.filtros.clave : '';
-      const idStr = u.id ? u.id.toString() : '';
-
-      const coincideClave = idStr.toLowerCase().includes(claveFiltro.toLowerCase());
-      const coincideNombre = nombre.toLowerCase().includes(this.filtros.nombre.toLowerCase());
-      const coincideCorreo = correo.toLowerCase().includes(this.filtros.correo.toLowerCase());
-      const coincideUsuario = usuarioStr.toLowerCase().includes(this.filtros.usuario.toLowerCase());
-      const coincideRol = this.filtros.rol === '' || rol === this.filtros.rol;
-
-      return coincideClave && coincideNombre && coincideCorreo && coincideUsuario && coincideRol;
+    this.usuariosFiltrados = this.usuarios.filter(usuario => {
+      // Aplicar todos los filtros
+      return this.cumpleFiltro('clave', usuario.id?.toString()) &&
+        this.cumpleFiltro('nombre', usuario.nombre) &&
+        this.cumpleFiltro('correo', usuario.correo) &&
+        this.cumpleFiltro('usuario', usuario.usuario) &&
+        this.cumpleFiltroRol(usuario.rol);
     });
+  }
+
+  private cumpleFiltro(campo: string, valor: string = ''): boolean {
+    if (this.filtrosAplicados[campo].length === 0) return true;
+    return this.filtrosAplicados[campo].includes(valor);
+  }
+
+  private cumpleFiltroRol(rol: string): boolean {
+    if (this.filtrosAplicados.rol.length === 0) return true;
+
+    const rolDisplay = rol === this.ROLES.ADMIN.backendValue ?
+      this.ROLES.ADMIN.display : this.ROLES.USUARIO.display;
+
+    return this.filtrosAplicados.rol.includes(rolDisplay);
   }
 
   filtrarClientes(): ClienteNombre[] {
@@ -190,6 +267,11 @@ export class UsuariosComponent implements OnInit {
     };
     this.mostrarFormularioRegistroVisible = true;
     this.mostrarFormularioEdicion = false;
+    
+    // Resetear campos de cliente
+    this.asociarCliente = false;
+    this.clienteBusqueda = '';
+    this.clienteSeleccionadoId = null;
   }
 
   editarUsuario(usuario: Usuario): void {
@@ -245,10 +327,10 @@ export class UsuariosComponent implements OnInit {
 
       // Prepara el objeto para enviar
       const usuarioParaCrear: any = {
-        usuario: this.nuevoUsuario.usuario,
+        usuario: this.nuevoUsuario.usuario.trim(),
         contrasena: this.nuevoUsuario.contrasena,
-        nombre: this.nuevoUsuario.nombre,
-        correo: this.nuevoUsuario.correo,
+        nombre: this.nuevoUsuario.nombre.trim(),
+        correo: this.nuevoUsuario.correo.trim(),
         rol: this.nuevoUsuario.rol,
         activo: true
       };
@@ -267,12 +349,30 @@ export class UsuariosComponent implements OnInit {
           this.volverALista();
 
           // Actualiza la lista
-          this.usuarios.unshift(usuarioCreado);
+          this.usuarios.unshift({
+            ...usuarioCreado,
+            rol: usuarioCreado.rol === 'Administrador' ? this.ROLES.ADMIN.backendValue : this.ROLES.USUARIO.backendValue
+          });
+          this.prepararOpcionesFiltros(); // Actualizar opciones de filtro
           this.filtrarUsuarios();
+
+          // Limpiar campos de cliente para el próximo uso
+          this.asociarCliente = false;
+          this.clienteBusqueda = '';
+          this.clienteSeleccionadoId = null;
         },
         error: (error) => {
-          console.error('Error completo:', error); // Debug detallado
-          const mensaje = error.error?.error || error.message || 'Error al crear usuario';
+          console.error('Error completo:', error);
+          let mensaje = 'Error al crear usuario';
+
+          if (error.error?.error) {
+            mensaje = error.error.error;
+          } else if (error.status === 400) {
+            mensaje = 'Datos inválidos. Verifique la información';
+          } else if (error.status === 409) {
+            mensaje = 'El usuario, correo o nombre ya existen';
+          }
+
           this.alerta.mostrarError(mensaje);
           this.cargandoUsuarios = false;
         }
@@ -290,18 +390,19 @@ export class UsuariosComponent implements OnInit {
       this.cargandoUsuarios = true;
 
       const datosActualizacion: any = {
-        nombre: this.nuevoUsuario.nombre,
+        nombre: this.nuevoUsuario.nombre.trim(),
         rol: this.nuevoUsuario.rol,
         activo: this.nuevoUsuario.activo,
-        usuario: this.nuevoUsuario.usuario,
-        correo: this.nuevoUsuario.correo
+        usuario: this.nuevoUsuario.usuario.trim(),
+        correo: this.nuevoUsuario.correo.trim()
       };
 
+      // Solo enviar contraseña si se proporcionó una nueva y no está vacía
       if (this.nuevoUsuario.contrasena?.trim()) {
         datosActualizacion.contrasena = this.nuevoUsuario.contrasena;
       }
 
-      // 👇 Aquí decides si actualizar o eliminar el cliente_id
+      // Manejo de cliente_id según la selección
       if (this.asociarCliente && this.clienteSeleccionadoId) {
         datosActualizacion.cliente_id = this.clienteSeleccionadoId;
       } else {
@@ -310,22 +411,44 @@ export class UsuariosComponent implements OnInit {
 
       this.usuariosService.actualizarUsuario(this.nuevoUsuario.id, datosActualizacion).subscribe({
         next: (usuarioActualizado) => {
-          const index = this.usuarios.findIndex(u => u.id === usuarioActualizado.id);
+          // Convertir el rol al formato del frontend
+          const usuarioActualizadoFormateado = {
+            ...usuarioActualizado,
+            rol: usuarioActualizado.rol === 'Administrador' ? this.ROLES.ADMIN.backendValue : this.ROLES.USUARIO.backendValue
+          };
+
+          // Actualizar en la lista local
+          const index = this.usuarios.findIndex(u => u.id === usuarioActualizadoFormateado.id);
           if (index !== -1) {
-            this.usuarios[index] = usuarioActualizado;
+            this.usuarios[index] = usuarioActualizadoFormateado;
+            this.prepararOpcionesFiltros(); // Actualizar opciones de filtro
             this.filtrarUsuarios();
           }
+
           this.alerta.mostrarExito('✅ Usuario actualizado con éxito');
           this.volverALista();
           this.cargandoUsuarios = false;
+
+          // Limpiar campos de cliente
+          this.asociarCliente = false;
+          this.clienteBusqueda = '';
+          this.clienteSeleccionadoId = null;
         },
         error: (error) => {
           console.error('Error al actualizar usuario:', error);
-          if (error.status === 400 && error.error?.errores) {
-            this.alerta.mostrarError(error.error.errores.join('\n'));
-          } else {
-            this.alerta.mostrarError('Error al actualizar usuario');
+          let mensaje = 'Error al actualizar usuario';
+
+          if (error.error?.error) {
+            mensaje = error.error.error;
+          } else if (error.status === 400) {
+            mensaje = 'Datos inválidos. Verifique la información';
+          } else if (error.status === 409) {
+            mensaje = 'El usuario, correo o nombre ya existen';
+          } else if (error.status === 404) {
+            mensaje = 'Usuario no encontrado';
           }
+
+          this.alerta.mostrarError(mensaje);
           this.cargandoUsuarios = false;
         }
       });
@@ -333,32 +456,53 @@ export class UsuariosComponent implements OnInit {
   }
 
   validarFormulario(): boolean {
-    if (!this.nuevoUsuario.nombre) {
-      alert('El nombre es obligatorio');
+    // Validación de nombre de usuario (3-20 caracteres alfanuméricos)
+    if (this.mostrarFormularioRegistroVisible) {
+      const usuarioRegex = /^[a-zA-Z0-9_.-]{3,20}$/;
+      if (!usuarioRegex.test(this.nuevoUsuario.usuario)) {
+        this.alerta.mostrarError('El nombre de usuario debe tener entre 3 y 20 caracteres alfanuméricos');
+        return false;
+      }
+    }
+
+    // Validación de correo
+    if (this.nuevoUsuario.correo && !this.validarEmail(this.nuevoUsuario.correo)) {
+      this.alerta.mostrarError('El correo electrónico no es válido');
+      return false;
+    }
+
+    // Validación de contraseña (solo para registro)
+    if (this.mostrarFormularioRegistroVisible) {
+      if (!this.nuevoUsuario.contrasena) {
+        this.alerta.mostrarError('La contraseña es requerida');
+        return false;
+      }
+      if (this.nuevoUsuario.contrasena.length < 6) {
+        this.alerta.mostrarError('La contraseña debe tener al menos 6 caracteres');
+        return false;
+      }
+    }
+
+    // Validación de campos obligatorios
+    if (!this.nuevoUsuario.nombre?.trim()) {
+      this.alerta.mostrarError('El nombre es obligatorio');
       return false;
     }
 
     if (this.mostrarFormularioRegistroVisible) {
-      if (!this.nuevoUsuario.usuario) {
-        alert('El nombre de usuario es obligatorio');
+      if (!this.nuevoUsuario.usuario?.trim()) {
+        this.alerta.mostrarError('El nombre de usuario es obligatorio');
         return false;
       }
-      if (!this.nuevoUsuario.correo) {
-        alert('El correo electrónico es obligatorio');
-        return false;
-      }
-      if (!this.nuevoUsuario.contrasena) {
-        alert('La contraseña es requerida');
-        return false;
-      }
-      if (this.nuevoUsuario.contrasena.length < 6) {
-        alert('La contraseña debe tener al menos 6 caracteres');
+      if (!this.nuevoUsuario.correo?.trim()) {
+        this.alerta.mostrarError('El correo electrónico es obligatorio');
         return false;
       }
     }
 
-    if (this.nuevoUsuario.correo && !this.validarEmail(this.nuevoUsuario.correo)) {
-      alert('El correo electrónico no es válido');
+    // Validación de cliente si está seleccionado
+    if (this.asociarCliente && !this.clienteSeleccionadoId) {
+      this.alerta.mostrarError('Debe seleccionar un cliente válido');
       return false;
     }
 
@@ -387,6 +531,7 @@ export class UsuariosComponent implements OnInit {
         next: () => {
           // Actualización MANUAL
           this.usuarios = this.usuarios.filter(u => u.id !== this.usuarioAEliminar?.id);
+          this.prepararOpcionesFiltros(); // Actualizar opciones de filtro
           this.filtrarUsuarios();
           this.alerta.mostrarExito('✅ Usuario eliminado');
           this.mostrarConfirmacion = false;
@@ -401,9 +546,39 @@ export class UsuariosComponent implements OnInit {
     }
   }
 
-  verDetalles(usuario: Usuario): void {
-    console.log('Ver detalles de:', usuario);
-    // Aquí puedes mostrar un modal, redirigir, etc.
+  obtenerRangoPaginas(): number[] {
+    const totalPages = this.totalPaginas;
+    const currentPage = this.paginaActual;
+    const delta = 2;
+    const range = [];
+
+    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+      if (i > 0 && i <= totalPages) {
+        range.push(i);
+      }
+    }
+
+    if (currentPage - delta > 2) {
+      range.unshift(-1); // Marcador para elipsis
+    }
+    if (currentPage + delta < totalPages - 1) {
+      range.push(-1); // Marcador para elipsis
+    }
+
+    range.unshift(1);
+    if (totalPages > 1) {
+      range.push(totalPages);
+    }
+
+    return range.filter((page, index, array) => 
+      page !== -1 || array[index - 1] !== -1
+    );
+  }
+
+  cambiarPagina(pagina: number): void {
+    if (pagina > 0 && pagina <= this.totalPaginas) {
+      this.paginaActual = pagina;
+    }
   }
 
   paginaAnterior(): void {
@@ -415,14 +590,6 @@ export class UsuariosComponent implements OnInit {
   paginaSiguiente(): void {
     if (this.paginaActual < this.totalPaginas) {
       this.paginaActual++;
-    }
-  }
-
-  toggleFiltro(campo: string) {
-    if (this.filtroAbierto === campo) {
-      this.filtroAbierto = null;
-    } else {
-      this.filtroAbierto = campo;
     }
   }
 }

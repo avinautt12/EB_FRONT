@@ -148,7 +148,7 @@ h2 {
 /* FILAS DE DATOS - MUY COMPACTAS */
 .tabla-facturas tbody tr {
   background-color: #1e1e1c;
-  height: auto;
+  height: 30px;
 }
 
 .tabla-facturas tbody tr:nth-child(even) {

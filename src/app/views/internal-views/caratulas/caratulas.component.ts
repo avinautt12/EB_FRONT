@@ -691,48 +691,6 @@ export class CaratulasComponent implements OnInit {
     return faltanteScott + faltanteApp;
   }
 
-  getEstadoPeriodo(periodo: string): string {
-    const fechaActual = new Date(); // Fecha actual del sistema
-    const añoActual = fechaActual.getFullYear();
-    const mesActual = fechaActual.getMonth() + 1; // Enero = 1, Diciembre = 12
-
-    // Definición de periodos para 2025
-    const PERIODO_JUL_AGO = { inicio: 7, fin: 8, año: 2025 };
-    const PERIODO_SEP_OCT = { inicio: 9, fin: 10, año: 2025 };
-    const PERIODO_NOV_DIC = { inicio: 11, fin: 12, año: 2025 };
-
-    // Determinar qué periodo estamos evaluando
-    let periodoEvaluar;
-    switch (periodo) {
-      case 'Jul-Ago':
-        periodoEvaluar = PERIODO_JUL_AGO;
-        break;
-      case 'Sep-Oct':
-        periodoEvaluar = PERIODO_SEP_OCT;
-        break;
-      case 'Nov-Dic':
-        periodoEvaluar = PERIODO_NOV_DIC;
-        break;
-      default:
-        return 'Sin definir';
-    }
-
-    // 1. Verificar si estamos ANTES del periodo
-    if (añoActual < periodoEvaluar.año ||
-      (añoActual === periodoEvaluar.año && mesActual < periodoEvaluar.inicio)) {
-      return 'Sin iniciar';
-    }
-
-    // 2. Verificar si estamos DESPUÉS del periodo
-    if (añoActual > periodoEvaluar.año ||
-      (añoActual === periodoEvaluar.año && mesActual > periodoEvaluar.fin)) {
-      return 'Cerrado';
-    }
-
-    // 3. Si estamos DENTRO del periodo
-    return 'En curso';
-  }
-
   getImporteFaltanteScottJulAgo(): number {
     if (!this.datosCliente) return 0;
     const diferencia = this.datosCliente.compromiso_jul_ago - this.datosCliente.avance_jul_ago;
@@ -902,10 +860,6 @@ export class CaratulasComponent implements OnInit {
     });
   }
 
-  getMesActual(): number {
-    return new Date().getMonth() + 1; // getMonth() devuelve 0-11, sumamos 1
-  }
-
   // Función para determinar si debe mostrar el período Sep-Oct
   mostrarPeriodoSepOct(): boolean {
     const mesActual = this.getMesActual();
@@ -933,5 +887,155 @@ export class CaratulasComponent implements OnInit {
       // Nov-Dic: mostrar desde el 1 de noviembre  
       novDic: mes >= 11
     };
+  }
+
+  // ========== NUEVOS MÉTODOS PARA EL PERIODO ACUMULADO ==========
+
+  getMesActual(): number {
+    return new Date().getMonth() + 1; // Enero = 1, Diciembre = 12
+  }
+
+  getTituloPeriodoAcumulado(): string {
+    const mes = this.getMesActual();
+
+    if (mes <= 8) return 'Julio-Agosto';
+    if (mes <= 10) return 'Septiembre-Octubre';
+    return 'Noviembre-Diciembre';
+  }
+
+  getEstadoPeriodoAcumulado(): string {
+    const mes = this.getMesActual();
+
+    if (mes <= 8) return 'En curso';
+    if (mes <= 10) return 'En curso';
+    return 'Cerrado';
+  }
+
+  debeMostrarPeriodo(periodo: string): boolean {
+    const fechaActual = new Date();
+    const mesActual = fechaActual.getMonth() + 1;
+
+    const periodos = {
+      'Jul-Ago': { inicio: 7 },    // Mostrar desde julio (mes 7)
+      'Sep-Oct': { inicio: 9 },    // Mostrar desde septiembre (mes 9)
+      'Nov-Dic': { inicio: 11 }    // Mostrar desde noviembre (mes 11)
+    };
+
+    const periodoData = periodos[periodo as keyof typeof periodos];
+
+    if (!periodoData) return false;
+
+    // Mostrar solo si estamos en o después del mes de inicio
+    return mesActual >= periodoData.inicio;
+  }
+
+  getEstadoPeriodo(periodo: string): string {
+    const fechaActual = new Date();
+    const mesActual = fechaActual.getMonth() + 1;
+
+    const periodos = {
+      'Jul-Ago': { inicio: 7, fin: 8 },    // Julio-Agosto
+      'Sep-Oct': { inicio: 9, fin: 10 },   // Septiembre-Octubre
+      'Nov-Dic': { inicio: 11, fin: 12 }   // Noviembre-Diciembre
+    };
+
+    const periodoData = periodos[periodo as keyof typeof periodos];
+
+    if (!periodoData) return 'Sin definir';
+
+    // Si estamos ANTES del periodo
+    if (mesActual < periodoData.inicio) {
+      return 'Sin iniciar';
+    }
+
+    // Si estamos DESPUÉS del periodo
+    if (mesActual > periodoData.fin) {
+      return 'Cerrado';
+    }
+
+    // Si estamos DENTRO del periodo
+    return 'En curso';
+  }
+
+  // Métodos para Scott
+  getCompromisoAcumuladoScott(): number {
+    if (!this.datosCliente) return 0;
+
+    const mes = this.getMesActual();
+    let total = this.datosCliente.compromiso_jul_ago;
+
+    if (mes >= 9) total += this.datosCliente.compromiso_sep_oct;
+    if (mes >= 11) total += this.datosCliente.compromiso_nov_dic;
+
+    return total;
+  }
+
+  getAvanceAcumuladoScott(): number {
+    if (!this.datosCliente) return 0;
+
+    const mes = this.getMesActual();
+    let total = this.datosCliente.avance_jul_ago;
+
+    if (mes >= 9) total += this.datosCliente.avance_sep_oct;
+    if (mes >= 11) total += this.datosCliente.avance_nov_dic;
+
+    return total;
+  }
+
+  getPorcentajeAcumuladoScott(): number {
+    const compromiso = this.getCompromisoAcumuladoScott();
+    if (compromiso === 0) return 0;
+
+    return Math.round((this.getAvanceAcumuladoScott() / compromiso) * 100);
+  }
+
+  getFaltanteAcumuladoScott(): number {
+    return Math.max(0, this.getCompromisoAcumuladoScott() - this.getAvanceAcumuladoScott());
+  }
+
+  getSobranteAcumuladoScott(): number {
+    const diferencia = this.getCompromisoAcumuladoScott() - this.getAvanceAcumuladoScott();
+    return diferencia < 0 ? Math.abs(diferencia) : 0;
+  }
+
+  // Métodos para Apparel (misma lógica que Scott)
+  getCompromisoAcumuladoApparel(): number {
+    if (!this.datosCliente) return 0;
+
+    const mes = this.getMesActual();
+    let total = this.datosCliente.compromiso_jul_ago_app;
+
+    if (mes >= 9) total += this.datosCliente.compromiso_sep_oct_app;
+    if (mes >= 11) total += this.datosCliente.compromiso_nov_dic_app;
+
+    return total;
+  }
+
+  getAvanceAcumuladoApparel(): number {
+    if (!this.datosCliente) return 0;
+
+    const mes = this.getMesActual();
+    let total = this.datosCliente.avance_jul_ago_app;
+
+    if (mes >= 9) total += this.datosCliente.avance_sep_oct_app;
+    if (mes >= 11) total += this.datosCliente.avance_nov_dic_app;
+
+    return total;
+  }
+
+  getPorcentajeAcumuladoApparel(): number {
+    const compromiso = this.getCompromisoAcumuladoApparel();
+    if (compromiso === 0) return 0;
+
+    return Math.round((this.getAvanceAcumuladoApparel() / compromiso) * 100);
+  }
+
+  getFaltanteAcumuladoApparel(): number {
+    return Math.max(0, this.getCompromisoAcumuladoApparel() - this.getAvanceAcumuladoApparel());
+  }
+
+  getSobranteAcumuladoApparel(): number {
+    const diferencia = this.getCompromisoAcumuladoApparel() - this.getAvanceAcumuladoApparel();
+    return diferencia < 0 ? Math.abs(diferencia) : 0;
   }
 }

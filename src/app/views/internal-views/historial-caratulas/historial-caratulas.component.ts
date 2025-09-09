@@ -7,6 +7,8 @@ import { FiltroFechaComponent } from '../../../components/filtro-fecha/filtro-fe
 import { EmailService, HistorialCaratula } from '../../../services/email.service';
 import { RouterModule } from '@angular/router';
 import { Router } from '@angular/router';
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
 
 @Component({
   selector: 'app-historial-caratulas',
@@ -254,11 +256,13 @@ export class HistorialCaratulasComponent implements OnInit {
 
   formatearFecha(fecha: string): string {
     const date = new Date(fecha);
-    return date.toLocaleDateString('es-MX', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+
+    const day = date.getUTCDate();
+    const month = date.getUTCMonth() + 1;
+    const year = date.getUTCFullYear();
+
+    // Formatear con ceros a la izquierda si es necesario
+    return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
   }
 
   get tieneFiltrosActivos(): boolean {
@@ -288,5 +292,44 @@ export class HistorialCaratulasComponent implements OnInit {
     }
 
     return hora;
+  }
+
+  exportarAExcel(): void {
+    // Mapear los datos para que los títulos de las columnas sean más amigables
+    const dataParaExcel = this.historialFiltrado.map(item => {
+      return {
+        'Nombre Evac': item.nombre_usuario,
+        'Usuario Evac': item.usuario_envio,
+        'Distribuidor': item.cliente_nombre,
+        'Clave Distribuidor': item.clave_cliente,
+        'Correo Remitente': item.correo_remitente,
+        'Correo Destinatario': item.correo_destinatario,
+        'Fecha de Envío': this.formatearFecha(item.fecha_envio),
+        'Hora de Envío': this.formatearHora(item.hora_envio)
+      };
+    });
+
+    // Convertir el arreglo de objetos a una hoja de cálculo
+    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(dataParaExcel);
+
+    // Lógica para ajustar el ancho de las columnas
+    const anchosDeColumna = Object.keys(dataParaExcel[0]).map(columna => {
+      const anchoMaximo = dataParaExcel.reduce((max, fila) => {
+        const valor = fila[columna as keyof typeof fila] || '';
+        return Math.max(max, String(valor).length);
+      }, columna.length);
+      return { wch: anchoMaximo + 2 }; // +2 para un pequeño espacio adicional
+    });
+
+    // Asignar los anchos calculados a la hoja de cálculo
+    worksheet['!cols'] = anchosDeColumna;
+
+    const workbook: XLSX.WorkBook = { Sheets: { 'Historial': worksheet }, SheetNames: ['Historial'] };
+
+    const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data: Blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
+    const nombreArchivo = `historial_caratulas_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+    FileSaver.saveAs(data, nombreArchivo);
   }
 }

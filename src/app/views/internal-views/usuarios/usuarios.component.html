@@ -7,7 +7,7 @@
 
         <button class="btn agregar-btn" *ngIf="!mostrarFormularioRegistroVisible && !mostrarFormularioEdicion"
             (click)="mostrarFormularioRegistro()">
-            + Agregar Usuario
+            <i class="fas fa-user-plus"></i> Agregar Usuario
         </button>
 
         <app-alerta *ngIf="mensajeAlerta" [mensaje]="mensajeAlerta" [tipo]="tipoAlerta"></app-alerta>
@@ -25,64 +25,72 @@
         <div *ngIf="mostrarFormularioRegistroVisible" class="formulario-section">
             <h2>Nuevo Usuario</h2>
             <form (submit)="agregarUsuario()" class="formulario-usuario" #formRegistro="ngForm">
-                <div class="form-row">
+                <div class="form-grid">
                     <div class="form-group">
-                        <label>Nombre completo</label>
-                        <input type="text" [(ngModel)]="nuevoUsuario.nombre" name="nombre" required />
+                        <label>Nombre completo *</label>
+                        <input type="text" [(ngModel)]="nuevoUsuario.nombre" name="nombre" required
+                            placeholder="Ingrese el nombre completo" />
                     </div>
-                    <div class="form-group">
-                        <label>Correo electrónico</label>
-                        <input type="email" [(ngModel)]="nuevoUsuario.correo" name="correo" required />
-                    </div>
-                </div>
 
-                <div class="form-row">
                     <div class="form-group">
-                        <label>Nombre de usuario</label>
-                        <input type="text" [(ngModel)]="nuevoUsuario.usuario" name="usuario" required />
+                        <label>Correo electrónico *</label>
+                        <input type="email" [(ngModel)]="nuevoUsuario.correo" name="correo" required
+                            placeholder="ejemplo@correo.com" />
                     </div>
-                    <div class="form-group">
-                        <label>Contraseña</label>
-                        <input type="password" [(ngModel)]="nuevoUsuario.contrasena" name="contrasena" required />
-                    </div>
-                </div>
 
-                <div class="form-row">
                     <div class="form-group">
-                        <label>Rol</label>
+                        <label>Nombre de usuario *</label>
+                        <input type="text" [(ngModel)]="nuevoUsuario.usuario" name="usuario" required
+                            placeholder="3-20 caracteres alfanuméricos" pattern="[a-zA-Z0-9_.-]{3,20}" />
+                        <small class="input-hint">Solo letras, números, puntos, guiones y guiones bajos</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Contraseña *</label>
+                        <input type="password" [(ngModel)]="nuevoUsuario.contrasena" name="contrasena" required
+                            placeholder="Mínimo 6 caracteres" minlength="6" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Rol *</label>
                         <select [(ngModel)]="nuevoUsuario.rol" name="rol" required>
                             <option [value]="ROLES.ADMIN.backendValue">{{ROLES.ADMIN.display}}</option>
                             <option [value]="ROLES.USUARIO.backendValue">{{ROLES.USUARIO.display}}</option>
                         </select>
                     </div>
-                </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
                             <input type="checkbox" [(ngModel)]="asociarCliente" name="asociarCliente" />
+                            <span class="checkmark"></span>
                             Asociar cliente
                         </label>
                     </div>
                 </div>
 
                 <!-- Campos de cliente si está activado -->
-                <div class="form-row" *ngIf="asociarCliente">
-                    <div class="form-group" style="position: relative;">
+                <div class="cliente-container" *ngIf="asociarCliente">
+                    <div class="form-group cliente-busqueda">
                         <label>Buscar cliente</label>
-                        <input type="text" [(ngModel)]="clienteBusqueda" (input)="clienteSeleccionadoId = null"
-                            name="clienteBusqueda" placeholder="Nombre o clave" autocomplete="off" />
-                        <ul class="sugerencias" *ngIf="clienteBusqueda && !clienteSeleccionadoId">
-                            <li *ngFor="let cliente of filtrarClientes()" (click)="seleccionarCliente(cliente)">
-                                {{ cliente.nombre_cliente }} ({{ cliente.clave }})
-                            </li>
-                        </ul>
+                        <div class="search-wrapper">
+                            <input type="text" [(ngModel)]="clienteBusqueda" (input)="clienteSeleccionadoId = null"
+                                name="clienteBusqueda" placeholder="Nombre o clave del cliente" autocomplete="off" />
+                            <ul class="sugerencias"
+                                *ngIf="clienteBusqueda && !clienteSeleccionadoId && filtrarClientes().length > 0">
+                                <li *ngFor="let cliente of filtrarClientes()" (click)="seleccionarCliente(cliente)">
+                                    <strong>{{ cliente.nombre_cliente }}</strong> ({{ cliente.clave }})
+                                </li>
+                            </ul>
+                        </div>
+                        <small *ngIf="clienteSeleccionadoId" class="selected-client">
+                            Cliente seleccionado: {{ clienteBusqueda }}
+                        </small>
                     </div>
                 </div>
 
                 <div class="form-buttons">
                     <button class="btn small-btn" type="submit" [disabled]="formRegistro.invalid">Registrar</button>
-                    <button class="btn small-btn secondary" type="button" (click)="volverALista()">Volver</button>
+                    <button class="btn small-btn secondary" type="button" (click)="volverALista()">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -91,147 +99,135 @@
         <div *ngIf="mostrarFormularioEdicion" class="formulario-section">
             <h2>Editar Usuario</h2>
             <form (submit)="actualizarUsuario()" class="formulario-usuario" #formEdicion="ngForm">
-                <div class="form-row">
+                <div class="form-grid">
                     <div class="form-group">
-                        <label>Nombre completo</label>
+                        <label>Nombre completo *</label>
                         <input type="text" [(ngModel)]="nuevoUsuario.nombre" name="nombre" required />
                     </div>
+
                     <div class="form-group">
-                        <label>Correo electrónico</label>
+                        <label>Correo electrónico *</label>
                         <input type="email" [(ngModel)]="nuevoUsuario.correo" name="correo" required />
                     </div>
-                </div>
 
-                <div class="form-row">
                     <div class="form-group">
-                        <label>Nombre de usuario</label>
+                        <label>Nombre de usuario *</label>
                         <input type="text" [(ngModel)]="nuevoUsuario.usuario" name="usuario" required />
                     </div>
+
                     <div class="form-group">
                         <label>Contraseña</label>
                         <input type="password" [(ngModel)]="nuevoUsuario.contrasena" name="contrasena"
                             placeholder="Dejar vacío para no cambiar" />
+                        <small class="input-hint">Complete solo si desea cambiar la contraseña</small>
                     </div>
-                </div>
 
-                <div class="form-row">
                     <div class="form-group">
-                        <label>Rol</label>
-                        <select [(ngModel)]="nuevoUsuario.rol" name="rol_id" required>
+                        <label>Rol *</label>
+                        <select [(ngModel)]="nuevoUsuario.rol" name="rol" required>
                             <option [value]="ROLES.ADMIN.backendValue">{{ROLES.ADMIN.display}}</option>
                             <option [value]="ROLES.USUARIO.backendValue">{{ROLES.USUARIO.display}}</option>
                         </select>
                     </div>
-                </div>
 
-                <!-- Checkbox para asociar cliente -->
-                <div class="form-row">
                     <div class="form-group checkbox-group">
-                        <label>
+                        <label class="checkbox-label">
                             <input type="checkbox" [(ngModel)]="asociarCliente" name="asociarClienteEditar" />
+                            <span class="checkmark"></span>
                             Asociar cliente
                         </label>
                     </div>
                 </div>
 
                 <!-- Campos de cliente si está activado -->
-                <div class="form-row" *ngIf="asociarCliente">
-                    <div class="form-group" style="position: relative;">
+                <div class="cliente-container" *ngIf="asociarCliente">
+                    <div class="form-group cliente-busqueda">
                         <label>Buscar cliente</label>
-                        <input type="text" [(ngModel)]="clienteBusqueda" (input)="clienteSeleccionadoId = null"
-                            name="clienteBusqueda" placeholder="Nombre o clave" autocomplete="off" />
-                        <ul class="sugerencias" *ngIf="clienteBusqueda && !clienteSeleccionadoId">
-                            <li *ngFor="let cliente of filtrarClientes()" (click)="seleccionarCliente(cliente)">
-                                {{ cliente.nombre_cliente }} ({{ cliente.clave }})
-                            </li>
-                        </ul>
+                        <div class="search-wrapper">
+                            <input type="text" [(ngModel)]="clienteBusqueda" (input)="clienteSeleccionadoId = null"
+                                name="clienteBusqueda" placeholder="Nombre o clave del cliente" autocomplete="off" />
+                            <ul class="sugerencias"
+                                *ngIf="clienteBusqueda && !clienteSeleccionadoId && filtrarClientes().length > 0">
+                                <li *ngFor="let cliente of filtrarClientes()" (click)="seleccionarCliente(cliente)">
+                                    <strong>{{ cliente.nombre_cliente }}</strong> ({{ cliente.clave }})
+                                </li>
+                            </ul>
+                        </div>
+                        <small *ngIf="clienteSeleccionadoId" class="selected-client">
+                            Cliente seleccionado: {{ clienteBusqueda }}
+                        </small>
                     </div>
                 </div>
 
                 <div class="form-buttons">
                     <button class="btn small-btn actualizar" type="submit"
                         [disabled]="formEdicion.invalid">Actualizar</button>
-                    <button class="btn small-btn secondary" type="button" (click)="volverALista()">Volver</button>
+                    <button class="btn small-btn secondary" type="button" (click)="volverALista()">Cancelar</button>
                 </div>
             </form>
         </div>
 
         <!-- Lista de Usuarios -->
-        <div class="tabla-con-boton">
-            <div *ngIf="!mostrarFormularioRegistroVisible && !mostrarFormularioEdicion" class="usuarios-lista">
+        <div class="tabla-contenedor" *ngIf="!mostrarFormularioRegistroVisible && !mostrarFormularioEdicion">
+            <div class="tabla-header">
+                <button *ngIf="filtrosActivos" class="btn small-btn secondary limpiar-filtros-btn"
+                    (click)="limpiarTodosFiltros()">
+                    <i class="fas fa-times"></i> Limpiar todos los filtros
+                </button>
+            </div>
+
+            <div class="tabla-scroll-container">
                 <table class="tabla-usuarios" *ngIf="!cargandoUsuarios && usuarios.length > 0">
                     <thead>
                         <tr>
-                            <th class="columna-clave">
-                                Clave
-                                <div class="filtro-columna">
-                                    <button (click)="toggleFiltro('clave')"></button>
-                                    <div class="dropdown-filtro" [ngClass]="{ 'mostrar': filtroAbierto === 'clave' }">
-                                        <input type="text" [(ngModel)]="filtros.clave" (input)="filtrarUsuarios()"
-                                            placeholder="Filtrar por clave..." />
-                                    </div>
-                                </div>
+                            <th class="columna-con-filtro">
+                                <span class="header-label">Nombre</span>
+                                <app-filtro *ngIf="filtroOpciones.nombre.length > 0" filtroId="nombre"
+                                    [options]="filtroOpciones.nombre" [title]="'Filtrar nombre'"
+                                    [searchPlaceholder]="'Buscar nombre...'" (apply)="aplicarFiltro('nombre', $event)"
+                                    (clear)="limpiarFiltro('nombre')">
+                                </app-filtro>
                             </th>
-                            <th class="columna-nombre">
-                                Nombre
-                                <div class="filtro-columna">
-                                    <button (click)="toggleFiltro('nombre')"></button>
-                                    <div class="dropdown-filtro" [ngClass]="{ 'mostrar': filtroAbierto === 'nombre' }">
-                                        <input type="text" [(ngModel)]="filtros.nombre" (input)="filtrarUsuarios()"
-                                            placeholder="Filtrar por nombre..." />
-                                    </div>
-                                </div>
+                            <th class="columna-con-filtro">
+                                <span class="header-label">Correo</span>
+                                <app-filtro *ngIf="filtroOpciones.correo.length > 0" filtroId="correo"
+                                    [options]="filtroOpciones.correo" [title]="'Filtrar correo'"
+                                    [searchPlaceholder]="'Buscar correo...'" (apply)="aplicarFiltro('correo', $event)"
+                                    (clear)="limpiarFiltro('correo')">
+                                </app-filtro>
                             </th>
-                            <th class="columna-correo">
-                                Correo
-                                <div class="filtro-columna">
-                                    <button (click)="toggleFiltro('correo')"></button>
-                                    <div class="dropdown-filtro" [ngClass]="{ 'mostrar': filtroAbierto === 'correo' }">
-                                        <input type="text" [(ngModel)]="filtros.correo" (input)="filtrarUsuarios()"
-                                            placeholder="Filtrar por correo..." />
-                                    </div>
-                                </div>
+                            <th class="columna-con-filtro">
+                                <span class="header-label">Usuario</span>
+                                <app-filtro *ngIf="filtroOpciones.usuario.length > 0" filtroId="usuario"
+                                    [options]="filtroOpciones.usuario" [title]="'Filtrar usuario'"
+                                    [searchPlaceholder]="'Buscar usuario...'" (apply)="aplicarFiltro('usuario', $event)"
+                                    (clear)="limpiarFiltro('usuario')">
+                                </app-filtro>
                             </th>
-                            <th class="columna-usuario">
-                                Usuario
-                                <div class="filtro-columna">
-                                    <button (click)="toggleFiltro('usuario')"></button>
-                                    <div class="dropdown-filtro" [ngClass]="{ 'mostrar': filtroAbierto === 'usuario' }">
-                                        <input type="text" [(ngModel)]="filtros.usuario" (input)="filtrarUsuarios()"
-                                            placeholder="Filtrar por usuario..." />
-                                    </div>
-                                </div>
-                            </th>
-                            <th class="columna-rol">
-                                Rol
-                                <div class="filtro-columna">
-                                    <button (click)="toggleFiltro('rol')"></button>
-                                    <div class="dropdown-filtro" [ngClass]="{ 'mostrar': filtroAbierto === 'rol' }">
-                                        <select [(ngModel)]="filtros.rol" (change)="filtrarUsuarios()">
-                                            <option value="">Todos</option>
-                                            <option [value]="ROLES.ADMIN.backendValue">{{ ROLES.ADMIN.display }}
-                                            </option>
-                                            <option [value]="ROLES.USUARIO.backendValue">{{ ROLES.USUARIO.display }}
-                                            </option>
-                                        </select>
-                                    </div>
-                                </div>
+                            <th class="columna-con-filtro">
+                                <span class="header-label">Rol</span>
+                                <app-filtro *ngIf="filtroOpciones.rol.length > 0" filtroId="rol"
+                                    [options]="filtroOpciones.rol" [title]="'Filtrar rol'"
+                                    [searchPlaceholder]="'Buscar rol...'" (apply)="aplicarFiltro('rol', $event)"
+                                    (clear)="limpiarFiltro('rol')">
+                                </app-filtro>
                             </th>
                             <th class="columna-distribuidor">
-                                Distribuidor
+                                <span>Distribuidor</span>
                             </th>
-                            <th>Acciones</th>
+                            <th class="columna-acciones">
+                                <span>Acciones</span>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr *ngFor="let u of usuariosPaginados()">
-                            <td>{{ u.id }}</td>
                             <td>{{ u.nombre }}</td>
                             <td>{{ u.correo }}</td>
                             <td>{{ u.usuario }}</td>
                             <td>{{ u.rol === ROLES.ADMIN.backendValue ? ROLES.ADMIN.display : ROLES.USUARIO.display }}
                             </td>
-                            <td>{{u.cliente_nombre}}</td>
+                            <td>{{ u.cliente_nombre || 'N/A' }}</td>
                             <td>
                                 <div class="acciones-celda">
                                     <button class="btn btn-accion azul" (click)="editarUsuario(u)" title="Editar">
@@ -247,22 +243,51 @@
                     </tbody>
                 </table>
 
-                <p *ngIf="!cargandoUsuarios && usuarios.length === 0">No hay usuarios registrados.</p>
+                <!-- Mensaje cuando no hay datos después de filtrar -->
+                <div *ngIf="!cargandoUsuarios && usuariosFiltrados.length === 0 && usuarios.length > 0"
+                    class="sin-resultados">
+                    <p>No se encontraron usuarios que coincidan con los filtros aplicados.</p>
+                </div>
 
-                <div class="paginador" *ngIf="usuarios.length > 0">
-                    <button class="btn small-btn" (click)="paginaAnterior()"
-                        [disabled]="paginaActual === 1">Anterior</button>
+                <!-- Mensaje cuando no hay usuarios -->
+                <div *ngIf="!cargandoUsuarios && usuarios.length === 0" class="sin-datos">
+                    <p>No hay usuarios registrados.</p>
+                </div>
+            </div>
+
+            <!-- Paginación -->
+            <div class="paginacion-container" *ngIf="usuariosFiltrados.length > 0">
+                <div class="paginador-info">
+                    <span>Mostrando {{ usuariosPaginados().length }} de {{ usuariosFiltrados.length }} registros</span>
                     <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
+                </div>
+
+                <div class="paginador-controles">
+                    <button class="btn small-btn" (click)="paginaAnterior()" [disabled]="paginaActual === 1">
+                        <i class="fas fa-chevron-left"></i> Anterior
+                    </button>
+
+                    <div class="paginas-numeros">
+                        <button *ngFor="let pagina of obtenerRangoPaginas()" class="btn small-btn pagina-numero"
+                            [class.activa]="pagina === paginaActual" (click)="cambiarPagina(pagina)">
+                            {{ pagina }}
+                        </button>
+                    </div>
+
                     <button class="btn small-btn" (click)="paginaSiguiente()"
-                        [disabled]="paginaActual === totalPaginas">Siguiente</button>
+                        [disabled]="paginaActual === totalPaginas">
+                        Siguiente <i class="fas fa-chevron-right"></i>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Confirmación -->
+        <!-- Confirmación de Eliminación -->
         <div *ngIf="mostrarConfirmacion" class="confirmacion-dialogo">
             <div class="confirmacion-contenido">
+                <h3>Confirmar Eliminación</h3>
                 <p>¿Estás seguro de que deseas eliminar al usuario <strong>{{ usuarioAEliminar?.nombre }}</strong>?</p>
+                <p class="advertencia">Esta acción no se puede deshacer.</p>
                 <div class="confirmacion-botones">
                     <button class="btn small-btn confirmacion" (click)="eliminarUsuario()">Sí, eliminar</button>
                     <button class="btn small-btn secondary" (click)="cancelarEliminacion()">Cancelar</button>
@@ -270,3 +295,4 @@
             </div>
         </div>
     </div>
+</div>
