@@ -7,6 +7,8 @@ import { FormsModule } from '@angular/forms';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { FacturasClienteComponent } from '../../../components/facturas-cliente/facturas-cliente.component';
+import { AlertaService } from '../../../services/alerta.service';
+import { AlertaComponent } from '../../../components/alerta/alerta.component';
 
 interface DatosCliente {
   clave: string;
@@ -54,7 +56,7 @@ interface DatosCliente {
 @Component({
   selector: 'app-caratula-usuarios',
   standalone: true,
-  imports: [RouterModule, CommonModule, TopBarUsuariosComponent, FormsModule, FacturasClienteComponent],
+  imports: [RouterModule, CommonModule, TopBarUsuariosComponent, FormsModule, FacturasClienteComponent, AlertaComponent],
   templateUrl: './caratula-usuarios.component.html',
   styleUrls: ['./caratula-usuarios.component.css']
 })
@@ -68,7 +70,14 @@ export class CaratulaUsuariosComponent implements OnInit {
   error: string | null = null;
   private tokenData: any = null;
 
-  constructor(private caratulasService: CaratulasService, private router: Router) { }
+  mensajeAlerta: string | null = null;
+  tipoAlerta: 'exito' | 'error' = 'exito';
+
+  constructor(
+    private caratulasService: CaratulasService,
+    private router: Router,
+    private alertaService: AlertaService
+  ) { }
 
   ngOnInit() {
     this.obtenerDatosToken();
@@ -199,74 +208,77 @@ export class CaratulaUsuariosComponent implements OnInit {
     return 0;
   }
 
-  generarPDF() {
+  async generarPDF() {
     if (!this.datosCliente) {
-      this.error = 'No hay datos para generar PDF';
+      this.error = 'No hay datos del cliente para generar el PDF.';
+      console.error(this.error);
       return;
     }
 
-    const element = document.getElementById('pdf-content');
+    // Obtenemos el elemento HTML que queremos convertir
+    const element: HTMLElement | null = document.getElementById('pdf-content');
+
     if (!element) {
-      this.error = 'No se puede generar el PDF en este momento';
+      this.error = 'No se encontró el contenido para generar el PDF.';
+      console.error(this.error);
       return;
     }
 
-    element.classList.add('pdf-mode');
-    this.hideElementsForPDF();
+    // Ocultamos los botones y otros elementos que no queremos en el PDF
+    // Es mejor hacerlo con una clase CSS para no manipular estilos directamente
+    const parentContainer = element.parentElement;
+    if (parentContainer) {
+      parentContainer.classList.add('generating-pdf');
+    }
 
-    setTimeout(() => {
-      html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false
-      }).then(canvas => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgWidth = 180;
-        const pageHeight = 295;
-        const imgHeight = canvas.height * imgWidth / canvas.width;
-        let heightLeft = imgHeight;
-        let position = 0;
+    this.alertaService.mostrarExito('Generando PDF, por favor espere un momento...');
 
-        pdf.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
-
-        this.showElementsAfterPDF();
-        element.classList.remove('pdf-mode');
-        const clave = this.datosCliente ? this.datosCliente.clave : 'cliente';
-        pdf.save(`Caratula_${clave}_${new Date().toISOString().split('T')[0]}.pdf`);
-      }).catch(error => {
-        console.error('Error al generar PDF:', error);
-        this.error = 'Error al generar el PDF';
-        this.showElementsAfterPDF();
-        element.classList.remove('pdf-mode');
+    try {
+      // 1. Creamos una nueva instancia de jsPDF
+      const pdf = new jsPDF({
+        orientation: 'p', // p = portrait (vertical)
+        unit: 'mm',
+        format: 'a4'
       });
-    }, 500);
-  }
 
-  private hideElementsForPDF() {
-    const elementsToHide = ['.acciones-monitor', 'app-top-bar-usuarios', 'app-facturas-cliente'];
-    elementsToHide.forEach(selector => {
-      document.querySelectorAll(selector).forEach(el => {
-        (el as HTMLElement).style.display = 'none';
-      });
-    });
-  }
+      // 2. Usamos el método .html() que devuelve una promesa
+      await pdf.html(element, {
+        callback: (pdfInstance) => {
+          // Este callback se ejecuta cuando la renderización del PDF ha terminado.
 
-  private showElementsAfterPDF() {
-    const elementsToShow = ['.acciones-monitor', 'app-top-bar-usuarios', 'app-facturas-cliente'];
-    elementsToShow.forEach(selector => {
-      document.querySelectorAll(selector).forEach(el => {
-        (el as HTMLElement).style.display = '';
+          // --- OPCIÓN A: OBTENER EL PDF COMO BASE64 ---
+          // Esto genera una cadena larga que empieza con "data:application/pdf;base64,..."
+          const pdfBase64 = pdfInstance.output('datauristring');
+
+          // Ahora puedes hacer lo que necesites con la cadena Base64
+          console.log('PDF generado en Base64:');
+          // console.log(pdfBase64); // Descomenta si quieres ver la cadena completa en la consola
+
+          // Por ejemplo, puedes abrirlo en una nueva pestaña del navegador para verificar
+          window.open(pdfBase64);
+
+
+          // --- OPCIÓN B: GUARDAR EL ARCHIVO DIRECTAMENTE (como en tu código original) ---
+          const clave = this.datosCliente?.clave || 'cliente';
+          const fecha = new Date().toISOString().split('T')[0];
+          pdfInstance.save(`Caratula_${clave}_${fecha}.pdf`);
+
+        },
+        margin: [15, 15, 15, 15], // Margen [arriba, derecha, abajo, izquierda]
+        autoPaging: 'slice', // Divide el contenido automáticamente en páginas
+        width: 180, // Ancho del contenido en el PDF (A4 es 210mm, menos márgenes)
+        windowWidth: element.offsetWidth // Ancho de la "ventana" para renderizar
       });
-    });
+
+    } catch (error) {
+      this.error = 'Ocurrió un error al generar el PDF.';
+      console.error(this.error, error);
+    } finally {
+      // Nos aseguramos de volver a mostrar los elementos ocultos
+      if (parentContainer) {
+        parentContainer.classList.remove('generating-pdf');
+      }
+    }
   }
 
   getMesActual(): number {

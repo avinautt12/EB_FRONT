@@ -73,7 +73,7 @@
             <!-- Header del cliente -->
 
             <div class="titulo" style="display: flex; align-items: center; gap: 12px;">
-                <img src="assets/logo_elite.png" alt="Elite Logo" style="height: 60px;">
+                <img src="assets/logo_elite_2.png" alt="Elite Logo" style="height: 60px;">
                 <h1>Avance MY26</h1>
             </div>
 
@@ -158,32 +158,32 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Compromiso Acumulado</td>
+                                <td>Compromiso</td>
                                 <td>{{ getCompromisoAcumuladoScott() | currency:'USD':'symbol':'1.2-2' }}</td>
                                 <td>{{ getCompromisoAcumuladoApparel() | currency:'USD':'symbol':'1.2-2' }}</td>
                             </tr>
                             <tr>
-                                <td>Avance Acumulado</td>
+                                <td>Avance</td>
                                 <td>{{ getAvanceAcumuladoScott() | currency:'USD':'symbol':'1.2-2' }}</td>
                                 <td>{{ getAvanceAcumuladoApparel() | currency:'USD':'symbol':'1.2-2' }}</td>
                             </tr>
                             <tr>
-                                <td>% Acumulado</td>
+                                <td>%</td>
                                 <td>{{ getPorcentajeAcumuladoScott() }}%</td>
                                 <td>{{ getPorcentajeAcumuladoApparel() }}%</td>
                             </tr>
                             <tr>
-                                <td>Importe Faltante Acumulado</td>
+                                <td>Importe Faltante</td>
                                 <td>{{ getFaltanteAcumuladoScott() | currency:'USD':'symbol':'1.2-2' }}</td>
                                 <td>{{ getFaltanteAcumuladoApparel() | currency:'USD':'symbol':'1.2-2' }}</td>
                             </tr>
-                            <tr *ngIf="getSobranteAcumuladoScott() > 0 || getSobranteAcumuladoApparel() > 0">
-                                <td>Sobrante Acumulado</td>
+                            <!-- <tr *ngIf="getSobranteAcumuladoScott() > 0 || getSobranteAcumuladoApparel() > 0">
+                                <td>Sobrante</td>
                                 <td>{{ getSobranteAcumuladoScott() | currency:'USD':'symbol':'1.2-2' }}</td>
                                 <td>{{ getSobranteAcumuladoApparel() | currency:'USD':'symbol':'1.2-2' }}</td>
-                            </tr>
+                            </tr> -->
                             <tr>
-                                <td>Estatus Acumulado</td>
+                                <td>Estatus</td>
                                 <td>
                                     <span [class.estado-cumplido]="getFaltanteAcumuladoScott() <= 0"
                                         [class.estado-faltante]="getFaltanteAcumuladoScott() > 0">

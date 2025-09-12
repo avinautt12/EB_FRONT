@@ -133,126 +133,63 @@ export class CaratulasComponent implements OnInit {
   }
 
   async enviarCaratulaPorEmail() {
+    // 1. Validaciones
     if (!this.emailDestinatario || !this.datosCliente) {
-      this.mostrarError('Debe ingresar un email destinatario');
+      this.mostrarError('Primero debe seleccionar un cliente');
       return;
     }
-
-    // Validar formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.emailDestinatario)) {
       this.mostrarError('Por favor ingrese un email válido');
       return;
     }
-
-    // Verificar que tenemos token
     const token = localStorage.getItem('token');
     if (!token) {
       this.mostrarError('No se encontró token de autenticación. Por favor, inicie sesión nuevamente.');
       return;
     }
 
+    // 2. Mostrar feedback de carga inmediato
     this.enviandoEmail = true;
+    this.mostrarModalEmail = false;
+    setTimeout(() => {
+      this.mostrarExito('El correo se está procesando y será enviado en breve.');
+    }, 3000); 
 
-    try {
-      // 1. Generar PDF como base64
-      const pdfBase64 = await this.generarPdfComoBase64();
+    // 3. Preparar los datos del payload (sin el PDF)
+    const emailData: EmailData = {
+      to: this.emailDestinatario,
+      cliente_nombre: this.datosCliente.nombre_cliente,
+      clave: this.datosCliente.clave,
+      mensaje_personalizado: this.mensajePersonalizado,
+      datos_caratula: this.datosCliente,
 
-      // 2. Preparar datos para enviar
-      const emailData: EmailData = {
-        to: this.emailDestinatario,
-        cliente_nombre: this.datosCliente.nombre_cliente,
-        clave: this.datosCliente.clave,
-        pdf_base64: pdfBase64,
-        mensaje_personalizado: this.mensajePersonalizado
-      };
+      periodos: [
+        { nombre: 'Julio-Agosto', estado: this.getEstadoPeriodo('Jul-Ago') },
+        { nombre: 'Septiembre-Octubre', estado: this.getEstadoPeriodo('Sep-Oct') },
+        { nombre: 'Noviembre-Diciembre', estado: this.getEstadoPeriodo('Nov-Dic') }
+      ]
+    };
 
-      // 3. Enviar al backend
-      this.emailService.enviarCaratulaPdf(emailData).subscribe({
-        next: (response) => {
-          this.enviandoEmail = false;
-          this.mostrarModalEmail = false;
-          this.mostrarExito(`Carátula enviada correctamente desde ${response.enviado_desde}`);
-        },
-        error: (error) => {
-          this.enviandoEmail = false;
-          console.error('Error al enviar email:', error);
-
-          let mensajeError = 'Error al enviar el email';
-          if (error.error?.error) {
-            mensajeError = error.error.error;
-          } else if (error.status === 401) {
-            mensajeError = 'Error de autenticación. Token inválido o expirado.';
-          } else if (error.status === 500) {
-            mensajeError = 'Error del servidor al procesar el envío.';
-          }
-
-          this.mostrarError(mensajeError);
+    // 4. Enviar la petición al backend de forma asíncrona
+    this.emailService.enviarCaratulaPdf(emailData).subscribe({
+      next: (response) => {
+        this.enviandoEmail = false;
+        // La alerta de éxito ya se mostró antes de enviar la petición.
+      },
+      error: (error) => {
+        this.enviandoEmail = false;
+        console.error('Error al enviar email:', error);
+        let mensajeError = 'Error al enviar el email.';
+        if (error.error?.error) {
+          mensajeError = error.error.error;
+        } else if (error.status === 401) {
+          mensajeError = 'Error de autenticación. Token inválido o expirado.';
+        } else if (error.status === 500) {
+          mensajeError = 'Error del servidor al procesar el envío.';
         }
-      });
-
-    } catch (error: any) {
-      this.enviandoEmail = false;
-      console.error('Error al generar PDF:', error);
-      this.mostrarError(error.message || 'Error al generar el PDF para enviar');
-    }
-  }
-
-  private async generarPdfComoBase64(): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const element = document.getElementById('pdf-content');
-      if (!element) {
-        reject(new Error('Elemento no encontrado'));
-        return;
+        this.mostrarError(mensajeError);
       }
-
-      element.classList.add('pdf-mode');
-      this.hideElementsForPDF();
-
-      setTimeout(() => {
-        html2canvas(element, {
-          scale: 1, // escala reducida
-          useCORS: true,
-          logging: false
-        }).then(canvas => {
-          // Convertir a JPEG con calidad 0.6 para reducir tamaño
-          const imgData = canvas.toDataURL('image/jpeg', 0.6);
-          const pdf = new jsPDF('p', 'mm', 'a4');
-          const imgWidth = 140; // ancho menor para reducir tamaño
-          const pageHeight = 295;
-          const imgHeight = canvas.height * imgWidth / canvas.width;
-          let heightLeft = imgHeight;
-          let position = 0;
-
-          pdf.addImage(imgData, 'JPEG', 35, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-
-          while (heightLeft >= 0) {
-            position = heightLeft - imgHeight;
-            pdf.addPage();
-            pdf.addImage(imgData, 'JPEG', 35, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
-          }
-
-          const pdfBase64 = pdf.output('datauristring').split(',')[1];
-
-          this.showElementsAfterPDF();
-          element.classList.remove('pdf-mode');
-
-          // Validar tamaño base64 antes de enviar
-          const sizeInBytes = (pdfBase64.length * 3) / 4;
-          if (sizeInBytes > 20 * 1024 * 1024) { // 20 MB límite prudente
-            reject(new Error('El PDF es demasiado grande para enviar por email.'));
-            return;
-          }
-
-          resolve(pdfBase64);
-        }).catch(error => {
-          this.showElementsAfterPDF();
-          element.classList.remove('pdf-mode');
-          reject(error);
-        });
-      }, 500);
     });
   }
 

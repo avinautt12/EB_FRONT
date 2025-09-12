@@ -69,3 +69,19 @@
     opacity: 0;
   }
 }
+
+.contenido h1 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.contenido h1 img {
+  height: 60px;
+  width: auto; 
+}
+
+.contenido h1 span {
+  font-weight: bold; 
+}

@@ -3,14 +3,13 @@ import { HttpClient, HttpHeaders, HttpContext, HttpContextToken } from '@angular
 import { Observable, timeout } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-const TIMEOUT = new HttpContextToken<number>(() => 30000);
-
 export interface EmailData {
   to: string;
   cliente_nombre: string;
   clave: string;
-  pdf_base64: string;
   mensaje_personalizado?: string;
+  datos_caratula: any;
+  periodos?: { nombre: string; estado: string; }[];
 }
 
 export interface EmailConfig {
@@ -56,16 +55,10 @@ export class EmailService {
   }
 
   enviarCaratulaPdf(emailData: EmailData): Observable<any> {
-    const context = new HttpContext().set(TIMEOUT, 120000);
-
     return this.http.post(`${this.apiUrl}/enviar-caratura-pdf`, emailData, {
-      context,
       headers: this.getHeaders()
-    }).pipe(
-      timeout(120000)
-    );
+    });
   }
-
 
   verificarConfiguracion(): Observable<EmailConfig> {
     return this.http.get<EmailConfig>(`${this.apiUrl}/configuracion`, {

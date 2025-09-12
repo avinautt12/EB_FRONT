@@ -25,7 +25,7 @@ export class HistorialCaratulasComponent implements OnInit {
 
   // Paginación
   paginaActual = 1;
-  itemsPorPagina = 30;
+  itemsPorPagina = 50;
   totalPaginas = 1;
 
   // Opciones para los filtros
@@ -39,13 +39,7 @@ export class HistorialCaratulasComponent implements OnInit {
   filtroUsuario: string[] = [];
   filtroCliente: string[] = [];
   filtroCorreo: string[] = [];
-
-  // Filtro de fecha
-  filtroFecha: any = {
-    orden: null,
-    fechaDesde: '',
-    fechaHasta: ''
-  };
+  filtroFecha: any = { orden: null, fechaDesde: '', fechaHasta: '' };
 
   // Estados de dropdown
   showNombreEvacFilter = false;
@@ -65,7 +59,6 @@ export class HistorialCaratulasComponent implements OnInit {
   cargarHistorial() {
     this.isLoading = true;
     this.error = null;
-
     this.emailService.historialCaratulas().subscribe({
       next: (data) => {
         this.historial = data;
@@ -74,7 +67,7 @@ export class HistorialCaratulasComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        this.error = 'Error al cargar el historial';
+        this.error = 'Error al cargar el historial. Por favor, intente de nuevo.';
         this.isLoading = false;
         console.error('Error:', error);
       }
@@ -82,115 +75,58 @@ export class HistorialCaratulasComponent implements OnInit {
   }
 
   prepararOpcionesFiltros() {
-    const nombresEvacUnicos = new Set(this.historial.map(item => item.nombre_usuario));
-    this.nombreEvacOptions = Array.from(nombresEvacUnicos).map(nombre => ({
-      value: nombre,
-      selected: false
-    }));
-
-    // Preparar opciones para filtro de usuarios
-    const usuariosUnicos = new Set(this.historial.map(item => item.usuario_envio));
-    this.usuariosOptions = Array.from(usuariosUnicos).map(usuario => ({
-      value: usuario,
-      selected: false
-    }));
-
-    // Preparar opciones para filtro de clientes
-    const clientesUnicos = new Set(this.historial.map(item => item.cliente_nombre));
-    this.clientesOptions = Array.from(clientesUnicos).map(cliente => ({
-      value: cliente,
-      selected: false
-    }));
-
-    // Preparar opciones para filtro de correos
-    const correosUnicos = new Set(this.historial.map(item => item.correo_destinatario));
-    this.correosOptions = Array.from(correosUnicos).map(correo => ({
-      value: correo,
-      selected: false
-    }));
+    const crearOpciones = (campo: keyof HistorialCaratula) => {
+      const valoresUnicos = new Set(this.historial.map(item => item[campo]));
+      return Array.from(valoresUnicos).map(valor => ({ value: valor, selected: false }));
+    };
+    this.nombreEvacOptions = crearOpciones('nombre_usuario');
+    this.usuariosOptions = crearOpciones('usuario_envio');
+    this.clientesOptions = crearOpciones('cliente_nombre');
+    this.correosOptions = crearOpciones('correo_destinatario');
   }
 
   aplicarFiltros() {
     let datosFiltrados = this.historial;
 
-    // Aplicar filtro de nombres evacuados
     if (this.filtroNombreEvac.length > 0) {
-      datosFiltrados = datosFiltrados.filter(item =>
-        this.filtroNombreEvac.includes(item.nombre_usuario)
-      );
+      datosFiltrados = datosFiltrados.filter(item => this.filtroNombreEvac.includes(item.nombre_usuario));
     }
-
-    // Aplicar filtro de usuarios
     if (this.filtroUsuario.length > 0) {
-      datosFiltrados = datosFiltrados.filter(item =>
-        this.filtroUsuario.includes(item.usuario_envio)
-      );
+      datosFiltrados = datosFiltrados.filter(item => this.filtroUsuario.includes(item.usuario_envio));
     }
-
-    // Aplicar filtro de clientes
     if (this.filtroCliente.length > 0) {
-      datosFiltrados = datosFiltrados.filter(item =>
-        this.filtroCliente.includes(item.cliente_nombre)
-      );
+      datosFiltrados = datosFiltrados.filter(item => this.filtroCliente.includes(item.cliente_nombre));
     }
-
-    // Aplicar filtro de correos
     if (this.filtroCorreo.length > 0) {
-      datosFiltrados = datosFiltrados.filter(item =>
-        this.filtroCorreo.includes(item.correo_destinatario)
-      );
+      datosFiltrados = datosFiltrados.filter(item => this.filtroCorreo.includes(item.correo_destinatario));
     }
-
-    // Aplicar filtro de fecha
     if (this.filtroFecha.orden || this.filtroFecha.fechaDesde || this.filtroFecha.fechaHasta) {
       datosFiltrados = this.aplicarFiltroFechaADatos(datosFiltrados);
     }
 
     this.historialFiltrado = datosFiltrados;
-    this.totalPaginas = Math.ceil(this.historialFiltrado.length / this.itemsPorPagina);
-
-    // Asegurar que la página actual sea válida
-    if (this.paginaActual > this.totalPaginas) {
-      this.paginaActual = this.totalPaginas > 0 ? this.totalPaginas : 1;
-    }
+    this.paginaActual = 1; // Siempre volver a la página 1 al aplicar un filtro
+    this.actualizarPaginacion();
   }
 
   aplicarFiltroFechaADatos(datos: HistorialCaratula[]): HistorialCaratula[] {
     let datosFiltrados = [...datos];
-
-    // Filtrar por rango de fechas
     if (this.filtroFecha.fechaDesde) {
       const desde = new Date(this.filtroFecha.fechaDesde);
-      datosFiltrados = datosFiltrados.filter(item => {
-        const fechaItem = new Date(item.fecha_envio);
-        return fechaItem >= desde;
-      });
+      datosFiltrados = datosFiltrados.filter(item => new Date(item.fecha_envio) >= desde);
     }
-
     if (this.filtroFecha.fechaHasta) {
       const hasta = new Date(this.filtroFecha.fechaHasta);
-      // Ajustar para incluir todo el día
       hasta.setHours(23, 59, 59, 999);
-      datosFiltrados = datosFiltrados.filter(item => {
-        const fechaItem = new Date(item.fecha_envio);
-        return fechaItem <= hasta;
-      });
+      datosFiltrados = datosFiltrados.filter(item => new Date(item.fecha_envio) <= hasta);
     }
-
-    // Ordenar por fecha
     if (this.filtroFecha.orden) {
       datosFiltrados.sort((a, b) => {
         const fechaA = new Date(a.fecha_envio).getTime();
         const fechaB = new Date(b.fecha_envio).getTime();
-
-        if (this.filtroFecha.orden === 'asc') {
-          return fechaA - fechaB;
-        } else {
-          return fechaB - fechaA;
-        }
+        return this.filtroFecha.orden === 'asc' ? fechaA - fechaB : fechaB - fechaA;
       });
     }
-
     return datosFiltrados;
   }
 
@@ -200,33 +136,14 @@ export class HistorialCaratulasComponent implements OnInit {
   }
 
   limpiarFiltroFecha() {
-    this.filtroFecha = {
-      orden: null,
-      fechaDesde: '',
-      fechaHasta: ''
-    };
+    this.filtroFecha = { orden: null, fechaDesde: '', fechaHasta: '' };
     this.aplicarFiltros();
   }
 
-  onFiltroNombreEvacChange(nombres: string[]) {
-    this.filtroNombreEvac = nombres;
-    this.aplicarFiltros();
-  }
-
-  onFiltroUsuarioChange(usuarios: string[]) {
-    this.filtroUsuario = usuarios;
-    this.aplicarFiltros();
-  }
-
-  onFiltroClienteChange(clientes: string[]) {
-    this.filtroCliente = clientes;
-    this.aplicarFiltros();
-  }
-
-  onFiltroCorreoChange(correos: string[]) {
-    this.filtroCorreo = correos;
-    this.aplicarFiltros();
-  }
+  onFiltroNombreEvacChange(nombres: string[]) { this.filtroNombreEvac = nombres; this.aplicarFiltros(); }
+  onFiltroUsuarioChange(usuarios: string[]) { this.filtroUsuario = usuarios; this.aplicarFiltros(); }
+  onFiltroClienteChange(clientes: string[]) { this.filtroCliente = clientes; this.aplicarFiltros(); }
+  onFiltroCorreoChange(correos: string[]) { this.filtroCorreo = correos; this.aplicarFiltros(); }
 
   limpiarTodosFiltros() {
     this.filtroNombreEvac = [];
@@ -234,6 +151,7 @@ export class HistorialCaratulasComponent implements OnInit {
     this.filtroCliente = [];
     this.filtroCorreo = [];
     this.limpiarFiltroFecha();
+    // No es necesario llamar a aplicarFiltros() de nuevo si limpiarFiltroFecha ya lo hace.
   }
 
   get historialPaginado(): HistorialCaratula[] {
@@ -242,94 +160,69 @@ export class HistorialCaratulasComponent implements OnInit {
     return this.historialFiltrado.slice(inicio, fin);
   }
 
+  actualizarPaginacion() {
+    this.totalPaginas = Math.ceil(this.historialFiltrado.length / this.itemsPorPagina);
+    if (this.totalPaginas === 0) {
+      this.totalPaginas = 1;
+    }
+    if (this.paginaActual > this.totalPaginas) {
+      this.paginaActual = this.totalPaginas;
+    }
+  }
+
   cambiarPagina(pagina: number) {
     if (pagina >= 1 && pagina <= this.totalPaginas) {
       this.paginaActual = pagina;
     }
   }
 
-  cambiarItemsPorPagina(event: any) {
-    this.itemsPorPagina = Number(event.target.value);
-    this.totalPaginas = Math.ceil(this.historialFiltrado.length / this.itemsPorPagina);
+  cambiarItemsPorPagina(items: any) {
+    this.itemsPorPagina = Number(items);
     this.paginaActual = 1;
+    this.actualizarPaginacion();
   }
 
   formatearFecha(fecha: string): string {
     const date = new Date(fecha);
-
-    const day = date.getUTCDate();
-    const month = date.getUTCMonth() + 1;
-    const year = date.getUTCFullYear();
-
-    // Formatear con ceros a la izquierda si es necesario
-    return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
-  }
-
-  get tieneFiltrosActivos(): boolean {
-    return this.filtroNombreEvac.length > 0 ||
-      this.filtroUsuario.length > 0 ||
-      this.filtroCliente.length > 0 ||
-      this.filtroCorreo.length > 0 ||
-      this.filtroFecha.orden !== null ||
-      this.filtroFecha.fechaDesde !== '' ||
-      this.filtroFecha.fechaHasta !== '';
+    return date.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC' });
   }
 
   formatearHora(hora: string): string {
-    if (hora.includes('am') || hora.includes('pm')) {
-      return hora;
-    }
-
-    if (hora.includes(':')) {
-      const [horas, minutos] = hora.split(':');
-      let horasNum = parseInt(horas, 10);
-      const ampm = horasNum >= 12 ? 'pm' : 'am';
-
-      horasNum = horasNum % 12;
-      horasNum = horasNum === 0 ? 12 : horasNum;
-
-      return `${horasNum}:${minutos} ${ampm}`;
-    }
-
-    return hora;
+    if (!hora || !hora.includes(':')) return hora;
+    const [horas, minutos] = hora.split(':');
+    let horasNum = parseInt(horas, 10);
+    const ampm = horasNum >= 12 ? 'pm' : 'am';
+    horasNum = horasNum % 12 || 12;
+    return `${horasNum}:${minutos} ${ampm}`;
+  }
+  
+  get tieneFiltrosActivos(): boolean {
+    return this.filtroNombreEvac.length > 0 || this.filtroUsuario.length > 0 ||
+           this.filtroCliente.length > 0 || this.filtroCorreo.length > 0 ||
+           this.filtroFecha.orden !== null || this.filtroFecha.fechaDesde !== '' || this.filtroFecha.fechaHasta !== '';
   }
 
   exportarAExcel(): void {
-    // Mapear los datos para que los títulos de las columnas sean más amigables
-    const dataParaExcel = this.historialFiltrado.map(item => {
-      return {
-        'Nombre Evac': item.nombre_usuario,
-        'Usuario Evac': item.usuario_envio,
-        'Distribuidor': item.cliente_nombre,
-        'Clave Distribuidor': item.clave_cliente,
-        'Correo Remitente': item.correo_remitente,
-        'Correo Destinatario': item.correo_destinatario,
-        'Fecha de Envío': this.formatearFecha(item.fecha_envio),
-        'Hora de Envío': this.formatearHora(item.hora_envio)
-      };
-    });
+    const dataParaExcel = this.historialFiltrado.map(item => ({
+      'Nombre Evac': item.nombre_usuario,
+      'Usuario Evac': item.usuario_envio,
+      'Distribuidor': item.cliente_nombre,
+      'Clave Distribuidor': item.clave_cliente,
+      'Correo Remitente': item.correo_remitente,
+      'Correo Destinatario': item.correo_destinatario,
+      'Fecha de Envío': this.formatearFecha(item.fecha_envio),
+      'Hora de Envío': this.formatearHora(item.hora_envio)
+    }));
 
-    // Convertir el arreglo de objetos a una hoja de cálculo
     const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(dataParaExcel);
-
-    // Lógica para ajustar el ancho de las columnas
     const anchosDeColumna = Object.keys(dataParaExcel[0]).map(columna => {
-      const anchoMaximo = dataParaExcel.reduce((max, fila) => {
-        const valor = fila[columna as keyof typeof fila] || '';
-        return Math.max(max, String(valor).length);
-      }, columna.length);
-      return { wch: anchoMaximo + 2 }; // +2 para un pequeño espacio adicional
+      const anchoMaximo = dataParaExcel.reduce((max, fila) => Math.max(max, String(fila[columna as keyof typeof fila] || '').length), columna.length);
+      return { wch: anchoMaximo + 2 };
     });
-
-    // Asignar los anchos calculados a la hoja de cálculo
     worksheet['!cols'] = anchosDeColumna;
-
     const workbook: XLSX.WorkBook = { Sheets: { 'Historial': worksheet }, SheetNames: ['Historial'] };
-
     const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     const data: Blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
-    const nombreArchivo = `historial_caratulas_${new Date().toISOString().split('T')[0]}.xlsx`;
-
-    FileSaver.saveAs(data, nombreArchivo);
+    FileSaver.saveAs(data, `historial_caratulas_${new Date().toISOString().split('T')[0]}.xlsx`);
   }
 }

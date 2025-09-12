@@ -1,433 +1,133 @@
-/* Contenedor principal */
+:host {
+  --primary-color: #EB5E28;
+  --secondary-color: #403F3F;
+  --background-color: #252422;
+  --light-color: #FFFCF2;
+  --border-color: #444;
+  --border-radius: 8px;
+  --transition: all 0.3s ease;
+}
+
+/* Contenedor principal de toda la vista */
 .monitor-container {
-  max-width: 90%;
+  max-width: 95%;
   margin: 2rem auto;
-  padding-bottom: 1.5rem;
   font-family: 'Segoe UI', sans-serif;
-  color: #FFFCF2;
-  min-height: calc(100vh - 10rem);
-  overflow: visible;
+  color: var(--light-color);
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
 }
 
 h2 {
   text-align: center;
-  color: #EB5E28;
-  margin-bottom: 1rem;
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
+  flex-shrink: 0; /* No se encoge */
 }
 
 .acciones-monitor {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  /* Ajusta la separación entre botones */
-  margin: 2rem 0;
-  /* Margen superior e inferior */
+  margin-bottom: 1.5rem;
+  flex-shrink: 0; /* No se encoge */
 }
 
-/* Botones */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  font-size: 0.9rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  gap: 0.5rem;
+.contenido-principal {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; /* Ocupa todo el espacio vertical restante */
+  min-height: 0; /* Truco de Flexbox para evitar desbordamiento */
+  animation: fadeIn 0.5s ease-in-out;
 }
 
-.btn-secondary {
-  background-color: #403F3F;
-  color: #FFFCF2;
-  transition: all 0.3s ease;
-  border-radius: 8px;
-  gap: 8px;
-}
-
-.btn-secondary:hover {
-  background-color: #EB5E28;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-}
-
-/* Contenedor de la tabla - OPTIMIZADO */
+/* Contenedor de la tabla */
 .tabla-contenedor {
-  position: relative;
-  width: 100%;
-  min-height: 500px;
-  overflow: auto;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
   flex-grow: 1;
-  max-height: 70vh;
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-.tabla-contenedor::-webkit-scrollbar {
-  display: none;
+  overflow: auto;
+  position: relative;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
 }
 
 .tabla-scroll-horizontal {
-  width: fit-content;
-  min-width: 100%;
+  width: 100%;
   overflow-x: auto;
-  overflow-y: hidden;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.tabla-scroll-horizontal::-webkit-scrollbar {
-  display: none;
 }
 
 .tabla-facturas {
-  width: auto;
-  min-width: 100%;
+  width: 100%;
   border-collapse: collapse;
-  table-layout: auto;
-  min-height: 300px;
+  table-layout: fixed;
 }
 
-/* Cabecera sticky - fila de títulos */
-.tabla-facturas thead tr:first-child {
+.tabla-facturas thead {
   position: sticky;
   top: 0;
-  z-index: 11;
+  z-index: 10;
   background-color: #3a3a37;
 }
 
-/* Cabecera sticky - fila de filtros */
-.tabla-facturas thead tr.filtros {
-  position: sticky;
-  top: 2.8rem;
-  /* Ajusta según altura real de fila de títulos */
-  z-index: 12;
-  background-color: #3a3a37;
-}
-
-/* HEADER - Más espacio para filtros */
-.tabla-facturas thead th {
-  border: 1px solid #444;
-  padding: 0.7rem 0.8rem;
+.tabla-facturas td {
+  padding: 0.75rem;
   text-align: left;
   white-space: nowrap;
-  vertical-align: middle;
-  color: #EB5E28;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-bottom: 1px solid var(--border-color);
 }
 
-/* Ajuste específico para fila de títulos */
-.tabla-facturas thead tr:first-child th {
-  padding: 0.7rem 0.8rem;
+/* ✅ CORRECCIÓN: El <th> ya no es flex, solo define el padding y estilos base. */
+.tabla-facturas th {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--primary-color);
+  font-weight: 600;
+  vertical-align: middle; /* Asegura alineación vertical */
 }
 
-/* Ajuste para fila de filtros */
-.tabla-facturas thead tr.filtros th {
-  padding: 0.3rem 0.6rem;
-}
-
-/* Inputs de filtro */
-.tabla-facturas thead tr.filtros th input,
-.tabla-facturas thead tr.filtros th select {
+/* ✅ NUEVO: El <div> interno ahora maneja la alineación con Flexbox */
+.th-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
   width: 100%;
-  height: 1.8rem;
-  padding: 0.2rem 0.4rem;
-  font-size: 0.9rem;
-  box-sizing: border-box;
-  border-radius: 4px;
-  border: 1px solid #666;
-  background-color: #2a2a28;
-  color: #fff;
 }
 
-/* FILAS DE DATOS - MUY COMPACTAS */
+
 .tabla-facturas tbody tr {
-  background-color: #1e1e1c;
-  height: 30px;
+  background-color: #2a2a28;
+  transition: background-color 0.2s ease;
 }
 
 .tabla-facturas tbody tr:nth-child(even) {
-  background-color: #2a2a28;
+  background-color: var(--background-color);
 }
 
 .tabla-facturas tbody tr:hover {
-  background-color: #555;
+  background-color: #4f4d4d;
 }
 
-.tabla-facturas tbody td {
-  border: 1px solid #444;
-  padding: 0.2rem 0.6rem !important;
-  /* Padding mínimo para filas compactas */
-  text-align: left;
-  white-space: nowrap;
-  word-break: keep-all;
-  line-height: 1 !important;
-  height: auto !important;
-  font-size: 0.9rem;
-}
-
-/* Optimización para contenido de celdas - MÁS COMPACTO */
-.tabla-facturas tbody td strong {
-  color: #EB5E28;
-  font-weight: 600;
-  display: block;
-  margin: 0;
-  line-height: 1;
-}
-
-.tabla-facturas tbody td small {
-  color: #ccc;
-  font-size: 0.72rem;
-  display: block;
-  line-height: 1;
-  margin: 0;
-}
-
-/* PAGINACIÓN CENTRADA */
-.paginacion-centrada {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-top: 2rem;
-  width: 100%;
-  gap: 1rem;
-}
-
-.paginador-info {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  flex-wrap: wrap;
-  font-size: 0.9rem;
-  justify-content: center;
-  color: #fff;
-}
-
-.paginador-info span {
-  white-space: nowrap;
-}
-
-.paginador-controles {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.paginador-controles button {
-  background-color: #EB5E28;
-  color: #fff;
-  border: none;
-  padding: 0.6rem 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  font-size: 0.9rem;
-  white-space: nowrap;
-}
-
-.paginador-controles button:hover:not(:disabled) {
-  background-color: #ff6b2c;
-  transform: translateY(-1px);
-}
-
-.paginador-controles button:disabled {
-  background-color: #666;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.pagina-info {
-  background-color: #EB5E28;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-weight: bold;
-  margin: 0 0.5rem;
-  color: #fff;
-}
-
-/* Mensaje de carga */
-.cargando {
-  text-align: center;
-  font-style: italic;
-  color: #ccc;
-}
-
-/* Spinner de carga */
-.cargando-spinner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 2rem 0;
-  flex-grow: 1;
-}
-
-.spinner {
-  border: 6px solid #ccc;
-  border-top: 6px solid #EB5E28;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  animation: girar 1s linear infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes girar {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.cargando-spinner p {
-  color: #ccc;
-  font-size: 1.1rem;
-}
-
-/* Sin datos */
-.sin-datos {
-  text-align: center;
-  color: #ccc;
-  margin-top: 2rem;
-  font-size: 1.2rem;
-  font-style: italic;
-  padding: 2rem;
-  flex-grow: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Mensaje de error */
-.error-message {
-  background-color: #dc3545;
-  color: white;
-  padding: 1rem;
-  border-radius: 6px;
-  text-align: center;
-  margin: 1rem 0;
-}
-
-.btn-reintentar {
-  margin-top: 0.5rem;
-  padding: 0.5rem 1rem;
-  background-color: #fff;
-  color: #dc3545;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.btn-reintentar:hover {
-  background-color: #f8f9fa;
-}
-
-/* Botón limpiar filtros */
-.contenedor-limpiar-filtros {
-  display: flex;
-  justify-content: center;
-  margin: 1rem 0;
-}
-
-.btn-limpiar-todos {
-  padding: 0.6rem 1.2rem;
-  background-color: #474646;
-  border: none;
-  border-radius: 6px;
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-.btn-limpiar-todos:hover {
-  background-color: #ff6b2c;
-  transform: scale(1.08);
-}
-
-/* Animaciones */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Focus para accesibilidad */
-.tabla-facturas tbody tr:focus {
-  outline: 2px solid #EB5E28;
-  outline-offset: -2px;
-}
-
-.paginador-controles button:focus {
-  outline: 2px solid #EB5E28;
-  outline-offset: 2px;
-}
-
-/* RESPONSIVE - Ajustes adicionales */
-@media (max-width: 768px) {
-  .tabla-contenedor {
-    height: 500px;
-  }
-
-  .tabla-facturas tbody td {
-    padding: 0.4rem 0.6rem;
-  }
-
-  /* Ajuste para inputs en móvil */
-  .tabla-facturas thead tr.filtros th input,
-  .tabla-facturas thead tr.filtros th select {
-    height: 1.6rem;
-    font-size: 0.85rem;
-  }
-}
-
-/* Estilos para los filtros superiores */
-.filtros-superiores {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.filtro-fecha-container {
-  margin-right: auto;
-}
-
-/* Estilos para la paginación */
+/* Paginación */
 .paginacion-container {
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin-top: 1.5rem;
   gap: 1rem;
 }
 
 .paginador-info {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: center;
   width: 100%;
   font-size: 0.9rem;
-  color: var(--light-color);
 }
 
 .paginador-controles {
@@ -436,14 +136,6 @@ h2 {
   gap: 0.5rem;
   flex-wrap: wrap;
   justify-content: center;
-}
-
-.select-paginacion {
-  padding: 0.5rem;
-  border-radius: var(--border-radius);
-  background-color: var(--secondary-color);
-  color: var(--light-color);
-  border: 1px solid #555;
 }
 
 .btn-paginacion {
@@ -467,235 +159,67 @@ h2 {
 
 .pagina-info {
   padding: 0.5rem 1rem;
-  background-color: var(--secondary-color);
+  background-color: var(--primary-color);
   border-radius: var(--border-radius);
   font-weight: 600;
 }
 
-/* ===== ESTILOS ESPECÍFICOS PARA LOS FILTROS ===== */
-
-/* Contenedores de la tabla */
-.tabla-scroll-horizontal {
-  overflow: visible !important;
-}
-
-.tabla-contenedor {
-  overflow: visible !important;
-}
-
-/* Columnas con filtros */
-.columna-con-filtro {
-  position: relative;
-  overflow: visible !important;
-}
-
-/* Ajustar el ancho de la columna de fecha */
-th[style*="width: 100px;"]:nth-child(7) {
-  width: 140px !important;
-}
-
-/* Botón del filtro */
-.sort-btn {
+/* Mensajes y spinners */
+.cargando-spinner, .sin-datos, .error-message {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 5px;
-  background: transparent;
-  border: 1px solid #555;
-  border-radius: 4px;
-  padding: 4px 8px;
-  color: #EB5E28;
-  cursor: pointer;
-  font-size: 0.9rem;
-  white-space: nowrap;
-  width: 100%;
   justify-content: center;
-  margin-top: 5px;
+  text-align: center;
+  flex-grow: 1;
 }
 
-.sort-btn:hover {
-  background: rgba(235, 94, 40, 0.1);
+.sin-datos {
+  padding: 2rem;
+  font-style: italic;
+  color: #888;
 }
 
-/* Dropdown del filtro */
-.filter-options {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 1000;
-  min-width: 300px;
-  background: #3a3a37;
-  border: 1px solid #555;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  margin-top: 5px;
-  overflow: visible;
-}
-
-/* Contenido del filtro */
-.filter-content-wrapper {
-  padding: 15px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.filter-section {
-  margin-bottom: 15px;
-}
-
-.filter-section h4 {
-  margin: 0 0 10px 0;
-  color: #EB5E28;
-  font-size: 0.9rem;
-}
-
-.radio-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.radio-group label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  color: #FFFCF2;
-}
-
-.radio-group input[type="radio"] {
-  accent-color: #EB5E28;
-}
-
-.date-range {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.date-input {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.date-input label {
-  font-size: 0.85rem;
-  color: #ccc;
-}
-
-.date-input input {
-  padding: 6px;
-  border: 1px solid #555;
-  border-radius: 4px;
-  background: #2a2a28;
-  color: #fff;
-}
-
-.date-input input:focus {
-  outline: none;
-  border-color: #EB5E28;
-}
-
-.filter-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.filter-actions button {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: background-color 0.2s ease;
-}
-
-.filter-actions button:first-child {
-  background: #666;
-  color: #fff;
-}
-
-.filter-actions button:first-child:hover {
-  background: #777;
-}
-
-.filter-actions button:last-child {
-  background: #EB5E28;
-  color: #fff;
-}
-
-.filter-actions button:last-child:hover {
-  background: #ff6b2c;
-}
-
-/* Texto del filtro seleccionado */
-.selected-text {
-  max-width: 80px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.8rem;
-  color: #EB5E28;
-}
-
-/* Controles de tabla */
-.tabla-controls {
-  display: flex;
-  justify-content: flex-end;
+.spinner {
+  border: 6px solid #ccc;
+  border-top: 6px solid var(--primary-color);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: girar 1s linear infinite;
   margin-bottom: 1rem;
 }
 
-.tabla-controls .btn {
-  margin-bottom: 0;
+@keyframes girar {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-/* Responsive para filtros */
-@media (max-width: 768px) {
-  .filtros-superiores {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .paginador-controles {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .paginador-info {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  /* Ajuste para filtros en móvil */
-  .filter-options {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 300px;
-    z-index: 10000;
-  }
-
-  th[style*="width: 100px;"]:nth-child(7) {
-    width: 120px !important;
-  }
-
-  .sort-btn {
-    font-size: 0.8rem;
-    padding: 3px 6px;
-  }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* Asegurar que los dropdowns no se oculten */
-.tabla-facturas thead th {
-  overflow: visible;
+/* Botones genéricos */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.9rem;
 }
 
-/* Iconos de los botones de filtro */
-.sort-btn i {
-  font-size: 0.8rem;
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: var(--light-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--primary-color);
+  transform: translateY(-2px);
 }

@@ -1,128 +1,139 @@
 <app-home-bar></app-home-bar>
 
 <div class="monitor-container">
-    <h2>Historial de Carátulas Enviadas</h2>
+  <h2>Historial de Carátulas Enviadas</h2>
 
-    <div class="acciones-monitor">
-        <button class="btn btn-secondary" [routerLink]="['/inicio-caratulas']">
-            <i class="fas fa-arrow-left"></i> Volver
+  <div class="acciones-monitor">
+    <button class="btn btn-secondary" [routerLink]="['/inicio-caratulas']">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+    <button class="btn btn-secondary" (click)="exportarAExcel()" [disabled]="historialFiltrado.length === 0">
+      <i class="fas fa-file-excel"></i> Exportar a Excel
+    </button>
+  </div>
+
+  <div *ngIf="isLoading" class="cargando-spinner">
+    <div class="spinner"></div>
+    <p>Cargando historial...</p>
+  </div>
+
+  <div *ngIf="error && !isLoading" class="error-message">
+    {{ error }}
+    <button (click)="cargarHistorial()" class="btn-reintentar">🔄 Reintentar</button>
+  </div>
+
+  <div *ngIf="!isLoading && !error" class="contenido-principal">
+    
+    <div class="tabla-controls">
+      <button *ngIf="tieneFiltrosActivos" (click)="limpiarTodosFiltros()" class="btn btn-secondary">
+        <i class="fas fa-times"></i> Limpiar todos los filtros
+      </button>
+    </div>
+
+    <div class="tabla-contenedor">
+      <div class="tabla-scroll-horizontal">
+        <table class="tabla-facturas">
+          <thead>
+            <tr>
+              <th style="width: 200px;">
+                <div class="th-content">
+                  <span>Nombre Evac</span>
+                  <app-filtro filtroId="evac" [options]="nombreEvacOptions"
+                    [(showDropdown)]="showNombreEvacFilter" (apply)="onFiltroNombreEvacChange($event)"
+                    (clear)="onFiltroNombreEvacChange([])">
+                  </app-filtro>
+                </div>
+              </th>
+              <th style="width: 200px;">
+                <div class="th-content">
+                  <span>Usuario Evac</span>
+                  <app-filtro filtroId="usuarios" [options]="usuariosOptions"
+                    [(showDropdown)]="showUsuarioFilter" (apply)="onFiltroUsuarioChange($event)"
+                    (clear)="onFiltroUsuarioChange([])">
+                  </app-filtro>
+                </div>
+              </th>
+              <th style="width: 280px;">
+                <div class="th-content">
+                  <span>Distribuidor</span>
+                  <app-filtro filtroId="clientes" [options]="clientesOptions"
+                    [(showDropdown)]="showClienteFilter" (apply)="onFiltroClienteChange($event)"
+                    (clear)="onFiltroClienteChange([])">
+                  </app-filtro>
+                </div>
+              </th>
+              <th style="width: 180px;">
+                <div class="th-content">
+                  <span>Clave Distribuidor</span>
+                </div>
+              </th>
+              <th style="width: 250px;">
+                <div class="th-content">
+                  <span>Correo Remitente</span>
+                </div>
+              </th>
+              <th style="width: 250px;">
+                <div class="th-content">
+                  <span>Correo Destinatario</span>
+                  <app-filtro filtroId="correos" [options]="correosOptions"
+                    [(showDropdown)]="showCorreoFilter" (apply)="onFiltroCorreoChange($event)"
+                    (clear)="onFiltroCorreoChange([])">
+                  </app-filtro>
+                </div>
+              </th>
+              <th style="width: 200px;">
+                <div class="th-content">
+                  <span>Fecha de Envío</span>
+                  <app-filtro-fecha filtroId="fecha" (apply)="aplicarFiltroFecha($event)"
+                    (clear)="limpiarFiltroFecha()">
+                  </app-filtro-fecha>
+                </div>
+              </th>
+              <th style="width: 150px;">
+                <div class="th-content">
+                  <span>Hora de Envío</span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of historialPaginado">
+              <td>{{ item.nombre_usuario }}</td>
+              <td>{{ item.usuario_envio }}</td>
+              <td>{{ item.cliente_nombre }}</td>
+              <td>{{ item.clave_cliente }}</td>
+              <td>{{ item.correo_remitente }}</td>
+              <td>{{ item.correo_destinatario }}</td>
+              <td>{{ formatearFecha(item.fecha_envio) }}</td>
+              <td>{{ formatearHora(item.hora_envio) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div *ngIf="historialFiltrado.length === 0" class="sin-datos">
+        No se encontraron registros que coincidan con los filtros aplicados.
+      </div>
+    </div>
+
+    <div *ngIf="historialFiltrado.length > 0" class="paginacion-container">
+      <div class="paginador-info">
+        <span>Mostrando {{ historialPaginado.length }} de {{ historialFiltrado.length }} registros</span>
+      </div>
+      <div class="paginador-controles">
+        <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1" class="btn-paginacion">
+          <i class="fas fa-angle-double-left"></i> Primera
         </button>
-
-        <button class="btn btn-secondary" (click)="exportarAExcel()">
-            <i class="fas fa-file-excel"></i> Exportar a Excel
+        <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1" class="btn-paginacion">
+          <i class="fas fa-angle-left"></i> Anterior
         </button>
+        <span class="pagina-info">Página {{ paginaActual }}</span>
+        <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas" class="btn-paginacion">
+          Siguiente <i class="fas fa-angle-right"></i>
+        </button>
+        <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas" class="btn-paginacion">
+          Última <i class="fas fa-angle-double-right"></i>
+        </button>
+      </div>
     </div>
-
-    <!-- Loading -->
-    <div *ngIf="isLoading" class="cargando-spinner">
-        <div class="spinner"></div>
-        <p>Cargando historial...</p>
-    </div>
-
-    <!-- Error -->
-    <div *ngIf="error && !isLoading" class="error-message">
-        {{ error }}
-        <button (click)="cargarHistorial()" class="btn-reintentar">🔄 Reintentar</button>
-    </div>
-
-    <!-- Tabla -->
-    <div *ngIf="!isLoading && !error" class="tabla-contenedor">
-        <div class="tabla-controls">
-            <button *ngIf="tieneFiltrosActivos" (click)="limpiarTodosFiltros()" class="btn btn-secondary">
-                <i class="fas fa-times"></i> Limpiar todos los filtros
-            </button>
-        </div>
-
-        <div class="tabla-scroll-horizontal">
-            <table class="tabla-facturas">
-                <thead>
-                    <tr>
-                        <th class="columna-con-filtro" style="width: 100px;">
-                            Nombre Evac
-                            <app-filtro filtroId="evac" [options]="nombreEvacOptions"
-                                [(showDropdown)]="showNombreEvacFilter" (apply)="onFiltroNombreEvacChange($event)"
-                                (clear)="onFiltroNombreEvacChange([])">
-                            </app-filtro>
-                        </th>
-                        <th class="columna-con-filtro" style="width: 100px;">
-                            Usuario Evac
-                            <app-filtro filtroId="usuarios" [options]="usuariosOptions"
-                                [(showDropdown)]="showUsuarioFilter" (apply)="onFiltroUsuarioChange($event)"
-                                (clear)="onFiltroUsuarioChange([])">
-                            </app-filtro>
-                        </th>
-                        <th class="columna-con-filtro" style="width: 140px;">
-                            Distribuidor
-                            <app-filtro filtroId="clientes" [options]="clientesOptions"
-                                [(showDropdown)]="showClienteFilter" (apply)="onFiltroClienteChange($event)"
-                                (clear)="onFiltroClienteChange([])">
-                            </app-filtro>
-                        </th>
-                        <th class="columna-con-filtro" style="width: 100px;">
-                            Clave Distribuidor
-                        </th>
-                        <th class="columna-con-filtro" style="width: 100px;">
-                            Correo Remitente
-                        </th>
-                        <th class="columna-con-filtro" style="width: 100px;">
-                            Correo Destinatario
-                            <app-filtro filtroId="correos" [options]="correosOptions"
-                                [(showDropdown)]="showCorreoFilter" (apply)="onFiltroCorreoChange($event)"
-                                (clear)="onFiltroCorreoChange([])">
-                            </app-filtro>
-                        </th>
-                        <th class="columna-con-filtro" style="width: 140px;">
-                            Fecha de Envío
-                            <app-filtro-fecha filtroId="fecha" (apply)="aplicarFiltroFecha($event)"
-                                (clear)="limpiarFiltroFecha()">
-                            </app-filtro-fecha>
-                        </th>
-                        <th class="columna-con-filtro" style="width: 100px;">
-                            Hora de Envío
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let item of historialPaginado">
-                        <td>{{ item.nombre_usuario }}</td>
-                        <td>{{ item.usuario_envio }}</td>
-                        <td>{{ item.cliente_nombre }}</td>
-                        <td>{{ item.clave_cliente }}</td>
-                        <td>{{ item.correo_remitente }}</td>
-                        <td>{{ item.correo_destinatario }}</td>
-                        <td>{{ formatearFecha(item.fecha_envio) }}</td>
-                        <td>{{ formatearHora(item.hora_envio) }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Sin datos -->
-        <div *ngIf="historialFiltrado.length === 0" class="sin-datos">
-            No se encontraron registros en el historial
-        </div>
-    </div>
-
-    <!-- Paginación -->
-    <div *ngIf="historialFiltrado.length > 0 && !isLoading" class="paginacion-container">
-        <div class="paginador-controles">
-            <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1" class="btn-paginacion">
-                <i class="fas fa-angle-double-left"></i> Primera
-            </button>
-            <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1" class="btn-paginacion">
-                <i class="fas fa-angle-left"></i> Anterior
-            </button>
-
-            <span class="pagina-info">Página {{ paginaActual }} de {{ totalPaginas }}</span>
-
-            <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas"
-                class="btn-paginacion">
-                Siguiente <i class="fas fa-angle-right"></i>
-            </button>
-            <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas"
-                class="btn-paginacion">
-                Última <i class="fas fa-angle-double-right"></i>
-            </button>
-        </div>
-    </div>
+  </div>
 </div>
