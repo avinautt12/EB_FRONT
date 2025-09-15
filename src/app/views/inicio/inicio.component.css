@@ -85,3 +85,16 @@
 .contenido h1 span {
   font-weight: bold; 
 }
+
+/* --- Estilos para Dispositivos Móviles --- */
+@media (max-width: 768px) {
+  .contenido h1 {
+    /* Cambia la dirección del flex para apilar los elementos verticalmente */
+    flex-direction: column;
+    font-size: 2.5rem; /* Reduce el tamaño de la fuente para pantallas pequeñas */
+  }
+
+  .contenido h1 img {
+    height: 50px; /* Ajusta el tamaño del logo en móviles */
+  }
+}
