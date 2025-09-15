@@ -113,32 +113,25 @@ export class FacturasClienteComponent implements OnInit {
       const fila: any = {};
 
       // Mapear todas las propiedades manteniendo los nombres originales
-      fila['numero_factura'] = factura.numero_factura ?? '';
-      fila['referencia_interna'] = factura.referencia_interna ?? '';
-      fila['nombre_producto'] = factura.nombre_producto ?? '';
-      fila['contacto_referencia'] = factura.contacto_referencia ?? '';
-      fila['contacto_nombre'] = factura.contacto_nombre ?? '';
+      fila['Número Factura'] = factura.numero_factura ?? '';
+      fila['Clave producto'] = factura.referencia_interna ?? '';
+      fila['Producto'] = factura.nombre_producto ?? '';
 
       // Formatear fecha en formato YYYY-MM-DD
       if (factura.fecha_factura) {
         const fecha = new Date(factura.fecha_factura);
-        fila['fecha_factura'] = fecha.toISOString().slice(0, 10);
+        fila['Fecha'] = fecha.toISOString().slice(0, 10);
       } else {
-        fila['fecha_factura'] = '';
+        fila['Fecha'] = '';
       }
 
       // Convertir y formatear valores numéricos
-      fila['precio_unitario'] = this.formatearNumeroParaExcel(factura.precio_unitario);
-      fila['cantidad'] = factura.cantidad ?? 0;
-      fila['venta_total'] = this.formatearNumeroParaExcel(factura.venta_total);
+      fila['Precio Unit.'] = this.formatearNumeroParaExcel(factura.precio_unitario);
+      fila['Cantidad'] = factura.cantidad ?? 0;
+      fila['Total'] = this.formatearNumeroParaExcel(factura.venta_total);
 
-      fila['marca'] = factura.marca ?? '';
+      fila['Marca'] = factura.marca ?? '';
       fila['subcategoria'] = factura.subcategoria ?? '';
-      fila['apparel'] = factura.apparel ?? '';
-      fila['eride'] = factura.eride ?? '';
-      fila['evac'] = factura.evac ?? '';
-      fila['categoria_producto'] = factura.categoria_producto ?? '';
-      fila['estado_factura'] = factura.estado_factura ?? '';
 
       return fila;
     });
@@ -147,10 +140,8 @@ export class FacturasClienteComponent implements OnInit {
 
     // Ajustar ancho automático de columnas (igual que en MonitorComponent)
     const columnas = [
-      'numero_factura', 'referencia_interna', 'nombre_producto',
-      'contacto_referencia', 'contacto_nombre', 'fecha_factura',
-      'precio_unitario', 'cantidad', 'venta_total', 'marca',
-      'subcategoria', 'apparel', 'eride', 'evac', 'categoria_producto', 'estado_factura'
+      'Número Factura', 'Clave producto', 'Producto', 'Fecha',
+      'Precio Unit.', 'Cantidad', 'Total', 'Marca', 'Subcategoría'
     ];
 
     const colWidths = columnas.map(col => {
