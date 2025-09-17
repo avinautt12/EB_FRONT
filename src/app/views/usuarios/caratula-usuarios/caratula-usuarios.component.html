@@ -9,15 +9,15 @@
         <button class="btn btn-secondary" [routerLink]="['/usuarios/dashboard']">
             <i class="fas fa-arrow-left"></i> Volver
         </button>
-        <button class="btn btn-secondary" (click)="generarPDF()" [disabled]="!datosCliente">
-            <i class="fas fa-file-pdf"></i> Exportar Caratula PDF
+        <button class="btn btn-secondary" (click)="generarPDF()" [disabled]="exportandoPDF || !datosCliente">
+            <i class="fas fa-spinner fa-spin" *ngIf="exportandoPDF"></i>
+            <i class="fas fa-file-pdf" *ngIf="!exportandoPDF"></i>
+            {{ exportandoPDF ? 'Generando...' : 'Exportar Caratula PDF' }}
         </button>
-        <!-- En tu template (html) del componente actual -->
         <button class="btn btn-secondary" (click)="mostrarFacturas = true" [disabled]="!datosCliente">
             <i class="fas fa-print"></i> Detalle de Compras
         </button>
 
-        <!-- Agrega el componente del modal al final de tu template -->
         <app-facturas-cliente [isOpen]="mostrarFacturas" (onClose)="mostrarFacturas = false">
         </app-facturas-cliente>
     </div>
@@ -121,22 +121,22 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Compromiso Acumulado</td>
+                                <td>Compromiso</td>
                                 <td>{{ getCompromisoAcumuladoScott() | currency:'USD':'symbol':'1.2-2' }}</td>
                                 <td>{{ getCompromisoAcumuladoApparel() | currency:'USD':'symbol':'1.2-2' }}</td>
                             </tr>
                             <tr>
-                                <td>Avance Acumulado</td>
+                                <td>Avance</td>
                                 <td>{{ getAvanceAcumuladoScott() | currency:'USD':'symbol':'1.2-2' }}</td>
                                 <td>{{ getAvanceAcumuladoApparel() | currency:'USD':'symbol':'1.2-2' }}</td>
                             </tr>
                             <tr>
-                                <td>% Acumulado</td>
+                                <td>%</td>
                                 <td>{{ getPorcentajeAcumuladoScott() }}%</td>
                                 <td>{{ getPorcentajeAcumuladoApparel() }}%</td>
                             </tr>
                             <tr>
-                                <td>Importe Faltante Acumulado</td>
+                                <td>Importe Faltante</td>
                                 <td>{{ getFaltanteAcumuladoScott() | currency:'USD':'symbol':'1.2-2' }}</td>
                                 <td>{{ getFaltanteAcumuladoApparel() | currency:'USD':'symbol':'1.2-2' }}</td>
                             </tr>
@@ -146,7 +146,7 @@
                                 <td>{{ getSobranteAcumuladoApparel() | currency:'USD':'symbol':'1.2-2' }}</td>
                             </tr> -->
                             <tr>
-                                <td>Estatus Acumulado</td>
+                                <td>Estatus</td>
                                 <td>
                                     <span [class.estado-cumplido]="getFaltanteAcumuladoScott() <= 0"
                                         [class.estado-faltante]="getFaltanteAcumuladoScott() > 0">

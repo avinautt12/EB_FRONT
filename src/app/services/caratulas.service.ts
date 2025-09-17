@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -240,5 +240,35 @@ export class CaratulasService {
 
   getDatosPrevio(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/datos_previo`);
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('No se encontró token en localStorage');
+      return new HttpHeaders({ 'Content-Type': 'application/json' });
+    }
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+  }
+
+   /**
+   * ---> NUEVO MÉTODO PARA GENERAR EL PDF EN EL BACKEND
+   * Solicita la generación de un PDF al backend y devuelve el archivo como un Blob.
+   * @param payload - Objeto con los datos del cliente y los periodos.
+   * @returns Observable que emite un Blob con el contenido del PDF.
+   */
+  generarPdfDesdeBackend(payload: any): Observable<Blob> {
+    const url = `${this.apiUrl}/generar-pdf`;
+    
+    // Hacemos un POST con los datos y especificamos que la respuesta es un 'blob'
+    return this.http.post(url, payload, {
+      headers: this.getAuthHeaders(), // Usamos las cabeceras de autenticación
+      responseType: 'blob' // ¡Esto es muy importante!
+    }).pipe(
+      catchError(this.handleError)
+    );
   }
 }

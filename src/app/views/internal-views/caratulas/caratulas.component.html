@@ -11,8 +11,10 @@
         <button class="btn btn-secondary" [routerLink]="['/inicio-caratulas']">
             <i class="fas fa-arrow-left"></i> Volver
         </button>
-        <button class="btn btn-secondary" (click)="generarPDF()">
-            <i class="fas fa-file-pdf"></i> Exportar PDF
+        <button class="btn btn-secondary" (click)="generarPDF()" [disabled]="exportandoPDF || !datosCliente">
+            <i class="fas fa-spinner fa-spin" *ngIf="exportandoPDF"></i>
+            <i class="fas fa-file-pdf" *ngIf="!exportandoPDF"></i>
+            {{ exportandoPDF ? 'Generando...' : 'Exportar PDF' }}
         </button>
         <button class="btn btn-secondary" (click)="abrirModalEmail()" [disabled]="!datosCliente">
             <i class="fas fa-envelope"></i> Enviar por Email

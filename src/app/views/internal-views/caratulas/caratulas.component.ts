@@ -103,6 +103,8 @@ export class CaratulasComponent implements OnInit {
 
   configuracionEmail: EmailConfig | null = null;
 
+  exportandoPDF = false;
+
   constructor(
     private caratulasService: CaratulasService,
     private router: Router,
@@ -701,99 +703,53 @@ export class CaratulasComponent implements OnInit {
   }
 
   generarPDF() {
-    if (!this.datosCliente) {
-      this.error = 'No hay datos para generar PDF';
+    if (!this.datosCliente || this.exportandoPDF) {
+      this.mostrarError('Seleccione un cliente primero o espere a que finalice la descarga actual.');
       return;
     }
 
-    // Obtener el elemento que contiene solo la información a exportar
-    const element = document.getElementById('pdf-content');
+    this.exportandoPDF = true; // Inicia el estado de carga
+    this.error = null;
+    this.alertaService.mostrarExito('Generando PDF, por favor espere...');
 
-    if (!element) {
-      this.error = 'No se puede generar el PDF en este momento';
-      return;
-    }
+    // Preparamos el payload, similar a como lo haces para el email
+    const payload = {
+      datos_caratula: this.datosCliente,
+      periodos: [
+        { nombre: 'Julio-Agosto', estado: this.getEstadoPeriodo('Jul-Ago') },
+        { nombre: 'Septiembre-Octubre', estado: this.getEstadoPeriodo('Sep-Oct') },
+        { nombre: 'Noviembre-Diciembre', estado: this.getEstadoPeriodo('Nov-Dic') }
+      ]
+    };
 
-    // Añadir clase específica para PDF
-    element.classList.add('pdf-mode');
+    this.caratulasService.generarPdfDesdeBackend(payload).subscribe({
+      next: (blob) => {
+        // 1. Crear una URL temporal para el blob (el archivo recibido)
+        const url = window.URL.createObjectURL(blob);
 
-    // Ocultar elementos que no deben aparecer en el PDF
-    this.hideElementsForPDF();
+        // 2. Crear un enlace <a> temporal en el documento
+        const link = document.createElement('a');
+        link.href = url;
 
-    // Pequeño retraso para asegurar que el DOM se actualice
-    setTimeout(() => {
-      html2canvas(element, {
-        scale: 2, // Mayor calidad
-        useCORS: true,
-        logging: false
-      }).then(canvas => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgWidth = 180; // Reducir ancho para que no ocupe toda la página
-        const pageHeight = 295; // Alto A4 en mm
-        const imgHeight = canvas.height * imgWidth / canvas.width;
-        let heightLeft = imgHeight;
-        let position = 0;
+        // 3. Definir el nombre del archivo para la descarga
+        const clave = this.datosCliente?.clave || 'cliente';
+        link.download = `Caratula_${clave}_${new Date().toISOString().split('T')[0]}.pdf`;
 
-        // Centrar horizontalmente (210 - 180)/2 = 15mm de margen
-        pdf.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+        // 4. Simular un clic en el enlace para iniciar la descarga
+        document.body.appendChild(link); // Necesario para Firefox
+        link.click();
 
-        // Añadir páginas adicionales si el contenido es muy largo
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
+        // 5. Limpiar: remover el enlace y revocar la URL del objeto
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
 
-        // Restaurar los elementos ocultos y quitar clase PDF
-        this.showElementsAfterPDF();
-        element.classList.remove('pdf-mode');
-
-        // Guardar el PDF
-        const clave = this.datosCliente ? this.datosCliente.clave : 'cliente';
-        pdf.save(`Caratula_${clave}_${new Date().toISOString().split('T')[0]}.pdf`);
-      }).catch(error => {
-        console.error('Error al generar PDF:', error);
-        this.error = 'Error al generar el PDF';
-        this.showElementsAfterPDF();
-        element.classList.remove('pdf-mode');
-      });
-    }, 500);
-  }
-
-  private hideElementsForPDF() {
-    // Ocultar elementos que no deben aparecer en el PDF
-    const elementsToHide = [
-      '.search-section',
-      '.acciones-monitor',
-      '.home-bar-container',
-      'app-home-bar'
-    ];
-
-    elementsToHide.forEach(selector => {
-      const elements = document.querySelectorAll(selector);
-      elements.forEach(el => {
-        (el as HTMLElement).style.display = 'none';
-      });
-    });
-  }
-
-  private showElementsAfterPDF() {
-    // Mostrar elementos que fueron ocultos para el PDF
-    const elementsToShow = [
-      '.search-section',
-      '.acciones-monitor',
-      '.home-bar-container',
-      'app-home-bar'
-    ];
-
-    elementsToShow.forEach(selector => {
-      const elements = document.querySelectorAll(selector);
-      elements.forEach(el => {
-        (el as HTMLElement).style.display = '';
-      });
+        this.exportandoPDF = false; // Finaliza el estado de carga
+      },
+      error: (error) => {
+        console.error('Error al generar PDF desde el backend:', error);
+        this.mostrarError(error.message || 'Ocurrió un error al generar el PDF.');
+        this.exportandoPDF = false; // Finaliza el estado de carga en caso de error
+      }
     });
   }
 

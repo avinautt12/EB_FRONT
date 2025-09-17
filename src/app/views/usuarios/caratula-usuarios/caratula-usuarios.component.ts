@@ -4,8 +4,6 @@ import { CommonModule } from '@angular/common';
 import { TopBarUsuariosComponent } from '../../../components/top-bar-usuarios/top-bar-usuarios.component';
 import { CaratulasService } from '../../../services/caratulas.service';
 import { FormsModule } from '@angular/forms';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 import { FacturasClienteComponent } from '../../../components/facturas-cliente/facturas-cliente.component';
 import { AlertaService } from '../../../services/alerta.service';
 import { AlertaComponent } from '../../../components/alerta/alerta.component';
@@ -72,6 +70,8 @@ export class CaratulaUsuariosComponent implements OnInit {
 
   mensajeAlerta: string | null = null;
   tipoAlerta: 'exito' | 'error' = 'exito';
+
+  exportandoPDF = false;
 
   constructor(
     private caratulasService: CaratulasService,
@@ -208,77 +208,55 @@ export class CaratulaUsuariosComponent implements OnInit {
     return 0;
   }
 
-  async generarPDF() {
-    if (!this.datosCliente) {
-      this.error = 'No hay datos del cliente para generar el PDF.';
-      console.error(this.error);
+   generarPDF() {
+    if (!this.datosCliente || this.exportandoPDF) {
+      this.alertaService.mostrarError('Espere a que los datos del cliente carguen o a que finalice la descarga actual.');
       return;
     }
 
-    // Obtenemos el elemento HTML que queremos convertir
-    const element: HTMLElement | null = document.getElementById('pdf-content');
+    this.exportandoPDF = true; // Inicia el estado de carga
+    this.error = null;
+    this.alertaService.mostrarExito('Generando PDF, por favor espere...');
 
-    if (!element) {
-      this.error = 'No se encontró el contenido para generar el PDF.';
-      console.error(this.error);
-      return;
-    }
+    // Preparamos el payload, tal como lo hicimos en el otro componente
+    const payload = {
+      datos_caratula: this.datosCliente,
+      periodos: [
+        { nombre: 'Julio-Agosto', estado: this.getEstadoPeriodo('Jul-Ago') },
+        { nombre: 'Septiembre-Octubre', estado: this.getEstadoPeriodo('Sep-Oct') },
+        { nombre: 'Noviembre-Diciembre', estado: this.getEstadoPeriodo('Nov-Dic') }
+      ]
+    };
 
-    // Ocultamos los botones y otros elementos que no queremos en el PDF
-    // Es mejor hacerlo con una clase CSS para no manipular estilos directamente
-    const parentContainer = element.parentElement;
-    if (parentContainer) {
-      parentContainer.classList.add('generating-pdf');
-    }
+    this.caratulasService.generarPdfDesdeBackend(payload).subscribe({
+      next: (blob) => {
+        // 1. Crear una URL temporal para el blob (el archivo recibido)
+        const url = window.URL.createObjectURL(blob);
 
-    this.alertaService.mostrarExito('Generando PDF, por favor espere un momento...');
+        // 2. Crear un enlace <a> temporal en el documento
+        const link = document.createElement('a');
+        link.href = url;
 
-    try {
-      // 1. Creamos una nueva instancia de jsPDF
-      const pdf = new jsPDF({
-        orientation: 'p', // p = portrait (vertical)
-        unit: 'mm',
-        format: 'a4'
-      });
+        // 3. Definir el nombre del archivo para la descarga
+        const clave = this.datosCliente?.clave || 'cliente';
+        link.download = `Caratula_${clave}_${new Date().toISOString().split('T')[0]}.pdf`;
 
-      // 2. Usamos el método .html() que devuelve una promesa
-      await pdf.html(element, {
-        callback: (pdfInstance) => {
-          // Este callback se ejecuta cuando la renderización del PDF ha terminado.
+        // 4. Simular un clic en el enlace para iniciar la descarga
+        document.body.appendChild(link);
+        link.click();
 
-          // --- OPCIÓN A: OBTENER EL PDF COMO BASE64 ---
-          // Esto genera una cadena larga que empieza con "data:application/pdf;base64,..."
-          const pdfBase64 = pdfInstance.output('datauristring');
+        // 5. Limpiar
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
 
-          // Ahora puedes hacer lo que necesites con la cadena Base64
-          console.log('PDF generado en Base64:');
-          // console.log(pdfBase64); // Descomenta si quieres ver la cadena completa en la consola
-
-          // Por ejemplo, puedes abrirlo en una nueva pestaña del navegador para verificar
-          window.open(pdfBase64);
-
-
-          // --- OPCIÓN B: GUARDAR EL ARCHIVO DIRECTAMENTE (como en tu código original) ---
-          const clave = this.datosCliente?.clave || 'cliente';
-          const fecha = new Date().toISOString().split('T')[0];
-          pdfInstance.save(`Caratula_${clave}_${fecha}.pdf`);
-
-        },
-        margin: [15, 15, 15, 15], // Margen [arriba, derecha, abajo, izquierda]
-        autoPaging: 'slice', // Divide el contenido automáticamente en páginas
-        width: 180, // Ancho del contenido en el PDF (A4 es 210mm, menos márgenes)
-        windowWidth: element.offsetWidth // Ancho de la "ventana" para renderizar
-      });
-
-    } catch (error) {
-      this.error = 'Ocurrió un error al generar el PDF.';
-      console.error(this.error, error);
-    } finally {
-      // Nos aseguramos de volver a mostrar los elementos ocultos
-      if (parentContainer) {
-        parentContainer.classList.remove('generating-pdf');
+        this.exportandoPDF = false; // Finaliza el estado de carga
+      },
+      error: (error) => {
+        console.error('Error al generar PDF desde el backend:', error);
+        this.alertaService.mostrarError(error.message || 'Ocurrió un error al generar el PDF.');
+        this.exportandoPDF = false; // Finaliza el estado de carga en caso de error
       }
-    }
+    });
   }
 
   getMesActual(): number {
