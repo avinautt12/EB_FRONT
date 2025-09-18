@@ -40,6 +40,11 @@
   font-weight: 500;
 }
 
+.b2b-text {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 500;
+}
+
 /* Ícono perfil más grande y centrado verticalmente */
 .profile-icon {
   font-size: 1.6rem; /* más grande que el texto */
