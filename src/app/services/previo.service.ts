@@ -12,7 +12,7 @@ export class PrevioService {
   constructor(private http: HttpClient) { }
 
   getFacturasCalculadas(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/monitor_odoo_calculado`);
+    return this.http.get<any[]>(`${this.apiUrl}/monitor_odoo`); 
   }
 
   actualizarPrevio(todosLosDatos: any[]) {
