@@ -107,10 +107,38 @@ export class CaratulaUsuariosComponent implements OnInit {
 
   private buscarAutomaticamente() {
     this.isLoading = true;
-    const clave = this.tokenData.clave;
-    const nombreCliente = this.tokenData.nombre_cliente;
+    const claveOriginal = this.tokenData.clave;
+    const nombreOriginal = this.tokenData.nombre_cliente;
 
-    this.caratulasService.buscarCaratulas(clave, nombreCliente).subscribe({
+    // 1. Verificamos primero si el cliente pertenece a un grupo
+    this.caratulasService.verificarGrupoCliente(claveOriginal).subscribe({
+      next: (grupoResponse) => {
+
+        let nombreParaBuscar = nombreOriginal;
+
+        // 2. Si tiene grupo, usamos el nombre del grupo para la búsqueda
+        if (grupoResponse.tiene_grupo) {
+          console.log(`Cliente ${claveOriginal} pertenece al grupo: ${grupoResponse.nombre_grupo}`);
+          nombreParaBuscar = grupoResponse.nombre_grupo;
+        } else {
+          console.log(`Cliente ${claveOriginal} es individual.`);
+        }
+
+        // 3. Llamamos al servicio de búsqueda con los datos correctos (individuales o de grupo)
+        // Usamos el nombre del grupo o el nombre individual según corresponda.
+        this.realizarBusqueda(nombreParaBuscar);
+      },
+      error: (err) => {
+        // Si la verificación falla (ej. error de red), procedemos con la búsqueda individual por seguridad
+        console.error('Error al verificar grupo. Se buscará como cliente individual.', err);
+        this.realizarBusqueda(nombreOriginal);
+      }
+    });
+  }
+
+  private realizarBusqueda(nombreCliente: string) {
+    // La clave ya no es el parámetro principal, usamos el nombre (sea individual o de grupo)
+    this.caratulasService.buscarCaratulas('', nombreCliente).subscribe({
       next: (response: any) => {
         let datos: any = null;
         if (response && response.success && response.data) {
@@ -126,22 +154,14 @@ export class CaratulaUsuariosComponent implements OnInit {
           this.error = null;
         } else {
           this.datosCliente = null;
-          this.error = 'No se encontraron datos para este cliente';
+          this.error = `No se encontraron datos para "${nombreCliente}"`;
         }
         this.isLoading = false;
       },
       error: (error: any) => {
         console.error('Error al obtener datos del cliente:', error);
-        let mensajeError = 'No se encontraron datos para este cliente';
-        if (error.error && error.error.message) {
-          mensajeError = error.error.message;
-        } else if (error.message) {
-          mensajeError = error.message;
-        } else if (error.status === 404) {
-          mensajeError = 'Cliente no encontrado';
-        } else if (error.status === 0) {
-          mensajeError = 'Error de conexión con el servidor';
-        }
+        let mensajeError = `No se encontraron datos para "${nombreCliente}"`;
+        // ... (resto de tu manejo de errores) ...
         this.error = mensajeError;
         this.datosCliente = null;
         this.isLoading = false;
@@ -211,7 +231,7 @@ export class CaratulaUsuariosComponent implements OnInit {
     return 0;
   }
 
-   generarPDF() {
+  generarPDF() {
     if (!this.datosCliente || this.exportandoPDF) {
       this.alertaService.mostrarError('Espere a que los datos del cliente carguen o a que finalice la descarga actual.');
       return;

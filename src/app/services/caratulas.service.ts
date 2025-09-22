@@ -254,15 +254,15 @@ export class CaratulasService {
     });
   }
 
-   /**
-   * ---> NUEVO MÉTODO PARA GENERAR EL PDF EN EL BACKEND
-   * Solicita la generación de un PDF al backend y devuelve el archivo como un Blob.
-   * @param payload - Objeto con los datos del cliente y los periodos.
-   * @returns Observable que emite un Blob con el contenido del PDF.
-   */
+  /**
+  * ---> NUEVO MÉTODO PARA GENERAR EL PDF EN EL BACKEND
+  * Solicita la generación de un PDF al backend y devuelve el archivo como un Blob.
+  * @param payload - Objeto con los datos del cliente y los periodos.
+  * @returns Observable que emite un Blob con el contenido del PDF.
+  */
   generarPdfDesdeBackend(payload: any): Observable<Blob> {
     const url = `${this.apiUrl}/generar-pdf`;
-    
+
     // Hacemos un POST con los datos y especificamos que la respuesta es un 'blob'
     return this.http.post(url, payload, {
       headers: this.getAuthHeaders(), // Usamos las cabeceras de autenticación
@@ -270,5 +270,9 @@ export class CaratulasService {
     }).pipe(
       catchError(this.handleError)
     );
+  }
+
+  verificarGrupoCliente(clave: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/verificar_grupo_cliente`, { params: { clave } });
   }
 }
