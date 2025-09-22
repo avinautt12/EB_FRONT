@@ -12,6 +12,7 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
 import { EmailService, EmailData, EmailConfig } from '../../../services/email.service';
+import { FechaActualizacionComponent } from '../../../components/fecha-actualizacion/fecha-actualizacion.component';
 
 interface SugerenciaCliente {
   clave: string;
@@ -67,7 +68,7 @@ interface DatosCliente {
 @Component({
   selector: 'app-caratulas',
   standalone: true,
-  imports: [RouterModule, CommonModule, HomeBarComponent, FormsModule],
+  imports: [RouterModule, CommonModule, HomeBarComponent, FormsModule, FechaActualizacionComponent],
   templateUrl: './caratulas.component.html',
   styleUrls: ['./caratulas.component.css']
 })

@@ -1,0 +1,22 @@
+.update-container {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-family: Arial, sans-serif;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  
+  display: block; /* 1. Cambiado de 'inline-block' */
+  width: fit-content; /* 2. Hacemos que el ancho se ajuste al texto */
+  margin: 10px auto; /* 3. 'auto' centra el bloque horizontalmente */
+}
+
+.update-container p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.update-container strong {
+  margin-right: 8px;
+}

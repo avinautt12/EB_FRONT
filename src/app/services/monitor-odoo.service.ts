@@ -18,4 +18,8 @@ export class MonitorOdooService {
   importarFacturas(formData: FormData): Observable<any> {
     return this.http.post(`${this.apiUrl}/importar_facturas`, formData);
   }
+
+  getUltimaActualizacion(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/ultima_actualizacion`);
+  }
 }

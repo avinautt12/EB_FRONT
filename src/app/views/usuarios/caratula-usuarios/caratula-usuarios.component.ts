@@ -8,6 +8,8 @@ import { FacturasClienteComponent } from '../../../components/facturas-cliente/f
 import { AlertaService } from '../../../services/alerta.service';
 import { AlertaComponent } from '../../../components/alerta/alerta.component';
 
+import { FechaActualizacionComponent } from '../../../components/fecha-actualizacion/fecha-actualizacion.component';
+
 interface DatosCliente {
   clave: string;
   evac: string;
@@ -54,7 +56,8 @@ interface DatosCliente {
 @Component({
   selector: 'app-caratula-usuarios',
   standalone: true,
-  imports: [RouterModule, CommonModule, TopBarUsuariosComponent, FormsModule, FacturasClienteComponent, AlertaComponent],
+  imports: [RouterModule, CommonModule, TopBarUsuariosComponent,
+    FormsModule, FacturasClienteComponent, AlertaComponent, FechaActualizacionComponent],
   templateUrl: './caratula-usuarios.component.html',
   styleUrls: ['./caratula-usuarios.component.css']
 })

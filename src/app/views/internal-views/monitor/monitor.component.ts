@@ -11,6 +11,8 @@ import { AlertaComponent } from '../../../components/alerta/alerta.component';
 import { FiltroComponent } from '../../../components/filtro/filtro.component';
 import { FiltroFechaComponent } from '../../../components/filtro-fecha/filtro-fecha.component';
 
+import { FechaActualizacionComponent } from '../../../components/fecha-actualizacion/fecha-actualizacion.component';
+
 interface Factura {
   id: number;
   numero_factura: string;
@@ -34,7 +36,8 @@ interface Factura {
 @Component({
   selector: 'app-monitor',
   standalone: true,
-  imports: [CommonModule, HomeBarComponent, FormsModule, RouterModule, AlertaComponent, FiltroComponent, FiltroFechaComponent],
+  imports: [CommonModule, HomeBarComponent, FormsModule,
+    RouterModule, AlertaComponent, FiltroComponent, FiltroFechaComponent, FechaActualizacionComponent],
   templateUrl: './monitor.component.html',
   styleUrls: ['./monitor.component.css'],
   providers: [MonitorOdooService]

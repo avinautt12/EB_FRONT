@@ -11,6 +11,8 @@ import { AlertaService } from '../../../services/alerta.service';
 import { TooltipComponent } from '../../../components/tooltip/tooltip.component';
 import * as XLSX from 'xlsx';
 
+import { FechaActualizacionComponent } from '../../../components/fecha-actualizacion/fecha-actualizacion.component';
+
 interface Cliente {
   clave: string;
   zona: string;
@@ -81,7 +83,8 @@ interface ClienteConAcumulado extends Cliente {
 @Component({
   selector: 'app-previo',
   standalone: true,
-  imports: [HomeBarComponent, RouterModule, CommonModule, FormsModule, FiltroPrevioComponent, TooltipComponent],
+  imports: [HomeBarComponent, RouterModule, CommonModule, FormsModule,
+    FiltroPrevioComponent, TooltipComponent, FechaActualizacionComponent],
   templateUrl: './previo.component.html',
   styleUrl: './previo.component.css'
 })

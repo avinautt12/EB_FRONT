@@ -1,0 +1,14 @@
+<div class="update-container">
+  <p>
+    <strong>Última Actualización:</strong>
+    
+    <span *ngIf="fechaValida">
+      {{ fechaValida | date: 'dd/MM/yyyy h:mm a' }}
+    </span>
+    
+    <span *ngIf="!fechaValida">
+      {{ mensajeEstado }}
+    </span>
+
+  </p>
+</div>
