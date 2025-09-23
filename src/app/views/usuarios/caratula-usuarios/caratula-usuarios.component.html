@@ -3,7 +3,7 @@
 <app-alerta *ngIf="mensajeAlerta" [mensaje]="mensajeAlerta" [tipo]="tipoAlerta"></app-alerta>
 
 <div class="monitor-container">
-    <h2>Caratula</h2>
+    <h2>Carátula Distribuidor</h2>
 
     <div class="acciones-monitor">
         <button class="btn btn-secondary" [routerLink]="['/usuarios/dashboard']">
@@ -18,7 +18,7 @@
             <i class="fas fa-print"></i> Detalle de Compras
         </button>
 
-        <app-facturas-cliente [isOpen]="mostrarFacturas" (onClose)="mostrarFacturas = false">
+        <app-facturas-cliente [isOpen]="mostrarFacturas" (onClose)="mostrarFacturas = false" [idGrupo]="idDelGrupo">
         </app-facturas-cliente>
     </div>
 

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClientesService } from '../../services/clientes.service';
 import * as XLSX from 'xlsx';
+import { Observable } from 'rxjs';
 
 interface Factura {
   id: number;
@@ -35,6 +36,8 @@ export class FacturasClienteComponent implements OnInit {
   @Output() onClose = new EventEmitter<void>();
   @Input() isOpen = false;
 
+  @Input() idGrupo: number | null = null;
+
   facturas: Factura[] = [];
   facturasFiltradas: Factura[] = [];
   facturasPaginadas: Factura[] = [];
@@ -50,29 +53,40 @@ export class FacturasClienteComponent implements OnInit {
   constructor(private clientesService: ClientesService) { }
 
   ngOnInit() {
-    if (this.isOpen) {
-      this.obtenerFacturasCliente();
-    }
+
   }
 
   ngOnChanges() {
     if (this.isOpen) {
-      this.obtenerFacturasCliente();
+      this.obtenerFacturas();
     }
   }
 
-  obtenerFacturasCliente() {
+  obtenerFacturas() {
     this.cargando = true;
     this.error = null;
+    this.facturas = [];
+    this.facturasFiltradas = [];
+    this.facturasPaginadas = [];
 
-    this.clientesService.getFacturasCliente().subscribe({
+    let servicioObservable: Observable<any>;
+
+    if (this.idGrupo) {
+      console.log(`Buscando facturas para el GRUPO con ID: ${this.idGrupo}`);
+      servicioObservable = this.clientesService.getFacturasGrupo(this.idGrupo);
+    } else {
+      console.log('Buscando facturas para el cliente INDIVIDUAL del token.');
+      servicioObservable = this.clientesService.getFacturasCliente();
+    }
+
+    servicioObservable.subscribe({
       next: (response: any) => {
         if (response.success) {
           this.facturas = response.data || [];
           this.infoCliente = response.cliente;
 
           if (this.facturas.length === 0) {
-            this.error = 'No se encontraron facturas para este cliente';
+            this.error = 'No se encontraron facturas.';
           } else {
             this.filtrarFacturas();
           }
@@ -108,16 +122,13 @@ export class FacturasClienteComponent implements OnInit {
   }
 
   exportarExcel() {
-    // Preparar datos para exportar (similar al MonitorComponent)
     const datosExportar = this.facturasFiltradas.map(factura => {
+      // La preparación de datos ya es correcta, la dejamos como está.
       const fila: any = {};
-
-      // Mapear todas las propiedades manteniendo los nombres originales
       fila['Número Factura'] = factura.numero_factura ?? '';
       fila['Clave producto'] = factura.referencia_interna ?? '';
       fila['Producto'] = factura.nombre_producto ?? '';
 
-      // Formatear fecha en formato YYYY-MM-DD
       if (factura.fecha_factura) {
         const fecha = new Date(factura.fecha_factura);
         fila['Fecha'] = fecha.toISOString().slice(0, 10);
@@ -125,47 +136,61 @@ export class FacturasClienteComponent implements OnInit {
         fila['Fecha'] = '';
       }
 
-      // Convertir y formatear valores numéricos
+      // Es crucial que estos valores sean de tipo número para que Excel aplique el formato
       fila['Precio Unit.'] = this.formatearNumeroParaExcel(factura.precio_unitario);
       fila['Cantidad'] = factura.cantidad ?? 0;
       fila['Total'] = this.formatearNumeroParaExcel(factura.venta_total);
 
       fila['Marca'] = factura.marca ?? '';
-      fila['subcategoria'] = factura.subcategoria ?? '';
+      fila['Subcategoría'] = factura.subcategoria ?? ''; // Corregido el nombre de la columna
 
       return fila;
     });
 
     const worksheet = XLSX.utils.json_to_sheet(datosExportar);
 
-    // Ajustar ancho automático de columnas (igual que en MonitorComponent)
-    const columnas = [
+    // Definimos las cabeceras una sola vez para reutilizarlas
+    const headers = [
       'Número Factura', 'Clave producto', 'Producto', 'Fecha',
       'Precio Unit.', 'Cantidad', 'Total', 'Marca', 'Subcategoría'
     ];
 
-    const colWidths = columnas.map(col => {
-      const valores = datosExportar.map(row => row[col]?.toString() ?? '');
-      valores.push(col);
+    // Ajuste de anchos (tu lógica es correcta)
+    const colWidths = headers.map(header => {
+      const valores = datosExportar.map(row => row[header]?.toString() ?? '');
+      valores.push(header); // Incluir la cabecera en el cálculo
       const maxLength = Math.max(...valores.map(v => v.length));
-      return { wch: Math.min(maxLength + 2, 50) }; // Limitar ancho máximo a 50
+      return { wch: Math.min(maxLength + 2, 50) };
     });
     worksheet['!cols'] = colWidths;
 
-    // Formatear columnas numéricas (precio_unitario y venta_total)
-    ['precio_unitario', 'venta_total'].forEach(colName => {
-      const idx = columnas.indexOf(colName);
-      if (idx !== -1) {
-        const letraCol = XLSX.utils.encode_col(idx);
-        for (let i = 2; i <= datosExportar.length + 1; i++) {
-          const celda = worksheet[`${letraCol}${i}`];
-          if (celda && typeof celda.v === 'number') {
-            celda.t = 'n';
-            celda.z = '#,##0.00';
-          }
+    // --- INICIO DE LA CORRECCIÓN ---
+
+    // 1. Obtenemos el rango de la hoja para iterar
+    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+
+    // 2. Definimos las columnas que queremos formatear
+    const columnasMoneda = ['Precio Unit.', 'Total'];
+
+    // 3. Iteramos sobre cada celda de la hoja
+    for (let R = range.s.r + 1; R <= range.e.r; ++R) { // Empezamos en +1 para saltar la cabecera
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+
+        const cell_address = { c: C, r: R };
+        const cell_ref = XLSX.utils.encode_cell(cell_address);
+        const celda = worksheet[cell_ref];
+
+        // Obtenemos el nombre de la cabecera para esta columna
+        const headerName = headers[C];
+
+        // Si la celda existe, es un número y su cabecera está en nuestra lista de columnas de moneda
+        if (celda && celda.t === 'n' && columnasMoneda.includes(headerName)) {
+          celda.t = 'n'; // Confirmamos que el tipo es numérico
+          // MEJORA: Aplicamos un formato de moneda con separador de miles y dos decimales
+          celda.z = '#,##0.00';
         }
       }
-    });
+    }
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Facturas');
@@ -176,13 +201,10 @@ export class FacturasClienteComponent implements OnInit {
 
   private formatearNumeroParaExcel(valor: any): number {
     if (valor === null || valor === undefined) return 0;
-
     if (typeof valor === 'string') {
-      // Limpiar formato de moneda y convertir a número
       const numeroLimpio = valor.replace(/[^\d.-]/g, '');
       return parseFloat(numeroLimpio) || 0;
     }
-
     return Number(valor) || 0;
   }
 

@@ -66,7 +66,7 @@ export class CaratulaUsuariosComponent implements OnInit {
   @ViewChild('contentToExport', { static: false }) contentToExport!: ElementRef;
 
   mostrarFacturas = false;
-  datosCliente: DatosCliente | null = null; // Usar null para inicializar correctamente
+  datosCliente: DatosCliente | null = null;
   isLoading = false;
   error: string | null = null;
   private tokenData: any = null;
@@ -75,6 +75,8 @@ export class CaratulaUsuariosComponent implements OnInit {
   tipoAlerta: 'exito' | 'error' = 'exito';
 
   exportandoPDF = false;
+
+  idDelGrupo: number | null = null;
 
   constructor(
     private caratulasService: CaratulasService,
@@ -98,6 +100,7 @@ export class CaratulaUsuariosComponent implements OnInit {
         const payload = token.split('.')[1];
         const decodedPayload = atob(payload);
         this.tokenData = JSON.parse(decodedPayload);
+        console.log("Token decodificado:", this.tokenData);
       }
     } catch (error) {
       console.error('Error al decodificar el token:', error);
@@ -107,45 +110,36 @@ export class CaratulaUsuariosComponent implements OnInit {
 
   private buscarAutomaticamente() {
     this.isLoading = true;
-    const claveOriginal = this.tokenData.clave;
-    const nombreOriginal = this.tokenData.nombre_cliente;
+    this.error = null;
+    this.datosCliente = null;
 
-    // 1. Verificamos primero si el cliente pertenece a un grupo
-    this.caratulasService.verificarGrupoCliente(claveOriginal).subscribe({
-      next: (grupoResponse) => {
+    const idGrupo = this.tokenData.id_grupo;
 
-        let nombreParaBuscar = nombreOriginal;
+    this.idDelGrupo = idGrupo;
 
-        // 2. Si tiene grupo, usamos el nombre del grupo para la búsqueda
-        if (grupoResponse.tiene_grupo) {
-          console.log(`Cliente ${claveOriginal} pertenece al grupo: ${grupoResponse.nombre_grupo}`);
-          nombreParaBuscar = grupoResponse.nombre_grupo;
-        } else {
-          console.log(`Cliente ${claveOriginal} es individual.`);
-        }
+    let claveParaBuscar = this.tokenData.clave;
+    let nombreParaBuscar = this.tokenData.nombre_cliente;
 
-        // 3. Llamamos al servicio de búsqueda con los datos correctos (individuales o de grupo)
-        // Usamos el nombre del grupo o el nombre individual según corresponda.
-        this.realizarBusqueda(nombreParaBuscar);
-      },
-      error: (err) => {
-        // Si la verificación falla (ej. error de red), procedemos con la búsqueda individual por seguridad
-        console.error('Error al verificar grupo. Se buscará como cliente individual.', err);
-        this.realizarBusqueda(nombreOriginal);
-      }
-    });
+    if (idGrupo) {
+      claveParaBuscar = `Integral ${idGrupo}`;
+      nombreParaBuscar = '';
+
+      console.log(`Token tiene id_grupo ${idGrupo}. Buscando carátula por CLAVE: ${claveParaBuscar}`);
+      this.realizarBusqueda(claveParaBuscar, nombreParaBuscar);
+
+    } else {
+      console.log('Token no indica grupo. Buscando por datos individuales.');
+      this.realizarBusqueda(claveParaBuscar, nombreParaBuscar);
+    }
   }
 
-  private realizarBusqueda(nombreCliente: string) {
-    // La clave ya no es el parámetro principal, usamos el nombre (sea individual o de grupo)
-    this.caratulasService.buscarCaratulas('', nombreCliente).subscribe({
+  private realizarBusqueda(clave: string, nombreCliente: string) {
+    this.caratulasService.buscarCaratulas(clave, nombreCliente).subscribe({
       next: (response: any) => {
         let datos: any = null;
-        if (response && response.success && response.data) {
-          datos = Array.isArray(response.data) ? response.data[0] : response.data;
-        } else if (Array.isArray(response)) {
+        if (Array.isArray(response) && response.length > 0) {
           datos = response[0];
-        } else if (response && typeof response === 'object') {
+        } else if (response && typeof response === 'object' && !Array.isArray(response)) {
           datos = response;
         }
 
@@ -154,17 +148,14 @@ export class CaratulaUsuariosComponent implements OnInit {
           this.error = null;
         } else {
           this.datosCliente = null;
-          this.error = `No se encontraron datos para "${nombreCliente}"`;
+          this.error = `No se encontraron datos para la búsqueda.`;
         }
         this.isLoading = false;
       },
-      error: (error: any) => {
-        console.error('Error al obtener datos del cliente:', error);
-        let mensajeError = `No se encontraron datos para "${nombreCliente}"`;
-        // ... (resto de tu manejo de errores) ...
-        this.error = mensajeError;
-        this.datosCliente = null;
+      error: (err) => {
+        this.error = 'Error al cargar los datos de la carátula.';
         this.isLoading = false;
+        console.error("Error en realizarBusqueda:", err);
       }
     });
   }
@@ -237,11 +228,10 @@ export class CaratulaUsuariosComponent implements OnInit {
       return;
     }
 
-    this.exportandoPDF = true; // Inicia el estado de carga
+    this.exportandoPDF = true;
     this.error = null;
     this.alertaService.mostrarExito('Generando PDF, por favor espere...');
 
-    // Preparamos el payload, tal como lo hicimos en el otro componente
     const payload = {
       datos_caratula: this.datosCliente,
       periodos: [
@@ -253,31 +243,26 @@ export class CaratulaUsuariosComponent implements OnInit {
 
     this.caratulasService.generarPdfDesdeBackend(payload).subscribe({
       next: (blob) => {
-        // 1. Crear una URL temporal para el blob (el archivo recibido)
         const url = window.URL.createObjectURL(blob);
 
-        // 2. Crear un enlace <a> temporal en el documento
         const link = document.createElement('a');
         link.href = url;
 
-        // 3. Definir el nombre del archivo para la descarga
         const clave = this.datosCliente?.clave || 'cliente';
         link.download = `Caratula_${clave}_${new Date().toISOString().split('T')[0]}.pdf`;
 
-        // 4. Simular un clic en el enlace para iniciar la descarga
         document.body.appendChild(link);
         link.click();
 
-        // 5. Limpiar
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        this.exportandoPDF = false; // Finaliza el estado de carga
+        this.exportandoPDF = false;
       },
       error: (error) => {
         console.error('Error al generar PDF desde el backend:', error);
         this.alertaService.mostrarError(error.message || 'Ocurrió un error al generar el PDF.');
-        this.exportandoPDF = false; // Finaliza el estado de carga en caso de error
+        this.exportandoPDF = false;
       }
     });
   }

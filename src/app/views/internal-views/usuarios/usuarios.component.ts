@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
 import { UsuariosService } from '../../../services/usuarios.service';
-import { SocketService } from '../../../services/socket.service';
 import { AlertaService } from '../../../services/alerta.service';
 import { ClientesService } from '../../../services/clientes.service';
 import { AlertaComponent } from '../../../components/alerta/alerta.component';
@@ -43,7 +42,6 @@ interface FiltroOpciones {
 })
 export class UsuariosComponent implements OnInit {
   private usuariosService = inject(UsuariosService);
-  private socketService = inject(SocketService);
   private alerta = inject(AlertaService);
   private clientesService = inject(ClientesService);
   private cdr = inject(ChangeDetectorRef);

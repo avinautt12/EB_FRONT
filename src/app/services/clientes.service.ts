@@ -68,4 +68,8 @@ export class ClientesService {
 
     return this.http.get<any>(`${this.apiUrl}/facturas-cliente`, { headers });
   }
+
+  getFacturasGrupo(idGrupo: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/facturas-grupo/${idGrupo}`);
+  }
 }
