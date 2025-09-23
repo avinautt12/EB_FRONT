@@ -193,9 +193,9 @@ export class FacturasClienteComponent implements OnInit {
     }
 
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Facturas');
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Detalle Compras');
 
-    const fileName = `facturas_${this.infoCliente?.clave || 'cliente'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const fileName = `compras_${this.infoCliente?.clave || 'cliente'}_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   }
 
