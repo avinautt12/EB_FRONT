@@ -280,6 +280,16 @@
   position: relative;
 }
 
+.search-input {
+  width: 90%;
+  padding: 0.6rem;
+  border: 2px solid #403D39;
+  border-radius: 6px;
+  background: #1E1D1B;
+  color: #FFFCF2;
+  font-size: 0.9rem;
+}
+
 .sugerencias {
   position: absolute;
   top: 100%;
@@ -737,4 +747,20 @@ select:focus-visible {
   .formulario-section h2 {
     font-size: 1.3rem;
   }
+}
+
+.form-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.form-row .form-group:first-child {
+  flex: 1;
+}
+
+.form-row .checkbox-group {
+  margin-top: 0;
+  padding-bottom: 0.2rem;
 }

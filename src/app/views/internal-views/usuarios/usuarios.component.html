@@ -42,7 +42,6 @@
                         <label>Nombre de usuario *</label>
                         <input type="text" [(ngModel)]="nuevoUsuario.usuario" name="usuario" required
                             placeholder="3-20 caracteres alfanuméricos" pattern="[a-zA-Z0-9_.-]{3,20}" />
-                        <small class="input-hint">Solo letras, números, puntos, guiones y guiones bajos</small>
                     </div>
 
                     <div class="form-group">
@@ -51,20 +50,21 @@
                             placeholder="Mínimo 6 caracteres" minlength="6" />
                     </div>
 
-                    <div class="form-group">
-                        <label>Rol *</label>
-                        <select [(ngModel)]="nuevoUsuario.rol" name="rol" required>
-                            <option [value]="ROLES.ADMIN.backendValue">{{ROLES.ADMIN.display}}</option>
-                            <option [value]="ROLES.USUARIO.backendValue">{{ROLES.USUARIO.display}}</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" [(ngModel)]="asociarCliente" name="asociarCliente" />
-                            <span class="checkmark"></span>
-                            Asociar cliente
-                        </label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Rol *</label>
+                            <select [(ngModel)]="nuevoUsuario.rol" name="rol" required>
+                                <option [value]="ROLES.ADMIN.backendValue">{{ROLES.ADMIN.display}}</option>
+                                <option [value]="ROLES.USUARIO.backendValue">{{ROLES.USUARIO.display}}</option>
+                            </select>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" [(ngModel)]="asociarCliente" name="asociarCliente" />
+                                <span class="checkmark"></span>
+                                Asociar cliente
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -73,8 +73,9 @@
                     <div class="form-group cliente-busqueda">
                         <label>Buscar cliente</label>
                         <div class="search-wrapper">
-                            <input type="text" [(ngModel)]="clienteBusqueda" (input)="clienteSeleccionadoId = null"
-                                name="clienteBusqueda" placeholder="Nombre o clave del cliente" autocomplete="off" />
+                            <input class="search-input" type="text" [(ngModel)]="clienteBusqueda"
+                                (input)="clienteSeleccionadoId = null" name="clienteBusqueda"
+                                placeholder="Nombre o clave del cliente" autocomplete="off" />
                             <ul class="sugerencias"
                                 *ngIf="clienteBusqueda && !clienteSeleccionadoId && filtrarClientes().length > 0">
                                 <li *ngFor="let cliente of filtrarClientes()" (click)="seleccionarCliente(cliente)">
@@ -122,20 +123,21 @@
                         <small class="input-hint">Complete solo si desea cambiar la contraseña</small>
                     </div>
 
-                    <div class="form-group">
-                        <label>Rol *</label>
-                        <select [(ngModel)]="nuevoUsuario.rol" name="rol" required>
-                            <option [value]="ROLES.ADMIN.backendValue">{{ROLES.ADMIN.display}}</option>
-                            <option [value]="ROLES.USUARIO.backendValue">{{ROLES.USUARIO.display}}</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" [(ngModel)]="asociarCliente" name="asociarClienteEditar" />
-                            <span class="checkmark"></span>
-                            Asociar cliente
-                        </label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Rol *</label>
+                            <select [(ngModel)]="nuevoUsuario.rol" name="rol" required>
+                                <option [value]="ROLES.ADMIN.backendValue">{{ROLES.ADMIN.display}}</option>
+                                <option [value]="ROLES.USUARIO.backendValue">{{ROLES.USUARIO.display}}</option>
+                            </select>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" [(ngModel)]="asociarCliente" name="asociarClienteEditar" />
+                                <span class="checkmark"></span>
+                                Asociar cliente
+                            </label>
+                        </div>
                     </div>
                 </div>
 
