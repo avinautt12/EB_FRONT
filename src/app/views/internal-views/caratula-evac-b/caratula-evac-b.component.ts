@@ -94,6 +94,9 @@ export class CaratulaEvacBComponent implements OnInit {
 
     this.caratulasService.getClientesEvacB().subscribe({
       next: (data) => {
+        const clavesExcluidas = new Set(['EC216', 'JC539', 'LC625', 'LC627', 'LC626']);
+
+        const clientesFiltrados = data.filter((cliente: any) => !clavesExcluidas.has(cliente.clave));
 
         const ordenNiveles: { [key: string]: number } = {
           'Partner Elite Plus': 1,
@@ -102,13 +105,14 @@ export class CaratulaEvacBComponent implements OnInit {
           'Distribuidor': 4
         };
 
-        data.sort((a: Cliente, b: Cliente) => {
-          const nivelA = ordenNiveles[a.nivel] || 99; // Si un nivel no existe, se va al final
+        clientesFiltrados.sort((a: Cliente, b: Cliente) => {
+          const nivelA = ordenNiveles[a.nivel] || 99;
           const nivelB = ordenNiveles[b.nivel] || 99;
           return nivelA - nivelB;
         });
 
-        this.clientes = data;
+        this.clientes = clientesFiltrados;
+
         this.loading = false;
 
         this.prepararOpcionesFiltros();
