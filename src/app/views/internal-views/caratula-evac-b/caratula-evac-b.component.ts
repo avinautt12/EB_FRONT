@@ -5,6 +5,7 @@ import { HomeBarComponent } from "../../../components/home-bar/home-bar.componen
 import { MonitorOdooService } from '../../../services/monitor-odoo.service';
 import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
+import { FiltroComponent } from '../../../components/filtro/filtro.component';
 
 interface Cliente {
   nombre_cliente: string;
@@ -17,7 +18,7 @@ interface Cliente {
 @Component({
   selector: 'app-caratula-evac-b',
   standalone: true,
-  imports: [CommonModule, RouterModule, HomeBarComponent],
+  imports: [CommonModule, RouterModule, HomeBarComponent, FiltroComponent],
   templateUrl: './caratula-evac-b.component.html',
   styleUrl: './caratula-evac-b.component.css'
 })
@@ -50,6 +51,18 @@ export class CaratulaEvacBComponent implements OnInit {
   acumuladoTotalCalculado: string = '$0.00';
   facturasLoaded: boolean = false;
 
+  clientesFiltrados: any[] = [];
+
+  filtroOpciones = {
+    nombre_cliente: [] as any[],
+    nivel: [] as any[]
+  };
+
+  filtrosAplicados = {
+    nombre_cliente: [] as string[],
+    nivel: [] as string[]
+  };
+
   constructor(private caratulasService: CaratulasService,
     private router: Router,
     private monitorOdooService: MonitorOdooService) { }
@@ -81,9 +94,26 @@ export class CaratulaEvacBComponent implements OnInit {
 
     this.caratulasService.getClientesEvacB().subscribe({
       next: (data) => {
+
+        const ordenNiveles: { [key: string]: number } = {
+          'Partner Elite Plus': 1,
+          'Partner Elite': 2,
+          'Partner': 3,
+          'Distribuidor': 4
+        };
+
+        data.sort((a: Cliente, b: Cliente) => {
+          const nivelA = ordenNiveles[a.nivel] || 99; // Si un nivel no existe, se va al final
+          const nivelB = ordenNiveles[b.nivel] || 99;
+          return nivelA - nivelB;
+        });
+
         this.clientes = data;
-        this.calcularMontos();
         this.loading = false;
+
+        this.prepararOpcionesFiltros();
+        this.filtrarClientes();
+        this.calcularMontos();
         this.actualizarDatosCaratula();
       },
       error: (error) => {
@@ -93,6 +123,43 @@ export class CaratulaEvacBComponent implements OnInit {
       }
     });
   }
+
+  private prepararOpcionesFiltros(): void {
+    const nombresUnicos = [...new Set(this.clientes.map(c => c.nombre_cliente))];
+    this.filtroOpciones.nombre_cliente = nombresUnicos.map(nombre => ({ value: nombre, selected: false }));
+
+    const nivelesUnicos = [...new Set(this.clientes.map(c => c.nivel))];
+    this.filtroOpciones.nivel = nivelesUnicos.map(nivel => ({ value: nivel, selected: false }));
+  }
+
+  public aplicarFiltro(campo: 'nombre_cliente' | 'nivel', valores: string[]): void {
+    this.filtrosAplicados[campo] = valores;
+    this.filtrarClientes();
+  }
+
+  public limpiarFiltro(campo: 'nombre_cliente' | 'nivel'): void {
+    this.filtrosAplicados[campo] = [];
+    this.filtrarClientes();
+  }
+
+  public limpiarTodosFiltros(): void {
+    this.filtrosAplicados.nombre_cliente = [];
+    this.filtrosAplicados.nivel = [];
+    this.filtrarClientes();
+  }
+
+  private filtrarClientes(): void {
+    this.clientesFiltrados = this.clientes.filter(cliente => {
+      const cumpleFiltroNombre = this.filtrosAplicados.nombre_cliente.length === 0 ||
+        this.filtrosAplicados.nombre_cliente.includes(cliente.nombre_cliente);
+
+      const cumpleFiltroNivel = this.filtrosAplicados.nivel.length === 0 ||
+        this.filtrosAplicados.nivel.includes(cliente.nivel);
+
+      return cumpleFiltroNombre && cumpleFiltroNivel;
+    });
+  }
+
 
   actualizarDatosCaratula(): void {
     if (this.clientes.length === 0) {

@@ -25,7 +25,7 @@ body {
 /* Contenedor principal */
 .caratula-evac-container {
   position: relative;
-  max-width: 1200px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 20px;
   background-color: #1e1d1b;
@@ -317,6 +317,18 @@ body {
   width: 100%;
   border-collapse: collapse;
   margin-top: 15px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column; 
+}
+
+.sin-resultados {
+  flex-grow: 1; 
+  display: flex;
+  justify-content: center; 
+  align-items: center;   
+  color: #888;
+  font-size: 1.1em;
 }
 
 .fila-header-clientes,
@@ -476,4 +488,19 @@ body {
   .col-proyectado {
     flex: 1.3;
   }
+}
+
+.columna-con-filtro {
+    display: flex;              
+    align-items: center;       
+    justify-content: space-between; 
+    gap: 10px;               
+}
+
+.columna-con-filtro .header-label {
+    flex-grow: 1; 
+}
+
+.columna-con-filtro app-filtro {
+    flex-shrink: 0;
 }

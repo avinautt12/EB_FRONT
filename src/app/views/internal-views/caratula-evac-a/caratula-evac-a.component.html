@@ -3,12 +3,12 @@
 <div class="caratula-evac-container">
     <h2>Carátula EVAC-A</h2>
 
-      <div class="acciones-monitor">
+    <div class="acciones-monitor">
         <button class="btn btn-secondary" [routerLink]="['/inicio-caratulas']">
             <i class="fas fa-arrow-left"></i> Volver
         </button>
     </div>
-    
+
     <div class="caratula-content">
         <!-- Fecha en la esquina superior derecha -->
         <div class="fecha-header-mejorada">
@@ -103,8 +103,23 @@
             <div class="tabla-clientes">
                 <!-- Header -->
                 <div class="fila-header-clientes">
-                    <div class="col-nombre">NOMBRE</div>
-                    <div class="col-nivel">NIVEL</div>
+                    <div class="col-nombre columna-con-filtro">
+                        <span class="header-label">NOMBRE</span>
+                        <app-filtro *ngIf="filtroOpciones.nombre_cliente.length > 0" filtroId="nombre_cliente"
+                            [options]="filtroOpciones.nombre_cliente" [title]="'Filtrar por Nombre'"
+                            [searchPlaceholder]="'Buscar nombre...'" (apply)="aplicarFiltro('nombre_cliente', $event)"
+                            (clear)="limpiarFiltro('nombre_cliente')">
+                        </app-filtro>
+                    </div>
+
+                    <div class="col-nivel columna-con-filtro">
+                        <span class="header-label">NIVEL</span>
+                        <app-filtro *ngIf="filtroOpciones.nivel.length > 0" filtroId="nivel"
+                            [options]="filtroOpciones.nivel" [title]="'Filtrar por Nivel'"
+                            [searchPlaceholder]="'Buscar nivel...'" (apply)="aplicarFiltro('nivel', $event)"
+                            (clear)="limpiarFiltro('nivel')">
+                        </app-filtro>
+                    </div>
                     <div class="col-compromiso">COMPROMISO ANUAL</div>
                     <div class="col-acumulado">ACUMULADO REAL</div>
                     <div class="col-proyectado">AVANCE PROYECTADO SEMANAL</div>
@@ -112,7 +127,7 @@
                 </div>
 
                 <!-- Filas de datos -->
-                <div class="fila-cliente" *ngFor="let cliente of clientes">
+                <div class="fila-cliente" *ngFor="let cliente of clientesFiltrados">
                     <div class="col-nombre">{{ cliente.nombre_cliente }}</div>
                     <div class="col-nivel">{{ cliente.nivel }}</div>
                     <div class="col-compromiso">{{ cliente.compra_minima_anual | currency:'USD':'symbol':'1.2-2' }}
@@ -122,6 +137,10 @@
                     <div class="col-proyectado">{{ calcularAvanceProyectadoCliente(cliente.compra_minima_anual) |
                         currency:'USD':'symbol':'1.2-2' }}</div>
                     <div class="col-diferencia">{{ calcularDiferencia(cliente) | currency:'USD':'symbol':'1.2-2' }}
+                    </div>
+                    
+                    <div *ngIf="clientesFiltrados.length === 0 && clientes.length > 0" class="sin-resultados">
+                        <p>No se encontraron clientes que coincidan con los filtros aplicados.</p>
                     </div>
                 </div>
             </div>
