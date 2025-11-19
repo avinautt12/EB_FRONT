@@ -10,7 +10,7 @@ import { FormsModule } from '@angular/forms';
   imports: [CommonModule, FormsModule]
 })
 export class FiltroPrevioComponent {
-  @Input() tipo!: 'clave' | 'evac' | 'cliente' | 'nivel';
+  @Input() tipo!: 'clave' | 'evac' | 'cliente' | 'nivel' | 'cumplimiento';
   @Input() placeholder: string = '';
   @Input() opciones: { value: string; selected: boolean }[] = [];
   @Input() estaActivo: boolean = false;
@@ -50,8 +50,20 @@ export class FiltroPrevioComponent {
     this.filtroClicked.emit();
   }
 
-  onSelectionChange() {}
+  // NUEVO MÉTODO: Manejar cambios en la búsqueda
+  onSearchChange() {
+    // Este método se ejecuta cuando el usuario escribe en el buscador
+    // Puedes agregar lógica adicional aquí si es necesario
+    console.log('Búsqueda cambiada:', this.searchTerm);
+  }
 
+  // NUEVO MÉTODO: Alternar opción individual
+  toggleOption(option: { value: string; selected: boolean }) {
+    option.selected = !option.selected;
+    // No emitimos automáticamente aquí, solo cuando se presiona "Aplicar"
+  }
+
+  // MÉTODO ACTUALIZADO: Aplicar filtro
   aplicar() {
     const seleccionados = this.opciones
       .filter(op => op.selected)
@@ -59,9 +71,10 @@ export class FiltroPrevioComponent {
     this.aplicarFiltro.emit(seleccionados);
   }
 
+  // MÉTODO ACTUALIZADO: Limpiar filtro
   limpiar() {
     this.opciones.forEach(op => op.selected = false);
+    this.searchTerm = ''; // Limpiar también el término de búsqueda
     this.limpiarFiltro.emit();
-    this.searchTerm = '';
   }
 }

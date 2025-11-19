@@ -17,6 +17,7 @@
           [(ngModel)]="searchTerm"
           [placeholder]="placeholder"
           (click)="$event.stopPropagation()"
+          (input)="onSearchChange()"
         >
       </div>
 
@@ -30,19 +31,18 @@
           <label>
             <input
               type="checkbox"
-              [(ngModel)]="option.selected"
-              (click)="$event.stopPropagation()"
-              (change)="onSelectionChange()"
+              [checked]="option.selected"
+              (change)="toggleOption(option); $event.stopPropagation()"
             >
-            {{ option.value }}
+            <span class="option-text">{{ option.value }}</span>
           </label>
         </div>
       </div>
 
       <!-- Botones -->
       <div class="filter-actions">
-        <button (click)="limpiar(); $event.stopPropagation()">Limpiar</button>
-        <button (click)="aplicar(); $event.stopPropagation()">Aplicar</button>
+        <button type="button" (click)="limpiar(); $event.stopPropagation()">Limpiar</button>
+        <button type="button" (click)="aplicar(); $event.stopPropagation()">Aplicar</button>
       </div>
     </div>
   </div>

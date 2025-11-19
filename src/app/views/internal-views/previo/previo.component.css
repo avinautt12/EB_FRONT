@@ -1,4 +1,3 @@
-/* === CONTENEDOR PRINCIPAL === */
 .monitor-container {
   min-height: 100vh;
   padding: 2rem 3rem;
@@ -7,14 +6,12 @@
   color: #FFFCF2;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   position: relative;
-  /* Importante para el z-index */
 }
 
 .columna-zona {
   min-width: 110px;
   width: auto;
 }
-
 
 /* === TÍTULO === */
 h2 {
@@ -63,41 +60,131 @@ h2 {
 /* === TABLA === */
 .tabla-contenedor {
   width: 100%;
-  overflow: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overflow: auto; /* Esencial para el scroll y el sticky */
+  max-height: 75vh;
+  min-height: 600px; 
   min-width: 1000px;
-  min-height: 400px;
-  /* Altura mínima para el contenedor */
   position: relative;
-  /* Para el z-index */
+  border: 1px solid #444;
+  scrollbar-width: thin;
+  scrollbar-color: #474646 #252422;
+}
+
+.tabla-contenedor::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+
+.tabla-contenedor::-webkit-scrollbar-track {
+  background: #252422;
+}
+
+.tabla-contenedor::-webkit-scrollbar-thumb {
+  background-color: #474646;
+  border-radius: 6px;
+  border: 2px solid #252422;
+}
+
+.tabla-contenedor::-webkit-scrollbar-thumb:hover {
+  background-color: #EB5E28;
 }
 
 .tabla-previo {
-  width: 95%;
-  border-collapse: collapse;
-  margin: 0 auto;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
   min-width: 1000px;
-  overflow-x: hidden;
+  position: relative;
 }
 
-
-.sticky-th {
+.tabla-previo thead th:not(.columna-fija) {
   position: sticky;
   top: 0;
+  z-index: 5; /* Menor que columnas fijas */
   background-color: #252422;
-  z-index: 10;
-  padding: 0.6rem;
-}
-
-.tabla-previo thead th {
   border: 1px solid #444;
-  font-size: 0.90rem;
-  color: #ffffff;
-  padding: 0;
-  text-align: center;
 }
 
+/* === ENCABEZADO FIJO (SCROLL VERTICAL) === */
+.tabla-previo thead th {
+  position: sticky;
+  top: 0;             /* Pegado arriba */
+  z-index: 30;        /* Nivel base para headers normales */
+  background-color: #252422;
+  border: 1px solid #444;
+  padding: 0;
+  color: #ffffff;
+  box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+}
+
+/* === ESTILOS PARA COLUMNAS FIJAS (SCROLL HORIZONTAL) === */
+
+/* Regla base para TODAS las celdas fijas (TH y TD) */
+.columna-fija {
+  position: sticky !important;
+  z-index: 10;
+  background-color: inherit;
+  transform: translateZ(0);
+}
+
+/* Intersección: Encabezado Fijo (Top=0) + Columna Fija (Left=X) */
+.tabla-previo thead th.columna-fija {
+  /* El Z-Index más alto para que quede por encima de todo */
+  z-index: 30;
+  background-color: #252422 !important;
+}
+
+.tabla-previo tbody td.columna-fija {
+  z-index: 20; /* Entre headers y celdas normales */
+}
+
+/* 1. CLAVE (160px) */
+.fija-clave {
+  left: 0;
+  min-width: 160px;
+  width: 160px;
+  box-shadow: 1px 0 2px -1px rgba(0,0,0,0.5);
+}
+
+/* 2. EVAC (190px) -> Posición en 160px */
+.fija-evac {
+  left: 160px;
+  min-width: 190px;
+  width: 190px;
+  box-shadow: 1px 0 2px -1px rgba(0,0,0,0.5);
+}
+
+/* 3. CLIENTE (340px) -> Posición en 350px (160 + 190) */
+.fija-cliente {
+  left: 350px; /* 160px (Clave) + 190px (Evac) */
+  min-width: 340px;
+  width: 340px;
+  box-shadow: 4px 0 5px -2px rgba(0,0,0,0.5);
+}
+
+.tabla-previo tbody tr td.columna-fija {
+  background-color: inherit !important;
+}
+
+
+
+.tabla-previo tbody tr:nth-child(odd) td.columna-fija {
+ background-color: #2A2A28 !important; /* Color de fondo de la fila impar */
+}
+
+/* Filas pares: Asegura que el fondo del TD fijo es opaco */
+.tabla-previo tbody tr:nth-child(even) td.columna-fija {
+ background-color: #555555 !important; /* Color de fondo de la fila par */
+}
+
+/* Efecto Hover: Asegura que el fondo del TD fijo en hover es opaco */
+.tabla-previo tbody tr:hover td.columna-fija {
+ background-color: #777 !important; /* Color de fondo del hover */
+ color: #fff;
+}
+
+/* === FILAS NORMALES === */
 .tabla-previo tbody tr:nth-child(odd) {
   background-color: #2A2A28;
 }
@@ -117,6 +204,36 @@ h2 {
   color: #fff;
   font-size: 0.9rem;
   word-break: break-word;
+}
+
+/* === FILA DE TOTALES (SCROLL VERTICAL Y HORIZONTAL) === */
+/* Fija la fila de totales en la parte inferior al hacer scroll vertical */
+.fila-totales td {
+  z-index: 5;        /* Encima de filas normales */
+  background-color: #c46b2c !important; /* Fondo naranja de totales */
+  color: #fff;
+  border-top: 2px solid #fff;
+  padding: 10px 0.6rem;
+}
+
+/* Fija la intersección: Columna Fija + Fila de Totales */
+.fila-totales td.columna-fija {
+  /* Debe ser más alto que el thead (70) y columnas normales (50/60)
+     para que la esquina inferior-izquierda sea visible */
+  z-index: 25;
+  background-color: #c46b2c !important;
+}
+
+.texto-total {
+  text-align: center !important;
+  font-size: 1rem;
+  color: #fff; /* Cambiado a blanco para mejor contraste en naranja */
+}
+
+.tabla-scroll-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: 500px; 
 }
 
 /* === PAGINADOR === */
@@ -188,7 +305,6 @@ h2 {
   0% {
     transform: rotate(0deg);
   }
-
   100% {
     transform: rotate(360deg);
   }
@@ -326,9 +442,8 @@ input[type=number]::-webkit-inner-spin-button {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-8px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -404,19 +519,6 @@ input[type=number]::-webkit-inner-spin-button {
 
 .mini-btn:hover {
   background-color: #EB5E28;
-}
-
-/* Animación */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* Estilo para filas integrales */
@@ -592,21 +694,33 @@ input[type=number]::-webkit-inner-spin-button {
   border-radius: 3px;
 }
 
-/* Estilos para la fila de totales */
-.fila-totales {
-  background-color: #58585b;
-  border-top: 2px solid #4b4e52;
+/* === BARRA SUPERIOR DUMMY (PARA SINCRONIZACIÓN DE SCROLL) === */
+.dummy-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  height: 20px;
+  margin-bottom: 5px;
 }
 
-.fila-totales td {
-  padding: 8px;
-  text-align: center;
-  font-size: 1rem;
-  background-color: #c46b2c;
+.dummy-scroll-wrapper::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
 }
 
-.texto-total {
-  text-align: center !important;
-  font-size: 1rem;
-  color: #007bff;
+.dummy-scroll-wrapper::-webkit-scrollbar-track {
+  background: #252422;
+}
+
+.dummy-scroll-wrapper::-webkit-scrollbar-thumb {
+  background-color: #474646;
+  border-radius: 6px;
+  border: 2px solid #252422;
+}
+
+.dummy-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: #EB5E28;
+}
+
+.dummy-scroll-content {
+  height: 1px;
 }

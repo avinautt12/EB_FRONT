@@ -10,7 +10,7 @@
     </div>
 
     <div class="caratula-content">
-        <!-- Fecha en la esquina superior derecha -->
+
         <div class="fecha-header-mejorada">
             <div class="fecha-principal">
                 {{ obtenerFechaHoy() }}
@@ -21,128 +21,159 @@
             </div>
         </div>
 
-        <!-- Sección General -->
-        <div class="seccion-general">
+        <div class="card">
             <h3 class="seccion-titulo">a) General</h3>
-
-            <div class="tabla-general">
-                <div class="fila-header">
-                    <div class="col-categoria-esp"></div>
-                    <div class="col-categoria">Meta</div>
-                    <div class="col-numero">Acumulado Real</div>
-                    <div class="col-numero">Avance Proyectado</div>
-                    <div class="col-porcentaje">%</div>
-                    <div class="col-meta">Acumulado real vs Meta</div>
-                </div>
-
-                <div class="fila-data">
-                    <div class="col-categoria categoria-comercializadora">
-                        <span>Meta Gral. Comercializadora</span>
-                    </div>
-                    <div class="col-numero">{{ metaPrincipal | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-numero positivo">{{ acumuladoGeneral | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-numero">{{ avance_proyectado_monto3 | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-porcentaje negativo">{{ porcentajeMonto1 | percent:'1.0-0' }}</div>
-                </div>
-
-                <div class="fila-separador"></div>
-
-                <div class="fila-data">
-                    <div class="col-categoria categoria-cumplimiento">
-                        <span>Meta Cumplimiento Categoría</span>
-                    </div>
-                    <div class="col-numero">{{ totalMetaMY25 | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-numero positivo">{{ totalAcumulado | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-numero">{{ avance_proyectado_monto1 | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-porcentaje positivo">{{ porcentajeMonto2 | percent:'1.0-0' }}</div>
-                </div>
-
-                <div class="fila-data">
-                    <div class="col-categoria"></div>
-                    <div class="col-numero">{{ totalMetaMY25_2 | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-numero positivo">{{ totalAcumulado_2 | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-numero">{{ avance_proyectado_monto2 | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-porcentaje negativo">{{ porcentajeMonto3 | percent:'1.0-0' }}</div>
-                </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="col-categoria"></th>
+                            <th class="col-numero">Meta</th>
+                            <th class="col-numero">Acumulado Real</th>
+                            <th class="col-numero">Avance Proyectado</th>
+                            <th class="col-porcentaje">%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-bold text-primary">Meta Gral. Comercializadora</td>
+                            <td class="text-center">{{ metaPrincipal | currency:'USD':'symbol':'1.2-2' }}</td>
+                            <td class="text-center">
+                                <span [ngClass]="{ 'text-success': acumuladoGeneral > 0 }">
+                                    {{ acumuladoGeneral | currency:'USD':'symbol':'1.2-2' }}
+                                </span>
+                            </td>
+                            <td class="text-center">{{ avance_proyectado_monto3 | currency:'USD':'symbol':'1.2-2' }}</td>
+                            <td class="text-center">
+                                <span class="status-box" [ngClass]="{
+                                    'status-positive': (porcentajeMonto1 ?? 0) > 0,
+                                    'status-negative': (porcentajeMonto1 ?? 0) <= 0
+                                }">
+                                    {{ porcentajeMonto1 | percent:'1.0-0' }}
+                                </span>
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold text-info">Meta Cumplimiento Categoría</td>
+                            <td class="text-center">{{ totalMetaMY25 | currency:'USD':'symbol':'1.2-2' }}</td>
+                            <td class="text-center">
+                                <span [ngClass]="{ 'text-success': totalAcumulado > 0 }">
+                                    {{ totalAcumulado | currency:'USD':'symbol':'1.2-2' }}
+                                </span>
+                            </td>
+                            <td class="text-center">{{ avance_proyectado_monto1 | currency:'USD':'symbol':'1.2-2' }}</td>
+                            <td class="text-center">
+                                <span class="status-box" [ngClass]="{
+                                    'status-positive': (porcentajeMonto2 ?? 0) > 0,
+                                    'status-negative': (porcentajeMonto2 ?? 0) <= 0
+                                }">
+                                    {{ porcentajeMonto2 | percent:'1.0-0' }}
+                                </span>
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td></td> 
+                            <td class="text-center">{{ totalMetaMY25_2 | currency:'USD':'symbol':'1.2-2' }}</td>
+                            <td class="text-center">
+                                <span [ngClass]="{ 'text-success': totalAcumulado_2 > 0 }">
+                                    {{ totalAcumulado_2 | currency:'USD':'symbol':'1.2-2' }}
+                                </span>
+                            </td>
+                            <td class="text-center">{{ avance_proyectado_monto2 | currency:'USD':'symbol':'1.2-2' }}</td>
+                            <td class="text-center">
+                                <span class="status-box" [ngClass]="{
+                                    'status-positive': (porcentajeMonto3 ?? 0) > 0,
+                                    'status-negative': (porcentajeMonto3 ?? 0) <= 0
+                                }">
+                                    {{ porcentajeMonto3 | percent:'1.0-0' }}
+                                </span>
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Sección Específico -->
-        <div class="seccion-especifico">
+        <div class="card">
             <h3 class="seccion-titulo">b) Específico</h3>
-
-            <div class="tabla-especifico">
-                <div class="fila-header-especifico">
-                    <div class="col-categoria-esp"></div>
-                    <div class="col-numero-esp">Meta</div>
-                    <div class="col-numero-esp">Acumulado Real</div>
-                    <div class="col-numero-esp">Avance Proyectado</div>
-                    <div class="col-avance">% AVANCE META GRAL.</div>
-                    <div class="col-avance">% AVANCE PROYECTADO</div>
-                </div>
-
-                <div class="fila-categoria scott">
-                    <div class="col-categoria-esp categoria-scott">SCOTT</div>
-                    <div class="col-numero-esp">{{ metaScott | currency:'USD':'symbol':'1.2-2'}}</div>
-                    <div class="col-numero-esp">{{ acumuladoScott | currency:'USD':'symbol':'1.2-2'}}</div>
-                    <div class="col-numero-esp">{{ proyectadoScott | currency:'USD':'symbol':'1.2-2'}}</div>
-                    <div class="col-avance">
-                        <div>
-                            {{ ((acumuladoScott / metaScott) * 100) | number:'1.0-0' }}%
-                        </div>
-                    </div>
-                    <div class="col-avance negativo-total">{{ porcentajeScott !== null ? (porcentajeScott/100 | percent:'1.0-0') : 'N/A' }}</div>
-                    <div class="col-avance negativo-total">{{ porcentajeScott_2 !== null ? (porcentajeScott_2/100 | percent:'1.0-0') : 'N/A' }}</div>
-                </div>
-
-                <div class="fila-categoria apparel">
-                    <div class="col-categoria-esp categoria-apparel">APPAREL</div>
-                    <div class="col-numero-esp">{{metaApparel | currency:'USD':'symbol':'1.2-2'}}</div>
-                    <div class="col-numero-esp">{{ acumuladoApparel | currency:'USD':'symbol':'1.2-2'}}</div>
-                    <div class="col-numero-esp">{{ proyectadoApparel | currency:'USD':'symbol':'1.2-2'}}</div>
-                    <div class="col-avance">{{ ((acumuladoApparel / metaApparel) * 100) | number:'1.0-0' }}%</div>
-                    <div class="col-avance negativo-total">{{ porcentajeApparel !== null ? (porcentajeApparel/100 | percent:'1.0-0') : 'N/A' }}</div>
-                    <div class="col-avance negativo-total">{{ porcentajeApparel_2 !== null ? (porcentajeApparel_2/100 | percent:'1.0-0') : 'N/A' }}</div>
-                </div>
-
-                <!-- <div class="fila-categoria syncros">
-                    <div class="col-categoria-esp categoria-syncros">SYNCROS</div>
-                    <div class="col-numero-esp">{{metaSyncros | currency:'USD':'symbol':'1.2-2'}}</div>
-                    <div class="col-numero-esp">$ -</div>
-                    <div class="col-numero-esp">{{ proyectadoSyncros | currency:'USD':'symbol':'1.2-2'}}</div>
-                    <div class="col-avance">0%</div>
-                    <div class="col-avance negativo-total">-100%</div>
-                    <div class="col-avance negativo-total">-100%</div>
-                </div>
-
-                <div class="fila-categoria vittoria">
-                    <div class="col-categoria-esp categoria-vittoria">VITTORIA</div>
-                    <div class="col-numero-esp">{{metaVittorria | currency:'USD':'symbol':'1.2-2'}}</div>
-                    <div class="col-numero-esp">$ -</div>
-                    <div class="col-numero-esp">{{ proyectadoVittoria | currency:'USD':'symbol':'1.2-2'}}</div>
-                    <div class="col-avance">0%</div>
-                    <div class="col-avance negativo-total">-100%</div>
-                    <div class="col-avance negativo-total">-100%</div>
-                </div> -->
-<!-- 
-                <div class="fila-categoria otros">
-                    <div class="col-categoria-esp categoria-otros">Otros / Productos Antiguos</div>
-                    <div class="col-numero-esp"></div>
-                    <div class="col-numero-esp amarillo">$ -</div>
-                    <div class="col-numero-esp"></div>
-                    <div class="col-avance"></div>
-                    <div class="col-avance error"></div>
-                </div> -->
-
-                <div class="fila-diferencia">
-                    <div class="col-categoria-esp">Diferencia</div>
-                    <div class="col-numero-esp"></div>
-                    <div class="col-numero-esp">{{ (acumuladoScott) + (acumuladoApparel)| currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-numero-esp">{{ ((acumuladoScott) + (acumuladoApparel)) - (acumuladoGeneral) | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-avance"></div>
-                    <div class="col-avance"></div>
-                </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="col-categoria-esp"></th>
+                            <th class="col-numero-esp">Meta</th>
+                            <th class="col-numero-esp">Acumulado Real</th>
+                            <th class="col-numero-esp">Avance Proyectado</th>
+                            <th class="col-avance">% AVANCE META GRAL.</th>
+                            <th class="col-avance">% AVANCE PROYECTADO</th>
+                            <th class="col-avance">Acumulado real vs Meta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="category-badge category-scott">SCOTT</span></td>
+                            <td class="text-right">{{ metaScott | currency:'USD':'symbol':'1.2-2'}}</td>
+                            <td class="text-right">{{ acumuladoScott | currency:'USD':'symbol':'1.2-2'}}</td>
+                            <td class="text-right">{{ proyectadoScott | currency:'USD':'symbol':'1.2-2'}}</td>
+                            <td class="text-center">{{ ((acumuladoScott / metaScott) * 100) | number:'1.0-0' }}%</td>
+                            <td class="text-center">
+                                <span class="status-box" [ngClass]="{
+                                    'status-positive': (porcentajeScott ?? 0) > 0,
+                                    'status-negative': (porcentajeScott ?? 0) <= 0
+                                }">
+                                    {{ porcentajeScott !== null ? (porcentajeScott/100 | percent:'1.0-0') : 'N/A' }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="status-box" [ngClass]="{
+                                    'status-positive': (porcentajeScott_2 ?? 0) > 0,
+                                    'status-negative': (porcentajeScott_2 ?? 0) <= 0
+                                }">
+                                    {{ porcentajeScott_2 !== null ? (porcentajeScott_2/100 | percent:'1.0-0') : 'N/A' }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="category-badge category-apparel">APPAREL</span></td>
+                            <td class="text-right">{{metaApparel | currency:'USD':'symbol':'1.2-2'}}</td>
+                            <td class="text-right">{{ acumuladoApparel | currency:'USD':'symbol':'1.2-2'}}</td>
+                            <td class="text-right">{{ proyectadoApparel | currency:'USD':'symbol':'1.2-2'}}</td>
+                            <td class="text-center">{{ ((acumuladoApparel / metaApparel) * 100) | number:'1.0-0' }}%</td>
+                            <td class="text-center">
+                                <span class="status-box" [ngClass]="{
+                                    'status-positive': (porcentajeApparel ?? 0) > 0,
+                                    'status-negative': (porcentajeApparel ?? 0) <= 0
+                                }">
+                                    {{ porcentajeApparel !== null ? (porcentajeApparel/100 | percent:'1.0-0') : 'N/A' }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="status-box" [ngClass]="{
+                                    'status-positive': (porcentajeApparel_2 ?? 0) > 0,
+                                    'status-negative': (porcentajeApparel_2 ?? 0) <= 0
+                                }">
+                                    {{ porcentajeApparel_2 !== null ? (porcentajeApparel_2/100 | percent:'1.0-0') : 'N/A' }}
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="fila-total">
+                            <td class="font-bold">Diferencia</td>
+                            <td></td>
+                            <td class="text-right font-bold">{{ (acumuladoScott) + (acumuladoApparel)| currency:'USD':'symbol':'1.2-2' }}</td>
+                            <td class="text-right font-bold">{{ ((acumuladoScott) + (acumuladoApparel)) - (acumuladoGeneral) | currency:'USD':'symbol':'1.2-2' }}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
         </div>
+
     </div>
 </div>

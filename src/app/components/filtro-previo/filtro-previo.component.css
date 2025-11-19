@@ -1,35 +1,39 @@
 .sort-dropdown {
   position: relative;
   display: inline-block;
-  width: 100%; /* Cambio aquí */
-  min-width: 120px; /* Nuevo */
+  width: 100%;
+  min-width: 120px;
 }
 
-
-/* Estilos del botón principal */
+/* Estilos del botón principal - TEMA OSCURO */
 .sort-btn {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Centra los iconos */
-  padding: 6px 12px; /* Ajusta el padding */
+  justify-content: space-between;
+  padding: 6px 12px;
   gap: 4px;
-  min-width: 80px; /* Ancho mínimo para que se vea bien */
-  border-radius: 4px; /* Bordes redondeados */
-  border: 1px solid #dee2e6; /* Define un borde claro */
-  background-color: #ffffff; /* Fondo blanco */
-  outline: none; /* Elimina el outline por defecto */
+  min-width: 80px;
+  border-radius: 4px;
+  border: 1px solid #555 !important; /* Borde oscuro */
+  background-color: #2a2a28 !important; /* Fondo oscuro */
+  color: #FFFCF2 !important; /* Texto claro */
+  outline: none;
   box-shadow: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .sort-btn:hover {
-  background-color: #e9ecef;
-  border-color: #ced4da;
+  background-color: #3a3a38 !important;
+  border-color: #EB5E28 !important;
 }
 
 .sort-btn i {
   margin-left: auto;
   gap: 15px;
   transition: transform 0.2s ease;
+  color: #EB5E28 !important; /* Color naranja para iconos */
 }
 
 .sort-dropdown.show .sort-btn i.fa-chevron-down {
@@ -40,22 +44,22 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 14px;
-  /* Cambia esto: */
-  white-space: normal; /* En lugar de nowrap */
-  overflow: visible; /* En lugar de hidden */
-  text-overflow: clip; /* En lugar de ellipsis */
+  font-size: 0.85rem;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
   max-width: calc(100% - 24px);
-  word-break: break-word; /* Añadido */
-  line-height: 1.4; /* Mejor espaciado para múltiples líneas */
+  word-break: break-word;
+  line-height: 1.4;
+  color: #FFFCF2 !important;
 }
 
-/* Estilos del dropdown - Versión mejorada */
+/* Estilos del dropdown - TEMA OSCURO */
 .filter-options {
   width: 280px;
-  background-color: white;
-  color: #212529;
-  border: 1px solid #dee2e6;
+  background-color: #2a2a28 !important; /* Fondo oscuro */
+  color: #FFFCF2 !important; /* Texto claro */
+  border: 1px solid #555 !important; /* Borde oscuro */
   border-radius: 8px;
   position: absolute;
   left: 0;
@@ -63,24 +67,25 @@
   margin-top: 38px;
   display: none;
   flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
 }
 
 .sort-dropdown.show .filter-options {
   display: flex;
 }
 
-/* Contenedor principal del dropdown con altura flexible */
 .filter-content-wrapper {
   display: flex;
   flex-direction: column;
   max-height: 400px;
+  height: 100%;
 }
 
-/* Estilos para la sección de búsqueda */
+/* Búsqueda - TEMA OSCURO */
 .filter-search {
   padding: 12px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+  background: #252422 !important; /* Fondo más oscuro */
+  border-bottom: 1px solid #444 !important;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -89,83 +94,94 @@
 .filter-search input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #ced4da;
+  border: 1px solid #555 !important;
   border-radius: 4px;
   font-size: 14px;
   box-sizing: border-box;
+  background-color: #333 !important; /* Fondo oscuro para input */
+  color: #FFFCF2 !important; /* Texto claro */
 }
 
-/* Contenedor de items con scroll - Versión mejorada */
+.filter-search input::placeholder {
+  color: #999 !important; /* Placeholder gris */
+}
+
+/* Contenedor de items - TEMA OSCURO */
 .filter-items-container {
   padding: 8px 0;
   overflow-y: auto;
   flex: 1;
   min-height: 120px;
+  max-height: calc(400px - 120px);
   scrollbar-gutter: stable;
 }
 
-/* Estilo personalizado para el scrollbar */
+
+/* Scrollbar personalizado - TEMA OSCURO */
 .filter-items-container::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .filter-items-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
+  background: #252422 !important;
+  border-radius: 4px;
 }
 
 .filter-items-container::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+  background: #474646 !important;
+  border-radius: 4px;
 }
 
 .filter-items-container::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: #EB5E28 !important;
 }
 
+/* Items del filtro - TEMA OSCURO */
 .filter-item {
   padding: 10px 16px;
   transition: all 0.2s ease;
-  white-space: normal; /* En lugar de nowrap */
-  word-wrap: break-word; /* Permite que las palabras largas se rompan */
-  overflow: visible; /* En lugar de hidden */
+  white-space: normal;
+  word-wrap: break-word;
+  overflow: visible;
   text-overflow: clip;
   display: flex;
   align-items: center;
+  background-color: transparent !important;
 }
 
 .filter-item:hover {
-  background-color: #f8f9fa;
+  background-color: rgba(235, 94, 40, 0.1) !important; /* Hover naranja suave */
 }
 
 .filter-item label {
   display: flex;
-  align-items: flex-start; /* Ajustado para multilínea */
+  align-items: flex-start;
   gap: 10px;
   cursor: pointer;
   width: 100%;
   font-size: 14px;
-  white-space: normal; /* Añadido */
-  word-break: break-word; /* Añadido */
+  white-space: normal;
+  word-break: break-word;
+  color: #FFFCF2 !important;
 }
 
 .filter-item input[type="checkbox"] {
   margin: 0;
   width: 16px;
   height: 16px;
-  accent-color: #0d6efd;
+  accent-color: #EB5E28 !important; /* Checkbox naranja */
   cursor: pointer;
   flex-shrink: 0;
 }
 
-/* Estilos para los botones de acción - Versión mejorada */
+/* Botones de acción - TEMA OSCURO */
 .filter-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   padding: 12px;
-  border-top: 1px solid #e0e0e0;
-  background: #f8f9fa;
+  border-top: 1px solid #444 !important;
+  background: #252422 !important; /* Fondo oscuro */
   position: sticky;
   bottom: 0;
   flex-shrink: 0;
@@ -188,24 +204,24 @@
 }
 
 .filter-actions button:first-child {
-  color: #dc3545;
-  background-color: #fff;
-  border-color: #dc3545;
+  color: #ff6b6b !important; /* Rojo claro */
+  background-color: transparent !important;
+  border-color: #ff6b6b !important;
 }
 
 .filter-actions button:first-child:hover {
-  background-color: #f8d7da;
+  background-color: rgba(255, 107, 107, 0.1) !important;
 }
 
 .filter-actions button:nth-child(2) {
-  color: #fff;
-  background-color: #0d6efd;
-  border-color: #0d6efd;
+  color: #FFFCF2 !important; /* Texto claro */
+  background-color: #EB5E28 !important; /* Fondo naranja */
+  border-color: #EB5E28 !important;
 }
 
 .filter-actions button:nth-child(2):hover {
-  background-color: #0b5ed7;
-  border-color: #0a58ca;
+  background-color: #ff6b2c !important; /* Naranja más claro */
+  border-color: #ff6b2c !important;
 }
 
 /* Clase para cuando hay pocos items */
@@ -214,12 +230,13 @@
   overflow-y: visible;
 }
 
-/* Estilo para el mensaje de no selecciones */
+/* Mensaje de no selecciones - TEMA OSCURO */
 .no-selections {
   padding: 16px;
   text-align: center;
-  color: #6c757d;
+  color: #999 !important; /* Texto gris */
   font-style: italic;
+  background-color: #2a2a28 !important;
 }
 
 /* Asegurar que el contenedor de items tenga espacio mínimo */

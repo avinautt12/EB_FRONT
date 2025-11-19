@@ -1,12 +1,22 @@
-/* Variables CSS */
+/* Variables CSS (ajustadas para dark-mode) */
 :root {
   --primary-color: #EB5E28;
   --secondary-color: #403d39;
   --success-color: #28a745;
-  --warning-color: #f39c12;
+  --success-bg: #d4edda;
+  --success-text: #155724;
   --danger-color: #dc3545;
+  --danger-bg: #f8d7da;
+  --danger-text: #721c24;
+  --info-color: #2E86C1;
   --light-color: #FFFCF2;
+  /* Blanco cálido para texto (antes fondo) */
   --dark-color: #1e1d1b;
+  /* Fondo principal oscuro */
+  --medium-dark-color: #2c2c2e;
+  /* Fondo de las tarjetas */
+  --border-color: #444;
+  /* Color de borde sutil para dark mode */
   --border-radius: 8px;
   --box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
   --transition: all 0.3s ease;
@@ -14,8 +24,8 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #1e1d1b;
-  color: #FFFCF2;
+  background-color: var(--dark-color);
+  color: var(--light-color);
   line-height: 1.6;
 }
 
@@ -24,13 +34,10 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  background-color: #1e1d1b;
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
 }
 
 .caratula-global-container h2 {
-  color: #EB5E28;
+  color: var(--primary-color);
   font-size: 2rem;
   margin-bottom: 1.5rem;
   text-align: center;
@@ -55,7 +62,8 @@ body {
 .acciones-caratula {
   display: flex;
   justify-content: flex-start;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  /* Reducido un poco */
 }
 
 .btn {
@@ -71,253 +79,221 @@ body {
   font-size: 0.9rem;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   text-decoration: none;
-  border-radius: 8px;
 }
 
 .btn-secondary {
-  background-color: #403F3F;
-  color: #FFFCF2;
+  background-color: var(--secondary-color);
+  color: var(--light-color);
 }
 
 .btn-secondary:hover {
-  background-color: #EB5E28;
+  background-color: var(--primary-color);
   transform: translateY(-2px);
 }
 
-/* Contenido principal */
+/* Contenido principal (Ahora es un contenedor para las tarjetas) */
 .caratula-content {
-  background: white;
-  padding: 2rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  /* Espacio entre la fecha, tarjeta general y tarjeta específica */
+}
+
+/* ----------------------------------------------------------------- */
+/* --- ESTILOS DE FECHA CORREGIDOS (Apilados) --- */
+/* ----------------------------------------------------------------- */
+.fecha-header-mejorada {
+  background: var(--medium-dark-color);
+  padding: 1rem 1.5rem;
   border-radius: var(--border-radius);
-  position: relative;
-  color: #333;
+  display: flex;
+  flex-direction: column;   /* <-- CAMBIO: para apilar */
+  align-items: flex-start; /* <-- CAMBIO: para alinear a la izq. */
+  gap: 0.5rem;             /* <-- CAMBIO: espacio vertical */
+}
+
+.fecha-principal {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--light-color);
+}
+
+.semana-info-mejorada {
+  font-size: 0.9rem;
+  color: #ccc;
+  text-align: left;
+}
+
+.info-linea {
+  line-height: 1.4; /* Espacio entre las líneas de semana */
+}
+/* ----------------------------------------------------------------- */
+
+
+/* --- ESTILO DE TARJETA (Dark Mode) --- */
+.card {
+  background: var(--medium-dark-color);
+  color: #eee;
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
 }
 
-/* Fecha en esquina superior derecha */
-.fecha-header {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  text-align: right;
-  font-size: 0.9rem;
-  color: #333;
-  border-left: 2px solid #333;
-  padding-left: 1rem;
-}
-
-.semana-info {
-  display: flex;
-  flex-direction: column;
-  margin-top: 0.5rem;
-}
-
-.semana-info span {
-  line-height: 1.2;
-}
-
-/* Títulos de sección */
 .seccion-titulo {
-  color: #EB5E28;
-  font-size: 1.2rem;
+  color: var(--primary-color);
+  font-size: 1.3rem;
   font-weight: bold;
-  margin-bottom: 1rem;
-  margin-top: 1.5rem;
-}
-
-.seccion-titulo:first-child {
   margin-top: 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--secondary-color);
+  padding-bottom: 0.75rem;
 }
 
-/* Tabla General */
-.tabla-general {
-  margin-bottom: 2rem;
+/* --- ESTILOS DE TABLA (Dark Mode) --- */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
 }
 
-.fila-header, .fila-data {
-  display: grid;
-  grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr 0.8fr 1.5fr;
-  gap: 1rem;
-  align-items: center;
-  padding: 0.5rem;
-  border-bottom: 1px solid #ddd;
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
 }
 
-.fila-header {
+.table th,
+.table td {
+  padding: 0.75rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table thead th {
   background-color: #333;
   color: white;
-  font-weight: bold;
-  text-align: center;
-}
-
-.fila-data {
-  min-height: 2.5rem;
-}
-
-.fila-separador {
-  height: 10px;
-}
-
-/* Categorías con colores */
-.categoria-comercializadora {
-  color: #EB5E28;
-  font-weight: bold;
-}
-
-.categoria-cumplimiento {
-  color: #2E86C1;
-  font-weight: bold;
-}
-
-/* Colores para valores */
-.positivo {
-  background-color: #d4edda !important;
-  color: #155724;
-  padding: 0.25rem;
-  border-radius: 4px;
-}
-
-.negativo {
-  background-color: #f8d7da !important;
-  color: white;
-  background-color: #dc3545 !important;
-  padding: 0.25rem;
-  border-radius: 4px;
-  text-align: center;
-}
-
-/* Tabla Específico */
-.tabla-especifico {
-  margin-bottom: 2rem;
-}
-
-.fila-header-especifico, 
-.fila-categoria, 
-.fila-diferencia {
-  display: grid;
-  grid-template-columns: 2fr 1.5fr 1.2fr 1.5fr 1fr 1fr 1fr;
-  gap: 0.5rem;
-  align-items: center;
-  padding: 0.4rem;
-  border-bottom: 1px solid #ddd;
-  min-height: 2rem;
-}
-
-.fila-header-especifico {
-  background-color: #333;
-  color: white;
-  font-weight: bold;
-  text-align: center;
   font-size: 0.85rem;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-/* Categorías específicas con colores de fondo */
-.scott .categoria-scott {
+/* Centra los encabezados de columnas numéricas y de porcentaje (Tabla General) */
+.table thead th.col-numero,
+.table thead th.col-porcentaje {
+  text-align: center;
+}
+
+.table tbody tr:hover {
+  background-color: var(--secondary-color);
+}
+
+.table tfoot td {
+  border-top: 2px solid #555;
+}
+
+.fila-total {
+  font-weight: bold;
+}
+
+/* --- CLASES DE UTILIDAD (Ajustadas) --- */
+
+/* Alineación */
+.text-right {
+  text-align: right; /* Ya no se necesita !important */
+}
+
+.text-center {
+  text-align: center; /* Ya no se necesita !important */
+}
+
+/* Fuentes */
+.font-bold {
+  font-weight: 700; /* Ya no se necesita !important */
+}
+
+/* Colores de Texto (¡RESTAURADOS Y SIMPLIFICADOS!) */
+.text-primary {
+  color: var(--primary-color);
+}
+
+.text-info {
+  color: var(--info-color);
+}
+
+.text-danger {
+  color: var(--danger-color);
+}
+
+.text-success {
+  color: var(--success-color);
+}
+
+
+/* --- Indicadores de Status (¡SIMPLIFICADOS!) --- */
+/* Define el TAMAÑO de la caja */
+.status-box {
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+  font-weight: 600;
+  display: inline-block;
+  font-size: 0.9rem;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* Define el color POSITIVO */
+.status-positive {
+  background-color: var(--success-bg);
+  color: var(--success-text);
+}
+
+/* Define el color NEGATIVO */
+.status-negative {
+  background-color: var(--danger-color);
+  color: white;
+}
+/* ----------------------------------------------------------------- */
+
+
+/* Etiquetas de Categoría (reemplaza a .categoria-scott, etc.) */
+.category-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-weight: 700;
+  color: white;
+  text-align: center;
+  font-size: 0.9rem;
+  display: inline-block;
+}
+
+.category-scott {
   background-color: #6c757d;
   color: white;
-  padding: 0.5rem;
-  text-align: center;
-  font-weight: bold;
-  border-radius: 4px;
 }
 
-.apparel .categoria-apparel {
+.category-apparel {
   background-color: #ffc107;
   color: #333;
-  padding: 0.5rem;
-  text-align: center;
-  font-weight: bold;
-  border-radius: 4px;
 }
 
-.syncros .categoria-syncros {
-  background-color: #28a745;
-  color: white;
-  padding: 0.5rem;
-  text-align: center;
-  font-weight: bold;
-  border-radius: 4px;
-}
-
-.vittoria .categoria-vittoria {
-  background-color: #8B4513;
-  color: white;
-  padding: 0.5rem;
-  text-align: center;
-  font-weight: bold;
-  border-radius: 4px;
-}
-
-.otros .categoria-otros {
-  background-color: #17a2b8;
-  color: white;
-  padding: 0.5rem;
-  text-align: center;
-  font-weight: bold;
-  border-radius: 4px;
-}
-
-.negativo-total {
-  background-color: #dc3545 !important;
-  color: white !important;
-  padding: 0.25rem;
-  border-radius: 4px;
-  text-align: center;
-}
-
-.amarillo {
-  background-color: #ffc107;
-  color: #333;
-  padding: 0.25rem;
-  border-radius: 4px;
-  text-align: center;
-}
-
-.error {
-  color: #dc3545;
-  font-weight: bold;
-}
-
-.fila-diferencia {
-  font-weight: bold;
-  border-top: 2px solid #333;
-}
-
-/* Alineación de columnas */
-.col-numero, .col-numero-esp {
-  text-align: right;
-}
-
-.col-porcentaje, .col-avance {
-  text-align: center;
-}
-
-/* Responsivo */
+/* ----------------------------------------------------------------- */
+/* --- RESPONSIVIDAD (MÓVIL) --- */
+/* ----------------------------------------------------------------- */
 @media (max-width: 768px) {
-  .caratula-content {
+  .caratula-global-container {
     padding: 1rem;
   }
-  
-  .fila-header, .fila-data {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-    text-align: left;
+
+  .caratula-content {
+    gap: 1.5rem;
   }
-  
-  .fila-header-especifico, 
-  .fila-categoria, 
-  .fila-diferencia {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-    text-align: left;
+
+  .card {
+    padding: 1rem;
   }
-  
-  .fecha-header {
-    position: static;
-    text-align: center;
-    margin-bottom: 1rem;
-    border-left: none;
-    border-bottom: 1px solid #ddd;
-    padding: 1rem 0;
+
+  .table th,
+  .table td {
+    padding: 0.5rem;
   }
 }

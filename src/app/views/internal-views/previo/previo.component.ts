@@ -123,6 +123,13 @@ export class PrevioComponent implements OnInit, OnDestroy {
   showEvacFilter: boolean = false;
   showClienteFilter: boolean = false;
   showEleccionNivelFilter: boolean = false;
+  showCumplimientoFilter: boolean = false;
+
+  opcionesClave: { value: string; selected: boolean }[] = [];
+  opcionesEvac: { value: string; selected: boolean }[] = [];
+  opcionesCliente: { value: string; selected: boolean }[] = [];
+  opcionesEleccionNivel: { value: string; selected: boolean }[] = [];
+  opcionesCumplimiento: { value: string; selected: boolean }[] = [];
 
   paginaActual = 1;
   paginaActualTemp = 1;
@@ -137,13 +144,15 @@ export class PrevioComponent implements OnInit, OnDestroy {
     nivel: string[];
     evac: string[];
     cliente: string[];
+    cumplimiento: string[];
   } = {
       clave: [],
       zona: '',
       nombre_cliente: '',
       nivel: [],
       evac: [],
-      cliente: []
+      cliente: [],
+      cumplimiento: []
     };
 
   zonasUnicas: string[] = [];
@@ -158,11 +167,6 @@ export class PrevioComponent implements OnInit, OnDestroy {
   integrales: ClienteConAcumulado[] = [];
 
   mostrarIntegrales: boolean = true;
-
-  opcionesClave: { value: string; selected: boolean }[] = [];
-  opcionesEvac: { value: string; selected: boolean }[] = [];
-  opcionesCliente: { value: string; selected: boolean }[] = [];
-  opcionesEleccionNivel: { value: string; selected: boolean }[] = [];
 
   mensajeAlerta: string | null = null;
   tipoAlerta: 'exito' | 'error' = 'exito';
@@ -421,13 +425,17 @@ export class PrevioComponent implements OnInit, OnDestroy {
     const filtroEvac = this.filtros.evac;
     const filtroCliente = this.filtros.cliente;
     const filtroNivel = this.filtros.nivel;
+    const filtroCumplimiento = this.filtros.cumplimiento;
 
     const filtrar = (cliente: ClienteConAcumulado) => {
       const claveValida = !this.filtros.clave.length || this.filtros.clave.includes(cliente.clave);
       const evacValido = !filtroEvac.length || filtroEvac.includes(cliente.evac);
       const clienteValido = !filtroCliente.length || filtroCliente.includes(cliente.nombre_cliente);
       const nivelValido = !filtroNivel.length || filtroNivel.includes(cliente.nivel);
-      return claveValida && evacValido && clienteValido && nivelValido;
+      const cumplimientoValido = !filtroCumplimiento.length ||
+        filtroCumplimiento.includes(this.verificarCumplimientoCompraInicial(cliente));
+
+      return claveValida && evacValido && clienteValido && nivelValido && cumplimientoValido;
     };
 
     this.clientesFiltrados = this.todosLosDatos.filter(filtrar);
@@ -474,6 +482,11 @@ export class PrevioComponent implements OnInit, OnDestroy {
       value: nivel,
       selected: false
     }));
+
+    this.opcionesCumplimiento = [
+      { value: 'SI', selected: false },
+      { value: 'NO', selected: false }
+    ];
   }
 
   aplicarFiltroClave(clavesSeleccionadas: string[]): void {
@@ -518,6 +531,22 @@ export class PrevioComponent implements OnInit, OnDestroy {
   aplicarFiltroEleccionNivel(nivelesSeleccionados: string[]): void {
     this.filtros.nivel = nivelesSeleccionados;
     this.aplicarFiltros();
+  }
+
+  mostrarFiltroCumplimiento() {
+    this.manejarClickFiltro('cumplimiento');
+  }
+
+  aplicarFiltroCumplimiento(cumplimientosSeleccionados: string[]): void {
+    this.filtros.cumplimiento = cumplimientosSeleccionados;
+    this.aplicarFiltros();
+  }
+
+  limpiarFiltroCumplimiento(): void {
+    this.filtros.cumplimiento = [];
+    this.opcionesCumplimiento.forEach(opcion => opcion.selected = false);
+    this.aplicarFiltros();
+    this.calcularTotales();
   }
 
   limpiarFiltroEleccionNivel(): void {
@@ -1786,7 +1815,6 @@ export class PrevioComponent implements OnInit, OnDestroy {
     const fechaFin = cliente.f_fin ? new Date(cliente.f_fin) : new Date('2026-06-30');
 
     const esCasoEspecial = clave === 'KA578' || nombreCliente.includes('BROTHERS BIKE') ||
-      clave === 'KC612' || nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ') ||
       clave === 'FD324' || nombreCliente.includes('JOSE ANGEL DIAZ CORTES') ||
       clave === 'LC625' || clave === 'LC626' || clave === 'LC627' || nombreCliente.includes('NARUCO');
 
