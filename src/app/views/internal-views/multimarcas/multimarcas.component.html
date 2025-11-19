@@ -8,7 +8,8 @@
             <i class="fas fa-arrow-left"></i> Volver
         </button>
         <button class="btn" (click)="exportarAExcel()"><i class="fas fa-file-excel"></i> Exportar a Excel</button>
-        <button class="btn" [routerLink]="['/distribuidores-multimarcas']"><i class="fas fa-users"></i> Distribuidores Multimarcas</button>
+        <button class="btn" [routerLink]="['/distribuidores-multimarcas']"><i class="fas fa-users"></i> Distribuidores
+            Multimarcas</button>
     </div>
 
     <div *ngIf="cargando" class="cargando-spinner">
@@ -24,7 +25,7 @@
         <table class="tabla-previo">
             <thead>
                 <tr>
-                    <th class="columna-clave" style="min-width: 120px; height: 80px;">
+                    <th class="columna-fija fija-clave" style="height: 80px;">
                         <div class="filter-horizontal-container">
                             <span class="filter-label">Clave</span>
                             <app-filtro-previo tipo="clave" placeholder="Buscar clave..." [opciones]="opcionesClave"
@@ -34,7 +35,7 @@
                         </div>
                     </th>
 
-                    <th style="min-width: 150px;">
+                    <th class="columna-fija fija-evac">
                         <div class="filter-horizontal-container">
                             <span class="filter-label">EVAC</span>
                             <app-filtro-previo tipo="evac" placeholder="Buscar EVAC..." [opciones]="opcionesEvac"
@@ -44,7 +45,7 @@
                         </div>
                     </th>
 
-                    <th style="min-width: 420px;">
+                    <th class="columna-fija fija-cliente">
                         <div class="filter-horizontal-container">
                             <span class="filter-label">Cliente - Razón Social</span>
                             <app-filtro-previo tipo="cliente" placeholder="Buscar cliente..."
@@ -54,6 +55,8 @@
                             </app-filtro-previo>
                         </div>
                     </th>
+
+                    <!-- Columnas normales (no fijas) -->
                     <th style="min-width: 120px;">Avance GLOBAL</th>
                     <th style="min-width: 140px;">Avance GLOBAL SCOTT</th>
                     <th style="min-width: 140px;">Avance GLOBAL SYNCROS</th>
@@ -76,9 +79,10 @@
             </thead>
             <tbody>
                 <tr *ngFor="let cliente of clientesPaginados">
-                    <td>{{ cliente.clave }}</td>
-                    <td>{{ cliente.evac }}</td>
-                    <td>{{ cliente.cliente_razon_social }}</td>
+                    <td class="columna-fija fija-clave">{{ cliente.clave }}</td>
+                    <td class="columna-fija fija-evac">{{ cliente.evac }}</td>
+                    <td class="columna-fija fija-cliente">{{ cliente.cliente_razon_social }}</td>
+
                     <td>
                         {{
                         formatCurrency(
@@ -110,6 +114,5 @@
                 </tr>
             </tbody>
         </table>
-
     </div>
 </div>
