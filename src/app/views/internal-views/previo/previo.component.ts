@@ -1663,10 +1663,10 @@ export class PrevioComponent implements OnInit, OnDestroy {
         const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
 
         // Verificar criterios de producto
-        const esProductoValido = factura.apparel === 'NO' &&
-          (factura.marca === 'SCOTT' ||
-            factura.categoria_producto?.includes('SCOTT') ||
-            factura.nombre_producto?.includes('SCOTT'));
+        const esProductoValido =
+          factura.marca === 'SYNCROS' ||
+          factura.marca === 'VITTORIA' ||
+          factura.apparel === 'SI';
 
         // Lógica especial para cada caso
         let esValida;
@@ -1691,10 +1691,10 @@ export class PrevioComponent implements OnInit, OnDestroy {
         const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
 
         // Verificar criterios de producto
-        const esProductoValido = factura.apparel === 'NO' &&
-          (factura.marca === 'SCOTT' ||
-            factura.categoria_producto?.includes('SCOTT') ||
-            factura.nombre_producto?.includes('SCOTT'));
+        const esProductoValido =
+          factura.marca === 'SYNCROS' ||
+          factura.marca === 'VITTORIA' ||
+          factura.apparel === 'SI';
 
         return esClienteCorrecto && enRangoFechas && esProductoValido;
       });
@@ -1716,10 +1716,10 @@ export class PrevioComponent implements OnInit, OnDestroy {
           const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
 
           // Verificar criterios de producto
-          const esProductoValido = factura.apparel === 'NO' &&
-            (factura.marca === 'SCOTT' ||
-              factura.categoria_producto?.includes('SCOTT') ||
-              factura.nombre_producto?.includes('SCOTT'));
+          const esProductoValido =
+            factura.marca === 'SYNCROS' ||
+            factura.marca === 'VITTORIA' ||
+            factura.apparel === 'SI';
 
           return coincideNombre && enRangoFechas && esProductoValido;
         });
@@ -2344,36 +2344,64 @@ export class PrevioComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Función auxiliar para evitar divisiones por cero y porcentajes infinitos
+  private calcularPorcentajeSeguro(avance: number, meta: number): number {
+    // Aseguramos que sean números
+    const avanceNum = avance || 0;
+    const metaNum = meta || 0;
+
+    // Si la meta es 0
+    if (metaNum === 0) {
+      // Si hubo ventas sin tener meta, retornamos 100% (para que salga verde)
+      // Si prefieres que salga 0%, cambia el 100 por 0.
+      return avanceNum > 0 ? 100 : 0;
+    }
+
+    // Cálculo normal
+    return (avanceNum / metaNum) * 100;
+  }
+
   getPercentageValue(cliente: any, tipo: string): number {
+    const totalGlobal = (cliente?.avance_global_scott || 0) +
+      (cliente?.acumulado_syncros || 0) +
+      (cliente?.acumulado_apparel || 0) +
+      (cliente?.acumulado_vittoria || 0);
+
+    const totalApparel = (cliente?.acumulado_syncros || 0) +
+      (cliente?.acumulado_apparel || 0) +
+      (cliente?.acumulado_vittoria || 0);
+
     switch (tipo) {
       case 'anual':
-        return ((cliente?.avance_global_scott || 0) +
-          (cliente?.acumulado_syncros || 0) +
-          (cliente?.acumulado_apparel || 0) +
-          (cliente?.acumulado_vittoria || 0)) / (cliente?.compra_minima_anual || 1) * 100;
+        return this.calcularPorcentajeSeguro(totalGlobal, cliente?.compra_minima_anual);
+
       case 'inicial':
-        return ((cliente.avance_global_scott || 0) +
-          (cliente.acumulado_syncros || 0) +
-          (cliente.acumulado_apparel || 0) +
-          (cliente.acumulado_vittoria || 0)) / (cliente.compra_minima_inicial || 1) * 100;
+        return this.calcularPorcentajeSeguro(totalGlobal, cliente?.compra_minima_inicial);
+
       case 'scott':
-        return (cliente.avance_global_scott || 0) / (cliente.compromiso_scott || 1) * 100;
+        return this.calcularPorcentajeSeguro(cliente?.avance_global_scott, cliente?.compromiso_scott);
+
       case 'scott_jul_ago':
-        return (cliente.avance_jul_ago || 0) / (cliente.compromiso_jul_ago || 1) * 100;
+        return this.calcularPorcentajeSeguro(cliente?.avance_jul_ago, cliente?.compromiso_jul_ago);
+
       case 'scott_sep_oct':
-        return (cliente.avance_sep_oct || 0) / (cliente.compromiso_sep_oct || 1) * 100;
+        return this.calcularPorcentajeSeguro(cliente?.avance_sep_oct, cliente?.compromiso_sep_oct);
+
       case 'scott_nov_dic':
-        return (cliente.avance_nov_dic || 0) / (cliente.compromiso_nov_dic || 1) * 100;
+        return this.calcularPorcentajeSeguro(cliente?.avance_nov_dic, cliente?.compromiso_nov_dic);
+
       case 'apparel_global':
-        return ((cliente.acumulado_syncros || 0) +
-          (cliente.acumulado_apparel || 0) +
-          (cliente.acumulado_vittoria || 0)) / (cliente.compromiso_apparel_syncros_vittoria || 1) * 100;
+        return this.calcularPorcentajeSeguro(totalApparel, cliente?.compromiso_apparel_syncros_vittoria);
+
       case 'apparel_jul_ago':
-        return (cliente.avance_jul_ago_app || 0) / (cliente.compromiso_jul_ago_app || 1) * 100;
+        return this.calcularPorcentajeSeguro(cliente?.avance_jul_ago_app, cliente?.compromiso_jul_ago_app);
+
       case 'apparel_sep_oct':
-        return (cliente.avance_sep_oct_app || 0) / (cliente.compromiso_sep_oct_app || 1) * 100;
+        return this.calcularPorcentajeSeguro(cliente?.avance_sep_oct_app, cliente?.compromiso_sep_oct_app);
+
       case 'apparel_nov_dic':
-        return (cliente.avance_nov_dic_app || 0) / (cliente.compromiso_nov_dic_app || 1) * 100;
+        return this.calcularPorcentajeSeguro(cliente?.avance_nov_dic_app, cliente?.compromiso_nov_dic_app);
+
       default:
         return 0;
     }
