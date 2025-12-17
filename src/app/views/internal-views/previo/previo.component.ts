@@ -1627,7 +1627,6 @@ export class PrevioComponent implements OnInit, OnDestroy {
     const fechaInicio = new Date('2025-11-01');
     const fechaFin = new Date('2025-12-31');
 
-    // Casos especiales que requieren lógica particular
     const esCasoEspecial = nombreCliente.includes('BROTHERS BIKE') ||
       nombreCliente.includes('NARUCO') ||
       clave === 'KC612' ||
@@ -1638,22 +1637,18 @@ export class PrevioComponent implements OnInit, OnDestroy {
     let facturasValidas;
 
     if (esCasoEspecial) {
-      // Para casos especiales: lógica específica
       facturasValidas = facturas.filter(factura => {
         const coincideClave = factura.contacto_referencia === clave ||
           factura.contacto_referencia === `${clave}-CA`;
 
-        // PARA BROTHERS BIKE: Buscar directamente por nombre
         let coincideNombre = false;
         if (nombreCliente.includes('BROTHERS BIKE')) {
           coincideNombre = factura.contacto_nombre?.toUpperCase().includes('BROTHERS BIKE');
         }
-        // PARA NARUCO: Solo permitir coincidencia por nombre si la clave NO es LC625, LC626 o LC627
         else if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
           coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
             nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
         }
-        // Para otros casos especiales
         else {
           coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
             nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
@@ -1662,13 +1657,11 @@ export class PrevioComponent implements OnInit, OnDestroy {
         const fechaFactura = new Date(factura.fecha_factura);
         const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
 
-        // Verificar criterios de producto
         const esProductoValido =
           factura.marca === 'SYNCROS' ||
           factura.marca === 'VITTORIA' ||
           factura.apparel === 'SI';
 
-        // Lógica especial para cada caso
         let esValida;
         if (nombreCliente.includes('BROTHERS BIKE')) {
           esValida = coincideNombre && enRangoFechas && esProductoValido;
@@ -1681,7 +1674,6 @@ export class PrevioComponent implements OnInit, OnDestroy {
         return esValida;
       });
     } else {
-      // Para casos normales: primero buscar por clave
       facturasValidas = facturas.filter(factura => {
         const esClienteCorrecto =
           factura.contacto_referencia === clave ||
@@ -1699,10 +1691,8 @@ export class PrevioComponent implements OnInit, OnDestroy {
         return esClienteCorrecto && enRangoFechas && esProductoValido;
       });
 
-      // FALLBACK: Si no hay resultados por clave, buscar por nombre
       if (facturasValidas.length === 0) {
         facturasValidas = facturas.filter(factura => {
-          // PARA NARUCO: Solo permitir coincidencia por nombre si la clave NO es LC625, LC626 o LC627
           let coincideNombre = false;
           if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
             coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
