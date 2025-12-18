@@ -3,6 +3,10 @@ import { HttpClient, HttpParams, HttpErrorResponse, HttpHeaders } from '@angular
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { BehaviorSubject, of } from 'rxjs';
+import { tap } from 'rxjs/operators';
+
+
 
 // Define the SugerenciaCliente interface
 export interface SugerenciaCliente {
@@ -26,7 +30,15 @@ export interface CaratulaResponse {
 export class CaratulasService {
   private apiUrl = `${environment.apiUrl}`;
 
+  private clientesEvacACache = new BehaviorSubject<any>(null);
+  private clientesEvacBCache = new BehaviorSubject<any>(null);
+
   constructor(private http: HttpClient) { }
+
+  precargarDatos() {
+    if (!this.clientesEvacACache.value) this.getClientesEvacA().subscribe();
+    if (!this.clientesEvacBCache.value) this.getClientesEvacB().subscribe();
+  }
 
   /**
    * Obtener sugerencias para el autocompletado
@@ -205,11 +217,19 @@ export class CaratulasService {
   }
 
   getClientesEvacA(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/clientes_a`);
+    if (this.clientesEvacACache.value) return of(this.clientesEvacACache.value);
+
+    return this.http.get<any>(`${this.apiUrl}/clientes_a`).pipe(
+      tap(data => this.clientesEvacACache.next(data))
+    );
   }
 
   getClientesEvacB(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/clientes_b`);
+    if (this.clientesEvacBCache.value) return of(this.clientesEvacBCache.value);
+
+    return this.http.get<any>(`${this.apiUrl}/clientes_b`).pipe(
+      tap(data => this.clientesEvacBCache.next(data))
+    );
   }
 
   getClientesEvacGO(): Observable<any> {
@@ -217,16 +237,16 @@ export class CaratulasService {
   }
 
   actualizarCaratulaEvacA(datos: any[]): Observable<any> {
-    return this.http.post(`${this.apiUrl}/caratula_evac_a`, datos)
-      .pipe(
-        catchError(this.handleError)
-      );
+    return this.http.post(`${this.apiUrl}/caratula_evac_a`, datos).pipe(
+      tap(() => this.clientesEvacACache.next(null)), 
+      catchError(this.handleError)
+    );
   }
 
   actualizarCaratulaEvacB(datos: any[]): Observable<any> {
-    return this.http.post(`${this.apiUrl}/caratula_evac_b`, datos)
-      .pipe(
-        catchError(this.handleError)
+    return this.http.post(`${this.apiUrl}/caratula_evac_b`, datos).pipe(
+      tap(() => this.clientesEvacBCache.next(null)), 
+      catchError(this.handleError)
       );
   }
 
