@@ -120,10 +120,29 @@
                             (clear)="limpiarFiltro('nivel')">
                         </app-filtro>
                     </div>
-                    <div class="col-compromiso">COMPROMISO ANUAL</div>
-                    <div class="col-acumulado">ACUMULADO REAL</div>
-                    <div class="col-proyectado">AVANCE PROYECTADO SEMANAL</div>
-                    <div class="col-diferencia">DIFERENCIA</div>
+                    <div class="col-compromiso columna-con-filtro">
+                        <span class="header-label">COMPROMISO ANUAL</span>
+                        <app-filtro-orden label="" (ordenCambio)="ordenarColumna('compromiso', $event)">
+                        </app-filtro-orden>
+                    </div>
+
+                    <div class="col-acumulado columna-con-filtro">
+                        <span class="header-label">ACUMULADO REAL</span>
+                        <app-filtro-orden label="" (ordenCambio)="ordenarColumna('acumulado', $event)">
+                        </app-filtro-orden>
+                    </div>
+
+                    <div class="col-proyectado columna-con-filtro">
+                        <span class="header-label">AVANCE PROY. SEM.</span>
+                        <app-filtro-orden label="" (ordenCambio)="ordenarColumna('proyectado', $event)">
+                        </app-filtro-orden>
+                    </div>
+
+                    <div class="col-diferencia columna-con-filtro">
+                        <span class="header-label">DIFERENCIA</span>
+                        <app-filtro-orden label="" (ordenCambio)="ordenarColumna('diferencia', $event)">
+                        </app-filtro-orden>
+                    </div>
                 </div>
 
                 <!-- Filas de datos -->
@@ -138,7 +157,7 @@
                         currency:'USD':'symbol':'1.2-2' }}</div>
                     <div class="col-diferencia">{{ calcularDiferencia(cliente) | currency:'USD':'symbol':'1.2-2' }}
                     </div>
-                    
+
                     <div *ngIf="clientesFiltrados.length === 0 && clientes.length > 0" class="sin-resultados">
                         <p>No se encontraron clientes que coincidan con los filtros aplicados.</p>
                     </div>

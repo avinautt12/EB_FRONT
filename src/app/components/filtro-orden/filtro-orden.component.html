@@ -1,0 +1,40 @@
+<div class="sort-dropdown" [class.show]="showDropdown">
+  
+  <button class="sort-btn" (click)="toggleDropdown($event)" [class.active]="currentDirection !== null">
+    <i class="fas" [ngClass]="{
+        'fa-sort': currentDirection === null,
+        'fa-sort-amount-up': currentDirection === 'asc',
+        'fa-sort-amount-down': currentDirection === 'desc'
+    }"></i>
+    
+    <i class="fas fa-chevron-down chevron"></i>
+  </button>
+
+  <div class="filter-options">
+    <div class="filter-content-wrapper">
+      
+      <button class="sort-option" 
+              [class.selected]="currentDirection === 'asc'"
+              (click)="seleccionarOrden('asc')">
+        <i class="fas fa-sort-numeric-up"></i>
+        <span>Menor a Mayor</span>
+        <i *ngIf="currentDirection === 'asc'" class="fas fa-check check-icon"></i>
+      </button>
+
+      <button class="sort-option" 
+              [class.selected]="currentDirection === 'desc'"
+              (click)="seleccionarOrden('desc')">
+        <i class="fas fa-sort-numeric-down-alt"></i>
+        <span>Mayor a Menor</span>
+        <i *ngIf="currentDirection === 'desc'" class="fas fa-check check-icon"></i>
+      </button>
+
+    </div>
+
+    <div class="filter-actions">
+      <button class="btn-limpiar" (click)="limpiarOrden($event)">
+        Limpiar orden
+      </button>
+    </div>
+  </div>
+</div>

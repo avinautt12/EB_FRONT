@@ -1,4 +1,6 @@
-/* Variables CSS */
+/* =========================================
+   1. VARIABLES Y CONFIGURACIÓN GLOBAL
+   ========================================= */
 :root {
   --primary-color: #EB5E28;
   --secondary-color: #403d39;
@@ -22,7 +24,9 @@ body {
   line-height: 1.6;
 }
 
-/* Contenedor principal */
+/* =========================================
+   2. CONTENEDORES Y TÍTULOS
+   ========================================= */
 .caratula-evac-container {
   position: relative;
   max-width: 1800px;
@@ -55,7 +59,41 @@ body {
   border-radius: 2px;
 }
 
-/* Botones */
+/* Estilos para monitor-container (si se usa en otras vistas) */
+.monitor-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #1e1d1b;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+}
+
+.monitor-container h2 {
+  color: #EB5E28;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-weight: 700;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.monitor-container h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 4px;
+  background: var(--primary-color);
+  border-radius: 2px;
+}
+
+/* =========================================
+   3. BOTONES
+   ========================================= */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -84,7 +122,9 @@ body {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* Contenido principal */
+/* =========================================
+   4. HEADER DE FECHAS
+   ========================================= */
 .caratula-content {
   background: var(--dark-color);
   padding: 2rem;
@@ -93,7 +133,6 @@ body {
   color: var(--light-color);
 }
 
-/* Header de fecha mejorado */
 .fecha-header-mejorada {
   position: relative;
   text-align: center;
@@ -102,13 +141,11 @@ body {
   border-radius: 5px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
-  /* Espacio antes de la tabla */
   width: fit-content;
   margin-left: auto;
   z-index: 10;
 }
 
-/* Estilos tipográficos (mantén los que ya tienes) */
 .fecha-principal {
   font-size: 1.2em;
   font-weight: bold;
@@ -125,12 +162,6 @@ body {
   margin: 3px 0;
 }
 
-.fila-header,
-.fila-header-linea {
-  background-color: #555 !important;
-  color: var(--light-color) !important;
-}
-
 .semana-info {
   display: flex;
   flex-direction: column;
@@ -141,7 +172,9 @@ body {
   line-height: 1.2;
 }
 
-/* Tabla Principal (EB y MY25) */
+/* =========================================
+   5. TABLAS PRINCIPALES (Grid System)
+   ========================================= */
 .tabla-principal {
   margin-bottom: 2rem;
 }
@@ -163,6 +196,7 @@ body {
   text-align: center;
 }
 
+/* Colores de Header y Celdas */
 .header-verde {
   background-color: var(--verde-header) !important;
   color: #333;
@@ -173,24 +207,13 @@ body {
   color: #333;
 }
 
-/* Categorías */
-.categoria-eb {
-  color: var(--primary-color);
-  font-weight: bold;
-}
-
-.categoria-my25 {
-  color: #2E86C1;
-  font-weight: bold;
-}
-
-/* Colores para valores */
 .verde {
-  background-color: var(--verde-header);
+  background-color: var(--verde-header); /* Para fondos */
   color: #333;
   padding: 0.25rem;
   border-radius: 4px;
   text-align: right;
+  font-weight: 500;
 }
 
 .verde-claro {
@@ -201,7 +224,24 @@ body {
   text-align: center;
 }
 
-/* Sección Línea */
+.rojo {
+  color: var(--danger-color);
+  font-weight: 500;
+}
+
+/* Categorías */
+.categoria-eb { color: var(--primary-color); font-weight: bold; }
+.categoria-my25 { color: #2E86C1; font-weight: bold; }
+
+/* Headers específicos */
+.fila-header, .fila-header-linea {
+  background-color: #555 !important;
+  color: var(--light-color) !important;
+}
+
+/* =========================================
+   6. SECCIÓN LÍNEA
+   ========================================= */
 .seccion-linea {
   margin-top: 2rem;
 }
@@ -213,15 +253,6 @@ body {
   margin-bottom: 1rem;
 }
 
-.avance-proyectado-header {
-  text-align: right;
-  margin-bottom: 0.5rem;
-  font-weight: bold;
-  color: #666;
-  font-size: 0.9rem;
-}
-
-/* Tabla Línea */
 .tabla-linea {
   margin-bottom: 1rem;
 }
@@ -237,13 +268,6 @@ body {
   min-height: 2.5rem;
 }
 
-.fila-header-linea {
-  background-color: #f8f9fa;
-  font-weight: bold;
-  text-align: center;
-}
-
-/* Categorías específicas */
 .categoria-scott {
   background-color: #6c757d;
   color: white;
@@ -262,49 +286,13 @@ body {
   border-radius: 4px;
 }
 
-/* Alineación de columnas */
-.col-numero,
-.col-numero-linea {
-  text-align: right;
-}
+/* Alineaciones */
+.col-numero, .col-numero-linea { text-align: right; }
+.col-porcentaje, .col-porcentaje-linea { text-align: center; color: #ffffff; }
 
-.col-porcentaje,
-.col-porcentaje-linea {
-  text-align: center;
-  color: #ffffff;
-}
-
-/* Responsivo */
-@media (max-width: 768px) {
-  .caratula-evac-container {
-    padding: 1rem;
-  }
-
-  .caratula-content {
-    position: relative;
-    /* Esto es crucial */
-    width: 100%;
-    min-height: 100vh;
-    /* O ajusta según necesites */
-    padding: 20px;
-    /* Espacio interno general */
-  }
-
-  .fila-header,
-  .fila-data,
-  .fila-header-linea,
-  .fila-categoria {
-    grid-template-columns: 1fr;
-    gap: 0.25rem;
-    text-align: left;
-  }
-
-  .avance-proyectado-header {
-    text-align: center;
-  }
-}
-
-/* Estilos para la tabla de clientes */
+/* =========================================
+   7. SECCIÓN CLIENTES Y FILTROS
+   ========================================= */
 .seccion-clientes {
   margin-top: 30px;
   padding: 20px;
@@ -322,20 +310,12 @@ body {
   flex-direction: column; 
 }
 
-.sin-resultados {
-  flex-grow: 1; 
-  display: flex;
-  justify-content: center; 
-  align-items: center;   
-  color: #888;
-  font-size: 1.1em;
-}
-
 .fila-header-clientes,
 .fila-cliente {
   display: flex;
   padding: 12px 0;
   border-bottom: 1px solid #555;
+  align-items: center; /* Asegura alineación vertical */
 }
 
 .fila-header-clientes {
@@ -345,6 +325,20 @@ body {
   border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
+.fila-cliente:hover {
+  background-color: rgba(235, 94, 40, 0.1);
+}
+
+.sin-resultados {
+  flex-grow: 1; 
+  display: flex;
+  justify-content: center; 
+  align-items: center;   
+  color: #888;
+  font-size: 1.1em;
+}
+
+/* --- DEFINICIÓN DE COLUMNAS (Anchos) --- */
 .col-nombre {
   flex: 2;
   padding-left: 15px;
@@ -352,7 +346,7 @@ body {
 }
 
 .col-nivel {
-  flex: 1;
+  flex: 1; /* Valor corregido */
   color: var(--light-color);
 }
 
@@ -366,134 +360,18 @@ body {
   color: var(--light-color);
 }
 
-.fila-cliente:hover {
-  background-color: rgba(235, 94, 40, 0.1);
-}
-
-/* Mantener consistencia con estilos existentes */
-.verde {
-  color: var(--success-color);
-  font-weight: 500;
-}
-
-/* Estilos para la nueva columna */
+/* Columna Diferencia Específica */
 .col-diferencia {
   flex: 1.2;
-  text-align: right;
-  padding-right: 15px;
 }
 
-.rojo {
-  color: var(--danger-color);
-  font-weight: 500;
-}
+/* --- AJUSTES DE FILTROS --- */
 
-/* Ajuste de anchos para mantener la proporción */
-.col-nombre {
-  flex: 2;
-}
-
-.col-nivel {
-  flex: 0.8;
-
-  /* Estilos generales con tema oscuro */
-  :root {
-    --primary-color: #EB5E28;
-    --secondary-color: #403d39;
-    --success-color: #28a745;
-    --warning-color: #f39c12;
-    --danger-color: #dc3545;
-    --light-color: #FFFCF2;
-    --dark-color: #1e1d1b;
-    --border-radius: 8px;
-    --box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-    --transition: all 0.3s ease;
-  }
-
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #1e1d1b;
-    color: #FFFCF2;
-    line-height: 1.6;
-  }
-
-  /* Contenedor principal */
-  .monitor-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2rem;
-    background-color: #1e1d1b;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-  }
-
-  /* Título principal */
-  .monitor-container h2 {
-    color: #EB5E28;
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
-    text-align: center;
-    font-weight: 700;
-    position: relative;
-    padding-bottom: 0.5rem;
-  }
-
-  .monitor-container h2::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100px;
-    height: 4px;
-    background: var(--primary-color);
-    border-radius: 2px;
-  }
-
-  /* Spinner */
-  .spinner-container {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-top: 1rem;
-    justify-content: center;
-  }
-
-  .spinner {
-    width: 20px;
-    height: 20px;
-    border: 3px solid #EB5E28;
-    border-top: 3px solid transparent;
-    border-radius: 50%;
-    animation: girar 0.8s linear infinite;
-  }
-
-  .spinner-text {
-    color: #FFFCF2;
-    font-size: 0.95rem;
-  }
-
-  @keyframes girar {
-    from {
-      transform: rotate(0deg);
-    }
-
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .col-compromiso,
-  .col-acumulado,
-  .col-proyectado {
-    flex: 1.3;
-  }
-}
-
+/* 1. Estilo base para todas las columnas con filtro */
 .columna-con-filtro {
     display: flex;              
     align-items: center;       
-    justify-content: space-between; 
+    justify-content: space-between; /* Por defecto separa texto y filtro */
     gap: 10px;               
 }
 
@@ -501,6 +379,59 @@ body {
     flex-grow: 1; 
 }
 
-.columna-con-filtro app-filtro {
+.columna-con-filtro app-filtro,
+.columna-con-filtro app-filtro-orden {
     flex-shrink: 0;
+}
+
+/* 2. CORRECCIÓN ESPECÍFICA PARA NOMBRE Y NIVEL */
+/* Esto hace que en estas dos columnas el filtro NO se vaya a la derecha, sino que se quede pegado al texto */
+.col-nombre.columna-con-filtro,
+.col-nivel.columna-con-filtro {
+    justify-content: flex-start !important; /* Alinea a la izquierda */
+    gap: 15px; /* Espacio entre la palabra NOMBRE y el icono del filtro */
+}
+
+/* =========================================
+   8. SPINNERS Y RESPONSIVE
+   ========================================= */
+.spinner-container {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  justify-content: center;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #EB5E28;
+  border-top: 3px solid transparent;
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
+}
+
+.spinner-text {
+  color: #FFFCF2;
+  font-size: 0.95rem;
+}
+
+@keyframes girar {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .caratula-evac-container { padding: 1rem; }
+  .caratula-content { width: 100%; min-height: 100vh; padding: 20px; }
+  
+  .fila-header, .fila-data, 
+  .fila-header-linea, .fila-categoria {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+    text-align: left;
+  }
+  
+  .avance-proyectado-header { text-align: center; }
 }

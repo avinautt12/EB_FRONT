@@ -2,7 +2,7 @@
 .sort-dropdown {
   position: relative;
   display: inline-block;
-  width: 90%;
+  width: auto; /* <--- CORRECCIÓN: Antes era 90%, ahora auto para que no se estire */
 }
 
 /* Estilos del botón principal */
@@ -11,13 +11,14 @@
   align-items: center;
   justify-content: space-between; /* Centra los iconos */
   padding: 6px 12px; /* Ajusta el padding */
-  gap: 4px;
+  gap: 8px; /* Un poco más de espacio entre iconos */
   min-width: 40px; /* Ancho mínimo para que se vea bien */
   border-radius: 4px; /* Bordes redondeados */
   border: 1px solid #dee2e6; /* Define un borde claro */
   background-color: #ffffff; /* Fondo blanco */
   outline: none; /* Elimina el outline por defecto */
   box-shadow: none;
+  cursor: pointer;
 }
 
 .sort-btn:hover {
@@ -26,8 +27,7 @@
 }
 
 .sort-btn i {
-  margin-left: auto;
-  gap: 15px;
+  /* margin-left: auto; <--- ELIMINADO: Esto empujaba el icono demasiado lejos */
   transition: transform 0.2s ease;
 }
 
@@ -40,13 +40,12 @@
   align-items: center;
   gap: 4px;
   font-size: 14px;
-  /* Cambia esto: */
-  white-space: normal; /* En lugar de nowrap */
-  overflow: visible; /* En lugar de hidden */
-  text-overflow: clip; /* En lugar de ellipsis */
-  max-width: calc(100% - 24px);
-  word-break: break-word; /* Añadido */
-  line-height: 1.4; /* Mejor espaciado para múltiples líneas */
+  white-space: normal; 
+  overflow: visible; 
+  text-overflow: clip; 
+  max-width: 200px; /* Limitamos el ancho del texto si es muy largo */
+  word-break: break-word; 
+  line-height: 1.4; 
 }
 
 /* Estilos del dropdown - Versión mejorada */
@@ -59,9 +58,10 @@
   position: absolute;
   left: 0;
   z-index: 1050;
-  margin-top: 15px;
+  margin-top: 5px; /* Ajustado ligeramente */
   display: none;
   flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Añadida sombra para mejor visibilidad */
 }
 
 .sort-dropdown.show .filter-options {
@@ -125,9 +125,9 @@
 .filter-item {
   padding: 10px 16px;
   transition: all 0.2s ease;
-  white-space: normal; /* En lugar de nowrap */
-  word-wrap: break-word; /* Permite que las palabras largas se rompan */
-  overflow: visible; /* En lugar de hidden */
+  white-space: normal;
+  word-wrap: break-word;
+  overflow: visible;
   text-overflow: clip;
   display: flex;
   align-items: center;
@@ -139,13 +139,13 @@
 
 .filter-item label {
   display: flex;
-  align-items: flex-start; /* Ajustado para multilínea */
+  align-items: flex-start;
   gap: 10px;
   cursor: pointer;
   width: 100%;
   font-size: 14px;
-  white-space: normal; /* Añadido */
-  word-break: break-word; /* Añadido */
+  white-space: normal;
+  word-break: break-word;
 }
 
 .filter-item input[type="checkbox"] {
@@ -168,6 +168,7 @@
   position: sticky;
   bottom: 0;
   flex-shrink: 0;
+  border-radius: 0 0 8px 8px;
 }
 
 .filter-actions button {

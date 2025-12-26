@@ -5,6 +5,7 @@ import { HomeBarComponent } from "../../../components/home-bar/home-bar.componen
 import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
 import { FiltroComponent } from '../../../components/filtro/filtro.component';
+import { FiltroOrdenComponent, OrdenDirection } from '../../../components/filtro-orden/filtro-orden.component';
 
 interface Cliente {
   nombre_cliente: string;
@@ -25,7 +26,7 @@ interface CaratulaData {
 @Component({
   selector: 'app-caratula-evac-a',
   standalone: true,
-  imports: [CommonModule, RouterModule, HomeBarComponent, FiltroComponent],
+  imports: [CommonModule, RouterModule, HomeBarComponent, FiltroComponent, FiltroOrdenComponent],
   templateUrl: './caratula-evac-a.component.html',
   styleUrl: './caratula-evac-a.component.css'
 })
@@ -71,6 +72,51 @@ export class CaratulaEvacAComponent implements OnInit {
     this.cargarClientes();
     this.calcularMontos();
     this.onInit.emit();
+  }  
+
+  // 3. AÑADE ESTA FUNCIÓN NUEVA PARA ORDENAR
+  ordenarColumna(campo: 'compromiso' | 'acumulado' | 'proyectado' | 'diferencia', direccion: OrdenDirection): void {
+    if (!direccion) {
+      // Si se deselecciona el orden, volvemos al orden por defecto (por ejemplo, por Nivel)
+      // O simplemente recargamos/refiltramos para resetear
+      this.filtrarClientes(); 
+      return;
+    }
+
+    // Ordenamos la lista actual (clientesFiltrados)
+    this.clientesFiltrados.sort((a, b) => {
+      let valorA = 0;
+      let valorB = 0;
+
+      // Determinamos los valores según la columna
+      switch (campo) {
+        case 'compromiso':
+          valorA = a.compra_minima_anual || 0;
+          valorB = b.compra_minima_anual || 0;
+          break;
+        case 'acumulado':
+          valorA = a.acumulado_anticipado || 0;
+          valorB = b.acumulado_anticipado || 0;
+          break;
+        case 'proyectado':
+          // Calculamos al vuelo porque no está guardado en el objeto base
+          valorA = this.calcularAvanceProyectadoCliente(a.compra_minima_anual);
+          valorB = this.calcularAvanceProyectadoCliente(b.compra_minima_anual);
+          break;
+        case 'diferencia':
+          // Calculamos al vuelo
+          valorA = this.calcularDiferencia(a);
+          valorB = this.calcularDiferencia(b);
+          break;
+      }
+
+      // Lógica de comparación
+      if (direccion === 'asc') {
+        return valorA - valorB; // Menor a Mayor
+      } else {
+        return valorB - valorA; // Mayor a Menor
+      }
+    });
   }
 
   cargarClientes(): void {

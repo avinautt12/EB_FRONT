@@ -1,0 +1,135 @@
+/* Contenedor relativo */
+.sort-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Botón idéntico al filtro original */
+.sort-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  gap: 8px;
+  min-width: 45px; /* Ancho compacto igual que el filtro */
+  height: 38px;    /* Altura estándar */
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  background-color: #ffffff;
+  cursor: pointer;
+  outline: none;
+  color: #495057;
+  transition: all 0.2s ease;
+}
+
+.sort-btn:hover {
+  background-color: #e9ecef;
+  border-color: #ced4da;
+}
+
+/* Estado activo (cuando hay un orden aplicado) */
+.sort-btn.active {
+  background-color: #e7f1ff; /* Azul muy claro */
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+
+.chevron {
+  font-size: 10px;
+  color: #6c757d;
+  transition: transform 0.2s ease;
+}
+
+.sort-btn.active .chevron {
+  color: #0d6efd;
+}
+
+.sort-dropdown.show .chevron {
+  transform: rotate(180deg);
+}
+
+/* Dropdown menú */
+.filter-options {
+  position: absolute;
+  top: 100%;
+  right: 0; /* Alineado a la derecha para que no se salga de pantalla */
+  width: 200px;
+  margin-top: 4px;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1050;
+  display: none;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+.sort-dropdown.show .filter-options {
+  display: flex;
+}
+
+.filter-content-wrapper {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Opciones del menú */
+.sort-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+  color: #212529;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.sort-option:hover {
+  background-color: #f8f9fa;
+}
+
+.sort-option.selected {
+  background-color: #e7f1ff;
+  color: #0d6efd;
+  font-weight: 500;
+}
+
+.check-icon {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+/* Footer con botón Limpiar */
+.filter-actions {
+  border-top: 1px solid #e0e0e0;
+  padding: 8px;
+  background: #f8f9fa;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-limpiar {
+  background: transparent;
+  border: 1px solid #dc3545;
+  color: #dc3545;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+.btn-limpiar:hover {
+  background-color: #dc3545;
+  color: white;
+}
