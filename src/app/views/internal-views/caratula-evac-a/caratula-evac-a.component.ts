@@ -72,14 +72,20 @@ export class CaratulaEvacAComponent implements OnInit {
     this.cargarClientes();
     this.calcularMontos();
     this.onInit.emit();
-  }  
+  }
+
+  irACaratula(nombreCliente: string): void {
+    this.router.navigate(['/caratulas'], {
+      queryParams: { q: nombreCliente }
+    });
+  }
 
   // 3. AÑADE ESTA FUNCIÓN NUEVA PARA ORDENAR
   ordenarColumna(campo: 'compromiso' | 'acumulado' | 'proyectado' | 'diferencia', direccion: OrdenDirection): void {
     if (!direccion) {
       // Si se deselecciona el orden, volvemos al orden por defecto (por ejemplo, por Nivel)
       // O simplemente recargamos/refiltramos para resetear
-      this.filtrarClientes(); 
+      this.filtrarClientes();
       return;
     }
 

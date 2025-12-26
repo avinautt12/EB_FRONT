@@ -147,7 +147,10 @@
 
                 <!-- Filas de datos -->
                 <div class="fila-cliente" *ngFor="let cliente of clientesFiltrados">
-                    <div class="col-nombre">{{ cliente.nombre_cliente }}</div>
+                    <div class="col-nombre nombre-clicable" (click)="irACaratula(cliente.nombre_cliente)">
+                        {{ cliente.nombre_cliente }}
+                        <i class="fas fa-external-link-alt icono-link"></i>
+                    </div>
                     <div class="col-nivel">{{ cliente.nivel }}</div>
                     <div class="col-compromiso">{{ cliente.compra_minima_anual | currency:'USD':'symbol':'1.2-2' }}
                     </div>

@@ -1,6 +1,6 @@
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
 import { CaratulasService } from '../../../services/caratulas.service';
@@ -109,6 +109,7 @@ export class CaratulasComponent implements OnInit {
   constructor(
     private caratulasService: CaratulasService,
     private router: Router,
+    private route: ActivatedRoute,
     private emailService: EmailService,
     private alertaService: AlertaService
   ) { }
@@ -117,6 +118,17 @@ export class CaratulasComponent implements OnInit {
     this.initializeSearch();
     this.loadAllClientes();
     this.verificarConfiguracionEmail();
+
+    this.route.queryParams.subscribe(params => {
+      const query = params['q'];
+      if (query) {
+        this.terminoBusqueda = query;
+        // Pequeño timeout para asegurar que la vista esté lista
+        setTimeout(() => {
+          this.realizarBusqueda();
+        }, 100);
+      }
+    });
   }
 
   abrirModalEmail() {

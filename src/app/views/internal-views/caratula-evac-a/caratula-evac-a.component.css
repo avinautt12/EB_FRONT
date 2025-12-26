@@ -417,6 +417,28 @@ body {
   font-size: 0.95rem;
 }
 
+.nombre-clicable {
+    cursor: pointer;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nombre-clicable:hover {
+    color: var(--primary-color); /* Se pondrá naranja al pasar el mouse */
+    text-decoration: underline;
+}
+
+.icono-link {
+    font-size: 0.8em;
+    opacity: 0.5;
+}
+
+.nombre-clicable:hover .icono-link {
+    opacity: 1;
+}
+
 @keyframes girar {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
