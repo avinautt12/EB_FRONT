@@ -120,28 +120,91 @@
                             (clear)="limpiarFiltro('nivel')">
                         </app-filtro>
                     </div>
-                    <div class="col-compromiso">COMPROMISO ANUAL</div>
-                    <div class="col-acumulado">ACUMULADO REAL</div>
-                    <div class="col-proyectado">AVANCE PROYECTADO SEMANAL</div>
-                    <div class="col-diferencia">DIFERENCIA</div>
+                    <div class="col-compromiso columna-con-filtro">
+                        <span class="header-label">COMPROMISO ANUAL</span>
+                        <app-filtro-orden label="" (ordenCambio)="ordenarColumna('compromiso', $event)">
+                        </app-filtro-orden>
+                    </div>
+
+                    <div class="col-acumulado columna-con-filtro">
+                        <span class="header-label">ACUMULADO REAL</span>
+                        <app-filtro-orden label="" (ordenCambio)="ordenarColumna('acumulado', $event)">
+                        </app-filtro-orden>
+                    </div>
+
+                    <div class="col-proyectado columna-con-filtro">
+                        <span class="header-label">AVANCE PROY. SEM.</span>
+                        <app-filtro-orden label="" (ordenCambio)="ordenarColumna('proyectado', $event)">
+                        </app-filtro-orden>
+                    </div>
+
+                    <div class="col-diferencia columna-con-filtro">
+                        <span class="header-label">DIFERENCIA</span>
+                        <app-filtro-orden label="" (ordenCambio)="ordenarColumna('diferencia', $event)">
+                        </app-filtro-orden>
+                    </div>
                 </div>
 
                 <!-- Filas de datos -->
-                <div class="fila-cliente" *ngFor="let cliente of clientesFiltrados">
-                    <div class="col-nombre">{{ cliente.nombre_cliente }}</div>
-                    <div class="col-nivel">{{ cliente.nivel }}</div>
-                    <div class="col-compromiso">{{ cliente.compra_minima_anual | currency:'USD':'symbol':'1.2-2' }}
-                    </div>
-                    <div class="col-acumulado verde">{{ cliente.acumulado_anticipado | currency:'USD':'symbol':'1.2-2'
-                        }}</div>
-                    <div class="col-proyectado">{{ calcularAvanceProyectadoCliente(cliente.compra_minima_anual) |
-                        currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-diferencia">{{ calcularDiferencia(cliente) | currency:'USD':'symbol':'1.2-2' }}
+                <div class="grupo-cliente" *ngFor="let cliente of clientesFiltrados">
+
+                    <div class="fila-cliente" (click)="toggleCliente(cliente)" [class.fila-activa]="cliente.expanded">
+
+                        <div class="col-nombre nombre-clicable">
+                            <i class="fas" [ngClass]="cliente.expanded ? 'fa-chevron-up' : 'fa-chevron-down'"
+                                style="margin-right: 8px; font-size: 0.8em; opacity: 0.7;"></i>
+
+                            {{ cliente.nombre_cliente }}
+
+                            <i class="fas fa-external-link-alt icono-link"
+                                (click)="$event.stopPropagation(); irACaratula(cliente.nombre_cliente)"
+                                title="Ver detalle completo"></i>
+                        </div>
+
+                        <div class="col-nivel">{{ cliente.nivel }}</div>
+                        <div class="col-compromiso">{{ cliente.compra_minima_anual | currency:'USD':'symbol':'1.2-2' }}
+                        </div>
+                        <div class="col-acumulado verde">{{ cliente.acumulado_anticipado |
+                            currency:'USD':'symbol':'1.2-2' }}</div>
+                        <div class="col-proyectado">{{ calcularAvanceProyectadoCliente(cliente.compra_minima_anual) |
+                            currency:'USD':'symbol':'1.2-2' }}</div>
+                        <div class="col-diferencia">{{ calcularDiferencia(cliente) | currency:'USD':'symbol':'1.2-2' }}
+                        </div>
                     </div>
 
-                    <div *ngIf="clientesFiltrados.length === 0 && clientes.length > 0" class="sin-resultados">
-                        <p>No se encontraron clientes que coincidan con los filtros aplicados.</p>
+                    <div class="fila-detalle" *ngIf="cliente.expanded">
+                        <div class="detalle-grid">
+
+                            <div class="detalle-card scott">
+                                <div class="detalle-titulo">Faltante SCOTT (Acumulado)</div>
+                                <div class="detalle-valor" [class.rojo]="getFaltanteScott(cliente) > 0"
+                                    [class.verde]="getFaltanteScott(cliente) === 0">
+                                    {{ getFaltanteScott(cliente) | currency:'USD':'symbol':'1.2-2' }}
+                                </div>
+                                <div class="detalle-sub">
+                                    (Meta al día: {{ getMetaAcumuladaScott(cliente) | currency:'USD':'symbol':'1.0-0'
+                                    }})
+                                </div>
+                            </div>
+
+                            <div class="detalle-card apparel">
+                                <div class="detalle-titulo">Faltante APPAREL (Acumulado)</div>
+                                <div class="detalle-valor" [class.rojo]="getFaltanteApparel(cliente) > 0"
+                                    [class.verde]="getFaltanteApparel(cliente) === 0">
+                                    {{ getFaltanteApparel(cliente) | currency:'USD':'symbol':'1.2-2' }}
+                                </div>
+                                <div class="detalle-sub">
+                                    (Meta al día: {{ getMetaAcumuladaApparel(cliente) | currency:'USD':'symbol':'1.0-0'
+                                    }})
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
+                </div>
+
+                <div *ngIf="clientesFiltrados.length === 0 && clientes.length > 0" class="sin-resultados">
+                    <p>No se encontraron clientes que coincidan con los filtros aplicados.</p>
                 </div>
             </div>
         </div>

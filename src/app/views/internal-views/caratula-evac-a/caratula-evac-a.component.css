@@ -208,7 +208,8 @@ body {
 }
 
 .verde {
-  background-color: var(--verde-header); /* Para fondos */
+  background-color: var(--verde-header);
+  /* Para fondos */
   color: #333;
   padding: 0.25rem;
   border-radius: 4px;
@@ -230,11 +231,19 @@ body {
 }
 
 /* Categorías */
-.categoria-eb { color: var(--primary-color); font-weight: bold; }
-.categoria-my25 { color: #2E86C1; font-weight: bold; }
+.categoria-eb {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.categoria-my25 {
+  color: #2E86C1;
+  font-weight: bold;
+}
 
 /* Headers específicos */
-.fila-header, .fila-header-linea {
+.fila-header,
+.fila-header-linea {
   background-color: #555 !important;
   color: var(--light-color) !important;
 }
@@ -287,8 +296,16 @@ body {
 }
 
 /* Alineaciones */
-.col-numero, .col-numero-linea { text-align: right; }
-.col-porcentaje, .col-porcentaje-linea { text-align: center; color: #ffffff; }
+.col-numero,
+.col-numero-linea {
+  text-align: right;
+}
+
+.col-porcentaje,
+.col-porcentaje-linea {
+  text-align: center;
+  color: #ffffff;
+}
 
 /* =========================================
    7. SECCIÓN CLIENTES Y FILTROS
@@ -307,7 +324,7 @@ body {
   margin-top: 15px;
   min-height: 400px;
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
 }
 
 .fila-header-clientes,
@@ -315,7 +332,8 @@ body {
   display: flex;
   padding: 12px 0;
   border-bottom: 1px solid #555;
-  align-items: center; /* Asegura alineación vertical */
+  align-items: center;
+  /* Asegura alineación vertical */
 }
 
 .fila-header-clientes {
@@ -330,10 +348,10 @@ body {
 }
 
 .sin-resultados {
-  flex-grow: 1; 
+  flex-grow: 1;
   display: flex;
-  justify-content: center; 
-  align-items: center;   
+  justify-content: center;
+  align-items: center;
   color: #888;
   font-size: 1.1em;
 }
@@ -346,7 +364,8 @@ body {
 }
 
 .col-nivel {
-  flex: 1; /* Valor corregido */
+  flex: 1;
+  /* Valor corregido */
   color: var(--light-color);
 }
 
@@ -369,27 +388,30 @@ body {
 
 /* 1. Estilo base para todas las columnas con filtro */
 .columna-con-filtro {
-    display: flex;              
-    align-items: center;       
-    justify-content: space-between; /* Por defecto separa texto y filtro */
-    gap: 10px;               
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* Por defecto separa texto y filtro */
+  gap: 10px;
 }
 
 .columna-con-filtro .header-label {
-    flex-grow: 1; 
+  flex-grow: 1;
 }
 
 .columna-con-filtro app-filtro,
 .columna-con-filtro app-filtro-orden {
-    flex-shrink: 0;
+  flex-shrink: 0;
 }
 
 /* 2. CORRECCIÓN ESPECÍFICA PARA NOMBRE Y NIVEL */
 /* Esto hace que en estas dos columnas el filtro NO se vaya a la derecha, sino que se quede pegado al texto */
 .col-nombre.columna-con-filtro,
 .col-nivel.columna-con-filtro {
-    justify-content: flex-start !important; /* Alinea a la izquierda */
-    gap: 15px; /* Espacio entre la palabra NOMBRE y el icono del filtro */
+  justify-content: flex-start !important;
+  /* Alinea a la izquierda */
+  gap: 15px;
+  /* Espacio entre la palabra NOMBRE y el icono del filtro */
 }
 
 /* =========================================
@@ -418,42 +440,146 @@ body {
 }
 
 .nombre-clicable {
-    cursor: pointer;
-    transition: color 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .nombre-clicable:hover {
-    color: var(--primary-color); /* Se pondrá naranja al pasar el mouse */
-    text-decoration: underline;
+  color: var(--primary-color);
+  /* Se pondrá naranja al pasar el mouse */
+  text-decoration: underline;
 }
 
 .icono-link {
-    font-size: 0.8em;
-    opacity: 0.5;
+  font-size: 0.8em;
+  opacity: 0.5;
 }
 
 .nombre-clicable:hover .icono-link {
-    opacity: 1;
+  opacity: 1;
 }
 
 @keyframes girar {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 768px) {
-  .caratula-evac-container { padding: 1rem; }
-  .caratula-content { width: 100%; min-height: 100vh; padding: 20px; }
-  
-  .fila-header, .fila-data, 
-  .fila-header-linea, .fila-categoria {
+  .caratula-evac-container {
+    padding: 1rem;
+  }
+
+  .caratula-content {
+    width: 100%;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .fila-header,
+  .fila-data,
+  .fila-header-linea,
+  .fila-categoria {
     grid-template-columns: 1fr;
     gap: 0.25rem;
     text-align: left;
   }
-  
-  .avance-proyectado-header { text-align: center; }
+
+  .avance-proyectado-header {
+    text-align: center;
+  }
+}
+
+/* Contenedor del grupo */
+.grupo-cliente {
+  border-bottom: 1px solid #333;
+  /* Separador entre clientes */
+}
+
+/* Ajustes a la fila principal */
+.fila-cliente {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.fila-cliente:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.fila-cliente.fila-activa {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+  /* Quitamos borde inferior para unir con el detalle */
+}
+
+/* Panel Desplegable */
+.fila-detalle {
+  background-color: #1a1a1a;
+  /* Fondo más oscuro para el detalle */
+  padding: 15px 20px;
+  border-left: 3px solid #f37021;
+  /* Línea de acento naranja */
+  animation: slideDown 0.3s ease-out;
+}
+
+/* Grid para las tarjetas */
+.detalle-grid {
+  display: flex;
+  justify-content: flex-start;
+  /* Alineado a la izquierda, cerca del nombre */
+  gap: 40px;
+  margin-left: 20px;
+  /* Indentación visual */
+}
+
+.detalle-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.detalle-titulo {
+  font-size: 0.85rem;
+  color: #888;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.detalle-valor {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.detalle-sub {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+/* Colores de estado */
+.rojo {
+  color: #ff4444;
+}
+
+.verde {
+  color: #ffffff;
+}
+
+/* Animación simple */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

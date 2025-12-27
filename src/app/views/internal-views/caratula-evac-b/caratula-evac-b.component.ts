@@ -6,6 +6,8 @@ import { MonitorOdooService } from '../../../services/monitor-odoo.service';
 import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
 import { FiltroComponent } from '../../../components/filtro/filtro.component';
+import { FiltroOrdenComponent, OrdenDirection } from '../../../components/filtro-orden/filtro-orden.component';
+
 
 interface Cliente {
   nombre_cliente: string;
@@ -13,12 +15,36 @@ interface Cliente {
   compra_minima_anual: number;
   acumulado_anticipado: number;
   avance_proyectado?: number;
+
+  // === NUEVOS CAMPOS NECESARIOS PARA EL CÁLCULO ===
+  compromiso_scott?: number;
+  avance_global_scott?: number;
+  compromiso_apparel_syncros_vittoria?: number;
+  avance_global_apparel_syncros_vittoria?: number;
+
+  // Periodos (El backend debe enviarlos)
+  compromiso_jul_ago?: number;
+  avance_jul_ago?: number;
+  compromiso_sep_oct?: number;
+  avance_sep_oct?: number;
+  compromiso_nov_dic?: number;
+  avance_nov_dic?: number;
+
+  compromiso_jul_ago_app?: number;
+  avance_jul_ago_app?: number;
+  compromiso_sep_oct_app?: number;
+  avance_sep_oct_app?: number;
+  compromiso_nov_dic_app?: number;
+  avance_nov_dic_app?: number;
+
+  // UI
+  expanded?: boolean;
 }
 
 @Component({
   selector: 'app-caratula-evac-b',
   standalone: true,
-  imports: [CommonModule, RouterModule, HomeBarComponent, FiltroComponent],
+  imports: [CommonModule, RouterModule, HomeBarComponent, FiltroComponent, FiltroOrdenComponent],
   templateUrl: './caratula-evac-b.component.html',
   styleUrl: './caratula-evac-b.component.css'
 })
@@ -73,6 +99,116 @@ export class CaratulaEvacBComponent implements OnInit {
     this.calcularMontos();
     this.onInit.emit();
   }
+
+  toggleCliente(cliente: Cliente): void {
+    cliente.expanded = !cliente.expanded;
+  }
+
+  private getMesActual(): number {
+    return new Date().getMonth() + 1;
+  }
+
+  // === CÁLCULOS DE FALTANTE ACUMULADO (IGUAL QUE EVAC-A) ===
+
+  getFaltanteScott(cliente: Cliente): number {
+    const mes = this.getMesActual();
+    
+    // 1. Compromiso acumulado al día
+    let compromisoAcumulado = (cliente.compromiso_jul_ago || 0);
+    if (mes >= 9) compromisoAcumulado += (cliente.compromiso_sep_oct || 0);
+    if (mes >= 11) compromisoAcumulado += (cliente.compromiso_nov_dic || 0);
+
+    // 2. Avance acumulado al día
+    let avanceAcumulado = (cliente.avance_jul_ago || 0);
+    if (mes >= 9) avanceAcumulado += (cliente.avance_sep_oct || 0);
+    if (mes >= 11) avanceAcumulado += (cliente.avance_nov_dic || 0);
+
+    const diferencia = compromisoAcumulado - avanceAcumulado;
+    return diferencia > 0 ? diferencia : 0;
+  }
+
+  getMetaAcumuladaScott(cliente: Cliente): number {
+    const mes = this.getMesActual();
+    let compromisoAcumulado = (cliente.compromiso_jul_ago || 0);
+    if (mes >= 9) compromisoAcumulado += (cliente.compromiso_sep_oct || 0);
+    if (mes >= 11) compromisoAcumulado += (cliente.compromiso_nov_dic || 0);
+    return compromisoAcumulado;
+  }
+
+  getFaltanteApparel(cliente: Cliente): number {
+    const mes = this.getMesActual();
+
+    let compromisoAcumulado = (cliente.compromiso_jul_ago_app || 0);
+    if (mes >= 9) compromisoAcumulado += (cliente.compromiso_sep_oct_app || 0);
+    if (mes >= 11) compromisoAcumulado += (cliente.compromiso_nov_dic_app || 0);
+
+    let avanceAcumulado = (cliente.avance_jul_ago_app || 0);
+    if (mes >= 9) avanceAcumulado += (cliente.avance_sep_oct_app || 0);
+    if (mes >= 11) avanceAcumulado += (cliente.avance_nov_dic_app || 0);
+
+    const diferencia = compromisoAcumulado - avanceAcumulado;
+    return diferencia > 0 ? diferencia : 0;
+  }
+
+  getMetaAcumuladaApparel(cliente: Cliente): number {
+    const mes = this.getMesActual();
+    let compromisoAcumulado = (cliente.compromiso_jul_ago_app || 0);
+    if (mes >= 9) compromisoAcumulado += (cliente.compromiso_sep_oct_app || 0);
+    if (mes >= 11) compromisoAcumulado += (cliente.compromiso_nov_dic_app || 0);
+    return compromisoAcumulado;
+  }
+
+  irACaratula(nombreCliente: string): void {
+    // Redirige a la ruta '/caratulas' enviando el nombre en el parámetro 'q'
+    this.router.navigate(['/caratulas'], { 
+      queryParams: { q: nombreCliente } 
+    });
+  }
+
+  // 3. AÑADE ESTA FUNCIÓN NUEVA PARA ORDENAR
+    ordenarColumna(campo: 'compromiso' | 'acumulado' | 'proyectado' | 'diferencia', direccion: OrdenDirection): void {
+      if (!direccion) {
+        // Si se deselecciona el orden, volvemos al orden por defecto (por ejemplo, por Nivel)
+        // O simplemente recargamos/refiltramos para resetear
+        this.filtrarClientes();
+        return;
+      }
+  
+      // Ordenamos la lista actual (clientesFiltrados)
+      this.clientesFiltrados.sort((a, b) => {
+        let valorA = 0;
+        let valorB = 0;
+  
+        // Determinamos los valores según la columna
+        switch (campo) {
+          case 'compromiso':
+            valorA = a.compra_minima_anual || 0;
+            valorB = b.compra_minima_anual || 0;
+            break;
+          case 'acumulado':
+            valorA = a.acumulado_anticipado || 0;
+            valorB = b.acumulado_anticipado || 0;
+            break;
+          case 'proyectado':
+            // Calculamos al vuelo porque no está guardado en el objeto base
+            valorA = this.calcularAvanceProyectadoCliente(a.compra_minima_anual);
+            valorB = this.calcularAvanceProyectadoCliente(b.compra_minima_anual);
+            break;
+          case 'diferencia':
+            // Calculamos al vuelo
+            valorA = this.calcularDiferencia(a);
+            valorB = this.calcularDiferencia(b);
+            break;
+        }
+  
+        // Lógica de comparación
+        if (direccion === 'asc') {
+          return valorA - valorB; // Menor a Mayor
+        } else {
+          return valorB - valorA; // Mayor a Menor
+        }
+      });
+    }
 
   cargarFacturas(): void {
     this.monitorOdooService.getFacturas().subscribe({

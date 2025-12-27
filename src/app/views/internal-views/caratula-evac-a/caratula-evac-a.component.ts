@@ -13,6 +13,30 @@ interface Cliente {
   compra_minima_anual: number;
   acumulado_anticipado: number;
   avance_proyectado?: number;
+  
+  // Propiedades globales (las que tenías)
+  compromiso_scott?: number;
+  avance_global_scott?: number;
+  compromiso_apparel_syncros_vittoria?: number;
+  avance_global_apparel_syncros_vittoria?: number;
+
+  // AGREGAMOS: Propiedades de los periodos (El backend debe enviarlas)
+  compromiso_jul_ago?: number;
+  avance_jul_ago?: number;
+  compromiso_sep_oct?: number;
+  avance_sep_oct?: number;
+  compromiso_nov_dic?: number;
+  avance_nov_dic?: number;
+
+  compromiso_jul_ago_app?: number;
+  avance_jul_ago_app?: number;
+  compromiso_sep_oct_app?: number;
+  avance_sep_oct_app?: number;
+  compromiso_nov_dic_app?: number;
+  avance_nov_dic_app?: number;
+
+  // Propiedad para la UI
+  expanded?: boolean;
 }
 
 interface CaratulaData {
@@ -72,6 +96,71 @@ export class CaratulaEvacAComponent implements OnInit {
     this.cargarClientes();
     this.calcularMontos();
     this.onInit.emit();
+  }
+
+  // Función para abrir/cerrar el acordeón
+  toggleCliente(cliente: Cliente): void {
+    cliente.expanded = !cliente.expanded;
+  }
+
+  private getMesActual(): number {
+    return new Date().getMonth() + 1; // Enero = 1
+  }
+
+  // Calcula el faltante de SCOTT basado en los periodos acumulados
+  getFaltanteScott(cliente: Cliente): number {
+    const mes = this.getMesActual();
+    
+    // 1. Calcular Compromiso Acumulado
+    let compromisoAcumulado = (cliente.compromiso_jul_ago || 0);
+    if (mes >= 9) compromisoAcumulado += (cliente.compromiso_sep_oct || 0);
+    if (mes >= 11) compromisoAcumulado += (cliente.compromiso_nov_dic || 0);
+
+    // 2. Calcular Avance Acumulado
+    let avanceAcumulado = (cliente.avance_jul_ago || 0);
+    if (mes >= 9) avanceAcumulado += (cliente.avance_sep_oct || 0);
+    if (mes >= 11) avanceAcumulado += (cliente.avance_nov_dic || 0);
+
+    // 3. Retornar diferencia
+    const diferencia = compromisoAcumulado - avanceAcumulado;
+    return diferencia > 0 ? diferencia : 0;
+  }
+
+  // Calcula el faltante de APPAREL basado en los periodos acumulados
+  getFaltanteApparel(cliente: Cliente): number {
+    const mes = this.getMesActual();
+
+    // 1. Calcular Compromiso Acumulado
+    let compromisoAcumulado = (cliente.compromiso_jul_ago_app || 0);
+    if (mes >= 9) compromisoAcumulado += (cliente.compromiso_sep_oct_app || 0);
+    if (mes >= 11) compromisoAcumulado += (cliente.compromiso_nov_dic_app || 0);
+
+    // 2. Calcular Avance Acumulado
+    let avanceAcumulado = (cliente.avance_jul_ago_app || 0);
+    if (mes >= 9) avanceAcumulado += (cliente.avance_sep_oct_app || 0);
+    if (mes >= 11) avanceAcumulado += (cliente.avance_nov_dic_app || 0);
+
+    // 3. Retornar diferencia
+    const diferencia = compromisoAcumulado - avanceAcumulado;
+    return diferencia > 0 ? diferencia : 0;
+  }
+  
+  // También necesitamos calcular la META que se muestra debajo del número grande
+  // para que coincida con el contexto (Meta Acumulada vs Meta Anual)
+  getMetaAcumuladaScott(cliente: Cliente): number {
+    const mes = this.getMesActual();
+    let compromisoAcumulado = (cliente.compromiso_jul_ago || 0);
+    if (mes >= 9) compromisoAcumulado += (cliente.compromiso_sep_oct || 0);
+    if (mes >= 11) compromisoAcumulado += (cliente.compromiso_nov_dic || 0);
+    return compromisoAcumulado;
+  }
+
+  getMetaAcumuladaApparel(cliente: Cliente): number {
+    const mes = this.getMesActual();
+    let compromisoAcumulado = (cliente.compromiso_jul_ago_app || 0);
+    if (mes >= 9) compromisoAcumulado += (cliente.compromiso_sep_oct_app || 0);
+    if (mes >= 11) compromisoAcumulado += (cliente.compromiso_nov_dic_app || 0);
+    return compromisoAcumulado;
   }
 
   irACaratula(nombreCliente: string): void {
