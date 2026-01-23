@@ -1,0 +1,69 @@
+<app-home-bar></app-home-bar>
+
+<div class="dashboard-container">
+
+    <div class="header-section">
+        <div>
+            <h1>Proyección de Ingresos</h1>
+            <p class="subtitulo">Registro de facturas emitidas y promesas de pago</p>
+        </div>
+        <button class="back-button" routerLink="/flujo-dashboard">
+            <i class="fas fa-arrow-left"></i> Volver al Tablero
+        </button>
+    </div>
+
+    <button type="button" class="accion-btn" (click)="toggleFormulario()">
+        {{ mostrarFormulario ? 'Cancelar Registro' : '+ Registrar Nueva Factura' }}
+    </button>
+
+    @if (mostrarFormulario) {
+    <div class="kpi-card" style="text-align: left; margin-top: 20px; border-left-color: #4caf50;">
+        <h3 style="margin-bottom: 15px; color: #4caf50;">Datos de la Factura</h3>
+
+        <form [formGroup]="form" (ngSubmit)="guardar()">
+            <div class="grid-form">
+
+                <label>Cliente:
+                    <input type="text" formControlName="cliente" placeholder="Ej: Bici Sport SA">
+                </label>
+
+                <label>Folio Factura:
+                    <input type="text" formControlName="folio_factura" placeholder="F-2025001">
+                </label>
+
+                <label>Fecha Promesa de Pago:
+                    <input type="date" formControlName="fecha_promesa_pago">
+                </label>
+
+                <label>Monto a Cobrar (MXN):
+                    <input type="number" formControlName="monto_cobro" placeholder="0.00">
+                </label>
+
+                <label>Probabilidad de Cobro:
+                    <select formControlName="probabilidad">
+                        <option value="ALTA">Alta (Seguro paga)</option>
+                        <option value="MEDIA">Media (A veces se atrasa)</option>
+                        <option value="BAJA">Baja (Cliente difícil)</option>
+                    </select>
+                </label>
+
+                <label>Cuenta Destino:
+                    <select formControlName="cuenta_destino">
+                        <option value="Santander">Santander</option>
+                        <option value="BBVA">BBVA</option>
+                        <option value="Banamex">Banamex</option>
+                    </select>
+                </label>
+
+            </div>
+
+            <div style="margin-top: 20px; text-align: right;">
+                <button type="submit" class="accion-btn" [disabled]="form.invalid"
+                    style="border-color: #4caf50; color: #4caf50;">
+                    Guardar Proyección
+                </button>
+            </div>
+        </form>
+    </div>
+    }
+</div>

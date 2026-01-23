@@ -1,0 +1,24 @@
+@if (confirmService.isOpen) {
+<div class="modal-backdrop">
+    <div class="modal-card">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Confirmación</h3>
+        </div>
+        
+        <div class="modal-body">
+            <p>{{ confirmService.mensaje }}</p>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn btn-secondary" (click)="responder(false)">
+                Cancelar
+            </button>
+            
+            <button class="btn btn-danger" (click)="responder(true)">
+                Sí, Eliminar
+            </button>
+        </div>
+    </div>
+</div>
+}

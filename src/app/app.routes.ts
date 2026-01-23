@@ -30,6 +30,15 @@ import { CaratulaEvacsComponent } from './views/internal-views/caratula-evacs/ca
 import { IntegralesComponent } from './views/internal-views/integrales/integrales.component';
 import { HistorialCaratulasComponent } from './views/internal-views/historial-caratulas/historial-caratulas.component';
 
+import { DashboardFlujoComponent } from './views/internal-views/dashboard-flujo/dashboard-flujo.component';
+import { OrdenesCompraComponent } from './views/internal-views/ordenes-compra/ordenes-compra.component';
+import { LogisticaComponent } from './views/internal-views/logistica/logistica.component';
+import { GastosOperativosComponent } from './views/internal-views/gastos-operativos/gastos-operativos.component';
+import { IngresosComponent } from './views/internal-views/ingresos/ingresos.component';
+import { TableroComponent } from './views/internal-views/tablero/tablero.component';
+import { TableroAnualComponent } from './views/internal-views/tablero-anual/tablero-anual.component';
+import { AuditoriaComponent } from './views/internal-views/auditoria/auditoria.component';
+
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { usuarioGuard } from './guards/usuario.guard';
@@ -65,5 +74,13 @@ export const routes: Routes = [
   { path: 'usuarios/crear-proyeccion', component: CrearProyeccionUsuariosComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/proyeccion-historial', component: ProyeccionHistorialComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/caratula', component: CaratulaUsuariosComponent, canActivate: [usuarioGuard] },
+  { path: 'flujo-dashboard', component: DashboardFlujoComponent, canActivate: [adminGuard] },
+  { path: 'ordenes-compra', component: OrdenesCompraComponent, canActivate: [adminGuard] },
+  { path: 'logistica', component: LogisticaComponent, canActivate: [adminGuard] },
+  { path: 'gastos-operativos', component: GastosOperativosComponent, canActivate: [adminGuard] },
+  { path: 'ingresos', component: IngresosComponent, canActivate: [adminGuard] },
+  { path: 'flujo-tablero', component: TableroComponent, canActivate: [adminGuard] },
+  { path: 'flujo-tablero-anual', component: TableroAnualComponent, canActivate: [adminGuard] },
+  { path: 'flujo-auditoria', component: AuditoriaComponent, canActivate: [adminGuard] },
   { path: '**', redirectTo: '' }
 ];

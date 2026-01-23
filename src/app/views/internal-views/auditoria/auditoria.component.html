@@ -1,0 +1,65 @@
+<app-home-bar></app-home-bar>
+
+<div class="audit-container">
+  
+  <div class="header-section">
+    <div class="header-info">
+      <h1>Registro de Auditoría</h1>
+      <p>Historial de movimientos y cambios en el sistema</p>
+    </div>
+    
+    <div class="header-actions">
+      <a routerLink="/flujo-tablero" class="btn-back">
+        <i class="fa-solid fa-arrow-left"></i> Regresar al Tablero
+      </a>
+    </div>
+  </div>
+
+  @if (cargando) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando bitácora de seguridad...</p>
+    </div>
+  } @else {
+    <div class="table-wrapper custom-scrollbar">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 150px;">Fecha / Hora</th>
+            <th style="width: 150px;">Usuario</th>
+            <th style="width: 120px;">Acción</th>
+            <th>Descripción del Evento</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of logs; track log.id_auditoria) {
+            <tr>
+              <td class="text-muted font-mono">
+                {{ log.fecha_hora | date:'dd/MM/yy HH:mm' }}
+              </td>
+              
+              <td class="font-bold">
+                <i class="fa-solid fa-user-circle mr-2"></i>
+                {{ log.nombre_usuario }}
+              </td>
+
+              <td>
+                <span class="badge-accion" [ngClass]="getBadgeClass(log.accion)">
+                  {{ log.accion }}
+                </span>
+              </td>
+
+              <td class="desc-cell">
+                {{ log.descripcion }}
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4" class="text-center p-5">No hay registros de auditoría aún.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

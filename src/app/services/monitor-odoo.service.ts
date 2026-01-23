@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, of } from 'rxjs'; // Importamos BehaviorSubject y of
-import { tap } from 'rxjs/operators'; // Importamos tap
+import { Observable, BehaviorSubject, of } from 'rxjs';
+import { tap, shareReplay } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -9,9 +9,11 @@ import { environment } from '../../environments/environment';
 })
 export class MonitorOdooService {
   private apiUrl = `${environment.apiUrl}`;
-  
+
   // CACHÉ
   private facturasCache = new BehaviorSubject<any>(null);
+
+  private fechaCache$: Observable<any> | null = null;
 
   constructor(private http: HttpClient) { }
 
@@ -35,11 +37,19 @@ export class MonitorOdooService {
 
   importarFacturas(formData: FormData): Observable<any> {
     return this.http.post(`${this.apiUrl}/importar_facturas`, formData).pipe(
-       tap(() => this.facturasCache.next(null)) // Limpiamos caché para obligar recarga
+      tap(() => this.facturasCache.next(null)) // Limpiamos caché para obligar recarga
     );
   }
 
   getUltimaActualizacion(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/ultima_actualizacion`);
+    if (this.fechaCache$) {
+      return this.fechaCache$;
+    }
+
+    this.fechaCache$ = this.http.get<any>(`${this.apiUrl}/ultima_actualizacion`).pipe(
+      shareReplay(1)
+    );
+
+    return this.fechaCache$;
   }
 }

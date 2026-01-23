@@ -1,0 +1,146 @@
+<app-home-bar></app-home-bar>
+
+<div class="dashboard-container">
+
+  <div class="nav-row">
+    <button class="btn-back" routerLink="/home">
+      <i class="fa-solid fa-arrow-left"></i> Regresar
+    </button>
+  </div>
+
+  <div class="header-section">
+
+    <div class="header-top">
+      <h1>Flujo de Efectivo Maestro</h1>
+      <p class="subtitulo">Visión unificada de Tesorería, Compras y Logística</p>
+    </div>
+
+    <div class="header-toolbar">
+
+      <button class="btn-proyeccion" routerLink="/flujo-tablero-anual">
+        <i class="fa-solid fa-chart-line"></i> Proyección Anual
+      </button>
+
+      <div class="divider"></div>
+
+      <button class="btn-auditoria" routerLink="/flujo-auditoria">
+        <i class="fa-solid fa-shield-halved"></i> Auditoría
+      </button>
+
+      <div class="divider"></div>
+
+      <button class="btn-odoo" (click)="sincronizar()" [disabled]="sincronizando">
+        @if(sincronizando) {
+        <i class="fa-solid fa-circle-notch fa-spin"></i> Conectando...
+        } @else {
+        <i class="fa-solid fa-cloud-arrow-down"></i> Sync Odoo
+        }
+      </button>
+      <div class="divider"></div>
+
+      <div class="filtros-container">
+        <div class="grupo-filtro">
+          <label>Mes</label>
+          <select [(ngModel)]="mesSeleccionado" (change)="onFiltroChange()">
+            @for (mes of meses; track mes.id) {
+            <option [value]="mes.id">{{ mes.nombre }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="grupo-filtro">
+          <label>Año</label>
+          <select [(ngModel)]="anioSeleccionado" (change)="onFiltroChange()">
+            @for (anio of anios; track $index) {
+            <option [value]="anio">{{ anio }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="kpi-mini-card" [class.danger]="saldoFinalReal < 0">
+        <div class="kpi-content">
+          <span class="kpi-label">Saldo Real Disponible</span>
+          <div class="kpi-value">
+            {{ saldoFinalReal | currency:'MXN':'symbol-narrow':'1.2-2' }}
+          </div>
+        </div>
+        <div class="kpi-comparison">
+          <small>Vs Proy: {{ saldoFinalProyectado | currency:'MXN':'symbol-narrow':'1.0-0' }}</small>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="table-container">
+    @if (cargando) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Cargando información...</p>
+    </div>
+    } @else {
+    <table>
+      <thead>
+        <tr>
+          <th class="col-concepto">Concepto</th>
+          <th class="col-numero">Proyectado</th>
+          <th class="col-numero">Real</th>
+          <th class="col-numero">Diferencia</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of renglones; track item.id) {
+        <tr [class.fila-resaltada]="esFilaNegrita(item.categoria)"
+          [class.fila-separador]="item.categoria === 'Total' || item.categoria === 'Saldo Final'">
+
+          <td class="col-concepto">
+            <div [class.pl-3]="!esFilaNegrita(item.categoria)">
+              {{ item.concepto }}
+              @if(!esFilaNegrita(item.categoria)) {
+              <span class="cat-tag">{{ item.categoria }}</span>
+              }
+            </div>
+          </td>
+
+          <td class="text-right font-mono celda-editable" (click)="iniciarEdicion(item, 'proyectado')">
+
+            @if (esEditando(item.id, 'proyectado')) {
+            <input type="number" [(ngModel)]="valorTemp" (blur)="guardarEdicion(item, 'proyectado')"
+              (keydown.enter)="guardarEdicion(item, 'proyectado')" (keydown.escape)="cancelarEdicion()"
+              class="input-celda" autofocus>
+            } @else {
+            <span class="text-muted">
+              {{ item.col_proyectado | currency:'MXN':'symbol-narrow':'1.2-2' }}
+            </span>
+            }
+          </td>
+
+          <td class="text-right font-mono celda-editable" (click)="iniciarEdicion(item, 'real')">
+
+            @if (esEditando(item.id, 'real')) {
+            <input type="number" [(ngModel)]="valorTemp" (blur)="guardarEdicion(item, 'real')"
+              (keydown.enter)="guardarEdicion(item, 'real')" (keydown.escape)="cancelarEdicion()" class="input-celda"
+              autofocus>
+            } @else {
+            <span class="fw-bold texto-azul">
+              {{ item.col_real | currency:'MXN':'symbol-narrow':'1.2-2' }}
+            </span>
+            }
+          </td>
+
+          <td class="text-right font-mono">
+            <span class="badge-dif" [class.bg-verde]="item.col_diferencia > 0" [class.bg-rojo]="item.col_diferencia < 0"
+              [class.bg-neutro]="item.col_diferencia === 0">
+              {{ item.col_diferencia | currency:'MXN':'symbol-narrow':'1.2-2' }}
+            </span>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    }
+  </div>
+</div>

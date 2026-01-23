@@ -1,0 +1,435 @@
+/* --- BASE --- */
+.dashboard-container {
+  background-color: #121212;
+  color: #e0e0e0;
+  min-height: 100vh;
+  padding: 2rem;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* --- HEADER SECTION (DISEÑO CENTRADO) --- */
+.header-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Centra todo horizontalmente */
+  margin-bottom: 2.5rem;
+  gap: 1.5rem;
+}
+
+/* Títulos */
+.header-top {
+  text-align: center;
+}
+
+h1 {
+  color: #EB5E28;
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.subtitulo {
+  color: #888;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+}
+
+/* --- TOOLBAR (CONTENEDOR DE CONTROLES) --- */
+.header-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  background-color: #1e1e1e;
+  padding: 1rem 2rem;
+  border-radius: 16px;
+  border: 1px solid #333;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  flex-wrap: wrap;
+  /* Se adapta si la pantalla es pequeña */
+}
+
+/* Divisor vertical visual */
+.divider {
+  width: 1px;
+  height: 40px;
+  background-color: #444;
+}
+
+/* Botón Proyección (Naranja) */
+.btn-proyeccion {
+  background-color: rgba(235, 94, 40, 0.1);
+  border: 1px solid #EB5E28;
+  color: #EB5E28;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-proyeccion:hover {
+  background-color: #EB5E28;
+  color: #121212;
+  box-shadow: 0 0 15px rgba(235, 94, 40, 0.3);
+}
+
+/* --- NUEVO: Botón Auditoría (Gris/Blanco) --- */
+.btn-auditoria {
+  background-color: transparent;
+  border: 1px solid #666;
+  color: #bbb;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-auditoria:hover {
+  background-color: #333;
+  color: #fff;
+  border-color: #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+/* Filtros */
+.filtros-container {
+  display: flex;
+  gap: 15px;
+}
+
+.grupo-filtro {
+  display: flex;
+  flex-direction: column;
+}
+
+.grupo-filtro label {
+  font-size: 0.7rem;
+  color: #aaa;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+select {
+  background-color: #121212;
+  color: white;
+  border: 1px solid #444;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  min-width: 130px;
+  outline: none;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+}
+
+select:focus {
+  border-color: #EB5E28;
+}
+
+/* --- KPI MINI CARD (Integrada) --- */
+.kpi-mini-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding-left: 10px;
+}
+
+.kpi-mini-card.danger .kpi-value {
+  color: #f44336;
+}
+
+.kpi-mini-card.danger .kpi-label {
+  color: #e57373;
+}
+
+.kpi-content {
+  text-align: right;
+}
+
+.kpi-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #4caf50;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.kpi-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.1;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-comparison {
+  background: #2a2a2a;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #888;
+  border: 1px solid #444;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- TABLA --- */
+.table-container {
+  background: #1e1e1e;
+  border-radius: 12px;
+  overflow-x: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+  table-layout: fixed;
+}
+
+th {
+  background-color: #252525;
+  color: #EB5E28;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  padding: 1rem;
+  text-align: left;
+}
+
+td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid #2a2a2a;
+  font-size: 0.95rem;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+tr:hover {
+  background-color: #2a2a2a;
+}
+
+/* Anchos de columnas */
+.col-concepto {
+  width: 35%;
+}
+
+.col-numero {
+  width: 21%;
+  text-align: right;
+}
+
+/* --- ESTILOS DE TEXTO --- */
+.text-right {
+  text-align: right;
+}
+
+.text-muted {
+  color: #666;
+}
+
+.texto-azul {
+  color: #ffffff;
+}
+
+.fw-bold {
+  font-weight: bold;
+}
+
+/* TIPOGRAFÍA NÚMERICA */
+.font-mono {
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.3px;
+  font-weight: 500;
+}
+
+.pl-3 {
+  margin-left: 1.5rem;
+  color: #bbb;
+}
+
+/* Filas especiales */
+.fila-resaltada {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.fila-separador {
+  border-top: 2px solid #444;
+  background-color: rgba(235, 94, 40, 0.1);
+}
+
+/* Tags y Badges */
+.cat-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  color: #666;
+  border: 1px solid #444;
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.badge-dif {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  min-width: 80px;
+  text-align: center;
+}
+
+.bg-verde {
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.bg-rojo {
+  color: #f44336;
+  background: rgba(244, 67, 54, 0.1);
+}
+
+.bg-neutro {
+  color: #666;
+}
+
+/* --- EDICIÓN DE CELDAS --- */
+.celda-editable {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  position: relative;
+}
+
+.celda-editable:hover {
+  background-color: rgba(235, 94, 40, 0.1) !important;
+}
+
+/* Input de edición */
+.input-celda {
+  width: 100%;
+  background: #000;
+  border: 1px solid #EB5E28;
+  color: #fff;
+  text-align: right;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.fila-resaltada .celda-editable {
+  cursor: default;
+}
+
+/* Loading */
+.loading {
+  padding: 4rem;
+  text-align: center;
+  color: #888;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #EB5E28;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Botón Odoo (Morado) */
+.btn-odoo {
+  background-color: transparent;
+  border: 1px solid #714B67;
+  /* Color morado oficial de Odoo aprox */
+  color: #dcbcd7;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-odoo:hover {
+  background-color: #714B67;
+  color: #fff;
+  border-color: #fff;
+  box-shadow: 0 0 15px rgba(113, 75, 103, 0.5);
+}
+
+/* Estado deshabilitado (cuando carga) */
+.btn-odoo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+.nav-row {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  /* Alinea a la izquierda */
+  margin-bottom: 1rem;
+}
+
+.btn-back {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #888;
+  /* Gris suave por defecto */
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  font-weight: 600;
+}
+
+.btn-back:hover {
+  color: #EB5E28;
+  /* Tu color naranja principal */
+  background-color: rgba(235, 94, 40, 0.1);
+  /* Fondo naranja muy sutil */
+  border-color: rgba(235, 94, 40, 0.3);
+  transform: translateX(-5px);
+  /* Pequeña animación hacia la izquierda */
+}

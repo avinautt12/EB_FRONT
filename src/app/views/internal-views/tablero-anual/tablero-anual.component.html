@@ -1,0 +1,104 @@
+<app-home-bar></app-home-bar>
+
+<div class="excel-container">
+  
+  <div class="header-section">
+    <div class="header-info">
+      <h1>Proyección Anual Extendida</h1>
+      <p>Matriz de flujo de efectivo consolidado</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/flujo-tablero" class="btn-back">
+        <i class="fa-solid fa-arrow-left"></i> Regresar al Tablero
+      </a>
+    </div>
+  </div>
+
+  @if (cargando) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Procesando matriz financiera...</p>
+    </div>
+  } @else {
+    <div class="tabla-scroll-wrapper custom-scrollbar">
+      <table>
+        <thead>
+          <tr>
+            <th class="sticky-col-header" rowspan="2">Concepto / Periodo</th>
+            
+            @for (fecha of columnas; track $index) {
+              <th [attr.colspan]="estaExpandido(fecha) ? 3 : 1" 
+                  [class.th-expanded]="estaExpandido(fecha)">
+                
+                <div class="th-content">
+                  <span>{{ fecha | date:'MMM-yy' : '' : 'es-MX' | uppercase }}</span>
+                  
+                  <button class="btn-toggle" (click)="toggleMes(fecha)">
+                    @if(estaExpandido(fecha)) {
+                      <i class="fa-solid fa-minus"></i>
+                    } @else {
+                      <i class="fa-solid fa-plus"></i>
+                    }
+                  </button>
+                </div>
+              </th>
+            }
+          </tr>
+
+          <tr class="sub-header-row">
+            @for (fecha of columnas; track $index) {
+              @if(estaExpandido(fecha)) {
+                <th class="sub-th col-p">Proy</th>
+                <th class="sub-th col-r">Real</th>
+                <th class="sub-th col-d">Dif</th>
+              } @else {
+                <th class="sub-th-hidden"></th> 
+              }
+            }
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (fila of filas; track $index) {
+            <tr [ngClass]="getClaseFila(fila.categoria)" class="fila-dato">
+              
+              <td class="sticky-col-first">
+                <div class="concepto-inner">{{ fila.concepto }}</div>
+              </td>
+
+              @for (dato of fila.datos; track $index) {
+                
+                @if (estaExpandido(columnas[$index])) {
+                  
+                  <td class="text-right font-tabular cell-detail cell-p">
+                    {{ dato.proyectado | currency:'MXN':'symbol-narrow':'1.0-0' }}
+                  </td>
+
+                  <td class="text-right font-tabular cell-detail cell-r fw-bold">
+                    {{ dato.real | currency:'MXN':'symbol-narrow':'1.0-0' }}
+                  </td>
+
+                  <td class="text-right font-tabular cell-detail cell-d"
+                      [class.texto-rojo]="esNegativo(dato.diferencia)"
+                      [class.texto-verde]="dato.diferencia > 0">
+                    {{ dato.diferencia | currency:'MXN':'symbol-narrow':'1.0-0' }}
+                  </td>
+
+                } @else {
+                  
+                  <td class="text-right font-tabular cell-main">
+                    @if (dato.real !== 0) {
+                      <span class="val-real">{{ dato.real | currency:'MXN':'symbol-narrow':'1.0-0' }}</span>
+                    } @else {
+                      <span class="val-proj">{{ dato.proyectado | currency:'MXN':'symbol-narrow':'1.0-0' }}</span>
+                    }
+                  </td>
+                }
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

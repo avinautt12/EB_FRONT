@@ -1,0 +1,68 @@
+<app-home-bar></app-home-bar>
+
+<div class="dashboard-container">
+
+    <div class="header-section">
+        <div>
+            <h1>Gastos Operativos Fijos</h1>
+            <p class="subtitulo">Catálogo de gastos recurrentes (Rentas, Nóminas, Servicios)</p>
+        </div>
+        <button class="back-button" routerLink="/flujo-dashboard">
+            <i class="fas fa-arrow-left"></i> Volver al Tablero
+        </button>
+    </div>
+
+    <button type="button" class="accion-btn" (click)="toggleFormulario()">
+        {{ mostrarFormulario ? 'Cancelar' : '+ Nuevo Gasto Recurrente' }}
+    </button>
+
+    @if (mostrarFormulario) {
+    <div class="kpi-card" style="text-align: left; margin-top: 20px; border-left-color: #ab47bc;">
+        <h3 style="margin-bottom: 15px; color: #ab47bc;">Datos del Gasto</h3>
+
+        <form [formGroup]="form" (ngSubmit)="guardar()">
+            <div class="grid-form">
+
+                <label>Concepto del Gasto:
+                    <input type="text" formControlName="concepto" placeholder="Ej: Renta Bodega Central">
+                </label>
+
+                <label>Categoría:
+                    <select formControlName="categoria">
+                        <option value="ADMINISTRATIVO">Administrativo</option>
+                        <option value="VENTAS">Ventas / Marketing</option>
+                        <option value="FINANCIERO">Financiero</option>
+                        <option value="ALMACEN">Almacén / Logística</option>
+                    </select>
+                </label>
+
+                <label>Día de Pago Mensual (1-31):
+                    <input type="number" formControlName="dia_pago_std" min="1" max="31" placeholder="Ej: 5">
+                    <small style="color: #888; margin-top: 2px;">* El sistema usará este día para proyectar el
+                        pago.</small>
+                </label>
+
+                <label>Monto Base (MXN):
+                    <input type="number" formControlName="monto_base" placeholder="0.00">
+                </label>
+
+                <label>Proveedor / Beneficiario:
+                    <input type="text" formControlName="proveedor_fijo" placeholder="Ej: CFE, Inmobiliaria SA">
+                </label>
+
+                <label>Código Interno:
+                    <input type="text" formControlName="codigo_interno" placeholder="Ej: GF-001">
+                </label>
+
+            </div>
+
+            <div style="margin-top: 20px; text-align: right;">
+                <button type="submit" class="accion-btn" [disabled]="form.invalid"
+                    style="border-color: #ab47bc; color: #ab47bc;">
+                    Guardar Gasto Fijo
+                </button>
+            </div>
+        </form>
+    </div>
+    }
+</div>

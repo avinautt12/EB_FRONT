@@ -1,0 +1,173 @@
+<app-home-bar></app-home-bar>
+
+
+<div class="page-container">
+
+    <header class="page-header">
+        <div class="header-content">
+            <h1>Gestión de Órdenes de Compra</h1>
+            <p>Administra tus pedidos a proveedores internacionales.</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-outline" routerLink="/flujo-dashboard">
+                <i class="fas fa-arrow-left"></i> Volver
+            </button>
+            <button class="btn btn-primary" (click)="toggleFormulario()">
+                {{ mostrarFormulario ? 'Cancelar / Cerrar' : '+ Nueva Orden' }}
+            </button>
+        </div>
+    </header>
+
+    @if (mostrarFormulario) {
+    <section class="form-section">
+        <div class="card" [ngClass]="{'border-edit': ordenSeleccionadaId, 'border-create': !ordenSeleccionadaId}">
+            <div class="card-header">
+                <h3>
+                    @if (ordenSeleccionadaId) {
+                    <i class="fas fa-edit" style="color: #4fc3f7;"></i> Editando Orden #{{ordenSeleccionadaId}}
+                    } @else {
+                    <i class="fas fa-plus-circle" style="color: #EB5E28;"></i> Registrar Nueva Orden
+                    }
+                </h3>
+            </div>
+            <div class="card-body">
+                <form [formGroup]="form" (ngSubmit)="guardar()">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Código PO</label>
+                            <input type="text" formControlName="codigo_po" placeholder="Ej: PO-SCOTT-001">
+                        </div>
+                        <div class="form-group">
+                            <label>Proveedor</label>
+                            <select formControlName="proveedor">
+                                <option value="Scott">Scott</option>
+                                <option value="Megamo">Megamo</option>
+                                <option value="Vittoria">Vittoria</option>
+                                <option value="Shimano">Shimano</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha Emisión</label>
+                            <input type="date" formControlName="fecha_po">
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha Vencimiento</label>
+                            <input type="date" formControlName="fecha_vencimiento">
+                        </div>
+                        <div class="form-group">
+                            <label>Moneda</label>
+                            <select formControlName="moneda">
+                                <option value="MXN">Pesos (MXN)</option>
+                                <option value="USD">Dólares (USD)</option>
+                                <option value="EUR">Euros (EUR)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Importe Total</label>
+                            <div class="currency-wrapper">
+                                <span class="currency-symbol">$</span>
+                                <input type="text" class="currency-input" formControlName="importe_original"
+                                    placeholder="0.00" (input)="formatearMoneda($event)">
+                            </div>
+                        </div>
+                        @if (ordenSeleccionadaId) {
+                        <div class="form-group">
+                            <label>Estatus</label>
+                            <select formControlName="estatus">
+                                <option value="PRODUCCION">PRODUCCION</option>
+                                <option value="TRANSITO">TRANSITO</option>
+                                <option value="ADUANA">ADUANA</option>
+                                <option value="CERRADO">CERRADO</option>
+                            </select>
+                        </div>
+                        }
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" (click)="limpiarFormulario()">Cancelar</button>
+                        <button type="submit" class="btn btn-save" [ngClass]="{'btn-update': ordenSeleccionadaId}">
+                            {{ ordenSeleccionadaId ? 'Actualizar Orden' : 'Guardar Orden' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+    }
+
+    <section class="table-section">
+        <div class="card">
+            <div class="card-header">
+                <h3>Órdenes Activas</h3>
+                <span style="font-size: 0.8rem; color: #888;">{{ listaOrdenes.length }} Registros</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th class="text-center">ID</th>
+                            <th>Código PO</th>
+                            <th>Proveedor</th>
+                            <th>Ciclo de Fechas</th>
+                            <th class="text-right">Importe</th>
+                            <th class="text-right">Saldo Pendiente</th>
+                            <th class="text-center">Estatus</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (orden of listaOrdenes; track orden.id_orden) {
+                        <tr>
+                            <td class="id-cell text-center">#{{ orden.id_orden }}</td>
+                            <td style="font-weight: 600;">{{ orden.codigo_po }}</td>
+                            <td>{{ orden.proveedor }}</td>
+                            <td>
+                                <div class="date-row">
+                                    <i class="fas fa-calendar-alt"></i> {{ orden.fecha_po | date:'dd/MM/yy' }}
+                                </div>
+                                <div class="date-row danger">
+                                    <i class="fas fa-clock"></i> {{ orden.fecha_vencimiento | date:'dd/MM/yy' }}
+                                </div>
+                            </td>
+                            <td class="text-right amount">
+                                {{ orden.importe_original | currency: orden.moneda }}
+                            </td>
+                            <td class="text-right amount pending">
+                                {{ (orden.importe_final - orden.pagado_total) | currency: orden.moneda }}
+                            </td>
+                            <td class="text-center">
+                                <span class="status-badge" [ngClass]="{
+                  'prod': orden.estatus === 'PRODUCCION' || orden.estatus === 'PENDIENTE',
+                  'closed': orden.estatus === 'CERRADO',
+                  'transit': orden.estatus === 'TRANSITO',
+                  'aduana': orden.estatus === 'ADUANA'
+                }">
+                                    {{ orden.estatus }}
+                                </span>
+                            </td>
+                            <td class="td-actions">
+                                <div class="action-col">
+                                    <button class="btn-icon btn-edit" title="Editar" (click)="editarOrden(orden)">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </button>
+                                    <button class="btn-icon btn-delete" title="Eliminar"
+                                        (click)="eliminarOrden(orden.id_orden)">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        } @empty {
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: #666; padding: 3rem;">
+                                <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                                <p>No hay órdenes registradas todavía.</p>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>

@@ -1,11 +1,19 @@
-import { importProvidersFrom } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { importProvidersFrom, LOCALE_ID } from '@angular/core';
+import { provideRouter, RouterModule } from '@angular/router';
 import { routes } from './app.routes';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
+
+import { registerLocaleData } from '@angular/common';
+import localeEsMx from '@angular/common/locales/es-MX';
+
+registerLocaleData(localeEsMx, 'es-MX');
 
 export const appConfig = {
   providers: [
+    provideRouter(routes),
+
     provideHttpClient(
+      withFetch(),
       withInterceptors([
         (req, next) => {
           const token = localStorage.getItem('token');
@@ -19,6 +27,9 @@ export const appConfig = {
         }
       ])
     ),
-    importProvidersFrom(RouterModule.forRoot(routes))
+    importProvidersFrom(RouterModule.forRoot(routes)),
+
+    { provide: LOCALE_ID, useValue: 'es-MX' }
+
   ]
 };

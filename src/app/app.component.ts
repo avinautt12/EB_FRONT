@@ -9,15 +9,17 @@ import { MonitorOdooService } from './services/monitor-odoo.service'; // Asumien
 import { PrevioService } from './services/previo.service';
 import { CaratulasService } from './services/caratulas.service';
 import { Subscription } from 'rxjs';
+import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, AlertaComponent],
+  imports: [CommonModule, RouterOutlet, AlertaComponent, ConfirmDialogComponent],
   template: `
     <router-outlet></router-outlet>
     <app-alerta *ngIf="mensajeVisible" [mensaje]="mensaje" [tipo]="tipo"></app-alerta>
-    `,
+    <app-confirm-dialog></app-confirm-dialog>
+  `,
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit, OnDestroy {

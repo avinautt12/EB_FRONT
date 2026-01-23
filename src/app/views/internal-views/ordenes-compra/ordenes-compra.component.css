@@ -1,0 +1,224 @@
+/* --- VARIABLES GLOBALES --- */
+:host {
+  --primary-color: #EB5E28;
+  --update-color: #29b6f6;
+  --bg-dark: #121212;
+  --bg-card: #1e1e1e;
+  --bg-input: #2c2c2c;
+  --text-main: #e0e0e0;
+  --text-muted: #a0a0a0;
+  --border-color: #333;
+  --success: #4caf50;
+  --danger: #f44336;
+  --warning: #ff9800;
+}
+
+/* --- LAYOUT --- */
+.page-container {
+  background-color: var(--bg-dark);
+  min-height: 100vh;
+  padding: 2rem;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text-main);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+.page-header h1 { margin: 0; font-size: 1.8rem; color: var(--primary-color); }
+.page-header p { margin: 0.5rem 0 0; color: var(--text-muted); font-size: 0.9rem; }
+.header-actions { display: flex; gap: 1rem; }
+
+/* --- BOTONES --- */
+.btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 0.5rem;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+.btn-primary { background-color: var(--primary-color); color: white; }
+.btn-primary:hover { background-color: #d45120; transform: translateY(-2px); }
+.btn-outline { background: transparent; border: 1px solid #666; color: var(--text-muted); }
+.btn-outline:hover { border-color: var(--text-main); color: var(--text-main); }
+
+.btn-save { background-color: var(--success); color: white; padding: 0.8rem 2rem; }
+.btn-save:hover { background-color: #43a047; }
+.btn-update { background-color: var(--update-color) !important; color: #121212 !important; }
+.btn-update:hover { background-color: #039be5 !important; }
+
+.form-actions {
+  display: flex; justify-content: flex-end; gap: 1rem;
+  margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #333;
+}
+
+/* --- CARDS --- */
+.card {
+  background-color: var(--bg-card);
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+
+.border-create { border-left: 5px solid var(--primary-color); }
+.border-edit { border-left: 5px solid var(--update-color); }
+
+.card-header {
+  padding: 1rem 1.5rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border-color);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.card-header h3 { margin: 0; font-size: 1.1rem; color: var(--text-main); font-weight: 500; }
+.card-body { padding: 1.5rem; }
+
+/* --- FORMULARIO --- */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+.form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.form-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+
+input, select {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: white;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+input:focus, select:focus { outline: none; border-color: var(--primary-color); }
+
+.currency-wrapper { position: relative; display: flex; align-items: center; }
+.currency-symbol { position: absolute; left: 10px; color: var(--text-muted); font-weight: bold; }
+.currency-input { text-align: right; font-weight: bold; letter-spacing: 0.5px; color: #fff !important; }
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* --- TABLA --- */
+.table-responsive { overflow-x: auto; border-radius: 0 0 10px 10px; }
+.custom-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+
+.custom-table th {
+  background-color: #252525;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  padding: 1rem 0.8rem;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border-color);
+  text-align: left;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.custom-table td {
+  padding: 1rem 0.8rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+  font-size: 0.9rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.custom-table tr:hover { background-color: rgba(255, 255, 255, 0.02); }
+
+.custom-table th.text-right, .custom-table td.text-right { text-align: right !important; }
+.custom-table th.text-center, .custom-table td.text-center { text-align: center !important; }
+
+/* ANCHOS DE COLUMNAS FIJOS */
+.custom-table th:nth-child(1), .custom-table td:nth-child(1) { width: 60px; }  /* ID */
+.custom-table th:nth-child(2), .custom-table td:nth-child(2) { width: 140px; } /* Código */
+.custom-table th:nth-child(3), .custom-table td:nth-child(3) { width: 120px; } /* Proveedor */
+.custom-table th:nth-child(4), .custom-table td:nth-child(4) { width: 160px; } /* Fechas */
+.custom-table th:nth-child(5), .custom-table td:nth-child(5) { width: 130px; } /* Importe */
+.custom-table th:nth-child(6), .custom-table td:nth-child(6) { width: 130px; } /* Saldo */
+.custom-table th:nth-child(7), .custom-table td:nth-child(7) { width: 120px; } /* Estatus */
+.custom-table th:nth-child(8), .custom-table td:nth-child(8) { width: 120px; } /* Acciones */
+
+.id-cell { color: var(--primary-color); font-family: monospace; font-weight: bold; }
+.amount { font-family: 'Consolas', monospace; font-size: 1rem; letter-spacing: -0.5px; }
+.pending { color: var(--warning); font-weight: bold; }
+.date-row { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted); }
+.date-row.danger { color: #e57373; margin-top: 4px; }
+
+/* BADGES */
+.status-badge { 
+  padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; display: inline-block;
+}
+.status-badge.prod { background: rgba(33, 150, 243, 0.15); color: #64b5f6; }
+.status-badge.transit { background: rgba(255, 152, 0, 0.15); color: #ffb74d; }
+.status-badge.closed { background: rgba(76, 175, 80, 0.15); color: #81c784; }
+.status-badge.aduana { background: rgba(156, 39, 176, 0.15); color: #ce93d8; }
+
+/* --- ACCIONES CORREGIDAS --- */
+
+/* 1. Quitamos el padding de la celda TD para que el div llene todo */
+.custom-table td.td-actions {
+  padding: 0 !important;
+  height: 1px; /* Truco para que el hijo tome el 100% real */
+}
+
+/* 2. El contenedor Flex ocupa todo y centra */
+.action-col {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  min-height: 60px; /* Asegura altura mínima cómoda */
+}
+
+/* 3. Botones centrados */
+.btn-icon {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0; /* Quitamos padding interno */
+  border-radius: 4px;
+  width: 34px;  /* Cuadrados perfectos */
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-edit { color: var(--update-color); border-color: rgba(41, 182, 246, 0.3); }
+.btn-delete { color: var(--danger); border-color: rgba(244, 67, 54, 0.3); }
+
+.btn-edit:hover { background-color: rgba(41, 182, 246, 0.1); transform: scale(1.1); border-color: var(--update-color); }
+.btn-delete:hover { background-color: rgba(244, 67, 54, 0.1); transform: scale(1.1); border-color: var(--danger); }
+
+/* --- ALERTAS --- */
+.alerta-container {
+  position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+  z-index: 1000; width: 90%; max-width: 400px; animation: slideDown 0.4s ease-out;
+}
+.alerta {
+  padding: 1rem 1.5rem; border-radius: 8px; display: flex; align-items: center;
+  gap: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); font-weight: 500; color: white; border: 1px solid transparent;
+}
+.alerta.exito { background-color: rgba(27, 94, 32, 0.95); border-color: #4caf50; }
+.alerta.exito i { color: #69f0ae; font-size: 1.2rem; }
+.alerta.error { background-color: rgba(183, 28, 28, 0.95); border-color: #ff5252; }
+.alerta.error i { color: #ff8a80; font-size: 1.2rem; }
+
+@keyframes slideDown { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
