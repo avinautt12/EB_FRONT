@@ -29,13 +29,14 @@
 
       <div class="divider"></div>
 
-      <button class="btn-odoo" (click)="sincronizar()" [disabled]="sincronizando">
+      <button class="btn-odoo" (click)="pedirConfirmacionSync()" [disabled]="sincronizando">
         @if(sincronizando) {
         <i class="fa-solid fa-circle-notch fa-spin"></i> Conectando...
         } @else {
         <i class="fa-solid fa-cloud-arrow-down"></i> Sync Odoo
         }
       </button>
+
       <div class="divider"></div>
 
       <div class="filtros-container">
@@ -144,3 +145,9 @@
     }
   </div>
 </div>
+
+<app-modal-confirmacion-flujo [visible]="mostrarModalSync" titulo="Sincronización con Odoo"
+  [mensaje]="'¿Deseas descargar los datos reales de Odoo para ' + meses[mesSeleccionado - 1].nombre + ' ' + anioSeleccionado + '?'"
+  textoConfirmar="Sí, Sincronizar" textoCancelar="Cancelar" (confirmar)="ejecutarSincronizacion()"
+  (cancelar)="mostrarModalSync = false">
+</app-modal-confirmacion-flujo>

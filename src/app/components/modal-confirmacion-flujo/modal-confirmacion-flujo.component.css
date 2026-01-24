@@ -1,0 +1,100 @@
+/* El fondo que cubre toda la pantalla */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7); /* Oscuro transparente */
+  z-index: 10000; /* Encima de todo */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px); /* Efecto borroso elegante */
+  animation: fadeIn 0.3s ease;
+}
+
+/* La tarjeta del mensaje */
+.modal-card {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  padding: 2rem;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: scaleUp 0.3s ease;
+}
+
+/* Icono grande arriba */
+.modal-icon {
+  font-size: 3rem;
+  color: #714B67; /* Morado Odoo */
+  margin-bottom: 1rem;
+}
+
+.modal-titulo {
+  color: #fff;
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem 0;
+  font-weight: 700;
+}
+
+.modal-mensaje {
+  color: #bbb;
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+/* Botones */
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+.btn-cancelar {
+  background-color: transparent;
+  border: 1px solid #555;
+  color: #ccc;
+}
+.btn-cancelar:hover {
+  background-color: #333;
+  color: #fff;
+}
+
+.btn-confirmar {
+  background-color: #714B67; /* Morado Odoo */
+  color: white;
+  box-shadow: 0 4px 15px rgba(113, 75, 103, 0.4);
+}
+.btn-confirmar:hover {
+  background-color: #8f6082;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

@@ -4,17 +4,20 @@ import { FormsModule } from '@angular/forms';
 import { FlujoService, RenglonDashboard } from '../../../services/flujo.service';
 import { HomeBarComponent } from "../../../components/home-bar/home-bar.component";
 import { RouterLink } from '@angular/router';
+import { ModalConfirmacionFlujoComponent } from '../../../components/modal-confirmacion-flujo/modal-confirmacion-flujo.component';
+import { AlertaService } from '../../../services/alerta.service';
 
 @Component({
   selector: 'app-tablero',
   standalone: true,
-  imports: [CommonModule, HomeBarComponent, FormsModule, RouterLink],
+  imports: [CommonModule, HomeBarComponent, FormsModule, RouterLink, ModalConfirmacionFlujoComponent],
   templateUrl: './tablero.component.html',
   styleUrl: './tablero.component.css'
 })
 export class TableroComponent implements OnInit {
 
   private flujoService = inject(FlujoService);
+  private alertaService = inject(AlertaService);
 
   renglones: RenglonDashboard[] = [];
   saldoFinalProyectado: number = 0;
@@ -22,6 +25,7 @@ export class TableroComponent implements OnInit {
   cargando: boolean = true;
 
   sincronizando: boolean = false;
+  mostrarModalSync: boolean = false;
 
   // Filtros de fecha
   meses = [
@@ -135,22 +139,33 @@ export class TableroComponent implements OnInit {
     return this.celdaEditando?.id === id && this.celdaEditando?.columna === columna;
   }
 
-  sincronizar() {
-    if (!confirm(`¿Deseas descargar los datos reales de Odoo para ${this.meses[this.mesSeleccionado - 1].nombre} ${this.anioSeleccionado}?`)) return;
+  pedirConfirmacionSync() {
+    this.mostrarModalSync = true;
+  }
 
+  ejecutarSincronizacion() {
+    this.mostrarModalSync = false;
     this.sincronizando = true;
 
-    // Llamamos al servicio (asegúrate de tener este método en flujo.service.ts)
     this.flujoService.sincronizarOdoo(this.anioSeleccionado, this.mesSeleccionado).subscribe({
       next: (res) => {
         this.sincronizando = false;
-        alert(res.mensaje); // O usa Swal.fire si lo tienes
-        this.cargarDatos(); // ¡Importante! Recargamos la tabla para ver los cambios
+        // Mensaje de éxito verde
+        this.alertaService.mostrarExito(res.mensaje);
+        this.cargarDatos();
       },
       error: (err) => {
         this.sincronizando = false;
         console.error(err);
-        alert("Error en la sincronización. Revisa la consola.");
+
+        // --- MANEJO DE TOKEN VENCIDO ---
+        if (err.status === 401) {
+          // Mensaje específico para token expirado
+          this.alertaService.mostrarError("⚠️ Tu sesión ha expirado. Por favor, recarga la página.");
+        } else {
+          // Mensaje genérico para otros errores
+          this.alertaService.mostrarError("Error al conectar con Odoo.");
+        }
       }
     });
   }

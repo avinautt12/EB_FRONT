@@ -1,0 +1,24 @@
+@if (visible) {
+  <div class="modal-backdrop" (click)="onCancelar()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      
+      <div class="modal-icon">
+        <i class="fa-solid fa-cloud-arrow-down"></i>
+      </div>
+
+      <h3 class="modal-titulo">{{ titulo }}</h3>
+      <p class="modal-mensaje">{{ mensaje }}</p>
+
+      <div class="modal-actions">
+        <button class="btn-cancelar" (click)="onCancelar()">
+          {{ textoCancelar }}
+        </button>
+        
+        <button class="btn-confirmar" (click)="onConfirmar()">
+          {{ textoConfirmar }}
+        </button>
+      </div>
+      
+    </div>
+  </div>
+}
