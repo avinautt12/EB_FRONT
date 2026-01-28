@@ -129,10 +129,10 @@
     <tbody>
       <tr *ngFor="let meta of metas">
         <td>{{ meta.nivel }}</td>
-        <td>{{ meta.compromiso_scott | currencycurrency:'USD':'$':'1.2-2' }}:'1.0-0' }}</td>
-        <td>{{ meta.compromiso_syncros | currencycurrency:'USD':'$':'1.2-2' }}:'1.0-0' }}</td>
-        <td>{{ meta.compromiso_apparel | currencycurrency:'USD':'$':'1.2-2' }}:'1.0-0' }}</td>
-        <td>{{ meta.compromiso_vittoria | currencycurrency:'USD':'$':'1.2-2' }}:'1.0-0' }}</td>
+        <td>{{ meta.compromiso_scott | currency:'USD':'$':'1.2-2' }}</td>
+        <td>{{ meta.compromiso_syncros | currency:'USD':'$':'1.2-2' }}</td>
+        <td>{{ meta.compromiso_apparel | currency:'USD':'$':'1.2-2' }}</td>
+        <td>{{ meta.compromiso_vittoria | currency:'USD':'$':'1.2-2' }}</td>
         <td>
           <button class="metas-btn btn-editar" (click)="abrirEditar(meta)">
             <i class="fas fa-edit"></i>
