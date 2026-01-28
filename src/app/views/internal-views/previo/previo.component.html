@@ -129,6 +129,17 @@
             <th style="min-width: 150px;">Compromiso NOV-DIC</th>
             <th style="min-width: 150px;">Avance</th>
             <th style="min-width: 80px;">%</th>
+            <th style="min-width: 150px;">Compromiso ENE-FEB</th>
+            <th style="min-width: 150px;">Avance</th>
+            <th style="min-width: 80px;">%</th>
+
+            <th style="min-width: 150px;">Compromiso MAR-ABR</th>
+            <th style="min-width: 150px;">Avance</th>
+            <th style="min-width: 80px;">%</th>
+
+            <th style="min-width: 150px;">Compromiso MAY-JUN</th>
+            <th style="min-width: 150px;">Avance</th>
+            <th style="min-width: 80px;">%</th>
             <th style="min-width: 150px;">Compromiso APPAREL, SYNCROS, VITTORIA</th>
             <th style="min-width: 150px;">Avance GLOBAL</th>
             <th style="min-width: 80px;">%</th>
@@ -139,6 +150,17 @@
             <th style="min-width: 150px;">Avance</th>
             <th style="min-width: 80px;">%</th>
             <th style="min-width: 150px;">Compromiso NOV-DIC</th>
+            <th style="min-width: 150px;">Avance</th>
+            <th style="min-width: 80px;">%</th>
+            <th style="min-width: 150px;">Compromiso ENE-FEB App</th>
+            <th style="min-width: 150px;">Avance</th>
+            <th style="min-width: 80px;">%</th>
+
+            <th style="min-width: 150px;">Compromiso MAR-ABR App</th>
+            <th style="min-width: 150px;">Avance</th>
+            <th style="min-width: 80px;">%</th>
+
+            <th style="min-width: 150px;">Compromiso MAY-JUN App</th>
             <th style="min-width: 150px;">Avance</th>
             <th style="min-width: 80px;">%</th>
             <th style="min-width: 130px;">SYNCROS Acumulado</th>
@@ -159,7 +181,7 @@
             <td>{{ cliente.acumulado_anticipado | currency:'USD':'$':'1.2-2' }}</td>
             <td>{{ cliente.nivel }}</td>
             <td>{{ verificarCumplimientoCompraInicial(cliente) }}</td>
-            <td class="td-number">{{ cliente.compra_minima_anual | currency:'USD':'$':'1.0-0' }}</td>
+            <td class="td-number">{{ cliente.compra_minima_anual | currency:'USD':'$':'1.2-2' }}</td>
 
             <td class="percentage-cell" [attr.data-tooltip]="getTooltipText(cliente, 'anual')">
               <div class="progress-bar" [ngClass]="getProgressClass(getPercentageValue(cliente, 'anual'))"
@@ -169,8 +191,8 @@
               </span>
             </td>
 
-            <td class="td-number">{{ cliente.compra_minima_inicial | currency:'USD':'$':'1.0-0' }}</td>
-            <td class="td-number">{{ calcularAvanceGlobal(cliente) | currency:'USD':'$':'1.0-0' }}</td>
+            <td class="td-number">{{ cliente.compra_minima_inicial | currency:'USD':'$':'1.2-2' }}</td>
+            <td class="td-number">{{ calcularAvanceGlobal(cliente) | currency:'USD':'$':'1.2-2' }}</td>
 
             <td class="percentage-cell" [attr.data-tooltip]="getTooltipText(cliente, 'inicial')">
               <div class="progress-bar" [ngClass]="getProgressClass(getPercentageValue(cliente, 'inicial'))"
@@ -180,8 +202,8 @@
               </span>
             </td>
 
-            <td class="td-number">{{ cliente.compromiso_scott | currency:'USD':'$':'1.0-0' }}</td>
-            <td class="td-number">{{ cliente.avance_global_scott | currency:'USD':'$':'1.0-0' }}</td>
+            <td class="td-number">{{ cliente.compromiso_scott | currency:'USD':'$':'1.2-2' }}</td>
+            <td class="td-number">{{ cliente.avance_global_scott | currency:'USD':'$':'1.2-2' }}</td>
 
             <td class="percentage-cell" [attr.data-tooltip]="getTooltipText(cliente, 'scott')">
               <div class="progress-bar" [ngClass]="getProgressClass(getPercentageValue(cliente, 'scott'))"
@@ -191,8 +213,8 @@
               </span>
             </td>
 
-            <td class="td-number">{{ cliente.compromiso_jul_ago | currency:'USD':'$':'1.0-0' }}</td>
-            <td class="td-number">{{ cliente.avance_jul_ago | currency:'USD':'$':'1.0-0' }}</td>
+            <td class="td-number">{{ cliente.compromiso_jul_ago | currency:'USD':'$':'1.2-2' }}</td>
+            <td class="td-number">{{ cliente.avance_jul_ago | currency:'USD':'$':'1.2-2' }}</td>
 
             <td class="percentage-cell" [attr.data-tooltip]="getTooltipText(cliente, 'scott_jul_ago')">
               <div class="progress-bar" [ngClass]="getProgressClass(getPercentageValue(cliente, 'scott_jul_ago'))"
@@ -202,8 +224,8 @@
               </span>
             </td>
 
-            <td class="td-number">{{ cliente.compromiso_sep_oct | currency:'USD':'$':'1.0-0' }}</td>
-            <td class="td-number">{{ cliente.avance_sep_oct | currency:'USD':'$':'1.0-0' }}</td>
+            <td class="td-number">{{ cliente.compromiso_sep_oct | currency:'USD':'$':'1.2-2' }}</td>
+            <td class="td-number">{{ cliente.avance_sep_oct | currency:'USD':'$':'1.2-2' }}</td>
 
             <td class="percentage-cell" [attr.data-tooltip]="getTooltipText(cliente, 'scott_sep_oct')">
               <div class="progress-bar" [ngClass]="getProgressClass(getPercentageValue(cliente, 'scott_sep_oct'))"
@@ -213,8 +235,8 @@
               </span>
             </td>
 
-            <td class="td-number">{{ cliente.compromiso_nov_dic | currency:'USD':'$':'1.0-0' }}</td>
-            <td class="td-number">{{ cliente.avance_nov_dic | currency:'USD':'$':'1.0-0' }}</td>
+            <td class="td-number">{{ cliente.compromiso_nov_dic | currency:'USD':'$':'1.2-2' }}</td>
+            <td class="td-number">{{ cliente.avance_nov_dic | currency:'USD':'$':'1.2-2' }}</td>
 
             <td class="percentage-cell" [attr.data-tooltip]="getTooltipText(cliente, 'scott_nov_dic')">
               <div class="progress-bar" [ngClass]="getProgressClass(getPercentageValue(cliente, 'scott_nov_dic'))"
@@ -224,8 +246,8 @@
               </span>
             </td>
 
-            <td class="td-number">{{ cliente.compromiso_apparel_syncros_vittoria | currency:'USD':'$':'1.0-0' }}</td>
-            <td class="td-number">{{ cliente.avance_global_apparel_syncros_vittoria | currency:'USD':'$':'1.0-0' }}</td>
+            <td class="td-number">{{ cliente.compromiso_apparel_syncros_vittoria | currency:'USD':'$':'1.2-2' }}</td>
+            <td class="td-number">{{ cliente.avance_global_apparel_syncros_vittoria | currency:'USD':'$':'1.2-2' }}</td>
 
             <td class="percentage-cell" [attr.data-tooltip]="getTooltipText(cliente, 'apparel_global')">
               <div class="progress-bar" [ngClass]="getProgressClass(getPercentageValue(cliente, 'apparel_global'))"
@@ -235,8 +257,8 @@
               </span>
             </td>
 
-            <td class="td-number">{{ cliente.compromiso_jul_ago_app | currency:'USD':'$':'1.0-0' }}</td>
-            <td class="td-number">{{ cliente.avance_jul_ago_app | currency:'USD':'$':'1.0-0' }}</td>
+            <td class="td-number">{{ cliente.compromiso_jul_ago_app | currency:'USD':'$':'1.2-2' }}</td>
+            <td class="td-number">{{ cliente.avance_jul_ago_app | currency:'USD':'$':'1.2-2' }}</td>
 
             <td class="percentage-cell" [attr.data-tooltip]="getTooltipText(cliente, 'apparel_jul_ago')">
               <div class="progress-bar" [ngClass]="getProgressClass(getPercentageValue(cliente, 'apparel_jul_ago'))"
@@ -246,8 +268,8 @@
               </span>
             </td>
 
-            <td class="td-number">{{ cliente.compromiso_sep_oct_app | currency:'USD':'$':'1.0-0' }}</td>
-            <td class="td-number">{{ cliente.avance_sep_oct_app | currency:'USD':'$':'1.0-0' }}</td>
+            <td class="td-number">{{ cliente.compromiso_sep_oct_app | currency:'USD':'$':'1.2-2' }}</td>
+            <td class="td-number">{{ cliente.avance_sep_oct_app | currency:'USD':'$':'1.2-2' }}</td>
 
             <td class="percentage-cell" [attr.data-tooltip]="getTooltipText(cliente, 'apparel_sep_oct')">
               <div class="progress-bar" [ngClass]="getProgressClass(getPercentageValue(cliente, 'apparel_sep_oct'))"
@@ -257,8 +279,8 @@
               </span>
             </td>
 
-            <td class="td-number">{{ cliente.compromiso_nov_dic_app | currency:'USD':'$':'1.0-0' }}</td>
-            <td class="td-number">{{ cliente.avance_nov_dic_app | currency:'USD':'$':'1.0-0' }}</td>
+            <td class="td-number">{{ cliente.compromiso_nov_dic_app | currency:'USD':'$':'1.2-2' }}</td>
+            <td class="td-number">{{ cliente.avance_nov_dic_app | currency:'USD':'$':'1.2-2' }}</td>
 
             <td class="percentage-cell" [attr.data-tooltip]="getTooltipText(cliente, 'apparel_nov_dic')">
               <div class="progress-bar" [ngClass]="getProgressClass(getPercentageValue(cliente, 'apparel_nov_dic'))"
@@ -268,10 +290,10 @@
               </span>
             </td>
 
-            <td class="td-number">{{ cliente.acumulado_syncros | currency:'USD':'$':'1.0-0' }}</td>
-            <td class="td-number">{{ cliente.acumulado_apparel | currency:'USD':'$':'1.0-0' }}</td>
-            <td class="td-number">{{ cliente.acumulado_vittoria | currency:'USD':'$':'1.0-0' }}</td>
-            <td class="td-number">{{ cliente.acumulado_bold | currency:'USD':'$':'1.0-0' }}</td>
+            <td class="td-number">{{ cliente.acumulado_syncros | currency:'USD':'$':'1.2-2' }}</td>
+            <td class="td-number">{{ cliente.acumulado_apparel | currency:'USD':'$':'1.2-2' }}</td>
+            <td class="td-number">{{ cliente.acumulado_vittoria | currency:'USD':'$':'1.2-2' }}</td>
+            <td class="td-number">{{ cliente.acumulado_bold | currency:'USD':'$':'1.2-2' }}</td>
           </tr>
 
           <div *ngIf="mostrarIntegrales">
@@ -287,55 +309,55 @@
               <td class="td-number">{{ integral.acumulado_anticipado | currency:'USD':'$':'1.2-2' }}</td>
               <td>{{ integral.nivel }}</td>
               <td>{{ verificarCumplimientoCompraInicial(integral) }}</td>
-              <td class="td-number">{{ integral.compra_minima_anual | currency:'USD':'$':'1.0-0' }}</td>
+              <td class="td-number">{{ integral.compra_minima_anual | currency:'USD':'$':'1.2-2' }}</td>
 
               <td>{{ calculoPorcentajeCompraAnual(integral) }}</td>
 
-              <td class="td-number">{{ integral.compra_minima_inicial | currency:'USD':'$':'1.0-0' }}</td>
-              <td class="td-number">{{ integral.avance_global | currency:'USD':'$':'1.0-0' }}</td>
+              <td class="td-number">{{ integral.compra_minima_inicial | currency:'USD':'$':'1.2-2' }}</td>
+              <td class="td-number">{{ integral.avance_global | currency:'USD':'$':'1.2-2' }}</td>
 
               <td>{{ calculoPorcentajeCompraInicial(integral) }}</td>
 
-              <td class="td-number">{{ integral.compromiso_scott | currency:'USD':'$':'1.0-0' }}</td>
-              <td class="td-number">{{ integral.avance_global_scott | currency:'USD':'$':'1.0-0' }}</td>
+              <td class="td-number">{{ integral.compromiso_scott | currency:'USD':'$':'1.2-2' }}</td>
+              <td class="td-number">{{ integral.avance_global_scott | currency:'USD':'$':'1.2-2' }}</td>
               <td>{{ (integral.avance_global_scott || 0) / (integral.compromiso_scott || 1) | percent:'1.0-0' }}</td>
 
-              <td class="td-number">{{ integral.compromiso_jul_ago| currency:'USD':'$':'1.0-0' }}</td>
-              <td class="td-number">{{ integral.avance_jul_ago | currency:'USD':'$':'1.0-0' }}</td>
+              <td class="td-number">{{ integral.compromiso_jul_ago| currency:'USD':'$':'1.2-2' }}</td>
+              <td class="td-number">{{ integral.avance_jul_ago | currency:'USD':'$':'1.2-2' }}</td>
               <td>{{ (integral.avance_jul_ago || 0) / (integral.compromiso_jul_ago || 1) | percent:'1.0-0' }}</td>
 
-              <td class="td-number">{{ integral.compromiso_sep_oct | currency:'USD':'$:'1.0-0' }}</td>
-              <td class="td-number">{{ integral.avance_sep_oct | currency:'USD':'$':'1.0-0' }}</td>
+              <td class="td-number">{{ integral.compromiso_sep_oct | currency:'USD':'$':'1.2-2' }}</td>
+              <td class="td-number">{{ integral.avance_sep_oct | currency:'USD':'$':'1.2-2' }}</td>
               <td>{{ (integral.avance_sep_oct || 0) / (integral.compromiso_sep_oct || 1) | percent:'1.0-0' }}</td>
 
-              <td class="td-number">{{ integral.compromiso_nov_dic | currency:'USD':'$':'1.0-0' }}</td>
-              <td class="td-number">{{ integral.avance_nov_dic | currency:'USD':'$':'1.0-0' }}</td>
+              <td class="td-number">{{ integral.compromiso_nov_dic | currency:'USD':'$':'1.2-2' }}</td>
+              <td class="td-number">{{ integral.avance_nov_dic | currency:'USD':'$':'1.2-2' }}</td>
               <td>{{ (integral.avance_nov_dic || 0) / (integral.compromiso_nov_dic || 1) | percent:'1.0-0' }}</td>
 
-              <td class="td-number">{{ integral.compromiso_apparel_syncros_vittoria | currency:'USD':'$':'1.0-0' }}</td>
-              <td class="td-number">{{ (integral.avance_global_apparel_syncros_vittoria) | currency:'USD':'$':'1.0-0' }}
+              <td class="td-number">{{ integral.compromiso_apparel_syncros_vittoria | currency:'USD':'$':'1.2-2' }}</td>
+              <td class="td-number">{{ (integral.avance_global_apparel_syncros_vittoria) | currency:'USD':'$':'1.2-2' }}
               </td>
               <td>{{ calculoPorcentajeAvanceSynAppVit(integral) }}</td>
 
-              <td class="td-number">{{ integral.compromiso_jul_ago_app | currency:'USD':'$':'1.0-0' }}</td>
-              <td class="td-number">{{ integral.avance_jul_ago_app | currency:'USD':'$':'1.0-0' }}</td>
+              <td class="td-number">{{ integral.compromiso_jul_ago_app | currency:'USD':'$':'1.2-2' }}</td>
+              <td class="td-number">{{ integral.avance_jul_ago_app | currency:'USD':'$':'1.2-2' }}</td>
               <td>{{ (integral.avance_jul_ago_app || 0) / (integral.compromiso_jul_ago_app || 1) | percent:'1.0-0' }}
               </td>
 
-              <td class="td-number">{{ integral.compromiso_sep_oct_app | currency:'USD':'$':'1.0-0' }}</td>
-              <td class="td-number">{{ integral.avance_sep_oct_app | currency:'USD':'$':'1.0-0' }}</td>
+              <td class="td-number">{{ integral.compromiso_sep_oct_app | currency:'USD':'$':'1.2-2' }}</td>
+              <td class="td-number">{{ integral.avance_sep_oct_app | currency:'USD':'$':'1.2-2' }}</td>
               <td>{{ (integral.avance_sep_oct_app || 0) / (integral.compromiso_sep_oct_app || 1) | percent:'1.0-0' }}
               </td>
 
-              <td class="td-number">{{ integral.compromiso_nov_dic_app | currency:'USD':'$':'1.0-0' }}</td>
-              <td class="td-number">{{ integral.avance_nov_dic_app | currency:'USD':'$':'1.0-0' }}</td>
+              <td class="td-number">{{ integral.compromiso_nov_dic_app | currency:'USD':'$':'1.2-2' }}</td>
+              <td class="td-number">{{ integral.avance_nov_dic_app | currency:'USD':'$':'1.2-2' }}</td>
               <td>{{ (integral.avance_nov_dic_app || 0) / (integral.compromiso_nov_dic_app || 1) | percent:'1.0-0' }}
               </td>
 
-              <td class="td-number">{{ integral.acumulado_syncros | currency:'USD':'$':'1.0-0' }}</td>
-              <td class="td-number">{{ integral.acumulado_apparel | currency:'USD':'$':'1.0-0' }}</td>
-              <td class="td-number">{{ integral.acumulado_vittoria | currency:'USD':'$':'1.0-0' }}</td>
-              <td class="td-number">{{ integral.acumulado_bold | currency:'USD':'$':'1.0-0' }}</td>
+              <td class="td-number">{{ integral.acumulado_syncros | currency:'USD':'$':'1.2-2' }}</td>
+              <td class="td-number">{{ integral.acumulado_apparel | currency:'USD':'$':'1.2-2' }}</td>
+              <td class="td-number">{{ integral.acumulado_vittoria | currency:'USD':'$':'1.2-2' }}</td>
+              <td class="td-number">{{ integral.acumulado_bold | currency:'USD':'$':'1.2-2' }}</td>
             </tr>
           </div>
 

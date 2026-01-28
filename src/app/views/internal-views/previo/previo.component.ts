@@ -65,9 +65,37 @@ interface ClienteConAcumulado extends Cliente {
   avance_jul_ago?: number;
   avance_sep_oct?: number;
   avance_nov_dic?: number;
+
+  // NUEVOS CAMPOS NORMALES (SCOTT)
+  compromiso_ene_feb?: number;
+  avance_ene_feb?: number;
+  porcentaje_ene_feb?: number;
+
+  compromiso_mar_abr?: number;
+  avance_mar_abr?: number;
+  porcentaje_mar_abr?: number;
+
+  compromiso_may_jun?: number;
+  avance_may_jun?: number;
+  porcentaje_may_jun?: number;
+
   avance_jul_ago_app?: number;
   avance_sep_oct_app?: number;
   avance_nov_dic_app?: number;
+
+  // NUEVOS CAMPOS APP
+  compromiso_ene_feb_app?: number;
+  avance_ene_feb_app?: number;
+  porcentaje_ene_feb_app?: number;
+
+  compromiso_mar_abr_app?: number;
+  avance_mar_abr_app?: number;
+  porcentaje_mar_abr_app?: number;
+
+  compromiso_may_jun_app?: number;
+  avance_may_jun_app?: number;
+  porcentaje_may_jun_app?: number;
+
   acumulado_syncros?: number;
   acumulado_apparel?: number;
   acumulado_vittoria?: number;
@@ -198,6 +226,21 @@ export class PrevioComponent implements OnInit, OnDestroy {
     acumulado_apparel: number;
     acumulado_vittoria: number;
     acumulado_bold: number;
+
+    compromiso_ene_feb: number;
+    avance_ene_feb: number;
+    compromiso_mar_abr: number;
+    avance_mar_abr: number;
+    compromiso_may_jun: number;
+    avance_may_jun: number;
+
+    compromiso_ene_feb_app: number;
+    avance_ene_feb_app: number;
+    compromiso_mar_abr_app: number;
+    avance_mar_abr_app: number;
+    compromiso_may_jun_app: number;
+    avance_may_jun_app: number;
+
   } = {
       acumulado_anticipado: 0,
       compra_minima_anual: 0,
@@ -222,7 +265,21 @@ export class PrevioComponent implements OnInit, OnDestroy {
       acumulado_syncros: 0,
       acumulado_apparel: 0,
       acumulado_vittoria: 0,
-      acumulado_bold: 0
+      acumulado_bold: 0,
+
+      compromiso_ene_feb: 0,
+      avance_ene_feb: 0,
+      compromiso_mar_abr: 0,
+      avance_mar_abr: 0,
+      compromiso_may_jun: 0,
+      avance_may_jun: 0,
+
+      compromiso_ene_feb_app: 0,
+      avance_ene_feb_app: 0,
+      compromiso_mar_abr_app: 0,
+      avance_mar_abr_app: 0,
+      compromiso_may_jun_app: 0,
+      avance_may_jun_app: 0,
     };
 
   constructor(
@@ -731,6 +788,24 @@ export class PrevioComponent implements OnInit, OnDestroy {
         avance_jul_ago_app: resultados.avance_jul_ago_app,
         avance_sep_oct_app: resultados.avance_sep_oct_app,
         avance_nov_dic_app: resultados.avance_nov_dic_app,
+
+        avance_ene_feb: resultados.avance_ene_feb,
+        avance_mar_abr: resultados.avance_mar_abr,
+        avance_may_jun: resultados.avance_may_jun,
+
+        avance_ene_feb_app: resultados.avance_ene_feb_app,
+        avance_mar_abr_app: resultados.avance_mar_abr_app,
+        avance_may_jun_app: resultados.avance_may_jun_app,
+
+        // COMPROMISOS (Usando las funciones placeholder que creamos en paso 4)
+        compromiso_ene_feb: this.calcularCompromisoEneFeb(cliente.nivel, cliente.nombre_cliente),
+        compromiso_mar_abr: this.calcularCompromisoMarAbr(cliente.nivel, cliente.nombre_cliente),
+        compromiso_may_jun: this.calcularCompromisoMayJun(cliente.nivel, cliente.nombre_cliente),
+
+        compromiso_ene_feb_app: this.calcularCompromisoEneFebApp(cliente.nivel, cliente.nombre_cliente),
+        compromiso_mar_abr_app: this.calcularCompromisoMarAbrApp(cliente.nivel, cliente.nombre_cliente),
+        compromiso_may_jun_app: this.calcularCompromisoMayJunApp(cliente.nivel, cliente.nombre_cliente),
+
         acumulado_syncros: resultados.acumulado_syncros,
         acumulado_apparel: resultados.acumulado_apparel,
         acumulado_vittoria: resultados.acumulado_vittoria,
@@ -1014,7 +1089,9 @@ export class PrevioComponent implements OnInit, OnDestroy {
     avance_sep_oct: number, avance_nov_dic: number, avance_jul_ago_app: number,
     avance_sep_oct_app: number, avance_nov_dic_app: number,
     acumulado_syncros: number, acumulado_apparel: number, acumulado_vittoria: number,
-    acumulado_bold: number, avance_global_apparel_syncros_vittoria: number, avance_global: number
+    acumulado_bold: number, avance_global_apparel_syncros_vittoria: number, avance_global: number,
+    avance_ene_feb: number, avance_mar_abr: number, avance_may_jun: number,
+    avance_ene_feb_app: number, avance_mar_abr_app: number, avance_may_jun_app: number,
   } {
     const clave = cliente.clave;
     const nombreCliente = cliente.nombre_cliente?.toUpperCase() || '';
@@ -1102,6 +1179,14 @@ export class PrevioComponent implements OnInit, OnDestroy {
     const acumuladoVittoria = this.calcularAcumuladoVittoria(cliente, facturas);
     const acumuladoBold = this.calcularAcumuladoBold(cliente, facturas);
 
+    const avanceEneFeb = this.calcularAvanceEneFeb(cliente, facturas);
+    const avanceMarAbr = this.calcularAvanceMarAbr(cliente, facturas);
+    const avanceMayJun = this.calcularAvanceMayJun(cliente, facturas);
+
+    const avanceEneFebApp = this.calcularAvanceEneFebApp(cliente, facturas);
+    const avanceMarAbrApp = this.calcularAvanceMarAbrApp(cliente, facturas);
+    const avanceMayJunApp = this.calcularAvanceMayJunApp(cliente, facturas);
+
     // Calcular totales usando las facturas filtradas correctamente
     const acumulado = facturasCliente.reduce((total, factura) => total + (+factura.venta_total || 0), 0);
     const acumuladoScott = facturasScott.reduce((total, factura) => total + (+factura.venta_total || 0), 0);
@@ -1121,6 +1206,12 @@ export class PrevioComponent implements OnInit, OnDestroy {
       avance_jul_ago_app: avanceJulAgoApp,
       avance_sep_oct_app: avanceSepOctApp,
       avance_nov_dic_app: avanceNovDicApp,
+      avance_ene_feb: avanceEneFeb,
+      avance_mar_abr: avanceMarAbr,
+      avance_may_jun: avanceMayJun,
+      avance_ene_feb_app: avanceEneFebApp,
+      avance_mar_abr_app: avanceMarAbrApp,
+      avance_may_jun_app: avanceMayJunApp,
       acumulado_syncros: acumuladoSyncros,
       acumulado_apparel: acumuladoApparel,
       acumulado_vittoria: acumuladoVittoria,
@@ -2392,6 +2483,14 @@ export class PrevioComponent implements OnInit, OnDestroy {
       case 'apparel_nov_dic':
         return this.calcularPorcentajeSeguro(cliente?.avance_nov_dic_app, cliente?.compromiso_nov_dic_app);
 
+      case 'scott_ene_feb': return this.calcularPorcentajeSeguro(cliente?.avance_ene_feb, cliente?.compromiso_ene_feb);
+      case 'scott_mar_abr': return this.calcularPorcentajeSeguro(cliente?.avance_mar_abr, cliente?.compromiso_mar_abr);
+      case 'scott_may_jun': return this.calcularPorcentajeSeguro(cliente?.avance_may_jun, cliente?.compromiso_may_jun);
+
+      case 'apparel_ene_feb': return this.calcularPorcentajeSeguro(cliente?.avance_ene_feb_app, cliente?.compromiso_ene_feb_app);
+      case 'apparel_mar_abr': return this.calcularPorcentajeSeguro(cliente?.avance_mar_abr_app, cliente?.compromiso_mar_abr_app);
+      case 'apparel_may_jun': return this.calcularPorcentajeSeguro(cliente?.avance_may_jun_app, cliente?.compromiso_may_jun_app);
+
       default:
         return 0;
     }
@@ -2903,4 +3002,125 @@ export class PrevioComponent implements OnInit, OnDestroy {
 
     return 'NO';
   }
+
+  // --- CALCULOS NORMALES (SCOTT) 2026 ---
+
+  private calcularAvanceEneFeb(cliente: Cliente, facturas: FacturaOdoo[]): number {
+    return this.calcularAvanceGenerico(cliente, facturas, '2026-01-01', '2026-02-28', false);
+  }
+
+  private calcularAvanceMarAbr(cliente: Cliente, facturas: FacturaOdoo[]): number {
+    return this.calcularAvanceGenerico(cliente, facturas, '2026-03-01', '2026-04-30', false);
+  }
+
+  private calcularAvanceMayJun(cliente: Cliente, facturas: FacturaOdoo[]): number {
+    return this.calcularAvanceGenerico(cliente, facturas, '2026-05-01', '2026-06-30', false);
+  }
+
+  // --- CALCULOS APP (SYNCROS/APPAREL/VITTORIA) 2026 ---
+
+  private calcularAvanceEneFebApp(cliente: Cliente, facturas: FacturaOdoo[]): number {
+    return this.calcularAvanceGenerico(cliente, facturas, '2026-01-01', '2026-02-28', true);
+  }
+
+  private calcularAvanceMarAbrApp(cliente: Cliente, facturas: FacturaOdoo[]): number {
+    return this.calcularAvanceGenerico(cliente, facturas, '2026-03-01', '2026-04-30', true);
+  }
+
+  private calcularAvanceMayJunApp(cliente: Cliente, facturas: FacturaOdoo[]): number {
+    return this.calcularAvanceGenerico(cliente, facturas, '2026-05-01', '2026-06-30', true);
+  }
+
+  // He creado esta función genérica para no repetir tu código de "Casos Especiales" 6 veces nuevas
+  // Si prefieres copiar y pegar tu código antiguo 6 veces, házmelo saber.
+  private calcularAvanceGenerico(cliente: Cliente, facturas: FacturaOdoo[], fInicio: string, fFin: string, esApp: boolean): number {
+    const clave = cliente.clave;
+    const nombreCliente = cliente.nombre_cliente?.toUpperCase() || '';
+    const fechaInicio = new Date(fInicio);
+    const fechaFin = new Date(fFin);
+
+    const esCasoEspecial = nombreCliente.includes('BROTHERS BIKE') ||
+      nombreCliente.includes('NARUCO') ||
+      clave === 'KC612' || clave === 'FD324' ||
+      nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ') ||
+      nombreCliente.includes('JOSE ANGEL DIAZ CORTES'); // Agregué el resto de tus casos especiales aquí si faltan
+
+    let facturasValidas;
+
+    const filtroBase = (factura: FacturaOdoo) => {
+      const fechaFactura = new Date(factura.fecha_factura);
+      const enRango = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
+
+      let esProductoValido = false;
+      if (esApp) {
+        esProductoValido = factura.marca === 'SYNCROS' || factura.marca === 'VITTORIA' || factura.apparel === 'SI';
+      } else {
+        // Lógica Scott Normal (Simplificada basada en tu código)
+        const esMarcaScott = factura.marca === 'SCOTT';
+        const esApparelNo = factura.apparel === 'NO';
+        const categoria = factura.categoria_producto?.toUpperCase() || '';
+        // Tu validación de Scott original:
+        const esCategoriaValida = categoria.includes('SCOTT') && !categoria.includes('APPAREL');
+        // O por nombre producto
+        const nombreProducto = factura.nombre_producto?.toUpperCase() || '';
+        esProductoValido = esMarcaScott && esApparelNo && (esCategoriaValida || nombreProducto.includes('SCOTT'));
+      }
+      return enRango && esProductoValido;
+    };
+
+    if (esCasoEspecial) {
+      facturasValidas = facturas.filter(factura => {
+        const coincideClave = factura.contacto_referencia === clave || factura.contacto_referencia === `${clave}-CA`;
+
+        let coincideNombre = false;
+        // Tu lógica específica de nombres
+        if (nombreCliente.includes('BROTHERS BIKE')) {
+          coincideNombre = factura.contacto_nombre?.toUpperCase().includes('BROTHERS BIKE');
+        } else if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
+          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) || nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+        } else {
+          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) || nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+        }
+
+        const baseValida = filtroBase(factura);
+
+        // Lógica de retorno según caso
+        if (nombreCliente.includes('BROTHERS BIKE')) return coincideNombre && baseValida;
+        if (nombreCliente.includes('NARUCO') && ['LC625', 'LC626', 'LC627'].includes(clave)) return coincideClave && baseValida;
+        return (coincideClave || coincideNombre) && baseValida;
+      });
+    } else {
+      // Caso Normal
+      facturasValidas = facturas.filter(factura => {
+        const coincideClave = factura.contacto_referencia === clave || factura.contacto_referencia === `${clave}-CA`;
+        return coincideClave && filtroBase(factura);
+      });
+
+      // Fallback nombre
+      if (facturasValidas.length === 0) {
+        facturasValidas = facturas.filter(factura => {
+          let coincideNombre = false;
+          // Logica fallback naruco vs normal
+          if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
+            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) || nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+          } else if (!nombreCliente.includes('NARUCO')) {
+            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) || nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
+          }
+          return coincideNombre && filtroBase(factura);
+        });
+      }
+    }
+
+    return facturasValidas.reduce((total, factura) => total + (+factura.venta_total || 0), 0);
+  }
+
+  // --- METAS 2026 (Pendiente actualizar montos) ---
+
+  calcularCompromisoEneFeb(nivel: string, nombre: string): number { return 0; } // <-- Poner montos reales
+  calcularCompromisoMarAbr(nivel: string, nombre: string): number { return 0; } // <-- Poner montos reales
+  calcularCompromisoMayJun(nivel: string, nombre: string): number { return 0; } // <-- Poner montos reales
+
+  calcularCompromisoEneFebApp(nivel: string, nombre: string): number { return 0; } // <-- Poner montos reales
+  calcularCompromisoMarAbrApp(nivel: string, nombre: string): number { return 0; } // <-- Poner montos reales
+  calcularCompromisoMayJunApp(nivel: string, nombre: string): number { return 0; } // <-- Poner montos reales
 }
