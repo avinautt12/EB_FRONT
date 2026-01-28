@@ -115,9 +115,9 @@
                     <tbody>
                         <tr>
                             <td><span class="category-badge category-scott">SCOTT</span></td>
-                            <td class="text-right">{{ metaScott | currency:'USD':'$':'$':'symbol':'1.2-2'}}</td>
-                            <td class="text-right">{{ acumuladoScott | currency:'USD':'$':'$':'symbol':'1.2-2'}}</td>
-                            <td class="text-right">{{ proyectadoScott | currency:'USD':'$':'$':'symbol':'1.2-2'}}</td>
+                            <td class="text-right">{{ metaScott | currency:'USD':'$':'1.2-2' }}</td>
+                            <td class="text-right">{{ acumuladoScott | currency:'USD':'$':'1.2-2' }}</td>
+                            <td class="text-right">{{ proyectadoScott | currency:'USD':'$':'1.2-2' }}</td>
                             <td class="text-center">{{ ((acumuladoScott / metaScott) * 100) | number:'1.0-0' }}%</td>
                             <td class="text-center">
                                 <span class="status-box" [ngClass]="{
@@ -138,9 +138,9 @@
                         </tr>
                         <tr>
                             <td><span class="category-badge category-apparel">APPAREL</span></td>
-                            <td class="text-right">{{metaApparel | currency:'USD':'$':'$':'symbol':'1.2-2'}}</td>
-                            <td class="text-right">{{ acumuladoApparel | currency:'USD':'$':'$':'symbol':'1.2-2'}}</td>
-                            <td class="text-right">{{ proyectadoApparel | currency:'USD':'$':'$':'symbol':'1.2-2'}}</td>
+                            <td class="text-right">{{metaApparel | currency:'USD':'$':'1.2-2' }}</td>
+                            <td class="text-right">{{ acumuladoApparel | currency:'USD':'$':'1.2-2' }}</td>
+                            <td class="text-right">{{ proyectadoApparel | currency:'USD':'$':'1.2-2' }}</td>
                             <td class="text-center">{{ ((acumuladoApparel / metaApparel) * 100) | number:'1.0-0' }}%</td>
                             <td class="text-center">
                                 <span class="status-box" [ngClass]="{

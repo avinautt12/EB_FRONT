@@ -100,8 +100,7 @@
                 </div>
                 <div class="info-item">
                     <span class="info-label">Compra Mínima ANUAL</span>
-                    <span class="info-value">{{ datosCliente.compra_minima_anual | currency:'USD':'$':'$':'symbol':'1.2-2'
-                        }}</span>
+                    <span class="info-value">{{ datosCliente.compra_minima_anual | currency:'USD':'$':'1.2-2' }}</span>
                 </div>
             </div>
 
@@ -232,14 +231,12 @@
                 <div class="compra-minima">
                     <div class="compra-item">
                         <div class="compra-label">Meta</div>
-                        <div class="compra-value">{{ datosCliente.compra_minima_anual | currency:'USD':'$':'$':'symbol':'1.2-2'
-                            }}
+                        <div class="compra-value">{{ datosCliente.compra_minima_anual | currency:'USD':'$':'1.2-2' }}
                         </div>
                     </div>
                     <div class="compra-item">
                         <div class="compra-label">Avance</div>
-                        <div class="compra-value">{{ datosCliente.acumulado_anticipado | currency:'USD':'$':'$':'symbol':'1.2-2'
-                            }}
+                        <div class="compra-value">{{ datosCliente.acumulado_anticipado | currency:'USD':'$':'1.2-2' }}
                         </div>
                     </div>
                     <div class="compra-item">
