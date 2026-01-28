@@ -45,17 +45,17 @@
                 <!-- Filas MY25 -->
                 <div class="fila-data">
                     <div class="col-categoria categoria-my25" rowspan="2">MY25</div>
-                    <div class="col-numero">{{ my25_monto1 | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-numero verde">{{ my25_monto3 | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-numero">{{ avance_proyectado_monto1 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero">{{ my25_monto1 | currency:'USD':'$':'1.2-2' }}</div>
+                    <div class="col-numero verde">{{ my25_monto3 | currency:'USD':'$':'1.2-2' }}</div>
+                    <div class="col-numero">{{ avance_proyectado_monto1 | currency:'USD':'$':'1.2-2' }}</div>
                     <div class="col-porcentaje verde-claro">{{ calcularPorcentajeMonto1() }}</div>
                 </div>
 
                 <div class="fila-data">
                     <div class="col-categoria"></div>
-                    <div class="col-numero">{{ my25_monto2 | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-numero verde">{{ my25_monto4 | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-numero">{{ avance_proyectado_monto2 | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero">{{ my25_monto2 | currency:'USD':'$':'1.2-2' }}</div>
+                    <div class="col-numero verde">{{ my25_monto4 | currency:'USD':'$':'1.2-2' }}</div>
+                    <div class="col-numero">{{ avance_proyectado_monto2 | currency:'USD':'$':'1.2-2' }}</div>
                     <div class="col-porcentaje verde-claro">{{ calcularPorcentajeMonto2() }}</div>
                 </div>
             </div>
@@ -78,18 +78,18 @@
                 <!-- SCOTT -->
                 <div class="fila-categoria scott-row">
                     <div class="col-categoria-linea categoria-scott">SCOTT</div>
-                    <div class="col-numero-linea">{{ montoCompromisoScott | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-numero-linea verde">{{ avanceGlobalScott | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-numero-linea">{{ avance_proyectado_scott | currency:'USD':'symbol':'1.2-2' }}</div>
+                    <div class="col-numero-linea">{{ montoCompromisoScott | currency:'USD':'$':'1.2-2' }}</div>
+                    <div class="col-numero-linea verde">{{ avanceGlobalScott | currency:'USD':'$':'1.2-2' }}</div>
+                    <div class="col-numero-linea">{{ avance_proyectado_scott | currency:'USD':'$':'1.2-2' }}</div>
                     <div class="col-porcentaje-linea verde-claro">{{ calcularPorcentajeScott() }}</div>
                 </div>
 
                 <!-- APPAREL, SYNCROS, VITTORIA -->
                 <div class="fila-categoria apparel-row">
                     <div class="col-categoria-linea categoria-apparel">APPAREL, SYNCROS, VITTORIA</div>
-                    <div class="col-numero-linea">{{ montoCompromisoApparel | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-numero-linea verde">{{ avanceGlobaApparel | currency:'USD':'symbol':'1.2-2' }}</div>
-                    <div class="col-numero-linea">{{ avance_proyectado_apparel | currency:'USD':'symbol':'1.2-2' }}
+                    <div class="col-numero-linea">{{ montoCompromisoApparel | currency:'USD':'$':'1.2-2' }}</div>
+                    <div class="col-numero-linea verde">{{ avanceGlobaApparel | currency:'USD':'$':'1.2-2' }}</div>
+                    <div class="col-numero-linea">{{ avance_proyectado_apparel | currency:'USD':'$':'1.2-2' }}
                     </div>
                     <div class="col-porcentaje-linea verde-claro">{{ calcularPorcentajeApparel() }}</div>
                 </div>
@@ -162,13 +162,13 @@
                         </div>
 
                         <div class="col-nivel">{{ cliente.nivel }}</div>
-                        <div class="col-compromiso">{{ cliente.compra_minima_anual | currency:'USD':'symbol':'1.2-2' }}
+                        <div class="col-compromiso">{{ cliente.compra_minima_anual | currency:'USD':'$':'1.2-2' }}
                         </div>
                         <div class="col-acumulado verde">{{ cliente.acumulado_anticipado |
                             currency:'USD':'symbol':'1.2-2' }}</div>
                         <div class="col-proyectado">{{ calcularAvanceProyectadoCliente(cliente.compra_minima_anual) |
                             currency:'USD':'symbol':'1.2-2' }}</div>
-                        <div class="col-diferencia">{{ calcularDiferencia(cliente) | currency:'USD':'symbol':'1.2-2' }}
+                        <div class="col-diferencia">{{ calcularDiferencia(cliente) | currency:'USD':'$':'1.2-2' }}
                         </div>
                     </div>
 
@@ -179,11 +179,10 @@
                                 <div class="detalle-titulo">Faltante SCOTT (Acumulado)</div>
                                 <div class="detalle-valor" [class.rojo]="getFaltanteScott(cliente) > 0"
                                     [class.verde]="getFaltanteScott(cliente) === 0">
-                                    {{ getFaltanteScott(cliente) | currency:'USD':'symbol':'1.2-2' }}
+                                    {{ getFaltanteScott(cliente) | currency:'USD':'$':'1.2-2' }}
                                 </div>
                                 <div class="detalle-sub">
-                                    (Meta al día: {{ getMetaAcumuladaScott(cliente) | currency:'USD':'symbol':'1.0-0'
-                                    }})
+                                    (Meta al día: {{ getMetaAcumuladaScott(cliente) | currency:'USD':'$':'1.2-2' }})
                                 </div>
                             </div>
 
@@ -191,11 +190,10 @@
                                 <div class="detalle-titulo">Faltante APPAREL (Acumulado)</div>
                                 <div class="detalle-valor" [class.rojo]="getFaltanteApparel(cliente) > 0"
                                     [class.verde]="getFaltanteApparel(cliente) === 0">
-                                    {{ getFaltanteApparel(cliente) | currency:'USD':'symbol':'1.2-2' }}
+                                    {{ getFaltanteApparel(cliente) | currency:'USD':'$':'1.2-2' }}
                                 </div>
                                 <div class="detalle-sub">
-                                    (Meta al día: {{ getMetaAcumuladaApparel(cliente) | currency:'USD':'symbol':'1.0-0'
-                                    }})
+                                    (Meta al día: {{ getMetaAcumuladaApparel(cliente) | currency:'USD':'$':'1.2-2' }})
                                 </div>
                             </div>
 
