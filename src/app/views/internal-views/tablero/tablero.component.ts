@@ -79,7 +79,6 @@ export class TableroComponent implements OnInit {
     this.valorTemp = columna === 'real' ? item.col_real : item.col_proyectado;
   }
 
-  // 2. Guardar al dar Enter o salir del foco
   guardarEdicion(item: RenglonDashboard, columna: 'real' | 'proyectado'): void {
     if (!this.celdaEditando) return;
 
@@ -87,20 +86,33 @@ export class TableroComponent implements OnInit {
     const valorOriginal = columna === 'real' ? item.col_real : item.col_proyectado;
 
     if (this.valorTemp !== valorOriginal) {
-      // Optimismo: Actualizamos la vista inmediatamente
+
+      // 1. Optimismo visual: Actualizamos la celda editada inmediatamente
+      // para que el usuario no vea que "regresa" al valor anterior
       if (columna === 'real') item.col_real = this.valorTemp;
       else item.col_proyectado = this.valorTemp;
 
-      // Recalculamos la diferencia visualmente
+      // 2. Recalculamos la diferencia de esa fila visualmente
       item.col_diferencia = item.col_real - item.col_proyectado;
-      this.calcularTotales();
 
-      // Enviamos a BD
+      // 3. Enviamos a BD
       const fecha = this.obtenerFechaQuery();
+
+      // Pone el estado en 'cargando' silencioso si quieres, o déjalo así
       this.flujoService.guardarValor(item.id, fecha, this.valorTemp, columna).subscribe({
+        next: (res) => {
+          // ================================================================
+          // ¡AQUÍ ESTÁ LA SOLUCIÓN!
+          // Una vez que Python dice "Ya guardé y recalculé",
+          // volvemos a pedir la tabla para ver los NUEVOS TOTALES.
+          // ================================================================
+          this.cargarDatos();
+        },
         error: (err) => {
           alert("Error guardando valor");
-          // Revertir si falla (opcional)
+          // Opcional: Revertir el valor si falla
+          if (columna === 'real') item.col_real = valorOriginal;
+          else item.col_proyectado = valorOriginal;
         }
       });
     }
