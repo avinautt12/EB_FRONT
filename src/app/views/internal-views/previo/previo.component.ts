@@ -290,6 +290,8 @@ export class PrevioComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
+    this.cargando = true;
+
     Promise.all([
       this.clientesService.getClientes().toPromise(),
       this.previoService.getFacturasCalculadas().toPromise()
@@ -300,98 +302,45 @@ export class PrevioComponent implements OnInit, OnDestroy {
         this.filtroActivo = filtroId;
       });
 
-      // Primero mapear todos los clientes con sus acumulados
-      const todosClientes = clientes.map((cliente: Cliente) => {
-        const {
-          acumulado,
-          scott,
-          avance_jul_ago,
-          avance_sep_oct,
-          avance_nov_dic,
-          avance_jul_ago_app,
-          avance_sep_oct_app,
-          avance_nov_dic_app,
-          acumulado_syncros,
-          acumulado_apparel,
-          acumulado_vittoria,
-          acumulado_bold,
-          avance_global_apparel_syncros_vittoria,
-          avance_global
-          //avance_global_1
-        } = this.calcularAcumulados(cliente, this.facturas);
+      // 1. Mapear clientes incluyendo los nuevos periodos de 2026
+      const todosClientes = (clientes || []).map((cliente: Cliente) => {
+        const res = this.calcularAcumulados(cliente, this.facturas);
         const fechaInicio = cliente.f_inicio ? new Date(cliente.f_inicio) : new Date('2025-07-01');
 
         return {
           ...cliente,
-          acumulado_anticipado: acumulado,
-          avance_global_scott: scott,
-          avance_jul_ago: avance_jul_ago,
-          avance_sep_oct: avance_sep_oct,
-          avance_nov_dic: avance_nov_dic,
-          avance_jul_ago_app: avance_jul_ago_app,
-          avance_sep_oct_app: avance_sep_oct_app,
-          avance_nov_dic_app: avance_nov_dic_app,
-          acumulado_syncros: acumulado_syncros,
-          acumulado_apparel: acumulado_apparel,
-          acumulado_vittoria: acumulado_vittoria,
-          acumulado_bold: acumulado_bold,
-          avance_global_apparel_syncros_vittoria: avance_global_apparel_syncros_vittoria,
-          avance_global: avance_global,
-          //avance_global_1: avance_global_1,
+          ...res, // Esto ya trae scott, avance_ene_feb, etc., desde tu calcularAcumulados corregido
+          acumulado_anticipado: res.acumulado,
+          avance_global_scott: res.scott,
           fecha_inicio_calculo: fechaInicio.toISOString().split('T')[0]
         };
       });
 
-      // Luego procesar los integrales
+      // 2. Procesar los integrales (Crea los grupos sumando los individuales)
       this.clientesOriginal = this.procesarIntegrales(todosClientes);
-      this.combinarDatos();
 
+      // 3. Llenar la fuente de verdad (clientes + integrales)
+      this.combinarDatos(); // Esto llena this.todosLosDatos
+
+      // 4. Configurar opciones de filtros basadas en la lista completa
       this.inicializarOpcionesFiltro();
+
+      // 5. Aplicar filtros e inicializar tabla
+      this.aplicarFiltros();
+
+      // 6. Guardar resultados procesados
       this.guardarDatosEnBackend();
 
-      // Configurar filtros basados en TODOS los datos
-      this.zonasUnicas = Array.from(new Set(this.todosLosDatos.map(c => c.zona ?? '').filter(Boolean)));
-      this.nivelesUnicos = Array.from(new Set(this.todosLosDatos.map(c => c.nivel ?? '').filter(Boolean)));
-
-      // Dentro de ngOnInit(), después de cargar los datos
-      this.opcionesEleccionNivel = Array.from(new Set(this.todosLosDatos.map(c => c.nivel)))
-        .filter(nivel => nivel) // Filtrar valores nulos/vacíos
-        .map(nivel => ({
-          value: nivel,
-          selected: false
-        }));
-
-      this.aplicarFiltros();
       this.cargando = false;
       this.onInit.emit();
 
     }).catch(error => {
-      console.error('Error al cargar datos:', error);
+      console.error('Error al cargar datos iniciales:', error);
       this.cargando = false;
-
-      this.onInit.emit();
     });
 
-    this.previoService.obtenerPrevio().subscribe({
-      next: (datos) => {
-        // Procesar datos del endpoint (convertir strings a números)
-        this.datosPrevio = this.procesarDatosDelEndpoint(datos);
-        this.clientesFiltrados = this.datosPrevio;
-        this.todosLosDatos = this.datosPrevio;
-
-        // Calcular totales después de procesar los datos
-        this.calcularTotales();
-
-        this.inicializarOpcionesFiltro();
-        this.totalPaginas = Math.ceil(this.clientesFiltrados.length / this.itemsPorPagina);
-        this.actualizarPaginado();
-        this.cargando = false;
-      },
-      error: (error) => {
-        console.error('Error al cargar datos del previo:', error);
-        this.cargando = false;
-      }
-    });
+    // NOTA: He eliminado el bloque previoService.obtenerPrevio() que tenías aquí abajo 
+    // porque sobreescribía el trabajo de los integrales con datos crudos del servidor.
   }
 
   procesarDatosDelEndpoint(datos: any[]): ClienteConAcumulado[] {
@@ -479,28 +428,32 @@ export class PrevioComponent implements OnInit, OnDestroy {
   }
 
   filtrarClientes() {
+    const filtroClave = this.filtros.clave;
     const filtroEvac = this.filtros.evac;
     const filtroCliente = this.filtros.cliente;
     const filtroNivel = this.filtros.nivel;
     const filtroCumplimiento = this.filtros.cumplimiento;
 
     const filtrar = (cliente: ClienteConAcumulado) => {
-      const claveValida = !this.filtros.clave.length || this.filtros.clave.includes(cliente.clave);
+      // Si es un Integral (Clave empieza con "Integral"), lo mantenemos si no hay filtros o si coincide con nivel/cliente
+      const esIntegral = cliente.esIntegral;
+
+      const claveValida = !filtroClave.length || filtroClave.includes(cliente.clave);
       const evacValido = !filtroEvac.length || filtroEvac.includes(cliente.evac);
       const clienteValido = !filtroCliente.length || filtroCliente.includes(cliente.nombre_cliente);
       const nivelValido = !filtroNivel.length || filtroNivel.includes(cliente.nivel);
-      const cumplimientoValido = !filtroCumplimiento.length ||
-        filtroCumplimiento.includes(this.verificarCumplimientoCompraInicial(cliente));
+
+      const cumplimientoStatus = this.verificarCumplimientoCompraInicial(cliente);
+      const cumplimientoValido = !filtroCumplimiento.length || filtroCumplimiento.includes(cumplimientoStatus);
 
       return claveValida && evacValido && clienteValido && nivelValido && cumplimientoValido;
     };
 
+    // Filtramos sobre todos los datos (Clientes + Integrales)
     this.clientesFiltrados = this.todosLosDatos.filter(filtrar);
 
-    // Actualizar paginación para la lista combinada
     this.totalPaginas = Math.ceil(this.clientesFiltrados.length / this.itemsPorPagina);
     this.actualizarPaginado();
-
     this.calcularTotales();
   }
 
@@ -515,30 +468,17 @@ export class PrevioComponent implements OnInit, OnDestroy {
   }
 
   private inicializarOpcionesFiltro(): void {
-    // NUEVO: Usar todosLosDatos en lugar de arrays separados
     const clavesUnicas = Array.from(new Set(this.todosLosDatos.map(c => c.clave).filter(Boolean)));
-    this.opcionesClave = clavesUnicas.map(clave => ({
-      value: clave,
-      selected: false
-    }));
+    this.opcionesClave = clavesUnicas.map(clave => ({ value: clave, selected: false }));
 
     const evacsUnicos = Array.from(new Set(this.todosLosDatos.map(c => c.evac).filter(Boolean)));
-    this.opcionesEvac = evacsUnicos.map(evac => ({
-      value: evac,
-      selected: false
-    }));
+    this.opcionesEvac = evacsUnicos.map(evac => ({ value: evac, selected: false }));
 
     const nombresUnicos = Array.from(new Set(this.todosLosDatos.map(c => c.nombre_cliente).filter(Boolean)));
-    this.opcionesCliente = nombresUnicos.map(nombre => ({
-      value: nombre,
-      selected: false
-    }));
+    this.opcionesCliente = nombresUnicos.map(nombre => ({ value: nombre, selected: false }));
 
     const nivelesUnicos = Array.from(new Set(this.todosLosDatos.map(c => c.nivel).filter(Boolean)));
-    this.opcionesEleccionNivel = nivelesUnicos.map(nivel => ({
-      value: nivel,
-      selected: false
-    }));
+    this.opcionesEleccionNivel = nivelesUnicos.map(nivel => ({ value: nivel, selected: false }));
 
     this.opcionesCumplimiento = [
       { value: 'SI', selected: false },
@@ -728,10 +668,16 @@ export class PrevioComponent implements OnInit, OnDestroy {
         compromisoJulAgo: 1930500,
         compromisoSepOct: 2047500,
         compromisoNovDic: 1872000,
+        compromisoEneFeb: 1260000,
+        compromisoMarAbr: 1417500,
+        compromisoMayJun: 472500,
         compromisoSynApaVit: 990000,
         compromisoJulAgoApp: 163350,
         compromisoSepOctApp: 173250,
-        compromisoNovDicApp: 158400
+        compromisoNovDicApp: 158400,
+        compromisoEneFebApp: 163350,
+        compromisoMarAbrApp: 173250,
+        compromisoMayJunApp: 158400
       },
       {
         nombre: 'VICTOR HUGO VILLANUEVA GUZMAN',
@@ -744,10 +690,16 @@ export class PrevioComponent implements OnInit, OnDestroy {
         compromisoJulAgo: 3861000,
         compromisoSepOct: 4095000,
         compromisoNovDic: 3744000,
+        compromisoEneFeb: 2520000,
+        compromisoMarAbr: 2835000,
+        compromisoMayJun: 945000,
         compromisoSynApaVit: 1980000,
         compromisoJulAgoApp: 326700,
         compromisoSepOctApp: 346500,
-        compromisoNovDicApp: 316800
+        compromisoNovDicApp: 316800,
+        compromisoEneFebApp: 326700,
+        compromisoMarAbrApp: 346500,
+        compromisoMayJunApp: 316800
       },
       {
         nombre: 'NARUCO',
@@ -760,10 +712,16 @@ export class PrevioComponent implements OnInit, OnDestroy {
         compromisoJulAgo: 1064250,
         compromisoSepOct: 1128600,
         compromisoNovDic: 1029600,
+        compromisoEneFeb: 693000,
+        compromisoMarAbr: 779625,
+        compromisoMayJun: 259875,
         compromisoSynApaVit: 750000,
         compromisoJulAgoApp: 123750,
         compromisoSepOctApp: 260750,
-        compromisoNovDicApp: 238400
+        compromisoNovDicApp: 238400,
+        compromisoEneFebApp: 123750,
+        compromisoMarAbrApp: 260750,
+        compromisoMayJunApp: 238400
       }
     ];
 
@@ -860,9 +818,19 @@ export class PrevioComponent implements OnInit, OnDestroy {
       const sumaJulAgo = clientesGrupo.reduce((sum, c) => sum + (c.avance_jul_ago || 0), 0);
       const sumaSepOct = clientesGrupo.reduce((sum, c) => sum + (c.avance_sep_oct || 0), 0);
       const sumaNovDic = clientesGrupo.reduce((sum, c) => sum + (c.avance_nov_dic || 0), 0);
+      const sumaEneFeb = clientesGrupo.reduce((sum, c) => sum + (c.avance_ene_feb || 0), 0);
+      const sumaMarAbr = clientesGrupo.reduce((sum, c) => sum + (c.avance_mar_abr || 0), 0);
+      const sumaMayJun = clientesGrupo.reduce((sum, c) => sum + (c.avance_may_jun || 0), 0);
+
+
       const sumaJulAgoApp = clientesGrupo.reduce((sum, c) => sum + (c.avance_jul_ago_app || 0), 0);
       const sumaSepOctApp = clientesGrupo.reduce((sum, c) => sum + (c.avance_sep_oct_app || 0), 0);
       const sumaNovDicApp = clientesGrupo.reduce((sum, c) => sum + (c.avance_nov_dic_app || 0), 0);
+      const sumaEneFebApp = clientesGrupo.reduce((sum, c) => sum + (c.avance_ene_feb_app || 0), 0);
+      const sumaMarAbrApp = clientesGrupo.reduce((sum, c) => sum + (c.avance_mar_abr_app || 0), 0);
+      const sumaMayJunApp = clientesGrupo.reduce((sum, c) => sum + (c.avance_may_jun_app || 0), 0);
+
+
       const acumuladoSyncros = clientesGrupo.reduce((sum, c) => sum + (c.acumulado_syncros || 0), 0);
       const acumuladoApparel = clientesGrupo.reduce((sum, c) => sum + (c.acumulado_apparel || 0), 0);
       const acumuladoVittoria = clientesGrupo.reduce((sum, c) => sum + (c.acumulado_vittoria || 0), 0);
@@ -885,18 +853,31 @@ export class PrevioComponent implements OnInit, OnDestroy {
         compromiso_jul_ago: grupo.compromisoJulAgo,
         compromiso_sep_oct: grupo.compromisoSepOct,
         compromiso_nov_dic: grupo.compromisoNovDic,
+        compromiso_ene_feb: grupo.compromisoEneFeb,
+        compromiso_mar_abr: grupo.compromisoMarAbr,
+        compromiso_may_jun: grupo.compromisoMayJun,
         compromiso_apparel_syncros_vittoria: grupo.compromisoSynApaVit,
         compromiso_jul_ago_app: grupo.compromisoJulAgoApp,
         compromiso_sep_oct_app: grupo.compromisoSepOctApp,
         compromiso_nov_dic_app: grupo.compromisoNovDicApp,
+        compromiso_ene_feb_app: grupo.compromisoEneFebApp,
+        compromiso_mar_abr_app: grupo.compromisoMarAbrApp,
+        compromiso_may_jun_app: grupo.compromisoMayJunApp,
         esIntegral: true,
         esParteDeIntegral: false,
         avance_jul_ago: sumaJulAgo,
         avance_sep_oct: sumaSepOct,
         avance_nov_dic: sumaNovDic,
+        avance_ene_feb: sumaEneFeb,
+        avance_mar_abr: sumaMarAbr,
+        avance_may_jun: sumaMayJun,
         avance_jul_ago_app: sumaJulAgoApp,
         avance_sep_oct_app: sumaSepOctApp,
         avance_nov_dic_app: sumaNovDicApp,
+        avance_ene_feb_app: sumaEneFebApp,
+        avance_mar_abr_app: sumaMarAbrApp,
+        avance_may_jun_app: sumaMayJunApp,
+
         acumulado_syncros: acumuladoSyncros,
         acumulado_apparel: acumuladoApparel,
         acumulado_vittoria: acumuladoVittoria,
@@ -908,6 +889,61 @@ export class PrevioComponent implements OnInit, OnDestroy {
     });
 
     return todosClientesProcesados;
+  }
+
+  // --- METAS 2026 BASADAS EN TABLAS ---
+  calcularCompromisoEneFeb(nivel: string, nombre: string): number {
+    const n = nivel?.toUpperCase();
+    if (n === 'PARTNER ELITE PLUS') return 840000;
+    if (n === 'PARTNER ELITE') return 308000;
+    if (n === 'PARTNER') return 210000;
+    if (n === 'DISTRIBUIDOR') return 52500;
+    return 0;
+  }
+
+  calcularCompromisoMarAbr(nivel: string, nombre: string): number {
+    const n = nivel?.toUpperCase();
+    if (n === 'PARTNER ELITE PLUS') return 945000;
+    if (n === 'PARTNER ELITE') return 346500;
+    if (n === 'PARTNER') return 236250;
+    if (n === 'DISTRIBUIDOR') return 52500;
+    return 0;
+  }
+
+  calcularCompromisoMayJun(nivel: string, nombre: string): number {
+    const n = nivel?.toUpperCase();
+    if (n === 'PARTNER ELITE PLUS') return 315000;
+    if (n === 'PARTNER ELITE') return 115500;
+    if (n === 'PARTNER') return 78750;
+    if (n === 'DISTRIBUIDOR') return 0;
+    return 0;
+  }
+
+  calcularCompromisoEneFebApp(nivel: string, nombre: string): number {
+    const n = nivel?.toUpperCase();
+    if (n === 'PARTNER ELITE PLUS') return 108900;
+    if (n === 'PARTNER ELITE') return 54450;
+    if (n === 'PARTNER') return 37950;
+    if (n === 'DISTRIBUIDOR') return 15000;
+    return 0;
+  }
+
+  calcularCompromisoMarAbrApp(nivel: string, nombre: string): number {
+    const n = nivel?.toUpperCase();
+    if (n === 'PARTNER ELITE PLUS') return 115500;
+    if (n === 'PARTNER ELITE') return 57750;
+    if (n === 'PARTNER') return 40250;
+    if (n === 'DISTRIBUIDOR') return 15000;
+    return 0;
+  }
+
+  calcularCompromisoMayJunApp(nivel: string, nombre: string): number {
+    const n = nivel?.toUpperCase();
+    if (n === 'PARTNER ELITE PLUS') return 105600;
+    if (n === 'PARTNER ELITE') return 52800;
+    if (n === 'PARTNER') return 36800;
+    if (n === 'DISTRIBUIDOR') return 0;
+    return 0;
   }
 
   calcularAvanceGlobal(cliente: any): number {
@@ -1098,107 +1134,50 @@ export class PrevioComponent implements OnInit, OnDestroy {
     const fechaInicio = cliente.f_inicio ? new Date(cliente.f_inicio) : new Date('2025-07-01');
     const fechaFin = cliente.f_fin ? new Date(cliente.f_fin) : new Date('2026-06-30');
 
-    // DEBUG: Solo para el cliente específico LD648
-    const esClienteDebug = clave === 'LD648' && nombreCliente.includes('FRANCISCO DAVID FRAGOSO DEL RIO');
-
-    // FILTRADO SEGURO: Primero por clave, si no hay resultados entonces por nombre
+    // Filtrado de facturas generales del cliente
     let facturasCliente = facturas.filter(factura => {
-      // PRIMERA PRIORIDAD: buscar por CLAVE EXACTA
-      const coincidePorClave =
-        factura.contacto_referencia === clave ||
-        factura.contacto_referencia === `${clave}-CA`;
-
+      const coincidePorClave = factura.contacto_referencia === clave || factura.contacto_referencia === `${clave}-CA`;
       const fechaFactura = new Date(factura.fecha_factura);
       return coincidePorClave && fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
     });
 
-    // FALLBACK: Solo si no hay facturas por clave, buscar por nombre
     if (facturasCliente.length === 0) {
       facturasCliente = facturas.filter(factura => {
         const nombreFactura = factura.contacto_nombre?.toUpperCase() || '';
-        const coincidePorNombre = nombreFactura === nombreCliente ||
-          (nombreCliente.length > 10 && nombreFactura.includes(nombreCliente)) ||
-          (nombreFactura.length > 10 && nombreCliente.includes(nombreFactura));
-
+        const coincidePorNombre = nombreFactura === nombreCliente || (nombreCliente.length > 10 && nombreFactura.includes(nombreCliente));
         const fechaFactura = new Date(factura.fecha_factura);
         return coincidePorNombre && fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
       });
     }
 
-    // FACTURAS SCOTT - VALIDACIÓN SIMPLIFICADA
-    let facturasScott = facturas.filter(factura => {
-      // PRIMERA PRIORIDAD: por clave exacta
-      const coincidePorClave =
-        factura.contacto_referencia === clave ||
-        factura.contacto_referencia === `${clave}-CA`;
-
-      // Validación simplificada para productos Scott
-      const esMarcaScott = factura.marca === 'SCOTT';
-      const esApparelNo = factura.apparel === 'NO';
-
-      // Solo validar que no sea apparel, no restringir por categoría o nombre
-      const esProductoValido = esMarcaScott && esApparelNo;
-
-      const fechaFactura = new Date(factura.fecha_factura);
-      const fechaValida = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-
-      return coincidePorClave && esProductoValido && fechaValida;
-    });
-
-    // FALLBACK para Scott: Solo si no hay facturas por clave, buscar por nombre
-    if (facturasScott.length === 0) {
-      facturasScott = facturas.filter(factura => {
-        const nombreFactura = factura.contacto_nombre?.toUpperCase() || '';
-        const coincidePorNombre = nombreFactura === nombreCliente ||
-          (nombreCliente.length > 10 && nombreFactura.includes(nombreCliente)) ||
-          (nombreFactura.length > 10 && nombreCliente.includes(nombreFactura));
-
-        // Validación simplificada para productos Scott
-        const esMarcaScott = factura.marca === 'SCOTT';
-        const esApparelNo = factura.apparel === 'NO';
-
-        // Solo validar que no sea apparel, no restringir por categoría o nombre
-        const esProductoValido = esMarcaScott && esApparelNo;
-
-        const fechaFactura = new Date(factura.fecha_factura);
-        const fechaValida = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-
-        return coincidePorNombre && esProductoValido && fechaValida;
-      });
-    }
-
-    // Calcular los acumulados específicos usando los métodos existentes
+    // Cálculos de periodos específicos usando tus métodos individuales
     const avanceJulAgo = this.calcularAvanceJulAgo(cliente, facturas);
     const avanceSepOct = this.calcularAvanceSepOct(cliente, facturas);
     const avanceNovDic = this.calcularAvanceNovDic(cliente, facturas);
+    const avanceEneFeb = this.calcularAvanceEneFeb(cliente, facturas);
+    const avanceMarAbr = this.calcularAvanceMarAbr(cliente, facturas);
+    const avanceMayJun = this.calcularAvanceMayJun(cliente, facturas);
+
     const avanceJulAgoApp = this.calcularAvanceJulAgoApp(cliente, facturas);
     const avanceSepOctApp = this.calcularAvanceSepOctApp(cliente, facturas);
     const avanceNovDicApp = this.calcularAvanceNovDicApp(cliente, facturas);
+    const avanceEneFebApp = this.calcularAvanceEneFebApp(cliente, facturas);
+    const avanceMarAbrApp = this.calcularAvanceMarAbrApp(cliente, facturas);
+    const avanceMayJunApp = this.calcularAvanceMayJunApp(cliente, facturas);
+
     const acumuladoSyncros = this.calcularAcumuladoSyncros(cliente, facturas);
     const acumuladoApparel = this.calcularAcumuladoApparel(cliente, facturas);
     const acumuladoVittoria = this.calcularAcumuladoVittoria(cliente, facturas);
     const acumuladoBold = this.calcularAcumuladoBold(cliente, facturas);
 
-    const avanceEneFeb = this.calcularAvanceEneFeb(cliente, facturas);
-    const avanceMarAbr = this.calcularAvanceMarAbr(cliente, facturas);
-    const avanceMayJun = this.calcularAvanceMayJun(cliente, facturas);
-
-    const avanceEneFebApp = this.calcularAvanceEneFebApp(cliente, facturas);
-    const avanceMarAbrApp = this.calcularAvanceMarAbrApp(cliente, facturas);
-    const avanceMayJunApp = this.calcularAvanceMayJunApp(cliente, facturas);
-
-    // Calcular totales usando las facturas filtradas correctamente
     const acumulado = facturasCliente.reduce((total, factura) => total + (+factura.venta_total || 0), 0);
-    const acumuladoScott = facturasScott.reduce((total, factura) => total + (+factura.venta_total || 0), 0);
+    const acumuladoScott = avanceJulAgo + avanceSepOct + avanceNovDic + avanceEneFeb + avanceMarAbr + avanceMayJun;
 
-    const avance_global_apparel_syncros_vittoria = (acumuladoSyncros || 0) +
-      (acumuladoApparel || 0) +
-      (acumuladoVittoria || 0);
-
-    const avance_global = acumuladoScott + acumuladoSyncros + acumuladoApparel + acumuladoVittoria;
+    const avance_global_apparel_syncros_vittoria = acumuladoSyncros + acumuladoApparel + acumuladoVittoria;
+    const avance_global = acumuladoScott + avance_global_apparel_syncros_vittoria;
 
     return {
-      acumulado: acumulado,
+      acumulado,
       scott: acumuladoScott,
       avance_jul_ago: avanceJulAgo,
       avance_sep_oct: avanceSepOct,
@@ -2127,48 +2106,29 @@ export class PrevioComponent implements OnInit, OnDestroy {
     switch (nombreCliente.toUpperCase()) {
       case 'MARCO TULIO ANDRADE NAVARRO':
         return {
-          compraMinimaAnual: 12200000,
-          compraMinimaInicial: 6345000,
-          compromisoScott: 9000000,
-          compromisoJulAgo: 1930500,
-          compromisoSepOct: 2047500,
-          compromisoNovDic: 1872000,
-          compromisoSynApaVit: 990000,
-          compromisoJulAgoApp: 163350,
-          compromisoSepOctApp: 173250,
-          compromisoNovDicApp: 158400
+          compraMinimaAnual: 12200000, compraMinimaInicial: 6345000, compromisoScott: 9000000,
+          compromisoJulAgo: 1930500, compromisoSepOct: 2047500, compromisoNovDic: 1872000,
+          compromisoEneFeb: 1260000, compromisoMarAbr: 1417500, compromisoMayJun: 472500, // 2026
+          compromisoSynApaVit: 990000, compromisoJulAgoApp: 163350, compromisoSepOctApp: 173250,
+          compromisoNovDicApp: 158400, compromisoEneFebApp: 163350, compromisoMarAbrApp: 173250, compromisoMayJunApp: 158400
         };
-
       case 'VICTOR HUGO VILLANUEVA GUZMAN':
         return {
-          compraMinimaAnual: 19980000,
-          compraMinimaInicial: 12690000,
-          compromisoScott: 18000000,
-          compromisoJulAgo: 3861000,
-          compromisoSepOct: 4095000,
-          compromisoNovDic: 3744000,
-          compromisoSynApaVit: 1980000,
-          compromisoJulAgoApp: 326700,
-          compromisoSepOctApp: 346500,
-          compromisoNovDicApp: 316800
+          compraMinimaAnual: 19980000, compraMinimaInicial: 12690000, compromisoScott: 18000000,
+          compromisoJulAgo: 3861000, compromisoSepOct: 4095000, compromisoNovDic: 3744000,
+          compromisoEneFeb: 2520000, compromisoMarAbr: 2835000, compromisoMayJun: 945000, // 2026
+          compromisoSynApaVit: 1980000, compromisoJulAgoApp: 326700, compromisoSepOctApp: 346500,
+          compromisoNovDicApp: 316800, compromisoEneFebApp: 326700, compromisoMarAbrApp: 346500, compromisoMayJunApp: 316800
         };
-
       case 'NARUCO':
         return {
-          compraMinimaAnual: 5700000,
-          compraMinimaInicial: 3590000,
-          compromisoScott: 4950000,
-          compromisoJulAgo: 1061775,
-          compromisoSepOct: 2808000,
-          compromisoNovDic: 2808000,
-          compromisoSynApaVit: 750000,
-          compromisoJulAgoApp: 123750,
-          compromisoSepOctApp: 260750,
-          compromisoNovDicApp: 238400
+          compraMinimaAnual: 5700000, compraMinimaInicial: 3590000, compromisoScott: 4950000,
+          compromisoJulAgo: 1064250, compromisoSepOct: 1128600, compromisoNovDic: 1029600,
+          compromisoEneFeb: 693000, compromisoMarAbr: 779625, compromisoMayJun: 259875, // 2026
+          compromisoSynApaVit: 750000, compromisoJulAgoApp: 123750, compromisoSepOctApp: 260750,
+          compromisoNovDicApp: 238400, compromisoEneFebApp: 123750, compromisoMarAbrApp: 260750, compromisoMayJunApp: 238400
         };
-
-      default:
-        return null;
+      default: return null;
     }
   }
 
@@ -2594,12 +2554,12 @@ export class PrevioComponent implements OnInit, OnDestroy {
   }
 
   calcularTotales(): void {
-    // Resetear totales
+    // 1. Resetear todos los totales a 0
     Object.keys(this.totales).forEach(key => {
       (this.totales as any)[key] = 0;
     });
 
-    // Llamar a cada método de cálculo específico
+    // 2. Llamar a los métodos de cálculo de 2025
     this.calcularTotalesAnticipado();
     this.calcularTotalesCompraMinimaAnual();
     this.calcularTotalesCompraMinimaInicial();
@@ -2613,8 +2573,13 @@ export class PrevioComponent implements OnInit, OnDestroy {
     this.calcularTotalCompromisoNovDic();
     this.calcularTotalAvanceNovDic();
 
-    // Apparel
+    // 3. Totales de marcas individuales
+    this.calcularTotalSyncros();
+    this.calcularTotalApparel();
+    this.calcularTotalVittoria();
+    this.calcularTotalBold();
 
+    // 4. Totales de Apparel 2025
     this.calcularTotalCompromisoAppSynVittoria();
     this.calcularTotalGlobalAppSynVittoria();
     this.calcularTotalCompromisoJulAgoApp();
@@ -2624,10 +2589,32 @@ export class PrevioComponent implements OnInit, OnDestroy {
     this.calcularTotalCompromisoNovDicApp();
     this.calcularTotalAvanceNovDicApp();
 
-    this.calcularTotalSyncros();
-    this.calcularTotalApparel();
-    this.calcularTotalVittoria();
-    this.calcularTotalBold();
+    // 5. ¡IMPORTANTE! Llamar al nuevo método de 2026 para sumar las nuevas columnas
+    this.calcularTotales2026();
+  }
+
+  private calcularTotales2026(): void {
+    // Filtramos para no sumar doble (excluimos los componentes individuales de los integrales)
+    const clavesExcluidas = ['JC539', 'EC216', 'LC657', 'GC411', 'MC679', 'MC677', 'LC625', 'LC626', 'LC627'];
+    const clientesValidos = this.clientesFiltrados.filter(c => !clavesExcluidas.includes(c.clave));
+
+    clientesValidos.forEach(c => {
+      // Sumamos Scott 2026
+      this.totales.compromiso_ene_feb += c.compromiso_ene_feb || 0;
+      this.totales.avance_ene_feb += c.avance_ene_feb || 0;
+      this.totales.compromiso_mar_abr += c.compromiso_mar_abr || 0;
+      this.totales.avance_mar_abr += c.avance_mar_abr || 0;
+      this.totales.compromiso_may_jun += c.compromiso_may_jun || 0;
+      this.totales.avance_may_jun += c.avance_may_jun || 0;
+
+      // Sumamos Apparel 2026
+      this.totales.compromiso_ene_feb_app += c.compromiso_ene_feb_app || 0;
+      this.totales.avance_ene_feb_app += c.avance_ene_feb_app || 0;
+      this.totales.compromiso_mar_abr_app += c.compromiso_mar_abr_app || 0;
+      this.totales.avance_mar_abr_app += c.avance_mar_abr_app || 0;
+      this.totales.compromiso_may_jun_app += c.compromiso_may_jun_app || 0;
+      this.totales.avance_may_jun_app += c.avance_may_jun_app || 0;
+    });
   }
 
   // 1. Totales de anticipado - ejemplo: excluir integrales
@@ -3113,14 +3100,5 @@ export class PrevioComponent implements OnInit, OnDestroy {
 
     return facturasValidas.reduce((total, factura) => total + (+factura.venta_total || 0), 0);
   }
-
-  // --- METAS 2026 (Pendiente actualizar montos) ---
-
-  calcularCompromisoEneFeb(nivel: string, nombre: string): number { return 0; } // <-- Poner montos reales
-  calcularCompromisoMarAbr(nivel: string, nombre: string): number { return 0; } // <-- Poner montos reales
-  calcularCompromisoMayJun(nivel: string, nombre: string): number { return 0; } // <-- Poner montos reales
-
-  calcularCompromisoEneFebApp(nivel: string, nombre: string): number { return 0; } // <-- Poner montos reales
-  calcularCompromisoMarAbrApp(nivel: string, nombre: string): number { return 0; } // <-- Poner montos reales
-  calcularCompromisoMayJunApp(nivel: string, nombre: string): number { return 0; } // <-- Poner montos reales
 }
+

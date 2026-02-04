@@ -165,9 +165,9 @@
                         <div class="col-compromiso">{{ cliente.compra_minima_anual | currency:'USD':'$':'1.2-2' }}
                         </div>
                         <div class="col-acumulado verde">{{ cliente.acumulado_anticipado |
-                            currency:'USD':'symbol':'1.2-2' }}</div>
+                            currency:'USD':'$':'1.2-2' }}</div>
                         <div class="col-proyectado">{{ calcularAvanceProyectadoCliente(cliente.compra_minima_anual) |
-                            currency:'USD':'symbol':'1.2-2' }}</div>
+                            currency:'USD':'$':'1.2-2' }}</div>
                         <div class="col-diferencia">{{ calcularDiferencia(cliente) | currency:'USD':'$':'1.2-2' }}
                         </div>
                     </div>

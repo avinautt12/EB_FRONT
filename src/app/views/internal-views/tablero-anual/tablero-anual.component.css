@@ -2,9 +2,12 @@
    VARIABLES DE ALTURA (LA CLAVE DEL FIX)
    ========================================= */
 :host {
-  --h-fila-1: 45px; /* Altura exacta fila Meses */
-  --h-fila-2: 35px; /* Altura exacta fila Sub-headers */
-  --h-total: 80px;  /* Suma de ambas (45 + 35) */
+  --h-fila-1: 45px;
+  /* Altura exacta fila Meses */
+  --h-fila-2: 35px;
+  /* Altura exacta fila Sub-headers */
+  --h-total: 80px;
+  /* Suma de ambas (45 + 35) */
   --color-borde: #2a2a2a;
   --bg-header: #252525;
   --bg-body: #1e1e1e;
@@ -30,106 +33,124 @@
   border: 1px solid #333;
   border-radius: 8px;
   background: var(--bg-body);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   position: relative;
 }
 
 /* Scrollbars */
-.custom-scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: var(--bg-body); }
-.custom-scrollbar::-webkit-scrollbar-thumb { background-color: #444; border-radius: 8px; border: 2px solid var(--bg-body); }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #EB5E28; }
-.custom-scrollbar::-webkit-scrollbar-corner { background: var(--bg-body); }
+.custom-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--bg-body);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #444;
+  border-radius: 8px;
+  border: 2px solid var(--bg-body);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #EB5E28;
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: var(--bg-body);
+}
 
 /* =========================================
    2. TABLA Y CELDAS
    ========================================= */
 table {
-  border-collapse: separate; /* OBLIGATORIO para sticky complejo */
+  border-collapse: separate;
+  /* OBLIGATORIO para sticky complejo */
   border-spacing: 0;
   width: max-content;
 }
 
-th, td {
+th,
+td {
   border-bottom: 1px solid var(--color-borde);
   border-right: 1px solid var(--color-borde);
-  box-sizing: border-box; /* Vital para que el padding no rompa el cálculo */
+  box-sizing: border-box;
+  /* Vital para que el padding no rompa el cálculo */
 }
 
 /* =========================================
-   3. STICKY HEADERS (LÓGICA BLINDADA)
+   3. STICKY HEADERS (LÓGICA LIMPIA)
    ========================================= */
 
-/* A. ESQUINA SUPERIOR IZQUIERDA (CONCEPTO) - NIVEL Z: 50 */
+/* A. ESQUINA SUPERIOR IZQUIERDA */
 .sticky-col-header {
-  position: sticky;
-  left: 0;
-  top: 0;
-  z-index: 50; 
-  background-color: var(--bg-header);
+  position: sticky !important;
+  left: 0 !important;
+  top: 0 !important;
+  z-index: 100 !important;
+  background-color: var(--bg-header) !important;
+  color: #ffffff !important; /* TEXTO BLANCO */
   min-width: 280px;
-  text-align: left;
-  padding-left: 20px;
-  color: #fff;
-  border-right: 2px solid #444;
-  border-bottom: 2px solid #EB5E28;
-  
-  /* FUERZA LA ALTURA TOTAL */
   height: var(--h-total) !important;
+  /* Quitamos bordes internos que causan líneas fantasma */
+  border-top: none !important;
+  border-left: none !important;
+  border-right: 2px solid #444 !important;
+  border-bottom: 2px solid #444 !important; /* Cambiado de naranja a gris oscuro */
   vertical-align: middle;
 }
 
-/* B. FILA 1: MESES - NIVEL Z: 40 */
-.header-row-months th {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  background-color: var(--bg-header);
-  color: #EB5E28;
-  
-  /* FUERZA ALTURA Y POSICIÓN */
+/* B. FILA 1: LOS MESES */
+.header-row-months th:not(.sticky-col-header) {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 90 !important;
+  background-color: var(--bg-header) !important;
+  color: #ffffff !important; /* TEXTO BLANCO (Cambiado de naranja) */
   height: var(--h-fila-1) !important;
-  line-height: var(--h-fila-1); /* Centrado vertical */
-  padding: 0; /* Quitamos padding vertical para usar line-height */
-  
-  text-transform: uppercase;
-  font-weight: 700;
-  font-size: 0.75rem;
-  text-align: center;
-  border-bottom: 1px solid #444;
+  line-height: var(--h-fila-1);
+  border-bottom: 1px solid #444 !important;
+  border-top: none !important;
 }
 
-/* C. FILA 2: SUB-ENCABEZADOS - NIVEL Z: 30 */
+/* C. FILA 2: SUB-HEADERS (PROY, REAL, DIF) */
 .sub-header-row th {
-  position: sticky;
-  /* SE PEGA JUSTO DEBAJO DE LA FILA 1 */
-  top: var(--h-fila-1); 
-  z-index: 30;
-  background-color: #1a1a1a;
-  
-  /* FUERZA ALTURA */
+  position: sticky !important;
+  top: var(--h-fila-1) !important; 
+  z-index: 90 !important;
+  background-color: #1a1a1a !important;
+  color: #ffffff !important; /* TEXTO BLANCO */
   height: var(--h-fila-2) !important;
-  
-  padding: 0 10px 0 0; /* Padding solo horizontal */
-  font-size: 0.7rem;
-  text-align: right;
-  border-top: none;
-  border-bottom: 2px solid #EB5E28;
-  color: #aaa;
+  border-bottom: 2px solid #444 !important; /* Cambiado de naranja a gris para evitar la línea */
 }
 
-/* D. COLUMNA IZQUIERDA (CUERPO) - NIVEL Z: 20 */
+/* D. COLUMNA IZQUIERDA DEL CUERPO (CONCEPTOS) */
 .sticky-col-first {
-  position: sticky;
-  left: 0;
-  z-index: 20;
-  background-color: var(--bg-body); 
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 80 !important;
+  background-color: var(--bg-body) !important; 
   min-width: 280px;
-  border-right: 2px solid #333;
-  box-shadow: 4px 0 10px rgba(0,0,0,0.3);
-  padding: 12px 16px;
-  font-size: 0.9rem;
-  color: #ddd;
+  border-right: 2px solid #333 !important;
+  /* Aseguramos que el borde inferior sea discreto */
+  border-bottom: 1px solid var(--color-borde) !important;
+  color: #ffffff !important; /* TEXTO BLANCO */
+}
+
+/* ELIMINAR LÍNEA NARANJA DEL CONTENEDOR */
+.tabla-scroll-wrapper {
+  position: relative;
+  flex: 1;
+  overflow: auto;
+  border: 1px solid #333;
+}
+
+/* Ajuste para que los bordes no se dupliquen */
+table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  border: none !important;
 }
 
 /* =========================================
@@ -147,57 +168,230 @@ th, td {
   background: rgba(235, 94, 40, 0.2);
   border: 1px solid #EB5E28;
   color: #EB5E28;
-  width: 18px; height: 18px;
+  width: 18px;
+  height: 18px;
   border-radius: 4px;
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 0.65rem;
   transition: all 0.2s;
 }
-.btn-toggle:hover { background: #EB5E28; color: #121212; }
+
+.btn-toggle:hover {
+  background: #EB5E28;
+  color: #121212;
+}
 
 /* Cuando está expandido, oscurecemos el header principal */
 .th-expanded {
   background-color: #333 !important;
-  border-bottom: none !important; 
+  border-bottom: none !important;
 }
 
 /* Celdas del cuerpo */
-.fila-dato td { padding: 8px 10px; white-space: nowrap; font-size: 0.9rem; }
-.fila-dato:hover td { background-color: rgba(255, 255, 255, 0.03); }
+.fila-dato td {
+  padding: 8px 10px;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.fila-dato:hover td {
+  background-color: rgba(255, 255, 255, 0.03);
+}
 
 /* Tipos de celda */
-.cell-detail { min-width: 90px; border-right: 1px solid #333; font-size: 0.85rem; }
-.cell-main { min-width: 120px; border-right: 2px solid #333; }
+.cell-detail {
+  min-width: 90px;
+  border-right: 1px solid #333;
+  font-size: 0.85rem;
+}
+
+.cell-main {
+  min-width: 120px;
+  border-right: 2px solid #333;
+}
 
 /* Colores columnas */
-.col-p { color: #888; border-bottom-color: #666; }
-.col-r { color: #4fc3f7; border-bottom-color: #4fc3f7; }
-.col-d { color: #ccc; border-bottom-color: #ccc; }
+.col-p {
+  color: #888;
+  border-bottom-color: #666;
+}
 
-.cell-p { color: #888; background: rgba(0,0,0,0.2); }
-.cell-r { color: #fff; background: rgba(79, 195, 247, 0.05); }
-.cell-d { border-right: 2px solid #444; }
+.col-r {
+  color: #4fc3f7;
+  border-bottom-color: #4fc3f7;
+}
+
+.col-d {
+  color: #ccc;
+  border-bottom-color: #ccc;
+}
+
+.cell-p {
+  color: #888;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.cell-r {
+  color: #fff;
+  background: rgba(79, 195, 247, 0.05);
+}
+
+.cell-d {
+  border-right: 2px solid #444;
+}
 
 /* Textos y Colores Fila */
-.text-right { text-align: right; }
-.font-tabular { font-family: 'Segoe UI', Roboto, sans-serif; font-variant-numeric: tabular-nums; letter-spacing: 0.3px; font-weight: 500; }
-.texto-rojo { color: #ff5252 !important; font-weight: 700; }
-.muted { color: #555; }
+.text-right {
+  text-align: right;
+}
+
+.font-tabular {
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.3px;
+  font-weight: 500;
+}
+
+.texto-rojo {
+  color: #ff5252 !important;
+  font-weight: 700;
+}
+
+.muted {
+  color: #555;
+}
 
 /* Filas semánticas (Tus colores) */
-.fila-amarilla td { background: rgba(255, 193, 7, 0.05); color: #ffca28; font-weight: 600; }
-.fila-amarilla .sticky-col-first { background: #1e1e1e; border-left: 4px solid #ffca28; }
-.fila-naranja td { background: rgba(235, 94, 40, 0.05); color: #ff8a65; font-weight: 600; }
-.fila-naranja .sticky-col-first { background: #1e1e1e; border-left: 4px solid #EB5E28; }
-.fila-azul td { background: rgba(0, 188, 212, 0.08); color: #4dd0e1; font-weight: 700; border-top: 1px solid rgba(0,188,212,0.3); }
-.fila-azul .sticky-col-first { background: #1e1e1e; border-left: 4px solid #00bcd4; }
-.fila-gris td { background: #252525; color: #bbb; font-style: italic; }
-.fila-gris .sticky-col-first { background: #252525; border-left: 4px solid #666; }
+.fila-amarilla td {
+  background: rgba(255, 193, 7, 0.05);
+  color: #ffca28;
+  font-weight: 600;
+}
+
+.fila-amarilla .sticky-col-first {
+  background: #1e1e1e;
+  border-left: 4px solid #ffca28;
+}
+
+.fila-naranja td {
+  background: rgba(235, 94, 40, 0.05);
+  color: #ff8a65;
+  font-weight: 600;
+}
+
+.fila-naranja .sticky-col-first {
+  background: #1e1e1e;
+  border-left: 4px solid #EB5E28;
+}
+
+.fila-azul td {
+  background: rgba(0, 188, 212, 0.08);
+  color: #4dd0e1;
+  font-weight: 700;
+  border-top: 1px solid rgba(0, 188, 212, 0.3);
+}
+
+.fila-azul .sticky-col-first {
+  background: #1e1e1e;
+  border-left: 4px solid #00bcd4;
+}
+
+.fila-gris td {
+  background: #252525;
+  color: #bbb;
+  font-style: italic;
+}
+
+.fila-gris .sticky-col-first {
+  background: #252525;
+  border-left: 4px solid #666;
+}
 
 /* HEADER SECTION (Mantener tu diseño) */
-.header-section { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #2a2a2a; gap: 1.5rem; }
-.header-info h1 { color: #EB5E28; margin: 0; font-size: 2rem; font-weight: 700; }
-.header-info p { color: #888; margin: 8px 0 0 0; }
-.btn-back { display: inline-flex; align-items: center; gap: 10px; border: 1px solid #444; padding: 10px 24px; border-radius: 50px; text-decoration: none; color: #aaa; transition: 0.3s; }
-.btn-back:hover { border-color: #EB5E28; color: #EB5E28; background: rgba(235, 94, 40, 0.1); }
+.header-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #2a2a2a;
+  gap: 1.5rem;
+}
+
+.header-info h1 {
+  color: #EB5E28;
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.header-info p {
+  color: #888;
+  margin: 8px 0 0 0;
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #444;
+  padding: 10px 24px;
+  border-radius: 50px;
+  text-decoration: none;
+  color: #aaa;
+  transition: 0.3s;
+}
+
+.btn-back:hover {
+  border-color: #EB5E28;
+  color: #EB5E28;
+  background: rgba(235, 94, 40, 0.1);
+}
+
+/* Estilo para la fila que agrupa */
+.fila-categoria-header {
+  background-color: #252525 !important;
+  cursor: pointer;
+  user-select: none;
+}
+
+.fila-categoria-header:hover {
+  background-color: #2a2a2a !important;
+}
+
+.fila-categoria-header td {
+  padding: 10px 15px !important;
+  border-bottom: 1px solid #121212 !important;
+  /* Mantiene el título a la izquierda al hacer scroll horizontal */
+  position: sticky;
+  left: 0;
+  z-index: 45; 
+}
+
+.categoria-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.categoria-titulo {
+  color: #EB5E28; /* Naranja para resaltar secciones */
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.categoria-count {
+  color: #666;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.val-collapsed-white {
+  color: #ffffff !important;
+  opacity: 0.8;
+}

@@ -21,6 +21,9 @@ export class TableroAnualComponent implements OnInit {
 
   mesesExpandidos: Set<string> = new Set();
 
+  categoriasExpandidas: Set<string> = new Set(['Ingresos']); // 'Ingresos' abierta por defecto
+  filasAgrupadas: { categoria: string, filas: any[] }[] = [];
+
   ngOnInit(): void {
     this.cargarDatosAnuales();
   }
@@ -30,7 +33,7 @@ export class TableroAnualComponent implements OnInit {
     this.flujoService.obtenerProyeccionAnual().subscribe({
       next: (data) => {
         this.columnas = data.columnas;
-        this.filas = data.filas;
+        this.agruparPorCategoria(data.filas);
         this.cargando = false;
       },
       error: (err) => {
@@ -50,6 +53,32 @@ export class TableroAnualComponent implements OnInit {
 
   estaExpandido(fecha: string): boolean {
     return this.mesesExpandidos.has(fecha);
+  }
+
+  agruparPorCategoria(filas: any[]) {
+    const grupos = new Map<string, any[]>();
+    filas.forEach(f => {
+      const cat = f.categoria || 'Sin Categoría';
+      if (!grupos.has(cat)) grupos.set(cat, []);
+      grupos.get(cat)?.push(f);
+    });
+    
+    this.filasAgrupadas = Array.from(grupos.entries()).map(([categoria, filas]) => ({
+      categoria,
+      filas
+    }));
+  }
+
+  toggleCategoria(cat: string) {
+    if (this.categoriasExpandidas.has(cat)) {
+      this.categoriasExpandidas.delete(cat);
+    } else {
+      this.categoriasExpandidas.add(cat);
+    }
+  }
+
+  catEstaExpandida(cat: string): boolean {
+    return this.categoriasExpandidas.has(cat);
   }
 
   // --- ESTILOS DINÁMICOS ---

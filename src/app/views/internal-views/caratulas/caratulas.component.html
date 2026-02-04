@@ -121,7 +121,6 @@
                     </div>
                 </div>
 
-                <!-- PERIODO SEPTIEMBRE-OCTUBRE (visible desde septiembre) -->
                 <div *ngIf="debeMostrarPeriodo('Sep-Oct')" class="periodo-header">
                     <div class="periodo-title">Periodo - Septiembre-Octubre</div>
                     <div class="periodo-status">
@@ -135,7 +134,6 @@
                     </div>
                 </div>
 
-                <!-- PERIODO NOVIEMBRE-DICIEMBRE (visible desde noviembre) -->
                 <div *ngIf="debeMostrarPeriodo('Nov-Dic')" class="periodo-header">
                     <div class="periodo-title">Periodo - Noviembre-Diciembre</div>
                     <div class="periodo-status">
@@ -149,29 +147,67 @@
                     </div>
                 </div>
 
-                <!-- Tabla de marcas ACUMULADA -->
+                <div *ngIf="debeMostrarPeriodo('Ene-Feb')" class="periodo-header">
+                    <div class="periodo-title">Periodo - Enero-Febrero</div>
+                    <div class="periodo-status">
+                        <div class="status-item">
+                            <span class="status-label">Estado:</span>
+                            <span class="status-value" [class.cerrado]="getEstadoPeriodo('Ene-Feb') === 'Cerrado'"
+                                [class.en-curso]="getEstadoPeriodo('Ene-Feb') === 'En curso'">
+                                {{ getEstadoPeriodo('Ene-Feb') }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div *ngIf="debeMostrarPeriodo('Mar-Abr')" class="periodo-header">
+                    <div class="periodo-title">Periodo - Marzo-Abril</div>
+                    <div class="periodo-status">
+                        <div class="status-item">
+                            <span class="status-label">Estado:</span>
+                            <span class="status-value" [class.cerrado]="getEstadoPeriodo('Mar-Abr') === 'Cerrado'"
+                                [class.en-curso]="getEstadoPeriodo('Mar-Abr') === 'En curso'">
+                                {{ getEstadoPeriodo('Mar-Abr') }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div *ngIf="debeMostrarPeriodo('May-Jun')" class="periodo-header">
+                    <div class="periodo-title">Periodo - Mayo-Junio</div>
+                    <div class="periodo-status">
+                        <div class="status-item">
+                            <span class="status-label">Estado:</span>
+                            <span class="status-value" [class.cerrado]="getEstadoPeriodo('May-Jun') === 'Cerrado'"
+                                [class.en-curso]="getEstadoPeriodo('May-Jun') === 'En curso'">
+                                {{ getEstadoPeriodo('May-Jun') }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
-                                <th></th>
+                                <th>RESUMEN ACUMULADO</th>
                                 <th>SCOTT</th>
                                 <th>APPAREL, SYNCROS, VITTORIA</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Compromiso</td>
+                                <td>Compromiso Acumulado</td>
                                 <td>{{ getCompromisoAcumuladoScott() | currency:'USD':'$':'1.2-2' }}</td>
                                 <td>{{ getCompromisoAcumuladoApparel() | currency:'USD':'$':'1.2-2' }}</td>
                             </tr>
                             <tr>
-                                <td>Avance</td>
+                                <td>Avance Real Total</td>
                                 <td>{{ getAvanceAcumuladoScott() | currency:'USD':'$':'1.2-2' }}</td>
                                 <td>{{ getAvanceAcumuladoApparel() | currency:'USD':'$':'1.2-2' }}</td>
                             </tr>
                             <tr>
-                                <td>%</td>
+                                <td>% de Cumplimiento</td>
                                 <td>{{ getPorcentajeAcumuladoScott() }}%</td>
                                 <td>{{ getPorcentajeAcumuladoApparel() }}%</td>
                             </tr>
@@ -180,11 +216,6 @@
                                 <td>{{ getFaltanteAcumuladoScott() | currency:'USD':'$':'1.2-2' }}</td>
                                 <td>{{ getFaltanteAcumuladoApparel() | currency:'USD':'$':'1.2-2' }}</td>
                             </tr>
-                            <!-- <tr *ngIf="getSobranteAcumuladoScott() > 0 || getSobranteAcumuladoApparel() > 0">
-                                <td>Sobrante</td>
-                                <td>{{ getSobranteAcumuladoScott() | currency:'USD':'$':'1.2-2' }}</td>
-                                <td>{{ getSobranteAcumuladoApparel() | currency:'USD':'$':'1.2-2' }}</td>
-                            </tr> -->
                             <tr>
                                 <td>Estatus</td>
                                 <td>
@@ -203,19 +234,19 @@
                 </div>
             </div>
 
-            <!-- Compra Mínima INICIAL -->
             <div class="section">
                 <h3>b) Compra Mínima INICIAL</h3>
                 <div class="compra-minima">
                     <div class="compra-item">
                         <div class="compra-label">Meta</div>
-                        <div class="compra-value">{{ datosCliente.compra_minima_inicial |
-                            currency:'USD':'symbol':'1.2-2' }}
+                        <div class="compra-value">
+                            {{ datosCliente.compra_minima_inicial | currency:'USD':'$':'1.2-2' }}
                         </div>
                     </div>
                     <div class="compra-item">
                         <div class="compra-label">Avance</div>
-                        <div class="compra-value">{{ datosCliente.acumulado_anticipado | currency:'USD':'$':'1.2-2' }}
+                        <div class="compra-value">
+                            {{ datosCliente.acumulado_anticipado | currency:'USD':'$':'1.2-2' }}
                         </div>
                     </div>
                     <div class="compra-item">
@@ -225,18 +256,19 @@
                 </div>
             </div>
 
-            <!-- Compra Mínima ANUAL -->
             <div class="section">
                 <h3>c) Compra Mínima ANUAL</h3>
                 <div class="compra-minima">
                     <div class="compra-item">
                         <div class="compra-label">Meta</div>
-                        <div class="compra-value">{{ datosCliente.compra_minima_anual | currency:'USD':'$':'1.2-2' }}
+                        <div class="compra-value">
+                            {{ datosCliente.compra_minima_anual | currency:'USD':'$':'1.2-2' }}
                         </div>
                     </div>
                     <div class="compra-item">
                         <div class="compra-label">Avance</div>
-                        <div class="compra-value">{{ datosCliente.acumulado_anticipado | currency:'USD':'$':'1.2-2' }}
+                        <div class="compra-value">
+                            {{ datosCliente.acumulado_anticipado | currency:'USD':'$':'1.2-2' }}
                         </div>
                     </div>
                     <div class="compra-item">

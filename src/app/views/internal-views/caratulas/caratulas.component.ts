@@ -43,6 +43,15 @@ interface DatosCliente {
   compromiso_nov_dic: number;
   avance_nov_dic: number;
   porcentaje_nov_dic: number;
+  compromiso_ene_feb: number;
+  avance_ene_feb: number;
+  porcentaje_ene_feb: number;
+  compromiso_mar_abr: number;
+  avance_mar_abr: number;
+  porcentaje_mar_abr: number;
+  compromiso_may_jun: number;
+  avance_may_jun: number;
+  porcentaje_may_jun: number;
   compromiso_jul_ago_app: number;
   avance_jul_ago_app: number;
   porcentaje_jul_ago_app: number;
@@ -52,6 +61,15 @@ interface DatosCliente {
   compromiso_nov_dic_app: number;
   avance_nov_dic_app: number;
   porcentaje_nov_dic_app: number;
+  compromiso_ene_feb_app: number;
+  avance_ene_feb_app: number;
+  porcentaje_ene_feb_app: number;
+  compromiso_mar_abr_app: number;
+  avance_mar_abr_app: number;
+  porcentaje_mar_abr_app: number;
+  compromiso_may_jun_app: number;
+  avance_may_jun_app: number;
+  porcentaje_may_jun_app: number;
   compra_minima_inicial: number;
   avance_global: number;
   porcentaje_global: number;
@@ -169,7 +187,7 @@ export class CaratulasComponent implements OnInit {
     this.mostrarModalEmail = false;
     setTimeout(() => {
       this.mostrarExito('El correo se está procesando y será enviado en breve.');
-    }, 3000); 
+    }, 3000);
 
     // 3. Preparar los datos del payload (sin el PDF)
     const emailData: EmailData = {
@@ -182,7 +200,10 @@ export class CaratulasComponent implements OnInit {
       periodos: [
         { nombre: 'Julio-Agosto', estado: this.getEstadoPeriodo('Jul-Ago') },
         { nombre: 'Septiembre-Octubre', estado: this.getEstadoPeriodo('Sep-Oct') },
-        { nombre: 'Noviembre-Diciembre', estado: this.getEstadoPeriodo('Nov-Dic') }
+        { nombre: 'Noviembre-Diciembre', estado: this.getEstadoPeriodo('Nov-Dic') },
+        { nombre: 'Enero-Febrero', estado: this.getEstadoPeriodo('Ene-Feb') },
+        { nombre: 'Marzo-Abril', estado: this.getEstadoPeriodo('Mar-Abr') },
+        { nombre: 'Mayo-Junio', estado: this.getEstadoPeriodo('May-Jun') }
       ]
     };
 
@@ -560,6 +581,15 @@ export class CaratulasComponent implements OnInit {
       compromiso_nov_dic: this.parseNumber(datos.compromiso_nov_dic || '0'),
       avance_nov_dic: this.parseNumber(datos.avance_nov_dic || '0'),
       porcentaje_nov_dic: this.parseNumber(datos.porcentaje_nov_dic || '0'),
+      compromiso_ene_feb: this.parseNumber(datos.compromiso_ene_feb || '0'),
+      avance_ene_feb: this.parseNumber(datos.avance_ene_feb || '0'),
+      porcentaje_ene_feb: this.parseNumber(datos.porcentaje_ene_feb || '0'),
+      compromiso_mar_abr: this.parseNumber(datos.compromiso_mar_abr || '0'),
+      avance_mar_abr: this.parseNumber(datos.avance_mar_abr || '0'),
+      porcentaje_mar_abr: this.parseNumber(datos.porcentaje_mar_abr || '0'),
+      compromiso_may_jun: this.parseNumber(datos.compromiso_may_jun || '0'),
+      avance_may_jun: this.parseNumber(datos.avance_may_jun || '0'),
+      porcentaje_may_jun: this.parseNumber(datos.porcentaje_may_jun || '0'),
       compromiso_jul_ago_app: this.parseNumber(datos.compromiso_jul_ago_app || '0'),
       avance_jul_ago_app: this.parseNumber(datos.avance_jul_ago_app || '0'),
       porcentaje_jul_ago_app: this.parseNumber(datos.porcentaje_jul_ago_app || '0'),
@@ -569,6 +599,15 @@ export class CaratulasComponent implements OnInit {
       compromiso_nov_dic_app: this.parseNumber(datos.compromiso_nov_dic_app || '0'),
       avance_nov_dic_app: this.parseNumber(datos.avance_nov_dic_app || '0'),
       porcentaje_nov_dic_app: this.parseNumber(datos.porcentaje_nov_dic_app || '0'),
+      compromiso_ene_feb_app: this.parseNumber(datos.compromiso_ene_feb_app || '0'),
+      avance_ene_feb_app: this.parseNumber(datos.avance_ene_feb_app || '0'),
+      porcentaje_ene_feb_app: this.parseNumber(datos.porcentaje_ene_feb_app || '0'),
+      compromiso_mar_abr_app: this.parseNumber(datos.compromiso_mar_abr_app || '0'),
+      avance_mar_abr_app: this.parseNumber(datos.avance_mar_abr_app || '0'),
+      porcentaje_mar_abr_app: this.parseNumber(datos.porcentaje_mar_abr_app || '0'),
+      compromiso_may_jun_app: this.parseNumber(datos.compromiso_may_jun_app || '0'),
+      avance_may_jun_app: this.parseNumber(datos.avance_may_jun_app || '0'),
+      porcentaje_may_jun_app: this.parseNumber(datos.porcentaje_may_jun_app || '0'),
       compra_minima_inicial: this.parseNumber(datos.compra_minima_inicial || metaInicial || '0'),
       avance_global: this.parseNumber(datos.avance_global || avanceGlobal || '0'),
       porcentaje_global: this.parseNumber(datos.porcentaje_global || porcentajeGlobal || '0'),
@@ -818,60 +857,62 @@ export class CaratulasComponent implements OnInit {
   }
 
   debeMostrarPeriodo(periodo: string): boolean {
-    const fechaActual = new Date();
-    const mesActual = fechaActual.getMonth() + 1;
+    const mesActual = this.getMesActual();
 
     const periodos = {
-      'Jul-Ago': { inicio: 7 },    // Mostrar desde julio (mes 7)
-      'Sep-Oct': { inicio: 9 },    // Mostrar desde septiembre (mes 9)
-      'Nov-Dic': { inicio: 11 }    // Mostrar desde noviembre (mes 11)
+      'Jul-Ago': { inicio: 7 },
+      'Sep-Oct': { inicio: 9 },
+      'Nov-Dic': { inicio: 11 },
+      'Ene-Feb': { inicio: 1 },  // Nuevo
+      'Mar-Abr': { inicio: 3 },  // Nuevo
+      'May-Jun': { inicio: 5 }   // Nuevo
     };
 
-    const periodoData = periodos[periodo as keyof typeof periodos];
+    const data = periodos[periodo as keyof typeof periodos];
+    if (!data) return false;
 
-    if (!periodoData) return false;
+    // Lógica especial: Si el mes es 1-6 (2026), los periodos de 2025 siempre son true
+    if (mesActual <= 6 && ['Jul-Ago', 'Sep-Oct', 'Nov-Dic'].includes(periodo)) return true;
 
-    // Mostrar solo si estamos en o después del mes de inicio
-    return mesActual >= periodoData.inicio;
+    return mesActual >= data.inicio;
   }
 
   getEstadoPeriodo(periodo: string): string {
-    const fechaActual = new Date();
-    const mesActual = fechaActual.getMonth() + 1;
+    const mesActual = this.getMesActual();
 
     const periodos = {
-      'Jul-Ago': { inicio: 7, fin: 8 },    // Julio-Agosto
-      'Sep-Oct': { inicio: 9, fin: 10 },   // Septiembre-Octubre
-      'Nov-Dic': { inicio: 11, fin: 12 }   // Noviembre-Diciembre
+      'Jul-Ago': { inicio: 7, fin: 8 },
+      'Sep-Oct': { inicio: 9, fin: 10 },
+      'Nov-Dic': { inicio: 11, fin: 12 },
+      'Ene-Feb': { inicio: 1, fin: 2 },
+      'Mar-Abr': { inicio: 3, fin: 4 },
+      'May-Jun': { inicio: 5, fin: 6 }
     };
 
-    const periodoData = periodos[periodo as keyof typeof periodos];
+    const data = periodos[periodo as keyof typeof periodos];
+    if (!data) return 'Sin definir';
 
-    if (!periodoData) return 'Sin definir';
+    // Si estamos en 2026 (mes 1-6), los de 2025 ya cerraron
+    if (mesActual <= 6 && data.inicio >= 7) return 'Cerrado';
 
-    // Si estamos ANTES del periodo
-    if (mesActual < periodoData.inicio) {
-      return 'Sin iniciar';
-    }
-
-    // Si estamos DESPUÉS del periodo
-    if (mesActual > periodoData.fin) {
-      return 'Cerrado';
-    }
-
-    // Si estamos DENTRO del periodo
+    if (mesActual < data.inicio) return 'Sin iniciar';
+    if (mesActual > data.fin) return 'Cerrado';
     return 'En curso';
   }
 
-  // Métodos para Scott
   getCompromisoAcumuladoScott(): number {
     if (!this.datosCliente) return 0;
-
     const mes = this.getMesActual();
-    let total = this.datosCliente.compromiso_jul_ago;
 
-    if (mes >= 9) total += this.datosCliente.compromiso_sep_oct;
-    if (mes >= 11) total += this.datosCliente.compromiso_nov_dic;
+    // Siempre sumamos el primer semestre (Jul-Dic)
+    let total = (this.datosCliente.compromiso_jul_ago || 0) +
+      (this.datosCliente.compromiso_sep_oct || 0) +
+      (this.datosCliente.compromiso_nov_dic || 0);
+
+    // Sumamos los bimestres de 2026 solo si ya transcurrieron o están en curso
+    if (mes >= 1) total += (this.datosCliente.compromiso_ene_feb || 0);
+    if (mes >= 3) total += (this.datosCliente.compromiso_mar_abr || 0);
+    if (mes >= 5) total += (this.datosCliente.compromiso_may_jun || 0);
 
     return total;
   }
@@ -879,13 +920,15 @@ export class CaratulasComponent implements OnInit {
   getAvanceAcumuladoScott(): number {
     if (!this.datosCliente) return 0;
 
-    const mes = this.getMesActual();
-    let total = this.datosCliente.avance_jul_ago;
-
-    if (mes >= 9) total += this.datosCliente.avance_sep_oct;
-    if (mes >= 11) total += this.datosCliente.avance_nov_dic;
-
-    return total;
+    // Lógica de Sobrante: Sumamos TODO el avance real que el cliente ha tenido 
+    // desde el inicio del año fiscal hasta hoy. 
+    // Esto hace que si en Jul-Ago vendió de más, ese excedente ya esté sumado aquí.
+    return (this.datosCliente.avance_jul_ago || 0) +
+      (this.datosCliente.avance_sep_oct || 0) +
+      (this.datosCliente.avance_nov_dic || 0) +
+      (this.datosCliente.avance_ene_feb || 0) +
+      (this.datosCliente.avance_mar_abr || 0) +
+      (this.datosCliente.avance_may_jun || 0);
   }
 
   getPorcentajeAcumuladoScott(): number {
@@ -904,15 +947,17 @@ export class CaratulasComponent implements OnInit {
     return diferencia < 0 ? Math.abs(diferencia) : 0;
   }
 
-  // Métodos para Apparel (misma lógica que Scott)
   getCompromisoAcumuladoApparel(): number {
     if (!this.datosCliente) return 0;
-
     const mes = this.getMesActual();
-    let total = this.datosCliente.compromiso_jul_ago_app;
 
-    if (mes >= 9) total += this.datosCliente.compromiso_sep_oct_app;
-    if (mes >= 11) total += this.datosCliente.compromiso_nov_dic_app;
+    let total = (this.datosCliente.compromiso_jul_ago_app || 0) +
+      (this.datosCliente.compromiso_sep_oct_app || 0) +
+      (this.datosCliente.compromiso_nov_dic_app || 0);
+
+    if (mes >= 1) total += (this.datosCliente.compromiso_ene_feb_app || 0);
+    if (mes >= 3) total += (this.datosCliente.compromiso_mar_abr_app || 0);
+    if (mes >= 5) total += (this.datosCliente.compromiso_may_jun_app || 0);
 
     return total;
   }
@@ -920,13 +965,12 @@ export class CaratulasComponent implements OnInit {
   getAvanceAcumuladoApparel(): number {
     if (!this.datosCliente) return 0;
 
-    const mes = this.getMesActual();
-    let total = this.datosCliente.avance_jul_ago_app;
-
-    if (mes >= 9) total += this.datosCliente.avance_sep_oct_app;
-    if (mes >= 11) total += this.datosCliente.avance_nov_dic_app;
-
-    return total;
+    return (this.datosCliente.avance_jul_ago_app || 0) +
+      (this.datosCliente.avance_sep_oct_app || 0) +
+      (this.datosCliente.avance_nov_dic_app || 0) +
+      (this.datosCliente.avance_ene_feb_app || 0) +
+      (this.datosCliente.avance_mar_abr_app || 0) +
+      (this.datosCliente.avance_may_jun_app || 0);
   }
 
   getPorcentajeAcumuladoApparel(): number {
