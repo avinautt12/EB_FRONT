@@ -2214,64 +2214,51 @@ export class PrevioComponent implements OnInit, OnDestroy {
   }
 
   private calcularPorcentajes(cliente: any): any {
-    // Calcular cada porcentaje basado en avance/compromiso
     const calcular = (avance: number, compromiso: number): number => {
-      if (!compromiso || compromiso === 0) return 0;
-      return Math.round((avance / compromiso) * 100);
+        if (!compromiso || compromiso === 0) return 0;
+        return Math.round((avance / compromiso) * 100);
     };
 
+    // Mapeamos el objeto completo asegurando que TODOS los campos de 2026 viajen al Back
     return {
-      ...cliente,
-      porcentaje_anual: calcular(
-        (cliente.avance_global_scott || 0) +
-        (cliente.acumulado_syncros || 0) +
-        (cliente.acumulado_apparel || 0) +
-        (cliente.acumulado_vittoria || 0),
-        cliente.compra_minima_anual || 1
-      ),
-      porcentaje_global: calcular(
-        (cliente.avance_global_scott || 0) +
-        (cliente.acumulado_syncros || 0) +
-        (cliente.acumulado_apparel || 0) +
-        (cliente.acumulado_vittoria || 0),
-        cliente.compra_minima_inicial || 1
-      ),
-      porcentaje_scott: calcular(
-        cliente.avance_global_scott || 0,
-        cliente.compromiso_scott || 1
-      ),
-      porcentaje_jul_ago: calcular(
-        cliente.avance_jul_ago || 0,
-        cliente.compromiso_jul_ago || 1
-      ),
-      porcentaje_sep_oct: calcular(
-        cliente.avance_sep_oct || 0,
-        cliente.compromiso_sep_oct || 1
-      ),
-      porcentaje_nov_dic: calcular(
-        cliente.avance_nov_dic || 0,
-        cliente.compromiso_nov_dic || 1
-      ),
-      porcentaje_apparel_syncros_vittoria: calcular(
-        (cliente.acumulado_syncros || 0) +
-        (cliente.acumulado_apparel || 0) +
-        (cliente.acumulado_vittoria || 0),
-        cliente.compromiso_apparel_syncros_vittoria || 1
-      ),
-      porcentaje_jul_ago_app: calcular(
-        cliente.avance_jul_ago_app || 0,
-        cliente.compromiso_jul_ago_app || 1
-      ),
-      porcentaje_sep_oct_app: calcular(
-        cliente.avance_sep_oct_app || 0,
-        cliente.compromiso_sep_oct_app || 1
-      ),
-      porcentaje_nov_dic_app: calcular(
-        cliente.avance_nov_dic_app || 0,
-        cliente.compromiso_nov_dic_app || 1
-      )
+        ...cliente,
+        // Porcentajes Globales
+        porcentaje_anual: calcular(
+            (cliente.avance_global_scott || 0) + (cliente.avance_global_apparel_syncros_vittoria || 0),
+            cliente.compra_minima_anual
+        ),
+        porcentaje_global: calcular(
+            (cliente.avance_global_scott || 0) + (cliente.avance_global_apparel_syncros_vittoria || 0),
+            cliente.compra_minima_inicial
+        ),
+
+        // --- CAMPOS NUEVOS 2026 (SCOTT) ---
+        compromiso_ene_feb: cliente.compromiso_ene_feb || 0,
+        avance_ene_feb: cliente.avance_ene_feb || 0,
+        porcentaje_ene_feb: calcular(cliente.avance_ene_feb, cliente.compromiso_ene_feb),
+
+        compromiso_mar_abr: cliente.compromiso_mar_abr || 0,
+        avance_mar_abr: cliente.avance_mar_abr || 0,
+        porcentaje_mar_abr: calcular(cliente.avance_mar_abr, cliente.compromiso_mar_abr),
+
+        compromiso_may_jun: cliente.compromiso_may_jun || 0,
+        avance_may_jun: cliente.avance_may_jun || 0,
+        porcentaje_may_jun: calcular(cliente.avance_may_jun, cliente.compromiso_may_jun),
+
+        // --- CAMPOS NUEVOS 2026 (APPAREL) ---
+        compromiso_ene_feb_app: cliente.compromiso_ene_feb_app || 0,
+        avance_ene_feb_app: cliente.avance_ene_feb_app || 0,
+        porcentaje_ene_feb_app: calcular(cliente.avance_ene_feb_app, cliente.compromiso_ene_feb_app),
+
+        compromiso_mar_abr_app: cliente.compromiso_mar_abr_app || 0,
+        avance_mar_abr_app: cliente.avance_mar_abr_app || 0,
+        porcentaje_mar_abr_app: calcular(cliente.avance_mar_abr_app, cliente.compromiso_mar_abr_app),
+
+        compromiso_may_jun_app: cliente.compromiso_may_jun_app || 0,
+        avance_may_jun_app: cliente.avance_may_jun_app || 0,
+        porcentaje_may_jun_app: calcular(cliente.avance_may_jun_app, cliente.compromiso_may_jun_app)
     };
-  }
+}
 
   exportarAExcel() {
     try {
