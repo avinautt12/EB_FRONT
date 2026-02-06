@@ -669,8 +669,8 @@ export class PrevioComponent implements OnInit, OnDestroy {
         compromisoSepOct: 2047500,
         compromisoNovDic: 1872000,
         compromisoEneFeb: 1260000,
-        compromisoMarAbr: 1417500,
-        compromisoMayJun: 472500,
+        compromisoMarAbr: 1422000,
+        compromisoMayJun: 468000,
         compromisoSynApaVit: 990000,
         compromisoJulAgoApp: 163350,
         compromisoSepOctApp: 173250,
@@ -691,8 +691,8 @@ export class PrevioComponent implements OnInit, OnDestroy {
         compromisoSepOct: 4095000,
         compromisoNovDic: 3744000,
         compromisoEneFeb: 2520000,
-        compromisoMarAbr: 2835000,
-        compromisoMayJun: 945000,
+        compromisoMarAbr: 2844000,
+        compromisoMayJun: 936000,
         compromisoSynApaVit: 1980000,
         compromisoJulAgoApp: 326700,
         compromisoSepOctApp: 346500,
@@ -713,15 +713,15 @@ export class PrevioComponent implements OnInit, OnDestroy {
         compromisoSepOct: 1128600,
         compromisoNovDic: 1029600,
         compromisoEneFeb: 693000,
-        compromisoMarAbr: 779625,
-        compromisoMayJun: 259875,
+        compromisoMarAbr: 782100,
+        compromisoMayJun: 252450,
         compromisoSynApaVit: 750000,
         compromisoJulAgoApp: 123750,
         compromisoSepOctApp: 260750,
         compromisoNovDicApp: 238400,
-        compromisoEneFebApp: 123750,
-        compromisoMarAbrApp: 260750,
-        compromisoMayJunApp: 238400
+        compromisoEneFebApp: 42366,
+        compromisoMarAbrApp: 42366, // +1 peso para ajuste
+        compromisoMayJunApp: 42368
       }
     ];
 
@@ -796,10 +796,16 @@ export class PrevioComponent implements OnInit, OnDestroy {
         clienteConValores.compromiso_jul_ago = 707850;
         clienteConValores.compromiso_sep_oct = 750750;
         clienteConValores.compromiso_nov_dic = 686400;
+        clienteConValores.compromiso_ene_feb = 462000;
+        clienteConValores.compromiso_mar_abr = 521400;
+        clienteConValores.compromiso_may_jun = 171600;
         clienteConValores.compromiso_apparel_syncros_vittoria = 500000;
         clienteConValores.compromiso_jul_ago_app = 82500;
         clienteConValores.compromiso_sep_oct_app = 87500;
         clienteConValores.compromiso_nov_dic_app = 80000;
+        clienteConValores.compromiso_ene_feb_app = 82500;
+        clienteConValores.compromiso_mar_abr_app = 87500;
+        clienteConValores.compromiso_may_jun_app = 80000;
       }
 
       return clienteConValores;
@@ -2614,6 +2620,8 @@ export class PrevioComponent implements OnInit, OnDestroy {
       this.totales.avance_mar_abr_app += c.avance_mar_abr_app || 0;
       this.totales.compromiso_may_jun_app += c.compromiso_may_jun_app || 0;
       this.totales.avance_may_jun_app += c.avance_may_jun_app || 0;
+
+      this.totales.compromiso_apparel_syncros_vittoria += c.compromiso_apparel_syncros_vittoria || 0;
     });
   }
 
