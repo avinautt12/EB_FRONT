@@ -166,37 +166,61 @@ export class CaratulasComponent implements OnInit {
   }
 
   async enviarCaratulaPorEmail() {
-    // 1. Validaciones
     if (!this.emailDestinatario || !this.datosCliente) {
       this.mostrarError('Primero debe seleccionar un cliente');
       return;
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(this.emailDestinatario)) {
-      this.mostrarError('Por favor ingrese un email válido');
-      return;
-    }
-    const token = localStorage.getItem('token');
-    if (!token) {
-      this.mostrarError('No se encontró token de autenticación. Por favor, inicie sesión nuevamente.');
-      return;
-    }
 
-    // 2. Mostrar feedback de carga inmediato
     this.enviandoEmail = true;
     this.mostrarModalEmail = false;
-    setTimeout(() => {
-      this.mostrarExito('El correo se está procesando y será enviado en breve.');
-    }, 3000);
 
-    // 3. Preparar los datos del payload (sin el PDF)
+    // CREAMOS UN OBJETO LIGERO (Elimina facturas y datos pesados innecesarios)
+    const datosParaPdf = {
+      clave: this.datosCliente.clave,
+      evac: this.datosCliente.evac,
+      nombre_cliente: this.datosCliente.nombre_cliente,
+      nivel: this.datosCliente.nivel,
+      compra_minima_anual: this.datosCliente.compra_minima_anual,
+      compra_minima_inicial: this.datosCliente.compra_minima_inicial,
+      acumulado_anticipado: this.datosCliente.acumulado_anticipado,
+      porcentaje_global: this.datosCliente.porcentaje_global,
+      porcentaje_anual: this.datosCliente.porcentaje_anual,
+
+      // Datos Scott 2025-2026
+      compromiso_jul_ago: this.datosCliente.compromiso_jul_ago,
+      avance_jul_ago: this.datosCliente.avance_jul_ago,
+      compromiso_sep_oct: this.datosCliente.compromiso_sep_oct,
+      avance_sep_oct: this.datosCliente.avance_sep_oct,
+      compromiso_nov_dic: this.datosCliente.compromiso_nov_dic,
+      avance_nov_dic: this.datosCliente.avance_nov_dic,
+      compromiso_ene_feb: this.datosCliente.compromiso_ene_feb,
+      avance_ene_feb: this.datosCliente.avance_ene_feb,
+      compromiso_mar_abr: this.datosCliente.compromiso_mar_abr,
+      avance_mar_abr: this.datosCliente.avance_mar_abr,
+      compromiso_may_jun: this.datosCliente.compromiso_may_jun,
+      avance_may_jun: this.datosCliente.avance_may_jun,
+
+      // Datos Apparel 2025-2026
+      compromiso_jul_ago_app: this.datosCliente.compromiso_jul_ago_app,
+      avance_jul_ago_app: this.datosCliente.avance_jul_ago_app,
+      compromiso_sep_oct_app: this.datosCliente.compromiso_sep_oct_app,
+      avance_sep_oct_app: this.datosCliente.avance_sep_oct_app,
+      compromiso_nov_dic_app: this.datosCliente.compromiso_nov_dic_app,
+      avance_nov_dic_app: this.datosCliente.avance_nov_dic_app,
+      compromiso_ene_feb_app: this.datosCliente.compromiso_ene_feb_app,
+      avance_ene_feb_app: this.datosCliente.avance_ene_feb_app,
+      compromiso_mar_abr_app: this.datosCliente.compromiso_mar_abr_app,
+      avance_mar_abr_app: this.datosCliente.avance_mar_abr_app,
+      compromiso_may_jun_app: this.datosCliente.compromiso_may_jun_app,
+      avance_may_jun_app: this.datosCliente.avance_may_jun_app
+    };
+
     const emailData: EmailData = {
       to: this.emailDestinatario,
       cliente_nombre: this.datosCliente.nombre_cliente,
       clave: this.datosCliente.clave,
       mensaje_personalizado: this.mensajePersonalizado,
-      datos_caratula: this.datosCliente,
-
+      datos_caratula: datosParaPdf, // <--- ENVIAMOS EL OBJETO LIGERO
       periodos: [
         { nombre: 'Julio-Agosto', estado: this.getEstadoPeriodo('Jul-Ago') },
         { nombre: 'Septiembre-Octubre', estado: this.getEstadoPeriodo('Sep-Oct') },
@@ -207,24 +231,14 @@ export class CaratulasComponent implements OnInit {
       ]
     };
 
-    // 4. Enviar la petición al backend de forma asíncrona
     this.emailService.enviarCaratulaPdf(emailData).subscribe({
-      next: (response) => {
+      next: () => {
         this.enviandoEmail = false;
-        // La alerta de éxito ya se mostró antes de enviar la petición.
+        this.mostrarExito('El correo se ha encolado correctamente.');
       },
-      error: (error) => {
+      error: (err) => {
         this.enviandoEmail = false;
-        console.error('Error al enviar email:', error);
-        let mensajeError = 'Error al enviar el email.';
-        if (error.error?.error) {
-          mensajeError = error.error.error;
-        } else if (error.status === 401) {
-          mensajeError = 'Error de autenticación. Token inválido o expirado.';
-        } else if (error.status === 500) {
-          mensajeError = 'Error del servidor al procesar el envío.';
-        }
-        this.mostrarError(mensajeError);
+        this.mostrarError('El servidor no pudo procesar la solicitud (Payload too large).');
       }
     });
   }
