@@ -575,6 +575,7 @@ export class CaratulasComponent implements OnInit {
     // Calcular datos de compra mínima usando los campos de Flask
     const metaInicial = this.parseNumber(datos.compra_minima_inicial || '0');
     const metaAnual = this.parseNumber(datos.compra_minima_anual || '0');
+    const avanceReal = this.parseNumber(datos.acumulado_anticipado || '0');
     const avanceGlobal = this.parseNumber(datos.avance_global || '0');
     const porcentajeGlobal = this.parseNumber(datos.porcentaje_global || '0');
     const porcentajeAnual = this.parseNumber(datos.porcentaje_anual || '0');
@@ -637,9 +638,8 @@ export class CaratulasComponent implements OnInit {
       porcentaje_may_jun_app: this.parseNumber(datos.porcentaje_may_jun_app || '0'),
       compra_minima_inicial: this.parseNumber(datos.compra_minima_inicial || metaInicial || '0'),
       avance_global: this.parseNumber(datos.avance_global || avanceGlobal || '0'),
-      porcentaje_global: this.parseNumber(datos.porcentaje_global || porcentajeGlobal || '0'),
-      acumulado_anticipado: this.parseNumber(datos.acumulado_anticipado || '0'),
-      porcentaje_anual: this.parseNumber(datos.porcentaje_anual || porcentajeAnual || '0'),
+      porcentaje_global: metaInicial > 0 ? Math.round((avanceReal / metaInicial) * 100) : 0, acumulado_anticipado: this.parseNumber(datos.acumulado_anticipado || '0'),
+      porcentaje_anual: metaAnual > 0 ? Math.round((avanceReal / metaAnual) * 100) : 0,
       periodoJulAgo: datos.periodoJulAgo || 'Julio - Agosto',
       periodoSepOct: datos.periodoSepOct || 'Septiembre - Octubre',
       periodoNovDic: datos.periodoNovDic || 'Noviembre - Diciembre',
