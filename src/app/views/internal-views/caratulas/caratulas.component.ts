@@ -174,7 +174,8 @@ export class CaratulasComponent implements OnInit {
     this.enviandoEmail = true;
     this.mostrarModalEmail = false;
 
-    // CREAMOS UN OBJETO LIGERO (Elimina facturas y datos pesados innecesarios)
+    // 1. CREAMOS EL OBJETO LIGERO 
+    // Incluimos explícitamente los campos que email_utils.py necesita para los totales
     const datosParaPdf = {
       clave: this.datosCliente.clave,
       evac: this.datosCliente.evac,
@@ -185,6 +186,12 @@ export class CaratulasComponent implements OnInit {
       acumulado_anticipado: this.datosCliente.acumulado_anticipado,
       porcentaje_global: this.datosCliente.porcentaje_global,
       porcentaje_anual: this.datosCliente.porcentaje_anual,
+
+      // IMPORTANTE PARA INTEGRALES: Estos campos son usados en las funciones de suma del backend
+      compromiso_scott: this.datosCliente.compromiso_scott,
+      avance_global_scott: this.datosCliente.avance_global_scott,
+      compromiso_apparel_syncros_vittoria: this.datosCliente.compromiso_apparel_syncros_vittoria,
+      avance_global_apparel_syncros_vittoria: this.datosCliente.avance_global_apparel_syncros_vittoria,
 
       // Datos Scott 2025-2026
       compromiso_jul_ago: this.datosCliente.compromiso_jul_ago,
@@ -220,7 +227,7 @@ export class CaratulasComponent implements OnInit {
       cliente_nombre: this.datosCliente.nombre_cliente,
       clave: this.datosCliente.clave,
       mensaje_personalizado: this.mensajePersonalizado,
-      datos_caratula: datosParaPdf, // <--- ENVIAMOS EL OBJETO LIGERO
+      datos_caratula: datosParaPdf,
       periodos: [
         { nombre: 'Julio-Agosto', estado: this.getEstadoPeriodo('Jul-Ago') },
         { nombre: 'Septiembre-Octubre', estado: this.getEstadoPeriodo('Sep-Oct') },
@@ -231,14 +238,20 @@ export class CaratulasComponent implements OnInit {
       ]
     };
 
+    // 2. ENVÍO CON MANEJO DE ERROR ESPECÍFICO
     this.emailService.enviarCaratulaPdf(emailData).subscribe({
       next: () => {
         this.enviandoEmail = false;
-        this.mostrarExito('El correo se ha encolado correctamente.');
+        this.mostrarExito('El correo del Integral se ha enviado a la cola de procesamiento.');
       },
       error: (err) => {
         this.enviandoEmail = false;
-        this.mostrarError('El servidor no pudo procesar la solicitud (Payload too large).');
+        console.error('Error al enviar Integral:', err);
+        if (err.status === 413) {
+          this.mostrarError('El archivo es demasiado grande para el servidor.');
+        } else {
+          this.mostrarError('Error al contactar al servidor de correos.');
+        }
       }
     });
   }
