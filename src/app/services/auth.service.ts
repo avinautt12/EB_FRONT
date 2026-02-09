@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { jwtDecode } from 'jwt-decode';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +24,7 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/registro`, user);
   }
 
-   login(credentials: any): Observable<{ token: string }> {
+  login(credentials: any): Observable<{ token: string }> {
     return this.http.post<{ token: string }>(`${this.apiUrl}/login`, credentials).pipe(
       tap(response => {
         if (response.token) {
@@ -103,6 +104,19 @@ export class AuthService {
       return payload.id || null; // Ajusta 'id' si tu token usa otro nombre, ej: 'userId'
     } catch (e) {
       return null;
+    }
+  }
+
+  getFlujoPermiso(): number {
+    const token = localStorage.getItem('token');
+    if (!token) return 0;
+
+    try {
+      const decoded: any = jwtDecode(token);
+      // Extraemos el campo 'flujo' que definimos en el Python
+      return decoded.flujo || 0;
+    } catch (error) {
+      return 0;
     }
   }
 

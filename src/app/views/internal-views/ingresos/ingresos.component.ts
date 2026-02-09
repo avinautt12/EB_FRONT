@@ -10,7 +10,7 @@ import { HomeBarComponent } from '../../../components/home-bar/home-bar.componen
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, HomeBarComponent],
   templateUrl: './ingresos.component.html',
-  styleUrls: ['../tablero/tablero.component.css'] // Reusamos estilos para ir rápido
+  styleUrls: ['../ingresos/ingresos.component.css']
 })
 export class IngresosComponent {
   private fb = inject(FormBuilder);

@@ -100,7 +100,21 @@ export class FlujoService {
     return this.http.post(`${this.apiUrl}/sincronizar-odoo`, payload);
   }
 
+  descargarReporteExcel(inicio?: string, fin?: string): Observable<Blob> {
+    let params = '';
+    if (inicio && fin) {
+      params = `?inicio=${inicio}&fin=${fin}`;
+    }
+    return this.http.get(`${this.apiUrl}/reporte-excel${params}`, {
+      responseType: 'blob'
+    });
+  }
 
+  verificarPermiso(idUsuario: number): Observable<{ permiso: number, error?: string }> {
+    return this.http.get<{ permiso: number, error?: string }>(
+      `${this.apiUrl}/verificar-permiso/${idUsuario}`
+    );
+  }
 
 
 

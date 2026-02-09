@@ -433,3 +433,84 @@ tr:hover {
   transform: translateX(-5px);
   /* Pequeña animación hacia la izquierda */
 }
+
+/* --- Botón Excel (Verde) --- */
+.btn-excel {
+  background-color: transparent;
+  border: 1px solid #217346;
+  /* Verde oficial de Excel */
+  color: #a3d4bb;
+  /* Verde muy suave para el texto */
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-excel:hover {
+  background-color: #217346;
+  color: #fff;
+  border-color: #fff;
+  box-shadow: 0 0 15px rgba(33, 115, 70, 0.4);
+}
+
+/* Opcional: Si quieres que el icono brille un poco más en el hover */
+.btn-excel:hover i {
+  transform: scale(1.1);
+}
+
+/* Cuadro de opciones que aparece al dar clic */
+.excel-dropdown {
+  position: absolute;
+  top: 110%; /* Justo debajo del botón */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1e1e1e;
+  border: 1px solid #217346;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  z-index: 1000;
+  min-width: 220px;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-header {
+  padding: 8px 15px;
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  font-weight: bold;
+  border-bottom: 1px solid #333;
+  margin-bottom: 5px;
+}
+
+.excel-dropdown button {
+  background: transparent;
+  border: none;
+  color: #e0e0e0;
+  padding: 10px 15px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.excel-dropdown button:hover {
+  background-color: rgba(33, 115, 70, 0.2);
+  color: #2ecc71;
+}
+
+.excel-dropdown button i {
+  color: #2ecc71;
+  width: 18px;
+}

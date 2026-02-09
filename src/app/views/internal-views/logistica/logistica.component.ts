@@ -10,7 +10,7 @@ import { HomeBarComponent } from "../../../components/home-bar/home-bar.componen
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, HomeBarComponent],
   templateUrl: './logistica.component.html',
-  styleUrls: ['../tablero/tablero.component.css']
+  styleUrls: ['../logistica/logistica.component.css']
 })
 export class LogisticaComponent {
   private fb = inject(FormBuilder);

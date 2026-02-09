@@ -30,7 +30,7 @@ import { CaratulaEvacsComponent } from './views/internal-views/caratula-evacs/ca
 import { IntegralesComponent } from './views/internal-views/integrales/integrales.component';
 import { HistorialCaratulasComponent } from './views/internal-views/historial-caratulas/historial-caratulas.component';
 
-import { DashboardFlujoComponent } from './views/internal-views/dashboard-flujo/dashboard-flujo.component';
+import { FlujoDashboardComponent } from './views/internal-views/dashboard-flujo/dashboard-flujo.component';
 import { OrdenesCompraComponent } from './views/internal-views/ordenes-compra/ordenes-compra.component';
 import { LogisticaComponent } from './views/internal-views/logistica/logistica.component';
 import { GastosOperativosComponent } from './views/internal-views/gastos-operativos/gastos-operativos.component';
@@ -42,6 +42,7 @@ import { AuditoriaComponent } from './views/internal-views/auditoria/auditoria.c
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { usuarioGuard } from './guards/usuario.guard';
+import { flujoGuard } from './guards/flujo.guard';
 
 export const routes: Routes = [
   { path: '', component: InicioComponent, canActivate: [authGuard] },
@@ -66,15 +67,15 @@ export const routes: Routes = [
   { path: 'proyeccion', component: ProyeccionComponent, canActivate: [authGuard] },
   { path: 'proyeccion/detalles/:id', component: ProyeccionDetallesComponent, canActivate: [authGuard] },
   { path: 'proyeccion/control', component: ProyeccionControlComponent, canActivate: [authGuard] },
-  { path: 'recuperacion/enviar-correo', component: EnviarCorreoComponent},
-  { path: 'recuperacion/verificar-codigo', component: VerificarCodigoComponent},
-  { path: 'recuperacion/restablecer-contrasena', component: RestablecerContrasenaComponent},
+  { path: 'recuperacion/enviar-correo', component: EnviarCorreoComponent },
+  { path: 'recuperacion/verificar-codigo', component: VerificarCodigoComponent },
+  { path: 'recuperacion/restablecer-contrasena', component: RestablecerContrasenaComponent },
   { path: 'usuarios/dashboard', component: DashboardComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/proyeccion-compras', component: ProyeccionUsuariosComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/crear-proyeccion', component: CrearProyeccionUsuariosComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/proyeccion-historial', component: ProyeccionHistorialComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/caratula', component: CaratulaUsuariosComponent, canActivate: [usuarioGuard] },
-  { path: 'flujo-dashboard', component: DashboardFlujoComponent, canActivate: [adminGuard] },
+  { path: 'flujo-dashboard', component: FlujoDashboardComponent, canActivate: [adminGuard] },
   { path: 'ordenes-compra', component: OrdenesCompraComponent, canActivate: [adminGuard] },
   { path: 'logistica', component: LogisticaComponent, canActivate: [adminGuard] },
   { path: 'gastos-operativos', component: GastosOperativosComponent, canActivate: [adminGuard] },
@@ -82,5 +83,11 @@ export const routes: Routes = [
   { path: 'flujo-tablero', component: TableroComponent, canActivate: [adminGuard] },
   { path: 'flujo-tablero-anual', component: TableroAnualComponent, canActivate: [adminGuard] },
   { path: 'flujo-auditoria', component: AuditoriaComponent, canActivate: [adminGuard] },
+  {
+    path: 'flujo-tablero-anual',
+    component: TableroAnualComponent,
+    // Se ejecutan en orden: primero verifica que esté logueado, luego el nivel de flujo
+    canActivate: [adminGuard, flujoGuard]
+  },
   { path: '**', redirectTo: '' }
 ];

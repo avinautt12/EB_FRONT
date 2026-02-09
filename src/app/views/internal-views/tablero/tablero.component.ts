@@ -43,6 +43,8 @@ export class TableroComponent implements OnInit {
   celdaEditando: { id: number, columna: 'real' | 'proyectado' } | null = null;
   valorTemp: number = 0; // Para binding temporal del input
 
+  mostrarOpcionesExcel: boolean = false;
+
   ngOnInit(): void {
     this.cargarDatos();
   }
@@ -132,7 +134,7 @@ export class TableroComponent implements OnInit {
   }
 
   calcularTotales() {
-    const filaTotal = this.renglones.find(r => r.concepto === 'TOTAL EFECTIVO DISPONIBLE');
+    const filaTotal = this.renglones.find(r => r.concepto === 'SALDO FINAL DISPONIBLE');
     if (filaTotal) {
       this.saldoFinalProyectado = filaTotal.col_proyectado;
       this.saldoFinalReal = filaTotal.col_real;
@@ -179,6 +181,65 @@ export class TableroComponent implements OnInit {
           this.alertaService.mostrarError("Error al conectar con Odoo.");
         }
       }
+    });
+  }
+
+  exportarAExcel() {
+    // Ejemplo: Exportar todo el año actual
+    const fechaInicio = `${this.anioSeleccionado}-01-01`;
+    const fechaFin = `${this.anioSeleccionado}-12-31`;
+
+    this.flujoService.descargarReporteExcel(fechaInicio, fechaFin).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Reporte_Flujo_${this.mesSeleccionado}_${this.anioSeleccionado}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => this.alertaService.mostrarError('Error al generar el Excel')
+    });
+  }
+
+  toggleOpcionesExcel() {
+    this.mostrarOpcionesExcel = !this.mostrarOpcionesExcel;
+  }
+
+  exportarMesActual() {
+    const anio = this.anioSeleccionado;
+    const mes = this.mesSeleccionado;
+
+    // Esta línea calcula el último día real del mes seleccionado
+    const ultimoDia = new Date(anio, mes, 0).getDate();
+
+    const mesStr = mes.toString().padStart(2, '0');
+    const inicio = `${anio}-${mesStr}-01`;
+    const fin = `${anio}-${mesStr}-${ultimoDia}`; // <--- Aquí ya no enviará 31 si es febrero
+
+    this.mostrarOpcionesExcel = false;
+    this.ejecutarDescarga(inicio, fin, `Reporte_Mensual_${this.meses[mes - 1].nombre}_${anio}.xlsx`);
+  }
+
+  exportarAnual() {
+    const inicio = `${this.anioSeleccionado}-01-01`;
+    const fin = `${this.anioSeleccionado}-12-31`;
+    this.mostrarOpcionesExcel = false;
+    this.ejecutarDescarga(inicio, fin, `Reporte_Anual_${this.anioSeleccionado}.xlsx`);
+  }
+
+  private ejecutarDescarga(inicio: string, fin: string, nombre: string) {
+    this.alertaService.mostrarExito('Generando archivo...');
+    this.flujoService.descargarReporteExcel(inicio, fin).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nombre;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => this.alertaService.mostrarError('Error al generar Excel')
     });
   }
 }

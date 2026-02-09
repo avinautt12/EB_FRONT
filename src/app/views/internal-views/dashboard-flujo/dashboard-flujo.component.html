@@ -16,15 +16,18 @@
 
     <div class="tarjetas-acciones">
 
+        @if (permisoCompleto) {
         <div class="tarjeta destacado">
             <div class="tarjeta-icono">
-                <i class="fas fa-tachometer-alt"></i> </div>
+                <i class="fas fa-tachometer-alt"></i>
+            </div>
             <h2>Tablero Maestro</h2>
             <p>Vista unificada de saldos, alertas de liquidez y calendario de pagos.</p>
-            <button class="accion-btn" [routerLink]="['/flujo-tablero']">Ver Tablero</button>
+            <button class="accion-btn" [routerLink]="['/flujo-tablero-anual']">Ver Tablero</button>
         </div>
+        }
 
-        <div class="tarjeta">
+        <!-- <div class="tarjeta">
             <div class="tarjeta-icono">
                 <i class="fas fa-shopping-cart"></i> </div>
             <h2>Órdenes de Compra</h2>
@@ -38,23 +41,27 @@
             <h2>Logística & Aduanas</h2>
             <p>Control de embarques, ETA y cálculo de impuestos (IGI/DTA/IVA).</p>
             <button class="accion-btn" [routerLink]="['/logistica']">Ver Embarques</button>
-        </div>
+        </div> -->
 
         <div class="tarjeta">
             <div class="tarjeta-icono">
-                <i class="fas fa-building"></i> </div>
+                <i class="fas fa-building"></i>
+            </div>
             <h2>Gastos Operativos</h2>
             <p>Nóminas, rentas, servicios y gastos fijos recurrentes.</p>
             <button class="accion-btn" [routerLink]="['/gastos-operativos']">Administrar</button>
         </div>
 
+        @if (permisoCompleto) {
         <div class="tarjeta">
             <div class="tarjeta-icono">
-                <i class="fas fa-hand-holding-usd"></i> </div>
+                <i class="fas fa-hand-holding-usd"></i>
+            </div>
             <h2>Ingresos & Cobranza</h2>
             <p>Registro de facturas, promesas de pago y entradas reales.</p>
             <button class="accion-btn" [routerLink]="['/ingresos']">Ver Cobranza</button>
         </div>
+        }
 
     </div>
 </div>

@@ -1,36 +1,103 @@
 <app-home-bar></app-home-bar>
 
-<div class="dashboard-container">
-    <div class="header-section">
-        <h1>Logística y Aduanas</h1>
-        <button class="back-button" routerLink="/flujo-dashboard">Volver</button>
+<div class="page-container">
+  <header class="page-header">
+    <div class="header-content">
+      <h1>Logística y Aduanas</h1>
+      <p>Control de embarques, contenedores e impuestos de importación.</p>
     </div>
+    <div class="header-actions">
+      <button class="btn btn-outline" routerLink="/flujo-dashboard">
+        <i class="fas fa-arrow-left"></i> Volver
+      </button>
+      <button class="btn btn-primary" (click)="toggleFormulario()">
+        {{ mostrarFormulario ? 'Cancelar / Cerrar' : '+ Registrar Embarque' }}
+      </button>
+    </div>
+  </header>
 
-    <button type="button" class="accion-btn" (click)="toggleFormulario()">
-        {{ mostrarFormulario ? 'Cerrar' : '+ Registrar Embarque' }}
-    </button>
-
-    @if (mostrarFormulario) {
-    <div class="kpi-card" style="text-align: left; margin-top: 20px;">
+  @if (mostrarFormulario) {
+  <section class="form-section">
+    <div class="card border-create">
+      <div class="card-header">
+        <h3>
+          <i class="fas fa-ship" style="color: #EB5E28;"></i> Registro de Nuevo Embarque
+        </h3>
+      </div>
+      <div class="card-body">
         <form [formGroup]="form" (ngSubmit)="guardar()">
-            <div class="grid-form">
-                <label>Código Emb: <input formControlName="codigo_embarque" placeholder="EMB-ENE26"></label>
-                <label>ID Orden Compra: <input type="number" formControlName="orden_compra_id"
-                        placeholder="ID de la PO"></label>
-                <label>Contenedor: <input formControlName="contenedor"></label>
-                <label>Fecha ETA (Llegada): <input type="date" formControlName="fecha_eta"></label>
-
-                <h3 style="grid-column: 1/-1; color: #EB5E28; margin-top: 10px;">Valores para Impuestos</h3>
-
-                <label>Valor Aduana (MXN): <input type="number" formControlName="valor_aduana_mxn"></label>
-                <label>Pago IGI: <input type="number" formControlName="pago_igi"></label>
-                <label>Pago DTA: <input type="number" formControlName="pago_dta"></label>
-                <label>Flete (MXN): <input type="number" formControlName="gasto_flete_mxn"></label>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Código Embarque</label>
+              <input type="text" formControlName="codigo_embarque" placeholder="Ej: EMB-ENE26">
             </div>
-            <p style="font-size: 0.8rem; color: #888;">* El IVA y la Fecha de Pago (ETA - 3 días) se calculan
-                automáticamente.</p>
-            <button type="submit" class="accion-btn">Calcular y Guardar</button>
+
+            <div class="form-group">
+              <label>ID Orden Compra</label>
+              <input type="number" formControlName="orden_compra_id" placeholder="ID de la PO">
+            </div>
+
+            <div class="form-group">
+              <label>Contenedor</label>
+              <input type="text" formControlName="contenedor" placeholder="Número de contenedor">
+            </div>
+
+            <div class="form-group">
+              <label>Fecha ETA (Llegada)</label>
+              <input type="date" formControlName="fecha_eta">
+            </div>
+
+            <h3 style="grid-column: 1/-1; color: var(--primary-color); margin: 1rem 0 0.5rem 0; font-size: 1.1rem; border-bottom: 1px solid #333; padding-bottom: 5px;">
+              Valores para Impuestos
+            </h3>
+
+            <div class="form-group">
+              <label>Valor Aduana (MXN)</label>
+              <div class="currency-wrapper">
+                <span class="currency-symbol">$</span>
+                <input type="number" class="currency-input" formControlName="valor_aduana_mxn" placeholder="0.00">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Pago IGI</label>
+              <div class="currency-wrapper">
+                <span class="currency-symbol">$</span>
+                <input type="number" class="currency-input" formControlName="pago_igi" placeholder="0.00">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Pago DTA</label>
+              <div class="currency-wrapper">
+                <span class="currency-symbol">$</span>
+                <input type="number" class="currency-input" formControlName="pago_dta" placeholder="0.00">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Flete (MXN)</label>
+              <div class="currency-wrapper">
+                <span class="currency-symbol">$</span>
+                <input type="number" class="currency-input" formControlName="gasto_flete_mxn" placeholder="0.00">
+              </div>
+            </div>
+          </div>
+
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 1.5rem; font-style: italic;">
+            * El IVA y la Fecha de Pago (ETA - 3 días) se calculan automáticamente.
+          </p>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" (click)="toggleFormulario()">Cancelar</button>
+            <button type="submit" class="btn btn-save">
+              <i class="fas fa-calculator"></i> Calcular y Guardar
+            </button>
+          </div>
         </form>
+      </div>
     </div>
-    }
+  </section>
+  }
 </div>

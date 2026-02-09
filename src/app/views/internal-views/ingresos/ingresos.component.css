@@ -1,0 +1,129 @@
+/* --- VARIABLES GLOBALES DEL COMPONENTE --- */
+:host {
+  --primary-color: #EB5E28;
+  --bg-dark: #121212;
+  --bg-card: #1e1e1e;
+  --bg-input: #2c2c2c;
+  --text-main: #e0e0e0;
+  --text-muted: #a0a0a0;
+  --border-color: #333;
+  --success: #4caf50;
+}
+
+/* --- CONTENEDOR Y LAYOUT --- */
+.page-container {
+  background-color: var(--bg-dark);
+  min-height: 100vh;
+  padding: 2rem;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  color: var(--text-main);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+.page-header h1 { margin: 0; font-size: 1.8rem; color: var(--primary-color); }
+.page-header p { margin: 0.5rem 0 0; color: var(--text-muted); font-size: 0.9rem; }
+.header-actions { display: flex; gap: 1rem; }
+
+/* --- BOTONES --- */
+.btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 0.5rem;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.btn-primary { background-color: var(--primary-color); color: white; }
+.btn-primary:hover { background-color: #d45120; transform: translateY(-2px); }
+
+.btn-outline { background: transparent; border: 1px solid #666; color: var(--text-muted); }
+.btn-outline:hover { border-color: var(--text-main); color: var(--text-main); }
+
+.btn-save { background-color: var(--success); color: white; padding: 0.8rem 2rem; }
+.btn-save:hover { background-color: #43a047; }
+.btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* --- CARDS --- */
+.card {
+  background-color: var(--bg-card);
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.border-create { border-left: 5px solid var(--primary-color); }
+
+.card-header {
+  padding: 1rem 1.5rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.card-header h3 { 
+  margin: 0; 
+  font-size: 1.1rem; 
+  color: var(--text-main); 
+  font-weight: 500; 
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-body { padding: 1.5rem; }
+
+/* --- FORMULARIO --- */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.form-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+
+input, select {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: white;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+input:focus, select:focus { outline: none; border-color: var(--primary-color); }
+
+/* --- MONEDA --- */
+.currency-wrapper { position: relative; display: flex; align-items: center; }
+.currency-symbol { 
+  position: absolute; 
+  left: 12px; 
+  color: var(--text-muted); 
+  font-weight: bold; 
+  z-index: 10;
+}
+.currency-input { padding-left: 30px !important; text-align: right; }
+
+/* Quitar flechas número */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+.form-actions {
+  display: flex; justify-content: flex-end; gap: 1rem;
+  margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color);
+}

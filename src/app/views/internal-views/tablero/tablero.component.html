@@ -3,7 +3,7 @@
 <div class="dashboard-container">
 
   <div class="nav-row">
-    <button class="btn-back" routerLink="/home">
+    <button class="btn-back" routerLink="/flujo-dashboard">
       <i class="fa-solid fa-arrow-left"></i> Regresar
     </button>
   </div>
@@ -26,6 +26,31 @@
       <button class="btn-auditoria" routerLink="/flujo-auditoria">
         <i class="fa-solid fa-shield-halved"></i> Auditoría
       </button>
+
+      <div class="divider"></div>
+
+      <div style="position: relative; display: inline-block;">
+        
+        <button class="btn-excel" (click)="toggleOpcionesExcel()" title="Opciones de Exportación">
+          <i class="fa-solid fa-file-excel"></i> Excel
+        </button>
+
+        @if (mostrarOpcionesExcel) {
+          <div class="excel-dropdown">
+            <div class="dropdown-header">Exportar Reporte</div>
+            
+            <button (click)="exportarMesActual()">
+              <i class="fa-solid fa-calendar-day"></i> Solo {{ meses[mesSeleccionado - 1].nombre }}
+            </button>
+            
+            <button (click)="exportarAnual()">
+              <i class="fa-solid fa-calendar-days"></i> Año Completo {{ anioSeleccionado }}
+            </button>
+          </div>
+        }
+      </div>
+
+      <div class="divider"></div>
 
       <div class="divider"></div>
 
