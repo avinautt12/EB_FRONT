@@ -186,6 +186,11 @@ export class CaratulaUsuariosComponent implements OnInit {
     const porcentajeScott = this.parseNumber(datos.porcentaje_scott || '0');
     const porcentajeCombined = this.parseNumber(datos.porcentaje_apparel_syncros_vittoria || '0');
 
+    const metaInicial = this.parseNumber(datos.compra_minima_inicial || '0');
+    const metaAnual = this.parseNumber(datos.compra_minima_anual || '0');
+
+    const avanceReal = this.parseNumber(datos.acumulado_anticipado || '0');
+
     const totalMeta = metaScott + metaCombined;
 
     return {
@@ -238,9 +243,9 @@ export class CaratulaUsuariosComponent implements OnInit {
       porcentaje_may_jun_app: this.parseNumber(datos.porcentaje_may_jun_app || '0'),
       compra_minima_inicial: this.parseNumber(datos.compra_minima_inicial || '0'),
       avance_global: this.parseNumber(datos.avance_global || '0'),
-      porcentaje_global: this.parseNumber(datos.porcentaje_global || '0'),
+      porcentaje_global: metaInicial > 0 ? Math.round((avanceReal / metaInicial) * 100) : 0,
       acumulado_anticipado: this.parseNumber(datos.acumulado_anticipado || '0'),
-      porcentaje_anual: this.parseNumber(datos.porcentaje_anual || '0'),
+      porcentaje_anual: metaAnual > 0 ? Math.round((avanceReal / metaAnual) * 100) : 0,
       periodoJulAgo: datos.periodoJulAgo || 'Julio - Agosto',
       periodoSepOct: datos.periodoSepOct || 'Septiembre - Octubre',
       periodoNovDic: datos.periodoNovDic || 'Noviembre - Diciembre',

@@ -24,6 +24,22 @@ export class TableroAnualComponent implements OnInit {
   categoriasExpandidas: Set<string> = new Set(['Ingresos']); // 'Ingresos' abierta por defecto
   filasAgrupadas: { categoria: string, filas: any[] }[] = [];
 
+  readonly ORDEN_CATEGORIAS = [
+    'Saldo',
+    'Ingresos Operativos',
+    'Ingresos Financieros',
+    'Movimientos',
+    'Ingresos Otros',
+    'Egresos Proveedores',
+    'Egresos Operativos',
+    'Egresos Laborales',
+    'Impuestos',
+    'Egresos Financieros', 
+    'Subtotal',   // Total de Recuperación
+    'Total',      // Total Entradas
+    'Saldo Final'
+  ];
+
   ngOnInit(): void {
     this.cargarDatosAnuales();
   }
@@ -57,16 +73,22 @@ export class TableroAnualComponent implements OnInit {
 
   agruparPorCategoria(filas: any[]) {
     const grupos = new Map<string, any[]>();
+
     filas.forEach(f => {
       const cat = f.categoria || 'Sin Categoría';
       if (!grupos.has(cat)) grupos.set(cat, []);
       grupos.get(cat)?.push(f);
     });
-    
-    this.filasAgrupadas = Array.from(grupos.entries()).map(([categoria, filas]) => ({
-      categoria,
-      filas
-    }));
+
+    // El cambio clave: Ordenar el array final basado en nuestro arreglo de jerarquía
+    this.filasAgrupadas = Array.from(grupos.entries())
+      .map(([categoria, filas]) => ({ categoria, filas }))
+      .sort((a, b) => {
+        const indexA = this.ORDEN_CATEGORIAS.indexOf(a.categoria);
+        const indexB = this.ORDEN_CATEGORIAS.indexOf(b.categoria);
+        // Si no encuentra la categoría, la manda al final
+        return (indexA === -1 ? 99 : indexA) - (indexB === -1 ? 99 : indexB);
+      });
   }
 
   toggleCategoria(cat: string) {

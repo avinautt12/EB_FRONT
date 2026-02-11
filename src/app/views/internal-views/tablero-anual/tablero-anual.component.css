@@ -90,14 +90,16 @@ td {
   top: 0 !important;
   z-index: 100 !important;
   background-color: var(--bg-header) !important;
-  color: #ffffff !important; /* TEXTO BLANCO */
+  color: #ffffff !important;
+  /* TEXTO BLANCO */
   min-width: 280px;
   height: var(--h-total) !important;
   /* Quitamos bordes internos que causan líneas fantasma */
   border-top: none !important;
   border-left: none !important;
   border-right: 2px solid #444 !important;
-  border-bottom: 2px solid #444 !important; /* Cambiado de naranja a gris oscuro */
+  border-bottom: 2px solid #444 !important;
+  /* Cambiado de naranja a gris oscuro */
   vertical-align: middle;
 }
 
@@ -107,7 +109,8 @@ td {
   top: 0 !important;
   z-index: 90 !important;
   background-color: var(--bg-header) !important;
-  color: #ffffff !important; /* TEXTO BLANCO (Cambiado de naranja) */
+  color: #ffffff !important;
+  /* TEXTO BLANCO (Cambiado de naranja) */
   height: var(--h-fila-1) !important;
   line-height: var(--h-fila-1);
   border-bottom: 1px solid #444 !important;
@@ -117,12 +120,14 @@ td {
 /* C. FILA 2: SUB-HEADERS (PROY, REAL, DIF) */
 .sub-header-row th {
   position: sticky !important;
-  top: var(--h-fila-1) !important; 
+  top: var(--h-fila-1) !important;
   z-index: 90 !important;
   background-color: #1a1a1a !important;
-  color: #ffffff !important; /* TEXTO BLANCO */
+  color: #ffffff !important;
+  /* TEXTO BLANCO */
   height: var(--h-fila-2) !important;
-  border-bottom: 2px solid #444 !important; /* Cambiado de naranja a gris para evitar la línea */
+  border-bottom: 2px solid #444 !important;
+  /* Cambiado de naranja a gris para evitar la línea */
 }
 
 /* D. COLUMNA IZQUIERDA DEL CUERPO (CONCEPTOS) */
@@ -130,12 +135,13 @@ td {
   position: sticky !important;
   left: 0 !important;
   z-index: 80 !important;
-  background-color: var(--bg-body) !important; 
+  background-color: var(--bg-body) !important;
   min-width: 280px;
   border-right: 2px solid #333 !important;
   /* Aseguramos que el borde inferior sea discreto */
   border-bottom: 1px solid var(--color-borde) !important;
-  color: #ffffff !important; /* TEXTO BLANCO */
+  color: #ffffff !important;
+  /* TEXTO BLANCO */
 }
 
 /* ELIMINAR LÍNEA NARANJA DEL CONTENEDOR */
@@ -327,6 +333,9 @@ table {
   margin: 0;
   font-size: 2rem;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .header-info p {
@@ -337,7 +346,7 @@ table {
 .btn-back {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 10px;  
   border: 1px solid #444;
   padding: 10px 24px;
   border-radius: 50px;
@@ -369,7 +378,7 @@ table {
   /* Mantiene el título a la izquierda al hacer scroll horizontal */
   position: sticky;
   left: 0;
-  z-index: 45; 
+  z-index: 45;
 }
 
 .categoria-content {
@@ -379,7 +388,8 @@ table {
 }
 
 .categoria-titulo {
-  color: #EB5E28; /* Naranja para resaltar secciones */
+  color: #EB5E28;
+  /* Naranja para resaltar secciones */
   font-weight: 800;
   font-size: 0.85rem;
   letter-spacing: 0.5px;
@@ -394,4 +404,54 @@ table {
 .val-collapsed-white {
   color: #ffffff !important;
   opacity: 0.8;
+}
+
+/* --- HEADER SECTION (DISEÑO CENTRADO) --- */
+.header-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Centra todo horizontalmente */
+  margin-bottom: 2.5rem;
+  gap: 1.5rem;
+}
+
+/* Títulos */
+.header-top {
+  text-align: center;
+}
+
+h1 {
+  color: #EB5E28;
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.subtitulo {
+  color: #888;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+}
+
+/* --- TOOLBAR (CONTENEDOR DE CONTROLES) --- */
+.header-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  background-color: #1e1e1e;
+  padding: 1rem 2rem;
+  border-radius: 16px;
+  border: 1px solid #333;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  /* Se adapta si la pantalla es pequeña */
+}
+
+/* Divisor vertical visual */
+.divider {
+  width: 1px;
+  height: 40px;
+  background-color: #444;
 }
