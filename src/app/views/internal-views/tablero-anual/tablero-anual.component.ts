@@ -168,4 +168,10 @@ export class TableroAnualComponent implements OnInit {
   esNegativo(valor: number): boolean {
     return valor < 0;
   }
+
+  esSaldoFinal(concepto: string): boolean {
+    if (!concepto) return false;
+    const c = concepto.toUpperCase();
+    return c.includes('SALDO FINAL'); // Aplica para "SALDO FINAL" y "SALDO FINAL DISPONIBLE"
+  }
 }

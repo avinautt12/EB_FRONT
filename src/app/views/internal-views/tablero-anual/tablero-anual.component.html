@@ -72,11 +72,16 @@
                     <td class="text-right font-tabular cell-detail cell-r fw-bold">
                       {{ dato.real | currency:'MXN':'symbol-narrow':'1.0-0' }}
                     </td>
+                    
                     <td class="text-right font-tabular cell-detail cell-d" 
                         [class.texto-rojo]="esNegativo(dato.diferencia)"
                         [class.texto-verde]="dato.diferencia > 0">
-                      {{ dato.diferencia | currency:'MXN':'symbol-narrow':'1.0-0' }}
+                      
+                      @if (!esSaldoFinal(fila.concepto)) {
+                        {{ dato.diferencia | currency:'MXN':'symbol-narrow':'1.0-0' }}
+                      }
                     </td>
+
                   } @else {
                     <td class="text-right font-tabular cell-main">
                       <span class="val-collapsed-white">
@@ -92,7 +97,7 @@
           
           @else {
             <tr class="fila-categoria-header" (click)="toggleCategoria(grupo.categoria)">
-              <td [attr.colspan]="1 + (columnas.length * (estaExpandido(columnas[0]) ? 3 : 1))" class="sticky-col-first">
+              <td class="sticky-col-first">
                 <div class="categoria-content">
                   <i class="fa-solid"
                     [ngClass]="catEstaExpandida(grupo.categoria) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
@@ -100,6 +105,9 @@
                   <span class="categoria-count">({{ grupo.filas.length }} conceptos)</span>
                 </div>
               </td>
+              @for (fecha of columnas; track $index) {
+                 <td [attr.colspan]="estaExpandido(fecha) ? 3 : 1" class="cell-group-empty"></td>
+              }
             </tr>
 
             @if (catEstaExpandida(grupo.categoria)) {
@@ -117,11 +125,16 @@
                       <td class="text-right font-tabular cell-detail cell-r fw-bold">
                         {{ dato.real | currency:'MXN':'symbol-narrow':'1.0-0' }}
                       </td>
+                      
                       <td class="text-right font-tabular cell-detail cell-d" 
                           [class.texto-rojo]="esNegativo(dato.diferencia)"
                           [class.texto-verde]="dato.diferencia > 0">
-                        {{ dato.diferencia | currency:'MXN':'symbol-narrow':'1.0-0' }}
+                        
+                        @if (!esSaldoFinal(fila.concepto)) {
+                          {{ dato.diferencia | currency:'MXN':'symbol-narrow':'1.0-0' }}
+                        }
                       </td>
+
                     } @else {
                       <td class="text-right font-tabular cell-main">
                         <span class="val-collapsed-white">
@@ -133,7 +146,9 @@
                 </tr>
               }
             }
-          } } </tbody>
+          } 
+        } 
+      </tbody>
     </table>
   </div>
   }
