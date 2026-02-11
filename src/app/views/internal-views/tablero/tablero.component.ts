@@ -175,7 +175,7 @@ export class TableroComponent implements OnInit {
         // --- MANEJO DE TOKEN VENCIDO ---
         if (err.status === 401) {
           // Mensaje específico para token expirado
-          this.alertaService.mostrarError("⚠️ Tu sesión ha expirado. Por favor, recarga la página.");
+          this.alertaService.mostrarError("⚠️ Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.");
         } else {
           // Mensaje genérico para otros errores
           this.alertaService.mostrarError("Error al conectar con Odoo.");
