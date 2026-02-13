@@ -1,5 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnDestroy, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, Output, EventEmitter, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
@@ -12,6 +11,7 @@ import { TooltipComponent } from '../../../components/tooltip/tooltip.component'
 import * as XLSX from 'xlsx';
 
 import { FechaActualizacionComponent } from '../../../components/fecha-actualizacion/fecha-actualizacion.component';
+import { CommonModule } from '@angular/common';
 
 interface Cliente {
   clave: string;
@@ -286,7 +286,8 @@ export class PrevioComponent implements OnInit, OnDestroy {
     private clientesService: ClientesService,
     private previoService: PrevioService,
     private alertaService: AlertaService,
-    private filtroService: FiltroService
+    private filtroService: FiltroService,
+    private cd: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
@@ -302,45 +303,72 @@ export class PrevioComponent implements OnInit, OnDestroy {
         this.filtroActivo = filtroId;
       });
 
-      // 1. Mapear clientes incluyendo los nuevos periodos de 2026
+      // 1. Mapear clientes (Cálculo en memoria)
       const todosClientes = (clientes || []).map((cliente: Cliente) => {
         const res = this.calcularAcumulados(cliente, this.facturas);
         const fechaInicio = cliente.f_inicio ? new Date(cliente.f_inicio) : new Date('2025-07-01');
 
         return {
           ...cliente,
-          ...res, // Esto ya trae scott, avance_ene_feb, etc., desde tu calcularAcumulados corregido
+          ...res,
           acumulado_anticipado: res.acumulado,
           avance_global_scott: res.scott,
           fecha_inicio_calculo: fechaInicio.toISOString().split('T')[0]
         };
       });
 
-      // 2. Procesar los integrales (Crea los grupos sumando los individuales)
+      // 2. Procesar integrales
       this.clientesOriginal = this.procesarIntegrales(todosClientes);
 
-      // 3. Llenar la fuente de verdad (clientes + integrales)
-      this.combinarDatos(); // Esto llena this.todosLosDatos
+      // 3. Combinar datos
+      this.combinarDatos();
 
-      // 4. Configurar opciones de filtros basadas en la lista completa
+      // 4. Configurar filtros y visualización inicial
       this.inicializarOpcionesFiltro();
-
-      // 5. Aplicar filtros e inicializar tabla
       this.aplicarFiltros();
 
-      // 6. Guardar resultados procesados
-      this.guardarDatosEnBackend();
-
-      this.cargando = false;
-      this.onInit.emit();
+      // 5. CAMBIO CLAVE: Guardar y luego Recargar desde BD
+      this.guardarYRefrescar();
 
     }).catch(error => {
       console.error('Error al cargar datos iniciales:', error);
       this.cargando = false;
     });
+  }
 
-    // NOTA: He eliminado el bloque previoService.obtenerPrevio() que tenías aquí abajo 
-    // porque sobreescribía el trabajo de los integrales con datos crudos del servidor.
+  guardarYRefrescar() {
+    this.cargando = true;
+    
+    // Preparar datos con porcentajes calculados
+    const datosParaGuardar = [...this.clientesOriginal, ...this.integralesOriginal].map(item => 
+      this.calcularPorcentajes(item)
+    );
+
+    // 1. Enviar al backend
+    this.previoService.actualizarPrevio(datosParaGuardar).subscribe({
+      next: (res) => {
+        console.log('Datos guardados/actualizados en BD');
+        
+        // 2. AHORA SÍ: Pedir la versión oficial al backend para asegurar que vemos lo real
+        this.previoService.obtenerPrevio().subscribe({
+          next: (datosBackend) => {
+            // Aquí podrías actualizar this.todosLosDatos con datosBackend si quisieras
+            // pero lo más importante es apagar el loading de forma segura:
+            
+            this.cargando = false;
+            this.cd.detectChanges(); // <--- ESTO ARREGLA EL ERROR NG0100
+          },
+          error: (err) => {
+            console.error('Error recargando previo:', err);
+            this.cargando = false;
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error guardando:', err);
+        this.cargando = false;
+      }
+    });
   }
 
   procesarDatosDelEndpoint(datos: any[]): ClienteConAcumulado[] {
@@ -2215,50 +2243,50 @@ export class PrevioComponent implements OnInit, OnDestroy {
 
   private calcularPorcentajes(cliente: any): any {
     const calcular = (avance: number, compromiso: number): number => {
-        if (!compromiso || compromiso === 0) return 0;
-        return Math.round((avance / compromiso) * 100);
+      if (!compromiso || compromiso === 0) return 0;
+      return Math.round((avance / compromiso) * 100);
     };
 
     // Mapeamos el objeto completo asegurando que TODOS los campos de 2026 viajen al Back
     return {
-        ...cliente,
-        // Porcentajes Globales
-        porcentaje_anual: calcular(
-            (cliente.avance_global_scott || 0) + (cliente.avance_global_apparel_syncros_vittoria || 0),
-            cliente.compra_minima_anual
-        ),
-        porcentaje_global: calcular(
-            (cliente.avance_global_scott || 0) + (cliente.avance_global_apparel_syncros_vittoria || 0),
-            cliente.compra_minima_inicial
-        ),
+      ...cliente,
+      // Porcentajes Globales
+      porcentaje_anual: calcular(
+        (cliente.avance_global_scott || 0) + (cliente.avance_global_apparel_syncros_vittoria || 0),
+        cliente.compra_minima_anual
+      ),
+      porcentaje_global: calcular(
+        (cliente.avance_global_scott || 0) + (cliente.avance_global_apparel_syncros_vittoria || 0),
+        cliente.compra_minima_inicial
+      ),
 
-        // --- CAMPOS NUEVOS 2026 (SCOTT) ---
-        compromiso_ene_feb: cliente.compromiso_ene_feb || 0,
-        avance_ene_feb: cliente.avance_ene_feb || 0,
-        porcentaje_ene_feb: calcular(cliente.avance_ene_feb, cliente.compromiso_ene_feb),
+      // --- CAMPOS NUEVOS 2026 (SCOTT) ---
+      compromiso_ene_feb: cliente.compromiso_ene_feb || 0,
+      avance_ene_feb: cliente.avance_ene_feb || 0,
+      porcentaje_ene_feb: calcular(cliente.avance_ene_feb, cliente.compromiso_ene_feb),
 
-        compromiso_mar_abr: cliente.compromiso_mar_abr || 0,
-        avance_mar_abr: cliente.avance_mar_abr || 0,
-        porcentaje_mar_abr: calcular(cliente.avance_mar_abr, cliente.compromiso_mar_abr),
+      compromiso_mar_abr: cliente.compromiso_mar_abr || 0,
+      avance_mar_abr: cliente.avance_mar_abr || 0,
+      porcentaje_mar_abr: calcular(cliente.avance_mar_abr, cliente.compromiso_mar_abr),
 
-        compromiso_may_jun: cliente.compromiso_may_jun || 0,
-        avance_may_jun: cliente.avance_may_jun || 0,
-        porcentaje_may_jun: calcular(cliente.avance_may_jun, cliente.compromiso_may_jun),
+      compromiso_may_jun: cliente.compromiso_may_jun || 0,
+      avance_may_jun: cliente.avance_may_jun || 0,
+      porcentaje_may_jun: calcular(cliente.avance_may_jun, cliente.compromiso_may_jun),
 
-        // --- CAMPOS NUEVOS 2026 (APPAREL) ---
-        compromiso_ene_feb_app: cliente.compromiso_ene_feb_app || 0,
-        avance_ene_feb_app: cliente.avance_ene_feb_app || 0,
-        porcentaje_ene_feb_app: calcular(cliente.avance_ene_feb_app, cliente.compromiso_ene_feb_app),
+      // --- CAMPOS NUEVOS 2026 (APPAREL) ---
+      compromiso_ene_feb_app: cliente.compromiso_ene_feb_app || 0,
+      avance_ene_feb_app: cliente.avance_ene_feb_app || 0,
+      porcentaje_ene_feb_app: calcular(cliente.avance_ene_feb_app, cliente.compromiso_ene_feb_app),
 
-        compromiso_mar_abr_app: cliente.compromiso_mar_abr_app || 0,
-        avance_mar_abr_app: cliente.avance_mar_abr_app || 0,
-        porcentaje_mar_abr_app: calcular(cliente.avance_mar_abr_app, cliente.compromiso_mar_abr_app),
+      compromiso_mar_abr_app: cliente.compromiso_mar_abr_app || 0,
+      avance_mar_abr_app: cliente.avance_mar_abr_app || 0,
+      porcentaje_mar_abr_app: calcular(cliente.avance_mar_abr_app, cliente.compromiso_mar_abr_app),
 
-        compromiso_may_jun_app: cliente.compromiso_may_jun_app || 0,
-        avance_may_jun_app: cliente.avance_may_jun_app || 0,
-        porcentaje_may_jun_app: calcular(cliente.avance_may_jun_app, cliente.compromiso_may_jun_app)
+      compromiso_may_jun_app: cliente.compromiso_may_jun_app || 0,
+      avance_may_jun_app: cliente.avance_may_jun_app || 0,
+      porcentaje_may_jun_app: calcular(cliente.avance_may_jun_app, cliente.compromiso_may_jun_app)
     };
-}
+  }
 
   exportarAExcel() {
     try {
