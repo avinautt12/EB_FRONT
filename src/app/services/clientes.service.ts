@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -29,8 +29,8 @@ export class ClientesService {
     return this.http.get<any>(`${this.apiUrl}/clientes/info`, { headers });
   }
 
-  getNombresClientes(): Observable<{ clave: string; nombre_cliente: string }[]> {
-    return this.http.get<{ clave: string; nombre_cliente: string }[]>(`${this.apiUrl}/clientes/nombres`);
+  getNombresClientes(): Observable<{ id: number; clave: string; nombre_cliente: string }[]> {
+    return this.http.get<{ id: number; clave: string; nombre_cliente: string }[]>(`${this.apiUrl}/clientes/nombres`);
   }
 
   // Buscar cliente por clave o nombre (POST con JSON)
@@ -67,6 +67,20 @@ export class ClientesService {
     const headers = { Authorization: `Bearer ${token}` };
 
     return this.http.get<any>(`${this.apiUrl}/facturas-cliente`, { headers });
+  }
+
+  getDetalleComprasCliente(limit?: number, offset?: number, estado?: string, cliente?: string, refExacta?: boolean, idGrupoOdoo?: number): Observable<any> {
+    const token = localStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
+    let params = new HttpParams();
+    if (limit !== undefined) params = params.set('limit', String(limit));
+    if (offset !== undefined) params = params.set('offset', String(offset));
+    if (estado) params = params.set('estado', estado);
+    if (cliente) params = params.set('cliente', cliente);
+    if (refExacta) params = params.set('ref_exacta', '1');
+    if (idGrupoOdoo != null) params = params.set('grupo', String(idGrupoOdoo));
+
+    return this.http.get<any>(`${this.apiUrl}/detalle-compras-odoo`, { headers, params });
   }
 
   getFacturasGrupo(idGrupo: number): Observable<any> {

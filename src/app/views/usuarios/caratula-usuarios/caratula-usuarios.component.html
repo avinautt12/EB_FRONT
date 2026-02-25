@@ -14,12 +14,36 @@
             <i class="fas fa-file-pdf" *ngIf="!exportandoPDF"></i>
             {{ exportandoPDF ? 'Generando...' : 'Exportar Caratula PDF' }}
         </button>
-        <button class="btn btn-secondary" (click)="mostrarFacturas = true" [disabled]="!datosCliente">
+        <button class="btn btn-secondary" (click)="pedirVistaDetalle()" [disabled]="!datosCliente">
             <i class="fas fa-print"></i> Detalle de Compras
         </button>
 
-        <app-facturas-cliente [isOpen]="mostrarFacturas" (onClose)="mostrarFacturas = false" [idGrupo]="idDelGrupo">
+        <app-facturas-cliente [isOpen]="mostrarFacturas" (onClose)="mostrarFacturas = false" [idGrupo]="idDelGrupo" [clienteClave]="clienteClaveModal" [claveExacta]="claveExactaModal" [idGrupoOdoo]="idGrupoOdooModal">
         </app-facturas-cliente>
+
+        <!-- Modal selector: Vista Global vs Mis Pedidos (solo usuarios integrales) -->
+        <div class="selector-overlay" *ngIf="mostrarSelectorVista" (click)="cerrarSelectorVista()">
+            <div class="selector-modal" (click)="$event.stopPropagation()">
+                <h3 class="selector-titulo">
+                    <i class="fas fa-eye"></i> ¿Qué deseas ver?
+                </h3>
+                <div class="selector-opciones">
+                    <div class="selector-card" (click)="abrirVistaGlobal()">
+                        <i class="fas fa-building selector-icon"></i>
+                        <span class="selector-card-titulo">Vista Global</span>
+                        <span class="selector-card-desc">Todos los pedidos de la razón social</span>
+                    </div>
+                    <div class="selector-card" (click)="abrirVistaMisPedidos()">
+                        <i class="fas fa-user selector-icon"></i>
+                        <span class="selector-card-titulo">Mis Pedidos</span>
+                        <span class="selector-card-desc">Solo los pedidos registrados a tu nombre</span>
+                    </div>
+                </div>
+                <button class="selector-cancelar" (click)="cerrarSelectorVista()">
+                    Cancelar
+                </button>
+            </div>
+        </div>
     </div>
 
     <app-fecha-actualizacion></app-fecha-actualizacion>

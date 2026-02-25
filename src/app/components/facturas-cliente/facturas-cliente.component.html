@@ -13,10 +13,46 @@
                 </button>
             </div>
 
+            <!-- Pestañas por estado de orden (solo si hay más de una) -->
+            <div *ngIf="!cargando && tabsDisponibles.length > 1" class="tabs-container">
+                <button
+                    *ngFor="let tab of tabsDisponibles"
+                    class="tab-btn"
+                    [class.tab-activa]="tabActiva === tab"
+                    (click)="seleccionarTab(tab)">
+                    {{ tab }}
+                    <span class="tab-count">({{ contarTab(tab) }})</span>
+                </button>
+            </div>
+
+            <!-- Buscador por SKU / producto / pedido -->
+            <div *ngIf="!cargando" class="buscador-container">
+                <div class="buscador-wrapper">
+                    <i class="fas fa-search buscador-icono"></i>
+                    <input
+                        type="text"
+                        class="buscador-input"
+                        [(ngModel)]="textoBusqueda"
+                        (input)="filtrarFacturas()"
+                        placeholder="Buscar por SKU, producto o pedido..."
+                        autocomplete="off"
+                    />
+                    <button *ngIf="textoBusqueda" class="buscador-limpiar" (click)="limpiarBusqueda()" title="Limpiar búsqueda">×</button>
+                </div>
+                <span *ngIf="textoBusqueda" class="buscador-resultado">
+                    {{ facturasFiltradas.length }} resultado{{ facturasFiltradas.length !== 1 ? 's' : '' }}
+                </span>
+            </div>
+
             <!-- Spinner carga -->
             <div *ngIf="cargando" class="cargando-spinner">
                 <div class="spinner"></div>
-                <p>Cargando facturas...</p>
+                <p>Cargando datos...</p>
+            </div>
+
+            <!-- Mensaje de error (visible también si la petición tarda) -->
+            <div *ngIf="error && (!cargando || cargando)" class="sin-datos" style="margin-top:12px;">
+                <p>{{ error }}</p>
             </div>
 
             <!-- Mensaje sin datos -->
@@ -29,15 +65,15 @@
                 <table class="tabla-facturas">
                     <thead>
                         <tr>
-                            <th>Número Factura</th>
+                            <th>ID</th>
                             <th>Clave producto</th>
                             <th>Producto</th>
                             <th>Fecha</th>
                             <th>Precio Unit.</th>
                             <th>Cantidad</th>
+                            <th>Entregado</th>
                             <th>Total</th>
-                            <th>Marca</th>
-                            <th>Subcategoría</th>
+                            <th>Estatus Actual</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -48,9 +84,9 @@
                             <td>{{ formatearFecha(factura.fecha_factura) }}</td>
                             <td>{{ formatearMoneda(factura.precio_unitario) }}</td>
                             <td>{{ factura.cantidad }}</td>
+                            <td>{{ factura.cantidad_entregada }}</td>
                             <td>{{ formatearMoneda(factura.venta_total) }}</td>
-                            <td>{{ factura.marca }}</td>
-                            <td>{{ factura.subcategoria }}</td>
+                            <td>{{ factura.estado_factura }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -72,6 +108,20 @@
                 </button>
                 <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">
                     <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+
+            <!-- Navegación entre pestañas (solo si hay más de una) -->
+            <div *ngIf="!cargando && tabsDisponibles.length > 1" class="tab-navegacion">
+                <button class="tab-nav-btn" (click)="tabAnterior()" [disabled]="indiceTabActiva === 0">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </button>
+                <span class="tab-nav-info">
+                    <strong>{{ tabActiva }}</strong>
+                    &nbsp;({{ indiceTabActiva + 1 }} / {{ tabsDisponibles.length }})
+                </span>
+                <button class="tab-nav-btn" (click)="tabSiguiente()" [disabled]="indiceTabActiva === tabsDisponibles.length - 1">
+                    Siguiente <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
         </div>

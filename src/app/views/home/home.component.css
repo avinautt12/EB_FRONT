@@ -2,24 +2,31 @@
   display: flex;
   flex-direction: column;
   max-width: 1200px;
-  margin: 2rem auto;
+  margin: 3rem auto;
   padding: 2rem;
-  color: #FFFCF2;
+  color: var(--text, #FFFCF2);
   font-family: 'Segoe UI', sans-serif;
-  border-radius: 12px;
   text-align: center;
+  position: relative;
+  z-index: 2;
+  background: none;
+  box-shadow: none;
+  border: none;
 }
 
 .home-container h1 {
-  color: #EB5E28;
+  color: var(--accent-warm, #EB5E28);
   font-size: 2rem;
   margin-bottom: 0.3rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 .subtexto {
   font-size: 1.1rem;
   margin-bottom: 2rem;
-  color: #ccc;
+  color: rgba(255, 252, 242, 0.7);
+  font-weight: 400;
 }
 
 .tarjetas-acciones {
@@ -29,44 +36,107 @@
 }
 
 .tarjeta {
-  background-color: #1e1d1b;
-  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(30, 29, 27, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 252, 242, 0.1);
+  border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2),
+              inset 0 1px 1px rgba(255, 252, 242, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.tarjeta::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 252, 242, 0.2), transparent);
+  pointer-events: none;
 }
 
 .tarjeta:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 20px rgba(255, 94, 40, 0.4);
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(235, 94, 40, 0.25),
+              inset 0 1px 1px rgba(255, 252, 242, 0.1);
+  border-color: rgba(235, 94, 40, 0.3);
+  background: rgba(30, 29, 27, 0.6);
 }
 
 .tarjeta h2 {
   font-size: 1.4rem;
-  color: #EB5E28;
+  color: var(--accent-warm, #EB5E28);
   margin-bottom: 0.5rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
 }
 
 .tarjeta p {
   font-size: 1rem;
   margin-bottom: 1.2rem;
-  color: #FFFCF2;
+  color: rgba(255, 252, 242, 0.8);
+  font-weight: 400;
+  line-height: 1.5;
 }
 
 .tarjeta button {
-  background-color: #EB5E28;
-  color: #FFFCF2;
+  margin-top: auto;
+  background: linear-gradient(135deg, var(--accent-warm, #EB5E28) 0%, rgba(235, 94, 40, 0.8) 100%);
+  color: var(--text, #FFFCF2);
   border: none;
-  padding: 0.6rem 1.2rem;
+  padding: 0.75rem 1.5rem;
   font-size: 1rem;
   font-weight: 600;
-  border-radius: 30px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(235, 94, 40, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tarjeta button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
 }
 
 .tarjeta button:hover {
-  background-color: #ff6b2c;
-  transform: scale(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(235, 94, 40, 0.4);
+}
+
+.tarjeta button:hover::before {
+  left: 100%;
+}
+
+.tarjeta button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(235, 94, 40, 0.3);
+}
+
+@keyframes fadeSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -21,6 +21,7 @@ interface Usuario {
 }
 
 interface ClienteNombre {
+  id?: number;
   clave: string;
   nombre_cliente: string;
 }
@@ -114,6 +115,15 @@ export class UsuariosComponent implements OnInit {
   clienteSugerencias: ClienteNombre[] = [];
   clienteSeleccionadoId: number | null = null;
 
+  /** Para vincular al usuario a un grupo integral sin cliente específico */
+  vincularGrupo = false;
+  grupoSeleccionadoId: number | null = null;
+  grupos: { id: number; nombre_grupo: string }[] = [];
+  /** Clientes que pertenecen al grupo seleccionado */
+  clientesDelGrupo: { id: number; clave: string; nombre_cliente: string }[] = [];
+  /** Cliente específico elegido dentro del grupo (null = sin asignar) */
+  clienteGrupoSeleccionadoId: number | null = null;
+
   ngOnInit(): void {
     this.cargarUsuarios();
 
@@ -130,6 +140,12 @@ export class UsuariosComponent implements OnInit {
         this.clienteSugerencias = res;
       },
       error: () => console.error('Error al obtener clientes')
+    });
+
+    // Carga grupos integrales
+    this.usuariosService.getGruposIntegrales().subscribe({
+      next: (res) => { this.grupos = res; },
+      error: () => console.error('Error al obtener grupos integrales')
     });
   }
 
@@ -237,6 +253,13 @@ export class UsuariosComponent implements OnInit {
   seleccionarCliente(cliente: ClienteNombre) {
     this.clienteBusqueda = `${cliente.nombre_cliente} (${cliente.clave})`;
 
+    // Si el endpoint ya devuelve el id, úsalo directamente sin segunda llamada HTTP
+    if (cliente.id) {
+      this.clienteSeleccionadoId = cliente.id;
+      return;
+    }
+
+    // Fallback: buscar por clave (clientes sin grupo)
     this.clientesService.buscarCliente(cliente.clave).subscribe({
       next: (clienteCompleto) => {
         this.clienteSeleccionadoId = clienteCompleto.id;
@@ -270,6 +293,10 @@ export class UsuariosComponent implements OnInit {
     this.asociarCliente = false;
     this.clienteBusqueda = '';
     this.clienteSeleccionadoId = null;
+    this.vincularGrupo = false;
+    this.grupoSeleccionadoId = null;
+    this.clientesDelGrupo = [];
+    this.clienteGrupoSeleccionadoId = null;
   }
 
   editarUsuario(usuario: Usuario): void {
@@ -319,6 +346,17 @@ export class UsuariosComponent implements OnInit {
     this.mostrarFormularioEdicion = false;
   }
 
+  /** Carga los clientes del grupo seleccionado al cambiar el dropdown de grupo. */
+  onGrupoChange(): void {
+    this.clienteGrupoSeleccionadoId = null;
+    this.clientesDelGrupo = [];
+    if (!this.grupoSeleccionadoId) return;
+    this.usuariosService.getClientesPorGrupo(this.grupoSeleccionadoId).subscribe({
+      next: (res) => { this.clientesDelGrupo = res; },
+      error: () => console.error('Error al cargar clientes del grupo')
+    });
+  }
+
   agregarUsuario(): void {
     if (this.validarFormulario()) {
       this.cargandoUsuarios = true;
@@ -340,6 +378,17 @@ export class UsuariosComponent implements OnInit {
         usuarioParaCrear.cliente_id = null; // Envía null explícitamente
       }
 
+      // Vincula a un grupo integral
+      if (this.vincularGrupo && this.grupoSeleccionadoId) {
+        if (this.clienteGrupoSeleccionadoId) {
+          // El admin eligió un cliente específico del grupo → se usa cliente_id
+          usuarioParaCrear.cliente_id = this.clienteGrupoSeleccionadoId;
+        } else {
+          // Sin cliente específico → solo el grupo
+          usuarioParaCrear.id_grupo = this.grupoSeleccionadoId;
+        }
+      }
+
       this.usuariosService.crearUsuario(usuarioParaCrear).subscribe({
         next: (usuarioCreado) => {
           this.alerta.mostrarExito('✅ Usuario creado con éxito');
@@ -358,6 +407,10 @@ export class UsuariosComponent implements OnInit {
           this.asociarCliente = false;
           this.clienteBusqueda = '';
           this.clienteSeleccionadoId = null;
+          this.vincularGrupo = false;
+          this.grupoSeleccionadoId = null;
+          this.clientesDelGrupo = [];
+          this.clienteGrupoSeleccionadoId = null;
         },
         error: (error) => {
           console.error('Error completo:', error);
@@ -501,6 +554,12 @@ export class UsuariosComponent implements OnInit {
     // Validación de cliente si está seleccionado
     if (this.asociarCliente && !this.clienteSeleccionadoId) {
       this.alerta.mostrarError('Debe seleccionar un cliente válido');
+      return false;
+    }
+
+    // Validación de grupo integral si está activado
+    if (this.vincularGrupo && !this.grupoSeleccionadoId) {
+      this.alerta.mostrarError('Debe seleccionar un grupo integral válido');
       return false;
     }
 

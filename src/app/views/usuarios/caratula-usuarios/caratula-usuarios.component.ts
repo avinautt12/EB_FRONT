@@ -96,6 +96,30 @@ export class CaratulaUsuariosComponent implements OnInit {
 
   idDelGrupo: number | null = null;
 
+  /** Guarda el id_grupo original del token para poder retomarlo en Vista Global. */
+  private grupoIdOriginal: number | null = null;
+
+  /** Muestra el mini-modal de selección vista global vs. mis pedidos. */
+  mostrarSelectorVista = false;
+
+  /**
+   * Clave/nombre de cliente que se pasa a facturas-cliente en modo "Mis Pedidos".
+   * En modo "Vista Global" se usa idDelGrupo c y este valor es ignorado.
+   */
+  clienteClaveModal: string | null = null;
+
+  /**
+   * Cuando true indica a facturas-cliente que busque en Odoo con match exacto por ref.
+   * Se activa en "Mis Pedidos" de usuarios integrales; false en Vista Global.
+   */
+  claveExactaModal = false;
+
+  /**
+   * ID del grupo integral para Vista Global.
+   * Cuando se setea, facturas-cliente consulta Odoo con todas las claves del grupo.
+   */
+  idGrupoOdooModal: number | null = null;
+
   constructor(
     private caratulasService: CaratulasService,
     private router: Router,
@@ -134,6 +158,7 @@ export class CaratulaUsuariosComponent implements OnInit {
     const idGrupo = this.tokenData.id_grupo;
 
     this.idDelGrupo = idGrupo;
+    this.grupoIdOriginal = idGrupo;  // guardar para poder restaurar en Vista Global
 
     let claveParaBuscar = this.tokenData.clave;
     let nombreParaBuscar = this.tokenData.nombre_cliente;
@@ -149,6 +174,58 @@ export class CaratulaUsuariosComponent implements OnInit {
       console.log('Token no indica grupo. Buscando por datos individuales.');
       this.realizarBusqueda(claveParaBuscar, nombreParaBuscar);
     }
+  }
+
+  /**
+   * Punto de entrada del botón "Detalle de Compras".
+   * - Si el usuario pertenece a un grupo integral → muestra el selector de vista.
+   * - Si es usuario individual → abre el modal directo.
+   */
+  pedirVistaDetalle() {
+    if (this.grupoIdOriginal) {
+      this.mostrarSelectorVista = true;
+    } else {
+      this.idDelGrupo = null;
+      this.clienteClaveModal = this.datosCliente?.nombre_cliente ?? this.datosCliente?.clave ?? null;
+      this.mostrarFacturas = true;
+    }
+  }
+
+  /**
+   * Abre el modal en modo "Vista Global":
+   * muestra TODOS los pedidos y estatus de la razón social completa consultando Odoo
+   * por el nombre del cliente (igual que cualquier usuario individual),
+   * sin usar la tabla interna de facturas del grupo.
+   */
+  abrirVistaGlobal() {
+    // Vista Global: el backend consulta DB por todas las claves del grupo y luego Odoo
+    this.idGrupoOdooModal = this.grupoIdOriginal;   // pasa el id_grupo al componente
+    this.idDelGrupo = null;        // desactiva el endpoint /facturas-grupo (tabla monitor)
+    this.clienteClaveModal = null; // no se usa cuando idGrupoOdooModal está activo
+    this.claveExactaModal = false;
+    this.mostrarSelectorVista = false;
+    this.mostrarFacturas = true;
+  }
+
+  /**
+   * Abre el modal en modo "Mis Pedidos":
+   * muestra solo las órdenes del cliente específico asignado a este usuario.
+   * Usa directamente tokenData.clave (la clave del cliente en Odoo/sistema).
+   * Si el usuario no tiene clave asignada, abre el modal vacío.
+   */
+  abrirVistaMisPedidos() {
+    this.idGrupoOdooModal = null;   // desactiva la Vista Global
+    this.idDelGrupo = null;         // desactiva el modo grupo en facturas-cliente
+    // tokenData.clave es la clave del cliente (ej. 'GC411') que coincide con ref en Odoo
+    this.clienteClaveModal = this.tokenData?.clave ?? null;
+    this.claveExactaModal = true;   // match exacto por ref en Odoo; si clave no existe → modal vacío
+    this.mostrarSelectorVista = false;
+    this.mostrarFacturas = true;
+  }
+
+  /** Cierra el selector de vista sin abrir el modal de compras. */
+  cerrarSelectorVista() {
+    this.mostrarSelectorVista = false;
   }
 
   private realizarBusqueda(clave: string, nombreCliente: string) {

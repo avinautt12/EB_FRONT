@@ -569,3 +569,106 @@ tr:hover {
     justify-content: space-between;
   }
 }
+
+/* =====================================================
+   SELECTOR DE VISTA: Global vs Mis Pedidos
+   ===================================================== */
+.selector-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+}
+
+.selector-modal {
+  background: linear-gradient(135deg, #252422 0%, #1e1d1b 100%);
+  border: 1px solid #403D39;
+  border-radius: 14px;
+  padding: 2rem 2.5rem;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+.selector-titulo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #EB5E28;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.selector-opciones {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.selector-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.4rem 1rem;
+  border: 1px solid #403D39;
+  border-radius: 10px;
+  cursor: pointer;
+  background: #2a2a28;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+}
+
+.selector-card:hover {
+  border-color: #EB5E28;
+  background: rgba(235, 94, 40, 0.08);
+  transform: translateY(-3px);
+}
+
+.selector-icon {
+  font-size: 2rem;
+  color: #EB5E28;
+}
+
+.selector-card-titulo {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #FFFCF2;
+}
+
+.selector-card-desc {
+  font-size: 0.78rem;
+  color: #9a958e;
+  line-height: 1.3;
+}
+
+.selector-cancelar {
+  background: none;
+  border: 1px solid #403D39;
+  color: #9a958e;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.45rem 1.4rem;
+  border-radius: 6px;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.selector-cancelar:hover {
+  color: #FFFCF2;
+  border-color: #6c6860;
+  background: rgba(255,255,255,0.05);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

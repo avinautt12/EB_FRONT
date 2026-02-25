@@ -41,4 +41,14 @@ export class UsuariosService {
       }
     });
   }
+
+  getGruposIntegrales(): Observable<{ id: number; nombre_grupo: string }[]> {
+    return this.http.get<{ id: number; nombre_grupo: string }[]>(`${this.apiUrl}/integrales/grupos`);
+  }
+
+  getClientesPorGrupo(idGrupo: number): Observable<{ id: number; clave: string; nombre_cliente: string }[]> {
+    return this.http.get<{ id: number; clave: string; nombre_cliente: string }[]>(
+      `${this.apiUrl}/clientes/por-grupo/${idGrupo}`
+    );
+  }
 }

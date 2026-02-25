@@ -60,9 +60,18 @@
                         </div>
                         <div class="form-group checkbox-group">
                             <label class="checkbox-label">
-                                <input type="checkbox" [(ngModel)]="asociarCliente" name="asociarCliente" />
+                                <input type="checkbox" [(ngModel)]="asociarCliente" name="asociarCliente"
+                                    (change)="vincularGrupo = false; grupoSeleccionadoId = null" />
                                 <span class="checkmark"></span>
                                 Asociar cliente
+                            </label>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" [(ngModel)]="vincularGrupo" name="vincularGrupo"
+                                    (change)="asociarCliente = false; clienteSeleccionadoId = null; clienteBusqueda = ''" />
+                                <span class="checkmark"></span>
+                                Vincular a grupo integral (sin cliente específico)
                             </label>
                         </div>
                     </div>
@@ -86,6 +95,41 @@
                         <small *ngIf="clienteSeleccionadoId" class="selected-client">
                             Cliente seleccionado: {{ clienteBusqueda }}
                         </small>
+                    </div>
+                </div>
+
+                <!-- Selector de grupo integral + variantes del grupo -->
+                <div class="cliente-container" *ngIf="vincularGrupo">
+                    <div class="form-group">
+                        <label>Grupo integral</label>
+                        <select [(ngModel)]="grupoSeleccionadoId" name="grupoSeleccionado" class="form-select"
+                            (ngModelChange)="onGrupoChange()">
+                            <option [ngValue]="null" disabled>-- Seleccionar grupo --</option>
+                            <option *ngFor="let g of grupos" [ngValue]="g.id">{{ g.nombre_grupo }}</option>
+                        </select>
+                    </div>
+                    <!-- Variantes del grupo -->
+                    <div class="form-group" *ngIf="clientesDelGrupo.length > 0">
+                        <label>Cliente dentro del grupo <small class="label-hint">(opcional)</small></label>
+                        <div class="grupo-clientes-lista">
+                            <label class="radio-option" [class.radio-selected]="clienteGrupoSeleccionadoId === null">
+                                <input type="radio" name="clienteGrupo" [value]="null"
+                                    [(ngModel)]="clienteGrupoSeleccionadoId" />
+                                <span class="radio-text">
+                                    <strong>Sin cliente específico</strong>
+                                    <small>Usuario nuevo sin pedidos propios</small>
+                                </span>
+                            </label>
+                            <label class="radio-option" *ngFor="let c of clientesDelGrupo"
+                                [class.radio-selected]="clienteGrupoSeleccionadoId === c.id">
+                                <input type="radio" name="clienteGrupo" [value]="c.id"
+                                    [(ngModel)]="clienteGrupoSeleccionadoId" />
+                                <span class="radio-text">
+                                    <strong>{{ c.nombre_cliente }}</strong>
+                                    <small>{{ c.clave }}</small>
+                                </span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
