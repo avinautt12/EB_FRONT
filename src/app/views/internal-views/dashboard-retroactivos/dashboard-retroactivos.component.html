@@ -1,0 +1,196 @@
+<app-home-bar></app-home-bar>
+
+<div class="monitor-container">
+    <h2>Monitor de Retroactivos</h2>
+
+    <div class="acciones-monitor">
+        <button class="btn btn-volver" [routerLink]="['/home']">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+
+        <button class="btn btn-caratula" [routerLink]="['/caratula-retroactivos']">
+            <i class="fas fa-file-alt"></i> Ver Carátula
+        </button>
+
+        <button class="btn btn-actualizar" (click)="actualizarDatos()" [disabled]="cargando">
+            <i class="fas fa-sync-alt" [class.fa-spin]="cargando"></i>
+            {{ cargando ? 'Sincronizando...' : 'Actualizar Odoo' }}
+        </button>
+    </div>
+
+    <div *ngIf="cargando" class="cargando-spinner">
+        <div class="spinner"></div>
+        <p>Procesando datos financieros...</p>
+    </div>
+
+    <div *ngIf="!cargando && retroactivosOriginales.length === 0" class="sin-datos">
+        <i class="fas fa-search fa-2x" style="margin-bottom: 10px; display:block;"></i>
+        <p>No hay información de retroactivos disponible para mostrar.</p>
+    </div>
+
+    <div class="tabla-scroll-wrapper" *ngIf="!cargando && retroactivosOriginales.length > 0">
+
+        <div class="dummy-scroll-wrapper" #dummyScroll (scroll)="tablaContainer.scrollLeft = dummyScroll.scrollLeft">
+            <div class="dummy-scroll-content" [style.width.px]="tabla.offsetWidth"></div>
+        </div>
+
+        <div class="tabla-contenedor" #tablaContainer (scroll)="dummyScroll.scrollLeft = tablaContainer.scrollLeft">
+
+            <table class="tabla-previo" #tabla>
+                <thead>
+                    <tr>
+                        <th class="columna-fija fija-clave">
+                            <div class="header-content">
+                                <span>Clave</span>
+                                <app-filtro filtroId="filtroClaveRetro" title="Clave" [options]="opcionesFiltroClave"
+                                    (apply)="aplicarFiltroClave($event)" (clear)="limpiarFiltroClave()">
+                                </app-filtro>
+                            </div>
+                        </th>
+
+                        <th class="columna-fija fija-zona">
+                            <div class="header-content">
+                                <span>Zona</span>
+                                <app-filtro filtroId="filtroZonaRetro" title="Zona" [options]="opcionesFiltroZona"
+                                    (apply)="aplicarFiltroZona($event)" (clear)="limpiarFiltroZona()">
+                                </app-filtro>
+                            </div>
+                        </th>
+
+                        <th class="columna-fija fija-cliente">
+                            <div class="header-content">
+                                <span>Cliente</span>
+                                <app-filtro filtroId="filtroClienteRetro" title="Cliente"
+                                    [options]="opcionesFiltroCliente" (apply)="aplicarFiltroCliente($event)"
+                                    (clear)="limpiarFiltroCliente()">
+                                </app-filtro>
+                            </div>
+                        </th>
+
+                        <th style="min-width: 200px;">
+                            <div class="header-content">
+                                <span>Categoría</span>
+                                <app-filtro filtroId="filtroCategoriaRetro" title="Categoría"
+                                    [options]="opcionesFiltroCategoria" (apply)="aplicarFiltroCategoria($event)"
+                                    (clear)="limpiarFiltroCategoria()">
+                                </app-filtro>
+                            </div>
+                        </th>
+                        
+                        <th style="min-width: 150px;">Compra Mín. Anual</th>
+                        <th style="min-width: 150px;">Compra Mín. Apparel</th>
+                        <th style="min-width: 150px;">Compras Totales (Crudo)</th>
+                        <th style="min-width: 100px;">% Avance</th>
+                        <th style="min-width: 100px;">Meta MY26</th>
+
+                        <th style="min-width: 150px;">Compra Global Scott</th>
+                        <th style="min-width: 100px; font-weight: bold;">% Avance</th>
+                        <th style="min-width: 150px;">Compra Global Apparel</th>
+                        <th style="min-width: 100px; font-weight: bold;">% Avance</th>
+                        <th style="min-width: 150px;">Compra Global Bold</th>
+                        <th style="min-width: 150px; font-weight: bold; color: #EB5E28;">Total Acumulado</th>
+
+                        <th style="min-width: 130px;">Notas Crédito</th>
+                        <th style="min-width: 130px;">Garantías</th>
+                        <th style="min-width: 130px;">Prod. Ofertados</th>
+                        <th style="min-width: 130px;">Bici Demo</th>
+                        <th style="min-width: 130px;">Bicis Bold</th>
+
+                        <th style="min-width: 160px; background-color: #333; color: white;">Importe Final Base</th>
+
+                        <th style="min-width: 150px;">Compra Anual Crudo</th>
+                        <th style="min-width: 150px;">Compra Adicional</th>
+
+                        <th style="min-width: 120px;">% Retroactivo</th>
+                        <th style="min-width: 120px;">% Apparel</th>
+                        <th style="min-width: 120px; font-weight: bold;">% Total</th>
+                        <th style="min-width: 170px; color: white;">IMPORTE A PAGAR</th>
+
+                        <th style="min-width: 120px;">Estatus</th>
+                        <th style="min-width: 120px;">Fecha Apl.</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr *ngFor="let item of retroactivos">
+                        <td class="columna-fija fija-clave">{{ item.CLAVE }}</td>
+                        <td class="columna-fija fija-zona">{{ item.ZONA }}</td>
+                        <td class="columna-fija fija-cliente nombre-cliente" [title]="item.CLIENTE">
+                            {{ item.CLIENTE }}
+                        </td>
+
+                        <td>{{ item.CATEGORIA }}</td>
+                        <td class="td-number text-muted">{{ item.COMPRA_MINIMA_ANUAL | currency:'USD':'$':'1.0-0' }}
+                        </td>
+                        <td class="td-number text-muted">{{ item.COMPRA_MINIMA_APPAREL | currency:'USD':'$':'1.0-0' }}
+                        </td>
+                        <td class="td-number">{{ item.COMPRAS_TOTALES_CRUDO | currency:'USD':'$':'1.0-0' }}</td>
+
+                        <td class="td-number" style="font-weight: bold;"
+                            [style.color]="(item.COMPRAS_TOTALES_CRUDO / (item.COMPRA_MINIMA_ANUAL || 1)) >= 1 ? '#4caf50' : '#888'">
+                            {{ (item.COMPRAS_TOTALES_CRUDO / (item.COMPRA_MINIMA_ANUAL || 1)) | percent:'1.0-0' }}
+                        </td>
+
+                        <td class="text-center">
+                            <span *ngIf="item.META_MY26_CUMPLIDA === 'SI' || item.META_MY26_CUMPLIDA === 1"
+                                class="text-excellent">
+                                <i class="fas fa-check-circle"></i> SÍ
+                            </span>
+                            <span *ngIf="item.META_MY26_CUMPLIDA !== 'SI' && item.META_MY26_CUMPLIDA !== 1"
+                                class="text-danger" style="opacity: 0.5;">
+                                NO
+                            </span>
+                        </td>
+
+                        <td class="td-number">{{ item.COMPRA_GLOBAL_SCOTT | currency:'USD':'$':'1.0-0' }}</td>
+                        <td class="td-number font-mono">{{ (item.COMPRA_GLOBAL_SCOTT / (item.COMPRA_MINIMA_ANUAL || 1))
+                            | percent:'1.0-0' }}</td>
+
+                        <td class="td-number">{{ item.COMPRA_GLOBAL_APPAREL | currency:'USD':'$':'1.0-0' }}</td>
+                        <td class="td-number font-mono">{{ (item.COMPRA_GLOBAL_APPAREL / (item.COMPRA_MINIMA_APPAREL ||
+                            1)) | percent:'1.0-0' }}</td>
+
+                        <td class="td-number">{{ item.COMPRA_GLOBAL_BOLD | currency:'USD':'$':'1.0-0' }}</td>
+                        <td class="td-number" style="font-weight: bold; color: #EB5E28;">
+                            {{ item.TOTAL_ACUMULADO | currency:'USD':'$':'1.0-0' }}
+                        </td>
+
+                        <td class="td-number text-danger">{{ item.notas_credito | currency:'USD':'$':'1.0-0' }}</td>
+                        <td class="td-number text-danger">{{ item.garantias | currency:'USD':'$':'1.0-0' }}</td>
+                        <td class="td-number text-danger">{{ item.productos_ofertados | currency:'USD':'$':'1.0-0' }}
+                        </td>
+                        <td class="td-number text-danger">{{ item.bicicleta_demo | currency:'USD':'$':'1.0-0' }}</td>
+                        <td class="td-number text-danger">{{ item.bicicletas_bold | currency:'USD':'$':'1.0-0' }}</td>
+
+                        <td class="td-number" style="background-color: #333; font-weight: bold;">
+                            {{ item.importe_final | currency:'USD':'$':'1.0-0' }}
+                        </td>
+
+                        <td class="td-number">{{ item.compra_anual_crudo | currency:'USD':'$':'1.0-0' }}</td>
+                        <td class="td-number" style="font-weight: bold;"
+                            [style.color]="item.compra_adicional >= 0 ? '#4caf50' : '#ef5350'">
+                            {{ item.compra_adicional | currency:'USD':'$':'1.0-0' }}
+                        </td>
+
+                        <td class="td-number">{{ item.porcentaje_retroactivo | percent:'1.1-2' }}</td>
+                        <td class="td-number">{{ item.porcentaje_retroactivo_apparel | percent:'1.1-2' }}</td>
+                        <td class="td-number font-mono" style="font-weight: bold;">{{ item.retroactivo_total |
+                            percent:'1.1-2' }}</td>
+
+                        <td class="td-number" style="font-weight: bold;">
+                            {{ item.importe | currency:'USD':'$':'1.2-2' }}
+                        </td>
+
+                        <td class="text-center" style="font-weight: 600;"
+                            [style.color]="item.estatus === 'Pendiente' ? '#fbbf24' : '#4caf50'">
+                            {{ item.estatus }}
+                        </td>
+                        <td class="text-center" style="font-size: 0.85rem; color: #bbb;">
+                            {{ item.fecha_aplicacion | date:'dd/MM/yy' }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

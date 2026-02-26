@@ -39,6 +39,10 @@ import { TableroComponent } from './views/internal-views/tablero/tablero.compone
 import { TableroAnualComponent } from './views/internal-views/tablero-anual/tablero-anual.component';
 import { AuditoriaComponent } from './views/internal-views/auditoria/auditoria.component';
 
+import { DashboardRetroactivosComponent } from './views/internal-views/dashboard-retroactivos/dashboard-retroactivos.component';
+import { RetroactivosComponent } from './views/internal-views/retroactivos/retroactivos.component';
+import { CaratulaRetroactivosComponent } from './views/internal-views/caratula-retroactivos/caratula-retroactivos.component';
+
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { usuarioGuard } from './guards/usuario.guard';
@@ -83,11 +87,9 @@ export const routes: Routes = [
   { path: 'flujo-tablero', component: TableroComponent, canActivate: [adminGuard] },
   { path: 'flujo-tablero-anual', component: TableroAnualComponent, canActivate: [adminGuard] },
   { path: 'flujo-auditoria', component: AuditoriaComponent, canActivate: [adminGuard] },
-  {
-    path: 'flujo-tablero-anual',
-    component: TableroAnualComponent,
-    // Se ejecutan en orden: primero verifica que esté logueado, luego el nivel de flujo
-    canActivate: [adminGuard, flujoGuard]
-  },
+  { path: 'flujo-tablero-anual', component: TableroAnualComponent, canActivate: [adminGuard, flujoGuard] },
+  { path: 'dashboard-retroactivos', component: DashboardRetroactivosComponent, canActivate: [adminGuard] },
+  { path: 'caratula-retroactivos', component: CaratulaRetroactivosComponent, canActivate: [adminGuard] },
+  { path: 'retroactivos', component: RetroactivosComponent, canActivate: [adminGuard] },
   { path: '**', redirectTo: '' }
 ];

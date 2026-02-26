@@ -1,0 +1,202 @@
+<app-home-bar></app-home-bar>
+
+<div class="monitor-container">
+
+    <div class="search-card">
+        <button class="btn-volver-sm" [routerLink]="['/dashboard-retroactivos']">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+
+        <div class="search-input-wrapper">
+            <input type="text" [(ngModel)]="terminoBusqueda" (input)="onInputChange($event)"
+                (keydown)="onKeyDown($event)" placeholder="Buscar por clave o nombre del cliente..."
+                class="buscador-input-clean" #searchInput [disabled]="isLoading">
+
+            <button class="btn-buscar-clean" (click)="buscarCliente()"
+                [disabled]="isLoading || !terminoBusqueda.trim()">
+                <i class="fas fa-search" *ngIf="!isLoading"></i>
+                <i class="fas fa-spinner fa-spin" *ngIf="isLoading"></i>
+                {{ isLoading ? 'Buscando...' : 'Buscar' }}
+            </button>
+
+            <button class="btn-clear-clean" (click)="limpiarBusqueda()" *ngIf="terminoBusqueda" title="Limpiar">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div *ngIf="mostrarSugerencias" class="sugerencias-dropdown-clean">
+                <div *ngFor="let sug of sugerenciasFiltradas" class="sugerencia-item-clean"
+                    (mousedown)="seleccionarSugerencia(sug)">
+                    <span class="sug-nombre-clean">{{ sug.CLIENTE }}</span>
+                    <span class="sug-clave-clean">{{ sug.CLAVE }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="error" class="error-message">
+        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+    </div>
+
+    <div class="caratula-wrapper" *ngIf="datosCliente && !isLoading">
+
+        <div class="caratula-header">
+            <div class="logo-box">
+                <img src="assets/logo_elite_2.png" alt="Logo Elite" class="logo-img">
+            </div>
+            <div class="header-text">
+                <h1>Retroactivos MY26</h1>
+                <p class="subtitle">Estado de Cuenta del Distribuidor</p>
+            </div>
+        </div>
+
+        <div class="section-title">Información General</div>
+        <table class="table-info-cliente">
+            <tr>
+                <th class="bg-orange">Clave</th>
+                <td class="text-danger fw-bold" style="width: 30%;">{{ datosCliente.CLAVE }}</td>
+            </tr>
+            <tr>
+                <th class="bg-orange">Razón Social</th>
+                <td colspan="3" class="fw-bold fs-large">{{ datosCliente.CLIENTE }}</td>
+            </tr>
+            <tr>
+                <th class="bg-dark text-center" colspan="4">Categoría de Cierre de Temporada</th>
+            </tr>
+            <tr>
+                <td colspan="4" class="text-center fw-bold cat-text">{{ datosCliente.CATEGORIA }}</td>
+            </tr>
+        </table>
+
+        <div class="section-title mt-4">Metas y Cumplimiento</div>
+        <table class="table-metas">
+            <thead>
+                <tr>
+                    <th style="background-color: #1a1a1a; color: white; text-align: center;">ITEM</th>
+                    <th style="background-color: #1a1a1a; color: white; text-align: center;">COMPROMISO</th>
+                    <th style="background-color: #1a1a1a; color: white; text-align: center;">CUMPLIMIENTO</th>
+                    <th style="background-color: #1a1a1a; color: white; text-align: center;">PORCENTAJE (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fw-bold" style="color: #006633; text-align: left; padding-left: 20px;">
+                        GENERAL - CATEGORÍA
+                    </td>
+                    <td>{{ datosCliente.COMPRA_MINIMA_ANUAL | currency:'USD':'$':'1.2-2' }}</td>
+                    <td>{{ datosCliente.COMPRAS_TOTALES_CRUDO | currency:'USD':'$':'1.2-2' }}</td>
+                    <td class="fw-bold"
+                        [style.color]="(datosCliente.COMPRAS_TOTALES_CRUDO / (datosCliente.COMPRA_MINIMA_ANUAL || 1)) >= 1 ? '#006633' : '#dc3545'">
+                        {{ (datosCliente.COMPRAS_TOTALES_CRUDO / (datosCliente.COMPRA_MINIMA_ANUAL || 1)) |
+                        percent:'1.1-1' }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fw-bold" style="color: #d35400; text-align: left; padding-left: 20px;">
+                        APPAREL / SYNCROS / VITTORIA
+                    </td>
+                    <td>{{ datosCliente.COMPRA_MINIMA_APPAREL | currency:'USD':'$':'1.2-2' }}</td>
+                    <td>{{ datosCliente.COMPRA_GLOBAL_APPAREL | currency:'USD':'$':'1.2-2' }}</td>
+                    <td class="fw-bold"
+                        [style.color]="(datosCliente.COMPRA_GLOBAL_APPAREL / (datosCliente.COMPRA_MINIMA_APPAREL || 1)) >= 1 ? '#006633' : '#dc3545'">
+                        {{ (datosCliente.COMPRA_GLOBAL_APPAREL / (datosCliente.COMPRA_MINIMA_APPAREL || 1)) |
+                        percent:'1.1-1' }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="section-title mt-4">Detalle de Acumulado Global</div>
+        <div class="escalera-calculo">
+
+            <div class="row-calc subtotal-row">
+                <div class="calc-label text-right pe-4">SUB TOTAL (Compras Totales)</div>
+                <div class="calc-value text-center">{{ datosCliente.COMPRAS_TOTALES_CRUDO | currency:'USD':'$':'1.2-2'
+                    }}</div>
+            </div>
+
+            <div class="text-center text-danger fw-bold mt-2 mb-1">MENOS (-) Deducciones</div>
+
+            <div class="row-calc black-row">
+                <div class="calc-label text-right pe-4">Notas de Crédito</div>
+                <div class="calc-value text-center">{{ datosCliente.notas_credito | currency:'USD':'$':'1.2-2' }}</div>
+            </div>
+
+            <div class="row-calc black-row mt-1">
+                <div class="calc-label text-right pe-4">Garantías</div>
+                <div class="calc-value text-center">{{ datosCliente.garantias | currency:'USD':'$':'1.2-2' }}</div>
+            </div>
+
+            <div class="row-calc golden-row mt-3">
+                <div class="calc-label text-right pe-4 fs-large">Acumulado GLOBAL</div>
+                <div class="calc-value text-center fw-bold fs-large">{{ datosCliente.acumulado_global_calculado |
+                    currency:'USD':'$':'1.2-2' }}</div>
+            </div>
+
+            <div class="text-center text-danger fw-bold mt-3 mb-1">MENOS (-) Descuentos Adicionales</div>
+
+            <div class="row-calc black-row">
+                <div class="calc-label text-right pe-4">Productos Ofertados</div>
+                <div class="calc-value text-center">{{ datosCliente.productos_ofertados | currency:'USD':'$':'1.2-2' }}
+                </div>
+            </div>
+            <div class="row-calc black-row mt-1">
+                <div class="calc-label text-right pe-4">Bicicletas DEMO / BOLD</div>
+                <div class="calc-value text-center">{{ (datosCliente.bicicleta_demo + datosCliente.bicicletas_bold) |
+                    currency:'USD':'$':'1.2-2' }}</div>
+            </div>
+
+            <div class="row-calc orange-row mt-3 shadow-sm">
+                <div class="calc-label text-right pe-4 fs-large">IMPORTE FINAL PARA - Cálculo de Retroactivos</div>
+                <div class="calc-value text-center fw-bold fs-large text-orange">{{ datosCliente.importe_final |
+                    currency:'USD':'$':'1.2-2' }}</div>
+            </div>
+
+        </div>
+
+        <div class="section-title mt-4">Resultados y Retroactivo</div>
+        <table class="table-metas">
+            <thead>
+                <tr>
+                    <th colspan="2" class="bg-cyan">Porcentajes Obtenidos</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fw-bold text-right" style="color: #2e7d32; width: 50%; padding-right: 30px;">RETROACTIVO
+                        (Por Compra Adicional)</td>
+                    <td class="text-center fw-bold bg-light">{{ datosCliente.porcentaje_retroactivo | percent:'1.1-2' }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fw-bold text-right" style="color: #1565c0; padding-right: 30px;">RETROACTIVO APPAREL</td>
+                    <td class="text-center fw-bold bg-light">{{ datosCliente.porcentaje_retroactivo_apparel |
+                        percent:'1.1-2' }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="escalera-calculo mt-3">
+            <div class="row-calc black-row border-radius-top">
+                <div class="calc-label text-right pe-4">Monto Adicional a cumplimiento</div>
+                <div class="calc-value text-center fw-bold"
+                    [style.color]="datosCliente.compra_adicional < 0 ? '#d32f2f' : '#2e7d32'">
+                    {{ datosCliente.compra_adicional | currency:'USD':'$':'1.2-2' }}
+                </div>
+            </div>
+
+            <div class="row-calc golden-row mt-3">
+                <div class="calc-label text-right pe-4 fs-large">RETROACTIVO TOTAL</div>
+                <div class="calc-value text-center fs-large fw-bold">{{ datosCliente.retroactivo_total | percent:'1.1-2'
+                    }}</div>
+            </div>
+
+            <div class="row-calc final-pay-row mt-3 shadow">
+                <div class="calc-label text-right pe-4 final-text">Importe FINAL A PAGAR</div>
+                <div class="calc-value text-center final-text fw-bold">
+                    {{ datosCliente.importe | currency:'USD':'$':'1.2-2' }}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
