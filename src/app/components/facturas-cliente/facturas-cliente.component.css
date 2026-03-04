@@ -593,3 +593,75 @@
   font-weight: 600;
   white-space: nowrap;
 }
+
+/* ── Barra de totales ─────────────────────────────────────────────────────── */
+.resumen-totales {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #1a1916;
+  border: 1px solid #403D39;
+  border-radius: 10px;
+  padding: 10px 18px;
+  margin: 10px 0 14px;
+  flex-wrap: wrap;
+  row-gap: 8px;
+  position: relative;
+}
+
+.resumen-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0 18px 0 0;
+}
+
+.resumen-label {
+  font-size: 0.75rem;
+  color: #8a8077;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.resumen-label i {
+  font-size: 0.7rem;
+}
+
+.resumen-valor {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #CCC5B9;
+  letter-spacing: 0.3px;
+}
+
+.resumen-entregado .resumen-valor {
+  color: #4ade80; /* verde para entregado */
+}
+
+.resumen-monto .resumen-valor {
+  color: #EB5E28; /* naranja marca para importe */
+}
+
+.resumen-separador {
+  width: 1px;
+  height: 36px;
+  background: #403D39;
+  margin: 0 18px 0 0;
+  flex-shrink: 0;
+}
+
+.resumen-tab-badge {
+  margin-left: auto;
+  background: #252320;
+  border: 1px solid #EB5E28;
+  color: #EB5E28;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
