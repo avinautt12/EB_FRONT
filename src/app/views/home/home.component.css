@@ -1,9 +1,39 @@
+/* ── Wrapper de página completa con fondo animado ─────────────────────── */
+.home-page {
+  min-height: calc(100vh - var(--topbar-height, 64px));
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    #1e1d1b 0%,
+    #231f1c 38%,
+    rgba(235, 94, 40, 0.06) 50%,
+    #231f1d 65%,
+    #1e1d1b 100%
+  );
+  background-size: 400% 400%;
+  animation: homeGradientBG 12s ease-in-out infinite;
+}
+
+.home-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: none;
+}
+
+@keyframes homeGradientBG {
+  0%   { background-position: 0% 20%; }
+  50%  { background-position: 100% 80%; }
+  100% { background-position: 0% 20%; }
+}
+
 .home-container {
   display: flex;
   flex-direction: column;
   max-width: 1200px;
-  margin: 3rem auto;
-  padding: 2rem;
+  margin: 0 auto;
+  padding: 3rem 2rem 3rem;
   color: var(--text, #FFFCF2);
   font-family: 'Segoe UI', sans-serif;
   text-align: center;
@@ -12,6 +42,12 @@
   background: none;
   box-shadow: none;
   border: none;
+}
+
+.tarjeta-icono {
+  color: var(--accent-warm, #EB5E28);
+  margin-right: 6px;
+  font-size: 1.1rem;
 }
 
 .home-container h1 {

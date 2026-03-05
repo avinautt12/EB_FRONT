@@ -46,6 +46,9 @@
 
             <!-- Resumen de totales (respeta pestaña activa y búsqueda) -->
             <div *ngIf="!cargando && facturasFiltradas.length > 0" class="resumen-totales">
+                <div *ngIf="tabActiva && tabActiva !== 'Todas'" class="resumen-tab-badge">
+                    {{ tabActiva }}
+                </div>
                 <div class="resumen-item">
                     <span class="resumen-label">
                         <i class="fas fa-boxes"></i> Total pedido
@@ -53,21 +56,11 @@
                     <span class="resumen-valor">{{ totalCantidad | number:'1.0-0' }} pz</span>
                 </div>
                 <div class="resumen-separador"></div>
-                <div class="resumen-item resumen-entregado">
-                    <span class="resumen-label">
-                        <i class="fas fa-check-circle"></i> Total entregado
-                    </span>
-                    <span class="resumen-valor">{{ totalEntregado | number:'1.0-0' }} pz</span>
-                </div>
-                <div class="resumen-separador"></div>
                 <div class="resumen-item resumen-monto">
                     <span class="resumen-label">
                         <i class="fas fa-dollar-sign"></i> Importe total
                     </span>
-                    <span class="resumen-valor">{{ formatearMoneda(totalMonto) }}</span>
-                </div>
-                <div *ngIf="tabActiva && tabActiva !== 'Todas'" class="resumen-tab-badge">
-                    {{ tabActiva }}
+                    <span class="resumen-valor resumen-valor-monto">{{ formatearMoneda(totalMonto) }}</span>
                 </div>
             </div>
 

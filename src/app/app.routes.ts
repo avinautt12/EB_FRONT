@@ -38,6 +38,7 @@ import { IngresosComponent } from './views/internal-views/ingresos/ingresos.comp
 import { TableroComponent } from './views/internal-views/tablero/tablero.component';
 import { TableroAnualComponent } from './views/internal-views/tablero-anual/tablero-anual.component';
 import { AuditoriaComponent } from './views/internal-views/auditoria/auditoria.component';
+import { MonitorPedidosComponent } from './views/internal-views/monitor-pedidos/monitor-pedidos.component';
 
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
@@ -83,6 +84,7 @@ export const routes: Routes = [
   { path: 'flujo-tablero', component: TableroComponent, canActivate: [adminGuard] },
   { path: 'flujo-tablero-anual', component: TableroAnualComponent, canActivate: [adminGuard] },
   { path: 'flujo-auditoria', component: AuditoriaComponent, canActivate: [adminGuard] },
+  { path: 'monitor-pedidos', component: MonitorPedidosComponent, canActivate: [adminGuard] },
   {
     path: 'flujo-tablero-anual',
     component: TableroAnualComponent,

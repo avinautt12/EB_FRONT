@@ -31,7 +31,7 @@ interface Factura {
   eride: string;
   evac: string;
   categoria_producto: string;
-  /** Estatus de entrega del producto (Entregado, En inventario, En tránsito, Falta de confirmación, Cancelado) */
+  /** Estatus de entrega del producto (Entregado, Almacén EB, En tránsito, Falta de confirmación, Cancelado) */
   estado_factura: string;
   /** Estado de la orden de venta en Odoo (Orden Confirmada, Cotización, etc.) */
   estado_orden: string;
@@ -476,7 +476,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
    * Devuelve la clase CSS del badge de estatus de entrega.
    * Mapa de colores:
    * - Entregado / Entregado Parcial → verde
-   * - En inventario → azul
+   * - Almacén EB → azul
    * - En tránsito → amarillo
    * - Falta de confirmación → gris
    * - Cancelado → rojo
@@ -486,7 +486,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     const mapa: Record<string, string> = {
       'Entregado':            'badge-confirmada',
       'Entregado Parcial':    'badge-confirmada',
-      'En inventario':        'badge-bloqueada',
+      'Almacén EB':           'badge-bloqueada',
       'En tránsito':          'badge-cotizacion',
       'Falta de confirmación':'badge-otro',
       'Cancelado':            'badge-cancelada',
