@@ -347,7 +347,6 @@ export class PrevioComponent implements OnInit, OnDestroy {
     // 1. Enviar al backend
     this.previoService.actualizarPrevio(datosParaGuardar).subscribe({
       next: (res) => {
-        console.log('Datos guardados/actualizados en BD');
         
         // 2. AHORA SÍ: Pedir la versión oficial al backend para asegurar que vemos lo real
         this.previoService.obtenerPrevio().subscribe({

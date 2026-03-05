@@ -1,0 +1,341 @@
+/* --- CONFIGURACIÓN BASE --- */
+.monitor-container {
+    background-color: #121212;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 2rem;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* --- ENCABEZADO --- */
+h2 {
+    color: #EB5E28;
+    /* Naranja corporativo */
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: -0.5px;
+}
+
+/* --- BOTONERA --- */
+.acciones-monitor {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    background-color: #1e1e1e;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid #333;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid transparent;
+    text-decoration: none;
+}
+
+/* Botón Volver (Estilo Ghost/Gris) */
+.btn-volver {
+    background-color: transparent;
+    border-color: #666;
+    color: #bbb;
+}
+
+.btn-volver:hover {
+    background-color: #333;
+    color: #fff;
+    border-color: #fff;
+}
+
+/* Botón Actualizar (Morado estilo Odoo) */
+.btn-actualizar {
+    background-color: rgba(113, 75, 103, 0.1);
+    /* Morado muy sutil y transparente */
+    border-color: #714B67;
+    /* Borde Morado Odoo */
+    color: #e0c0d8;
+    /* Texto lila claro para leerse bien */
+}
+
+.btn-actualizar:hover:not(:disabled) {
+    background-color: #714B67;
+    /* Fondo sólido al pasar el mouse */
+    color: #fff;
+    /* Texto blanco */
+    box-shadow: 0 0 15px rgba(113, 75, 103, 0.5);
+    /* Resplandor morado */
+    border-color: #8f6a85;
+    /* Borde un poco más claro */
+}
+
+/* Estado deshabilitado (cuando está cargando) */
+.btn-actualizar:disabled {
+    background-color: #2d252b;
+    border-color: #4a3b45;
+    color: #665c63;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+/* --- SPINNER Y MENSAJES --- */
+.cargando-spinner {
+    text-align: center;
+    padding: 3rem;
+    color: #888;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #EB5E28;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.sin-datos {
+    text-align: center;
+    padding: 3rem;
+    background: #1e1e1e;
+    border-radius: 12px;
+    color: #888;
+    border: 1px dashed #444;
+}
+
+/* --- CONTENEDOR DE LA TABLA --- */
+.tabla-scroll-wrapper {
+    background: #1e1e1e;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: 1px solid #333;
+    overflow: hidden;
+    /* Para respetar el border-radius */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Dummy Scroll (Barra superior) */
+.dummy-scroll-wrapper {
+    overflow-x: auto;
+    height: 12px;
+    background: #181818;
+}
+
+.dummy-scroll-content {
+    height: 1px;
+}
+
+/* Contenedor Real */
+.tabla-contenedor {
+    overflow: auto;
+    max-height: 75vh;
+    /* Altura máxima */
+    position: relative;
+    scrollbar-width: thin;
+    scrollbar-color: #555 #1e1e1e;
+}
+
+/* Tabla Base */
+.tabla-previo {
+    border-collapse: separate;
+    /* Crucial para position: sticky */
+    border-spacing: 0;
+    width: 100%;
+}
+
+.tabla-previo th,
+.tabla-previo td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #333;
+    border-right: 1px solid #2a2a2a;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+/* --- ENCABEZADOS (Sticky Top) --- */
+.tabla-previo thead th {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    /* Nivel 2 */
+    background-color: #252525;
+    color: #EB5E28;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    height: 50px;
+    vertical-align: middle;
+}
+
+/* --- COLUMNAS FIJAS A LA IZQUIERDA (Clave, Zona, Cliente) --- */
+.columna-fija {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    /* Nivel 1 (encima del contenido normal) */
+    background-color: #1e1e1e;
+    /* Fondo igual que la tabla */
+    border-right: 2px solid #444;
+    /* Borde más fuerte para separar */
+}
+
+/* 1. CLAVE */
+.fija-clave {
+    left: 0;
+    min-width: 90px;
+    /* <--- Ajusta este ancho */
+    width: 90px;
+    z-index: 15;
+}
+
+/* 2. ZONA (Empieza donde termina Clave: 90px) */
+.fija-zona {
+    left: 90px;
+    /* <--- Debe coincidir con el ancho de Clave */
+    min-width: 70px;
+    /* <--- Ajusta este ancho */
+    width: 70px;
+    z-index: 15;
+}
+
+/* 3. CLIENTE (Empieza donde termina Zona: 90 + 70 = 160px) */
+.fija-cliente {
+    left: 160px;
+    /* <--- Suma de Clave + Zona */
+    min-width: 280px;
+    /* <--- Ancho amplio para nombres largos */
+    width: 280px;
+    text-align: left !important;
+    z-index: 15;
+    /* Sombra para indicar que el contenido se desliza por debajo */
+    box-shadow: 4px 0 5px -2px rgba(0, 0, 0, 0.5);
+}
+
+/* Cruce Mágico: Encabezados de Columnas Fijas */
+.tabla-previo thead th.columna-fija {
+    z-index: 30;
+    /* Nivel 3 (El más alto superior) */
+    background-color: #252525;
+}
+
+/* --- PIE DE TABLA (Sticky Bottom) --- */
+.tabla-previo tfoot td {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    background-color: #2c3e50;
+    /* Azul oscuro elegante */
+    color: #fff;
+    font-weight: bold;
+    border-top: 2px solid #555;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Cruce Mágico: Footer de Columnas Fijas */
+.tabla-previo tfoot td.columna-fija {
+    z-index: 30;
+    background-color: #2c3e50;
+    border-right: 2px solid #555;
+}
+
+/* --- ESTILOS DE CELDAS --- */
+.td-number {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.nombre-cliente {
+    font-weight: 500;
+    color: #a3d4bb;
+}
+
+/* Colores de estado y texto */
+.text-excellent {
+    color: #4caf50;
+    font-weight: bold;
+}
+
+/* Verde Material */
+.text-danger {
+    color: #ffffff;
+}
+
+/* Rojo Material suave */
+
+/* Hover Filas */
+.tabla-previo tbody tr:hover td {
+    background-color: #333;
+}
+
+.tabla-previo tbody tr:hover td.columna-fija {
+    background-color: #333;
+}
+
+/* --- SCROLLBAR PERSONALIZADO --- */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 5px;
+    border: 2px solid #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #EB5E28;
+}
+
+th {
+    overflow: visible !important;
+}
+
+/* El truco: Si el TH tiene un filtro abierto (.show), le subimos el z-index al máximo */
+th:has(.sort-dropdown.show) {
+    z-index: 9999 !important;
+}
+
+/* Alineación bonita para los encabezados con filtro */
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+}
