@@ -1,0 +1,136 @@
+<app-home-bar></app-home-bar>
+
+<div class="mp-container">
+
+  <div class="mp-back-bar">
+    <a routerLink="/home" class="mp-back-btn">
+      <i class="fas fa-arrow-left"></i> Regresar al inicio
+    </a>
+  </div>
+
+  <div class="mp-header">
+    <h1>Monitor de Pedidos</h1>
+    <p class="mp-subtexto">Consulta el historial de compras de cualquier usuario o grupo integral</p>
+  </div>
+
+  <!-- Toggle modo -->
+  <div class="mp-modo-toggle">
+    <button
+      class="mp-modo-btn"
+      [class.activo]="modo === 'usuario'"
+      (click)="cambiarModo('usuario')">
+      <i class="fas fa-user"></i> Por usuario
+    </button>
+    <button
+      class="mp-modo-btn"
+      [class.activo]="modo === 'integral'"
+      (click)="cambiarModo('integral')">
+      <i class="fas fa-layer-group"></i> Por grupo integral
+    </button>
+  </div>
+
+  <!-- Spinner -->
+  <div *ngIf="cargando" class="mp-spinner">
+    <div class="spinner"></div>
+    <p>Cargando datos...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !cargando" class="mp-error">{{ error }}</div>
+
+  <!-- ── MODO USUARIO ── -->
+  <ng-container *ngIf="!cargando && modo === 'usuario'">
+
+    <!-- Buscador -->
+    <div class="mp-buscador-wrap">
+      <i class="fas fa-search mp-buscador-icono"></i>
+      <input
+        type="text"
+        class="mp-buscador"
+        [(ngModel)]="textoBusqueda"
+        placeholder="Buscar por nombre, usuario, clave o grupo..."
+        autocomplete="off"
+      />
+      <button *ngIf="textoBusqueda" class="mp-buscador-limpiar" (click)="textoBusqueda = ''">×</button>
+    </div>
+    <p class="mp-conteo">{{ usuariosFiltrados.length }} usuario{{ usuariosFiltrados.length !== 1 ? 's' : '' }}</p>
+
+    <!-- Tabla de usuarios -->
+    <div class="mp-tabla-wrap">
+      <table class="mp-tabla">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Usuario</th>
+            <th>Rol</th>
+            <th>Clave / Grupo</th>
+            <th>Estatus</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of usuariosFiltrados" [class.inactivo]="!u.activo">
+            <td class="mp-nombre">{{ u.nombre }}</td>
+            <td class="mp-usuario-col">{{ u.usuario }}</td>
+            <td>
+              <span class="mp-badge" [class.badge-admin]="u.rol === 'Administrador'"
+                                     [class.badge-user]="u.rol !== 'Administrador'">
+                {{ u.rol }}
+              </span>
+            </td>
+            <td>
+              <span *ngIf="u.nombre_grupo" class="mp-grupo-chip">
+                <i class="fas fa-layer-group"></i> {{ u.nombre_grupo }}
+              </span>
+              <span *ngIf="!u.nombre_grupo && u.clave" class="mp-clave-chip">
+                {{ u.clave }}
+              </span>
+              <span *ngIf="!u.nombre_grupo && !u.clave" class="mp-sin-asignar">—</span>
+            </td>
+            <td>
+              <span class="mp-estado" [class.activo]="u.activo" [class.inactivo-badge]="!u.activo">
+                {{ u.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td>
+              <button class="mp-ver-btn" (click)="verPedidosUsuario(u)">
+                <i class="fas fa-eye"></i> Ver pedidos
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="usuariosFiltrados.length === 0">
+            <td colspan="6" class="mp-sin-resultados">No se encontraron usuarios.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+
+  <!-- ── MODO INTEGRAL ── -->
+  <ng-container *ngIf="!cargando && modo === 'integral'">
+    <div class="mp-grupos-grid">
+      <div
+        class="mp-grupo-card"
+        *ngFor="let g of grupos"
+        (click)="verPedidosGrupo(g)">
+        <div class="mp-grupo-icono"><i class="fas fa-layer-group"></i></div>
+        <div class="mp-grupo-info">
+          <span class="mp-grupo-nombre">{{ g.nombre_grupo }}</span>
+          <span class="mp-grupo-hint">Ver todos los pedidos del grupo</span>
+        </div>
+        <i class="fas fa-chevron-right mp-grupo-arrow"></i>
+      </div>
+      <div *ngIf="grupos.length === 0" class="mp-sin-resultados">No hay grupos integrales registrados.</div>
+    </div>
+  </ng-container>
+
+</div>
+
+<!-- Modal de detalles de compra (reutiliza el componente existente) -->
+<app-facturas-cliente
+  [isOpen]="modalAbierto"
+  [clienteClave]="modalClave"
+  [idGrupoOdoo]="modalGrupoOdoo"
+  [claveExacta]="modalClaveExacta"
+  (onClose)="cerrarModal()">
+</app-facturas-cliente>

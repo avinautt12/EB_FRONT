@@ -1,54 +1,48 @@
 <app-home-bar></app-home-bar>
 
-<div class="home-container liquid-bg">
-  <h1>Panel Principal</h1>
-  <p class="subtexto">Bienvenido a tu panel de control</p>
+<div class="home-page">
+  <div class="home-bg"></div>
 
-  <div class="tarjetas-acciones">
+  <div class="home-container">
+    <h1>Panel Principal</h1>
+    <p class="subtexto">Bienvenido a tu panel de control</p>
 
-    <div class="tarjeta">
-      <h2 style="display: flex; align-items: center; gap: 8px;">
-        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path><path d="M12 14h.01"></path><path d="M8 14h.01"></path><path d="M12 18h.01"></path><path d="M8 18h.01"></path></svg>
-        Retroactivos
-      </h2>
-      <p>Metas MY26 y bonificaciones por distribuidor.</p>
-      <button [routerLink]="['/dashboard-retroactivos']">Ver Cálculos</button>
-    </div>
+    <div class="tarjetas-acciones">
+      <div class="tarjeta">
+        <h2><i class="fas fa-folder-open tarjeta-icono"></i> Monitor</h2>
+        <p>Visualización y administración de Monitor MY26.</p>
+        <button [routerLink]="['/previo']">Ver MY26</button>
+      </div>
 
-    <div class="tarjeta">
-      <h2 style="display: flex; align-items: center; gap: 8px;">
-        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-        Monitor
-      </h2>
-      <p>Visualización y administración de Monitor MY26.</p>
-      <button [routerLink]="['/previo']">Ver MY26</button>
-    </div>
+      <div class="tarjeta">
+        <h2><i class="fas fa-exchange-alt tarjeta-icono"></i> Flujo de Efectivo</h2>
+        <p>Visualiza movimientos financieros clave.</p>
+        <button [routerLink]="['/flujo-dashboard']">Ver flujo</button>
+      </div>
 
-    <div class="tarjeta">
-      <h2 style="display: flex; align-items: center; gap: 8px;">
-        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
-        Flujo de Efectivo
-      </h2>
-      <p>Visualiza movimientos financieros clave.</p>
-      <button [routerLink]="['/flujo-dashboard']">Ver flujo</button>
-    </div>
+      <div class="tarjeta">
+        <h2><i class="fas fa-users tarjeta-icono"></i> Usuarios</h2>
+        <p>Control de accesos y configuración de roles.</p>
+        <button [routerLink]="['/usuarios']">Administrar</button>
+      </div>
 
-    <div class="tarjeta">
-      <h2 style="display: flex; align-items: center; gap: 8px;">
-        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-        Usuarios
-      </h2>
-      <p>Control de accesos y configuración de roles.</p>
-      <button [routerLink]="['/usuarios']">Administrar</button>
-    </div>
+      <div class="tarjeta">
+        <h2><i class="fas fa-chart-line tarjeta-icono"></i> Monitor de Pedidos</h2>
+        <p>Consulta el historial de órdenes de cualquier cliente o grupo integral.</p>
+        <button [routerLink]="['/monitor-pedidos']">Ver pedidos</button>
+      </div>
 
-    <div class="tarjeta">
-      <h2 style="display: flex; align-items: center; gap: 8px;">
-        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-        Proyecciones de Compra Inicial
-      </h2>
-      <p>Pronósticos y planificación de compras.</p>
-      <button [routerLink]="['/proyeccion']">Consultar</button>
+      <div class="tarjeta">
+        <h2><i class="fas fa-chart-bar tarjeta-icono"></i> Proyecciones de Compra</h2>
+        <p>Pronósticos y planificación de compras.</p>
+        <button [routerLink]="['/proyeccion']">Consultar</button>
+      </div>
+
+      <div class="tarjeta">
+        <h2><i class="fas fa-percentage tarjeta-icono"></i> Retroactivos</h2>
+        <p>Metas MY26 y bonificaciones por distribuidor.</p>
+        <button [routerLink]="['/dashboard-retroactivos']">Ver Cálculos</button>
+      </div>
     </div>
 
   </div>

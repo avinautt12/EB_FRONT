@@ -1,0 +1,364 @@
+/* ── Botón regresar ─────────────────────────────────────────────────────── */
+.mp-back-bar {
+  margin-bottom: 1.2rem;
+}
+
+.mp-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #8a8077;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.mp-back-btn:hover {
+  color: #EB5E28;
+  background: rgba(235, 94, 40, 0.08);
+}
+
+.mp-back-btn i { font-size: 0.8rem; }
+
+/* ── Contenedor general ──────────────────────────────────────────────────── */
+.mp-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1.5rem 3rem;
+  color: #CCC5B9;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.mp-header {
+  text-align: center;
+  margin-bottom: 1.8rem;
+}
+
+.mp-header h1 {
+  color: #EB5E28;
+  font-size: 1.85rem;
+  font-weight: 700;
+  margin: 0 0 0.3rem;
+}
+
+.mp-subtexto {
+  color: #8a8077;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* ── Toggle de modo ──────────────────────────────────────────────────────── */
+.mp-modo-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 1.6rem;
+}
+
+.mp-modo-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 22px;
+  border-radius: 8px;
+  border: 1px solid #403D39;
+  background: #1a1916;
+  color: #8a8077;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mp-modo-btn:hover {
+  border-color: #EB5E28;
+  color: #CCC5B9;
+}
+
+.mp-modo-btn.activo {
+  background: #EB5E28;
+  border-color: #EB5E28;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Spinner ─────────────────────────────────────────────────────────────── */
+.mp-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 3rem 0;
+  color: #8a8077;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #403D39;
+  border-top-color: #EB5E28;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Error ───────────────────────────────────────────────────────────────── */
+.mp-error {
+  text-align: center;
+  color: #e05252;
+  padding: 1.5rem;
+  background: rgba(224, 82, 82, 0.08);
+  border: 1px solid rgba(224, 82, 82, 0.25);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+/* ── Buscador ────────────────────────────────────────────────────────────── */
+.mp-buscador-wrap {
+  position: relative;
+  max-width: 480px;
+  margin: 0 auto 0.5rem;
+}
+
+.mp-buscador-icono {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8a8077;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.mp-buscador {
+  width: 100%;
+  padding: 9px 36px 9px 34px;
+  background: #1a1916;
+  border: 1px solid #403D39;
+  border-radius: 8px;
+  color: #CCC5B9;
+  font-size: 0.9rem;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.mp-buscador::placeholder { color: #6b6560; }
+.mp-buscador:focus { border-color: #EB5E28; }
+
+.mp-buscador-limpiar {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #8a8077;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 3px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.mp-buscador-limpiar:hover { color: #EB5E28; }
+
+.mp-conteo {
+  text-align: center;
+  color: #6b6560;
+  font-size: 0.8rem;
+  margin: 0 0 1rem;
+}
+
+/* ── Tabla de usuarios ───────────────────────────────────────────────────── */
+.mp-tabla-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid #403D39;
+}
+
+.mp-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.mp-tabla thead tr {
+  background: #252320;
+}
+
+.mp-tabla th {
+  padding: 11px 14px;
+  text-align: left;
+  color: #EB5E28;
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #403D39;
+  white-space: nowrap;
+}
+
+.mp-tabla td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #2a2724;
+  color: #CCC5B9;
+  vertical-align: middle;
+}
+
+.mp-tabla tbody tr:last-child td { border-bottom: none; }
+
+.mp-tabla tbody tr:hover td {
+  background: #1e1d1a;
+}
+
+.mp-tabla tbody tr.inactivo td {
+  opacity: 0.45;
+}
+
+.mp-nombre { font-weight: 600; color: #FFFCF2; }
+.mp-usuario-col { color: #8a8077; font-size: 0.82rem; }
+
+/* ── Badges ──────────────────────────────────────────────────────────────── */
+.mp-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge-admin { background: rgba(235, 94, 40, 0.15); color: #EB5E28; border: 1px solid rgba(235, 94, 40, 0.3); }
+.badge-user  { background: rgba(100, 116, 139, 0.15); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.3); }
+
+.mp-grupo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(235, 94, 40, 0.1);
+  color: #EB5E28;
+  border: 1px solid rgba(235, 94, 40, 0.25);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.mp-clave-chip {
+  display: inline-block;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.mp-sin-asignar { color: #555; font-size: 0.85rem; }
+
+.mp-estado {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.mp-estado.activo { background: rgba(74, 222, 128, 0.12); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); }
+.mp-estado.inactivo-badge { background: rgba(100, 116, 139, 0.1); color: #64748b; border: 1px solid rgba(100, 116, 139, 0.25); }
+
+/* ── Botón ver pedidos ───────────────────────────────────────────────────── */
+.mp-ver-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #EB5E28;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.mp-ver-btn:hover { background: #d44e1e; }
+
+.mp-sin-resultados {
+  text-align: center;
+  color: #6b6560;
+  padding: 2rem;
+  font-size: 0.9rem;
+}
+
+/* ── Cards de grupos integrales ──────────────────────────────────────────── */
+.mp-grupos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.mp-grupo-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #1a1916;
+  border: 1px solid #403D39;
+  border-radius: 10px;
+  padding: 18px 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mp-grupo-card:hover {
+  border-color: #EB5E28;
+  background: #201e1b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(235, 94, 40, 0.12);
+}
+
+.mp-grupo-icono {
+  width: 44px;
+  height: 44px;
+  background: rgba(235, 94, 40, 0.12);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #EB5E28;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.mp-grupo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.mp-grupo-nombre {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #FFFCF2;
+}
+
+.mp-grupo-hint {
+  font-size: 0.78rem;
+  color: #6b6560;
+}
+
+.mp-grupo-arrow {
+  color: #403D39;
+  font-size: 0.85rem;
+  transition: color 0.2s;
+}
+
+.mp-grupo-card:hover .mp-grupo-arrow {
+  color: #EB5E28;
+}

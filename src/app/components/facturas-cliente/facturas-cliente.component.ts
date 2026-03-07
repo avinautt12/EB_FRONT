@@ -31,7 +31,7 @@ interface Factura {
   eride: string;
   evac: string;
   categoria_producto: string;
-  /** Estatus de entrega del producto (Entregado, En inventario, En tránsito, Falta de confirmación, Cancelado) */
+  /** Estatus de entrega del producto (Entregado, Almacén EB, En tránsito, Falta de confirmación, Cancelado) */
   estado_factura: string;
   /** Estado de la orden de venta en Odoo (Orden Confirmada, Cotización, etc.) */
   estado_orden: string;
@@ -476,7 +476,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
    * Devuelve la clase CSS del badge de estatus de entrega.
    * Mapa de colores:
    * - Entregado / Entregado Parcial → verde
-   * - En inventario → azul
+   * - Almacén EB → azul
    * - En tránsito → amarillo
    * - Falta de confirmación → gris
    * - Cancelado → rojo
@@ -486,7 +486,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     const mapa: Record<string, string> = {
       'Entregado':            'badge-confirmada',
       'Entregado Parcial':    'badge-confirmada',
-      'En inventario':        'badge-bloqueada',
+      'Almacén EB':           'badge-bloqueada',
       'En tránsito':          'badge-cotizacion',
       'Falta de confirmación':'badge-otro',
       'Cancelado':            'badge-cancelada',
@@ -526,79 +526,90 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
    */
   exportarExcel() {
     const datosExportar = this.facturasFiltradas.map(factura => {
-      // La preparación de datos ya es correcta, la dejamos como está.
       const fila: any = {};
-      fila['Número Factura'] = factura.numero_factura ?? '';
-      fila['Clave producto'] = factura.referencia_interna ?? '';
+      fila['Número Pedido'] = factura.numero_factura ?? '';
+      fila['Clave Producto'] = factura.referencia_interna ?? '';
       fila['Producto'] = factura.nombre_producto ?? '';
-
-      if (factura.fecha_factura) {
-        const fecha = new Date(factura.fecha_factura);
-        fila['Fecha'] = fecha.toISOString().slice(0, 10);
-      } else {
-        fila['Fecha'] = '';
-      }
-
-      // Es crucial que estos valores sean de tipo número para que Excel aplique el formato
+      fila['Fecha'] = factura.fecha_factura ? new Date(factura.fecha_factura).toISOString().slice(0, 10) : '';
       fila['Precio Unit.'] = this.formatearNumeroParaExcel(factura.precio_unitario);
-      fila['Cantidad'] = factura.cantidad ?? 0;
+      fila['Cantidad Pedida'] = Number(factura.cantidad ?? 0);
+      fila['Cantidad Entregada'] = Number(factura.cantidad_entregada ?? 0);
       fila['Total'] = this.formatearNumeroParaExcel(factura.venta_total);
-
+      fila['Estatus Entrega'] = factura.estado_factura ?? '';
+      fila['Estado Orden'] = factura.estado_orden ?? '';
+      fila['Cliente / EVAC'] = factura.evac ?? '';
       fila['Marca'] = factura.marca ?? '';
-      fila['Subcategoría'] = factura.subcategoria ?? ''; // Corregido el nombre de la columna
-
+      fila['Subcategoría'] = factura.subcategoria ?? '';
       return fila;
     });
 
+    // Fila de totales al final
+    const filaTotal: any = {};
+    filaTotal['Número Pedido'] = 'TOTALES';
+    filaTotal['Clave Producto'] = '';
+    filaTotal['Producto'] = '';
+    filaTotal['Fecha'] = '';
+    filaTotal['Precio Unit.'] = '';
+    filaTotal['Cantidad Pedida'] = this.totalCantidad;
+    filaTotal['Cantidad Entregada'] = this.totalEntregado;
+    filaTotal['Total'] = this.formatearNumeroParaExcel(this.totalMonto);
+    filaTotal['Estatus Entrega'] = '';
+    filaTotal['Estado Orden'] = '';
+    filaTotal['Cliente / EVAC'] = '';
+    filaTotal['Marca'] = '';
+    filaTotal['Subcategoría'] = '';
+    datosExportar.push(filaTotal);
+
     const worksheet = XLSX.utils.json_to_sheet(datosExportar);
 
-    // Definimos las cabeceras una sola vez para reutilizarlas
     const headers = [
-      'Número Factura', 'Clave producto', 'Producto', 'Fecha',
-      'Precio Unit.', 'Cantidad', 'Total', 'Marca', 'Subcategoría'
+      'Número Pedido', 'Clave Producto', 'Producto', 'Fecha',
+      'Precio Unit.', 'Cantidad Pedida', 'Cantidad Entregada', 'Total',
+      'Estatus Entrega', 'Estado Orden', 'Cliente / EVAC', 'Marca', 'Subcategoría'
     ];
 
-    // Ajuste de anchos (tu lógica es correcta)
     const colWidths = headers.map(header => {
       const valores = datosExportar.map(row => row[header]?.toString() ?? '');
-      valores.push(header); // Incluir la cabecera en el cálculo
+      valores.push(header);
       const maxLength = Math.max(...valores.map(v => v.length));
-      return { wch: Math.min(maxLength + 2, 50) };
+      return { wch: Math.min(maxLength + 2, 55) };
     });
     worksheet['!cols'] = colWidths;
 
-    // --- INICIO DE LA CORRECCIÓN ---
-
-    // 1. Obtenemos el rango de la hoja para iterar
     const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
-
-    // 2. Definimos las columnas que queremos formatear
     const columnasMoneda = ['Precio Unit.', 'Total'];
+    const columnasEntero = ['Cantidad Pedida', 'Cantidad Entregada'];
+    const filaTotal_R = range.e.r; // última fila = fila de totales
 
-    // 3. Iteramos sobre cada celda de la hoja
-    for (let R = range.s.r + 1; R <= range.e.r; ++R) { // Empezamos en +1 para saltar la cabecera
+    for (let R = range.s.r + 1; R <= range.e.r; ++R) {
       for (let C = range.s.c; C <= range.e.c; ++C) {
-
-        const cell_address = { c: C, r: R };
-        const cell_ref = XLSX.utils.encode_cell(cell_address);
+        const cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
         const celda = worksheet[cell_ref];
-
-        // Obtenemos el nombre de la cabecera para esta columna
+        if (!celda) continue;
         const headerName = headers[C];
-
-        // Si la celda existe, es un número y su cabecera está en nuestra lista de columnas de moneda
-        if (celda && celda.t === 'n' && columnasMoneda.includes(headerName)) {
-          celda.t = 'n'; // Confirmamos que el tipo es numérico
-          // MEJORA: Aplicamos un formato de moneda con separador de miles y dos decimales
+        if (celda.t === 'n' && columnasMoneda.includes(headerName)) {
           celda.z = '#,##0.00';
         }
+        if (celda.t === 'n' && columnasEntero.includes(headerName)) {
+          celda.z = '#,##0';
+        }
+        // Negrita en la fila de totales
+        if (R === filaTotal_R) {
+          celda.s = { font: { bold: true } };
+        }
       }
+    }
+    // Negrita en celda TOTALES (texto)
+    const celdaTotalesRef = XLSX.utils.encode_cell({ c: 0, r: filaTotal_R });
+    if (worksheet[celdaTotalesRef]) {
+      worksheet[celdaTotalesRef].s = { font: { bold: true } };
     }
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Detalle Compras');
 
-    const fileName = `compras_${this.infoCliente?.clave || 'cliente'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const tabLabel = this.tabActiva && this.tabActiva !== 'Todas' ? `_${this.tabActiva.replace(/ /g, '_')}` : '';
+    const fileName = `compras_${this.infoCliente?.clave || 'cliente'}${tabLabel}_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   }
 
@@ -642,6 +653,21 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
 
   formatearMoneda(valor: number): string {
     return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(valor);
+  }
+
+  /** Suma total de piezas pedidas en la vista filtrada activa. */
+  get totalCantidad(): number {
+    return this.facturasFiltradas.reduce((acc, f) => acc + (f.cantidad || 0), 0);
+  }
+
+  /** Suma total de piezas entregadas en la vista filtrada activa. */
+  get totalEntregado(): number {
+    return this.facturasFiltradas.reduce((acc, f) => acc + (f.cantidad_entregada || 0), 0);
+  }
+
+  /** Suma total del importe (venta_total) en la vista filtrada activa. */
+  get totalMonto(): number {
+    return this.facturasFiltradas.reduce((acc, f) => acc + (f.venta_total || 0), 0);
   }
 
   /**
