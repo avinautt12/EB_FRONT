@@ -43,6 +43,9 @@ interface DatosRetroactivo {
   porcentaje_retroactivo_apparel: number;
   retroactivo_total: number;
   importe: number;
+
+  porcentaje_avance_general: number;
+  total_bicis_deduccion: number;
 }
 
 @Component({

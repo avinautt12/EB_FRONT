@@ -120,15 +120,13 @@
                         </td>
 
                         <td>{{ item.CATEGORIA }}</td>
-                        <td class="td-number text-muted">{{ item.COMPRA_MINIMA_ANUAL | currency:'USD':'$':'1.0-0' }}
-                        </td>
-                        <td class="td-number text-muted">{{ item.COMPRA_MINIMA_APPAREL | currency:'USD':'$':'1.0-0' }}
-                        </td>
+                        <td class="td-number text-muted">{{ item.COMPRA_MINIMA_ANUAL | currency:'USD':'$':'1.0-0' }}</td>
+                        <td class="td-number text-muted">{{ item.COMPRA_MINIMA_APPAREL | currency:'USD':'$':'1.0-0' }}</td>
                         <td class="td-number">{{ item.COMPRAS_TOTALES_CRUDO | currency:'USD':'$':'1.0-0' }}</td>
 
                         <td class="td-number" style="font-weight: bold;"
-                            [style.color]="(item.COMPRAS_TOTALES_CRUDO / (item.COMPRA_MINIMA_ANUAL || 1)) >= 1 ? '#4caf50' : '#888'">
-                            {{ (item.COMPRAS_TOTALES_CRUDO / (item.COMPRA_MINIMA_ANUAL || 1)) | percent:'1.0-0' }}
+                            [style.color]="item.porcentaje_avance_general >= 1 ? '#4caf50' : '#888'">
+                            {{ item.porcentaje_avance_general | percent:'1.0-0' }}
                         </td>
 
                         <td class="text-center">
@@ -143,12 +141,16 @@
                         </td>
 
                         <td class="td-number">{{ item.COMPRA_GLOBAL_SCOTT | currency:'USD':'$':'1.0-0' }}</td>
-                        <td class="td-number font-mono">{{ (item.COMPRA_GLOBAL_SCOTT / (item.COMPRA_MINIMA_ANUAL || 1))
-                            | percent:'1.0-0' }}</td>
+                        
+                        <td class="td-number font-mono">
+                            {{ item.porcentaje_avance_scott | percent:'1.0-0' }}
+                        </td>
 
                         <td class="td-number">{{ item.COMPRA_GLOBAL_APPAREL | currency:'USD':'$':'1.0-0' }}</td>
-                        <td class="td-number font-mono">{{ (item.COMPRA_GLOBAL_APPAREL / (item.COMPRA_MINIMA_APPAREL ||
-                            1)) | percent:'1.0-0' }}</td>
+                        
+                        <td class="td-number font-mono">
+                            {{ item.porcentaje_avance_apparel | percent:'1.0-0' }}
+                        </td>
 
                         <td class="td-number">{{ item.COMPRA_GLOBAL_BOLD | currency:'USD':'$':'1.0-0' }}</td>
                         <td class="td-number" style="font-weight: bold; color: #EB5E28;">
@@ -157,8 +159,7 @@
 
                         <td class="td-number text-danger">{{ item.notas_credito | currency:'USD':'$':'1.0-0' }}</td>
                         <td class="td-number text-danger">{{ item.garantias | currency:'USD':'$':'1.0-0' }}</td>
-                        <td class="td-number text-danger">{{ item.productos_ofertados | currency:'USD':'$':'1.0-0' }}
-                        </td>
+                        <td class="td-number text-danger">{{ item.productos_ofertados | currency:'USD':'$':'1.0-0' }}</td>
                         <td class="td-number text-danger">{{ item.bicicleta_demo | currency:'USD':'$':'1.0-0' }}</td>
                         <td class="td-number text-danger">{{ item.bicicletas_bold | currency:'USD':'$':'1.0-0' }}</td>
 
@@ -174,8 +175,7 @@
 
                         <td class="td-number">{{ item.porcentaje_retroactivo | percent:'1.1-2' }}</td>
                         <td class="td-number">{{ item.porcentaje_retroactivo_apparel | percent:'1.1-2' }}</td>
-                        <td class="td-number font-mono" style="font-weight: bold;">{{ item.retroactivo_total |
-                            percent:'1.1-2' }}</td>
+                        <td class="td-number font-mono" style="font-weight: bold;">{{ item.retroactivo_total | percent:'1.1-2' }}</td>
 
                         <td class="td-number" style="font-weight: bold;">
                             {{ item.importe | currency:'USD':'$':'1.2-2' }}

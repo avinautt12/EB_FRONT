@@ -68,6 +68,7 @@
         </table>
 
         <div class="section-title mt-4">Metas y Cumplimiento</div>
+        <div class="section-title mt-4">Metas y Cumplimiento</div>
         <table class="table-metas">
             <thead>
                 <tr>
@@ -85,9 +86,8 @@
                     <td>{{ datosCliente.COMPRA_MINIMA_ANUAL | currency:'USD':'$':'1.2-2' }}</td>
                     <td>{{ datosCliente.COMPRAS_TOTALES_CRUDO | currency:'USD':'$':'1.2-2' }}</td>
                     <td class="fw-bold"
-                        [style.color]="(datosCliente.COMPRAS_TOTALES_CRUDO / (datosCliente.COMPRA_MINIMA_ANUAL || 1)) >= 1 ? '#006633' : '#dc3545'">
-                        {{ (datosCliente.COMPRAS_TOTALES_CRUDO / (datosCliente.COMPRA_MINIMA_ANUAL || 1)) |
-                        percent:'1.1-1' }}
+                        [style.color]="datosCliente.porcentaje_avance_general >= 1 ? '#006633' : '#dc3545'">
+                        {{ datosCliente.porcentaje_avance_general | percent:'1.1-1' }}
                     </td>
                 </tr>
                 <tr>
@@ -97,9 +97,8 @@
                     <td>{{ datosCliente.COMPRA_MINIMA_APPAREL | currency:'USD':'$':'1.2-2' }}</td>
                     <td>{{ datosCliente.COMPRA_GLOBAL_APPAREL | currency:'USD':'$':'1.2-2' }}</td>
                     <td class="fw-bold"
-                        [style.color]="(datosCliente.COMPRA_GLOBAL_APPAREL / (datosCliente.COMPRA_MINIMA_APPAREL || 1)) >= 1 ? '#006633' : '#dc3545'">
-                        {{ (datosCliente.COMPRA_GLOBAL_APPAREL / (datosCliente.COMPRA_MINIMA_APPAREL || 1)) |
-                        percent:'1.1-1' }}
+                        [style.color]="datosCliente.porcentaje_avance_apparel >= 1 ? '#006633' : '#dc3545'">
+                        {{ datosCliente.porcentaje_avance_apparel | percent:'1.1-1' }}
                     </td>
                 </tr>
             </tbody>
@@ -136,13 +135,12 @@
 
             <div class="row-calc black-row">
                 <div class="calc-label text-right pe-4">Productos Ofertados</div>
-                <div class="calc-value text-center">{{ datosCliente.productos_ofertados | currency:'USD':'$':'1.2-2' }}
-                </div>
+                <div class="calc-value text-center">{{ datosCliente.productos_ofertados | currency:'USD':'$':'1.2-2' }}</div>
             </div>
+            
             <div class="row-calc black-row mt-1">
                 <div class="calc-label text-right pe-4">Bicicletas DEMO / BOLD</div>
-                <div class="calc-value text-center">{{ (datosCliente.bicicleta_demo + datosCliente.bicicletas_bold) |
-                    currency:'USD':'$':'1.2-2' }}</div>
+                <div class="calc-value text-center">{{ datosCliente.total_bicis_deduccion | currency:'USD':'$':'1.2-2' }}</div>
             </div>
 
             <div class="row-calc orange-row mt-3 shadow-sm">
