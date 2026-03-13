@@ -25,6 +25,8 @@ interface Factura {
   /** Cantidad pedida en la línea */
   cantidad: number;
   venta_total: number;
+  /** Importe proporcional a la cantidad realmente entregada (qty_delivered / qty_ordered * total) */
+  total_entregado: number;
   marca: string;
   subcategoria: string;
   apparel: string;
@@ -104,6 +106,14 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
   /** Índice de tabActiva dentro de tabsDisponibles (para la navegación Anterior/Siguiente). */
   indiceTabActiva = 0;
 
+  // ── Fecha inicio temporada ─────────────────────────────────────────────────
+  /** Fecha de inicio de temporada devuelta por el backend (dynamic per client). */
+  fechaInicioTemporada: string | null = null;
+
+  // ── Avance previo (total entregado según carátula) ────────────────────────
+  /** Suma de avance_global de la tabla previo para este cliente/grupo. Fuente de verdad del importe Entregado. */
+  avancePrevio: number | null = null;
+
   // ── Buscador ───────────────────────────────────────────────────────────────
   /** Cadena de texto ingresada por el usuario para filtrar resultados. */
   textoBusqueda = '';
@@ -171,6 +181,8 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     this.tabActiva = 'Todas';
     this.indiceTabActiva = 0;
     this.textoBusqueda = '';
+    this.fechaInicioTemporada = null;
+    this.avancePrevio = null;
 
     // ── RUTA 0: Vista Global integral ← prioridad más alta ───────────────────────
     if (this.idGrupoOdoo) {
@@ -179,6 +191,8 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
       ).subscribe({
         next: (response: any) => {
           if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
+          this.fechaInicioTemporada = response.meta?.fecha_inicio_temporada ?? null;
+          this.avancePrevio = response.meta?.avance_previo != null ? Number(response.meta.avance_previo) : null;
           const rows = response.rows ?? response.data ?? [];
           this.facturas = (rows || []).map((r: any) => ({
             id: r.id || 0,
@@ -191,6 +205,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
             precio_unitario: Number(r.precio_unitario ?? r.precio ?? 0) || 0,
             cantidad: Number(r.cantidad ?? r.qty ?? 0) || 0,
             venta_total: Number(r.total ?? r.venta_total ?? 0) || 0,
+            total_entregado: Number(r.total_entregado ?? r.total ?? r.venta_total ?? 0) || 0,
             marca: r.marca ?? '',
             subcategoria: r.subcategoria ?? '',
             apparel: r.apparel ?? '',
@@ -201,16 +216,18 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
             estado_orden: r.estado_orden ?? '',
             cantidad_entregada: Number(r.cantidad_entregada ?? 0) || 0
           }));
-          if (this.facturas.length === 0) {
-            this.error = 'No se encontraron pedidos para este grupo.';
-          } else {
+          if (this.facturas.length > 0) {
             this.filtrarFacturas();
           }
           this.cargando = false;
         },
         error: (error) => {
           console.error('Error Vista Global grupo Odoo:', error);
-          this.error = error.error?.error || 'Error al cargar los pedidos del grupo';
+          if (error.status === 404 || error.status === 0) {
+            this.error = null;
+          } else {
+            this.error = error.error?.error || 'Error al conectar con el servidor';
+          }
           if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
           this.cargando = false;
         }
@@ -232,37 +249,47 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
               estado_factura: this.mapEstadoFactura(r.estado_factura ?? '')
             }));
             this.infoCliente = response.cliente ?? null;
-            if (this.facturas.length === 0) {
-              this.error = 'No se encontraron facturas.';
-            } else {
+            if (this.facturas.length > 0) {
               this.filtrarFacturas();
             }
           } else {
-            this.error = response.error || 'Error al obtener facturas';
+            this.error = response.error || 'Error al conectar con el servidor';
           }
           this.cargando = false;
         },
         error: (error) => {
           console.error('Error al obtener facturas (grupo):', error);
-          this.error = error.error?.error || 'Error al cargar las facturas';
+          if (error.status === 404 || error.status === 0) {
+            this.error = null;
+          } else {
+            this.error = error.error?.error || 'Error al conectar con el servidor';
+          }
           this.cargando = false;
         }
       });
     } else {
       // If parent provided the client key, use it. Otherwise try token-backed info endpoint as fallback.
       const clienteParam = this.clienteClave ?? null;
+      // Usuario sin clave asignada: no hacer llamada al backend, mostrar vacío directamente
+      if (clienteParam === '__sin_clave__') {
+        this.cargando = false;
+        return;
+      }
       if (clienteParam) {
         this.infoCliente = { nombre_cliente: clienteParam };
         // Sin límite: traer todos los registros; la paginación local se encarga de mostrarlos por páginas
         this.clientesService.getDetalleComprasCliente(undefined, undefined, undefined, clienteParam, this.claveExacta).subscribe({
             next: (response: any) => {
             if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
-              // Accept responses that contain rows/data even if they don't include a `success` flag
-              const hasRows = Array.isArray(response?.rows) && response.rows.length > 0;
-              const hasData = Array.isArray(response?.data) && response.data.length > 0;
-              if (response?.success || hasRows || hasData) {
-                const rows = response.rows ?? response.data ?? [];
-              this.facturas = (rows || []).map((r: any) => ({
+              this.fechaInicioTemporada = response.meta?.fecha_inicio_temporada ?? null;
+              this.avancePrevio = response.meta?.avance_previo != null ? Number(response.meta.avance_previo) : null;
+              // Considerar exitosa cualquier respuesta que devuelva rows/data como array (incluso vacío)
+              const rowsArray = Array.isArray(response?.rows) ? response.rows
+                              : Array.isArray(response?.data) ? response.data
+                              : null;
+              if (response?.success || rowsArray !== null) {
+                const rows = rowsArray ?? [];
+              this.facturas = rows.map((r: any) => ({
                 id: r.id || 0,
                 numero_factura: r.numero_factura ?? r.numero ?? r.factura ?? '',
                 referencia_interna: r.clave_producto != null && r.clave_producto !== false ? String(r.clave_producto) : (r.referencia_interna ?? ''),
@@ -273,6 +300,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
                 precio_unitario: Number(r.precio_unitario ?? r.precio ?? 0) || 0,
                 cantidad: Number(r.cantidad ?? r.qty ?? r.cantidad_entregada ?? 0) || 0,
                 venta_total: Number(r.total ?? r.venta_total ?? 0) || 0,
+                total_entregado: Number(r.total_entregado ?? r.total ?? r.venta_total ?? 0) || 0,
                 marca: r.marca ?? '',
                 subcategoria: r.subcategoria ?? '',
                 apparel: r.apparel ?? '',
@@ -283,21 +311,23 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
                 estado_orden: r.estado_orden ?? '',
                 cantidad_entregada: Number(r.cantidad_entregada ?? 0) || 0
               }));
-
-              if (this.facturas.length === 0) {
-                this.error = 'No se encontraron facturas.';
-              } else {
+              if (this.facturas.length > 0) {
                 this.filtrarFacturas();
               }
             } else {
               console.warn('getDetalleComprasCliente returned no rows:', response);
-              this.error = response.error || 'Error al obtener facturas';
+              this.error = response.error || 'Error al conectar con el servidor';
             }
             this.cargando = false;
           },
           error: (error) => {
             console.error('Error al obtener detalle compras (cliente param):', error);
-            this.error = error.error?.error || 'Error al cargar las facturas';
+            if (error.status === 404 || error.status === 0) {
+              // No se encontró el cliente en Odoo: tratar como sin órdenes, no como error
+              this.error = null;
+            } else {
+              this.error = error.error?.error || 'Error al conectar con el servidor';
+            }
             if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
             this.cargando = false;
           }
@@ -327,6 +357,8 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
             this.clientesService.getDetalleComprasCliente(undefined, undefined, undefined, clienteParam2, this.claveExacta).subscribe({
               next: (response: any) => {
                 if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
+                this.fechaInicioTemporada = response.meta?.fecha_inicio_temporada ?? null;
+                this.avancePrevio = response.meta?.avance_previo != null ? Number(response.meta.avance_previo) : null;
                 const hasRows2 = Array.isArray(response?.rows) && response.rows.length > 0;
                 const hasData2 = Array.isArray(response?.data) && response.data.length > 0;
                 if (response?.success || hasRows2 || hasData2) {
@@ -342,6 +374,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
                     precio_unitario: Number(r.precio_unitario ?? r.precio ?? 0) || 0,
                     cantidad: Number(r.cantidad ?? r.qty ?? r.cantidad_entregada ?? 0) || 0,
                     venta_total: Number(r.total ?? r.venta_factura ?? 0) || 0,
+                    total_entregado: Number(r.total_entregado ?? r.total ?? r.venta_factura ?? 0) || 0,
                     marca: r.marca ?? '',
                     subcategoria: r.subcategoria ?? '',
                     apparel: r.apparel ?? '',
@@ -353,20 +386,22 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
                     cantidad_entregada: Number(r.cantidad_entregada ?? 0) || 0
                   }));
 
-                  if (this.facturas.length === 0) {
-                    this.error = 'No se encontraron facturas.';
-                  } else {
+                  if (this.facturas.length > 0) {
                     this.filtrarFacturas();
                   }
                 } else {
                   console.warn('getDetalleComprasCliente (fallback) returned no rows:', response);
-                  this.error = response.error || 'Error al obtener facturas';
+                  this.error = response.error || 'Error al conectar con el servidor';
                 }
                 this.cargando = false;
               },
               error: (error) => {
                 console.error('Error al obtener detalle compras (fallback):', error);
-                this.error = error.error?.error || 'Error al cargar las facturas';
+                if (error.status === 404 || error.status === 0) {
+                  this.error = null;
+                } else {
+                  this.error = error.error?.error || 'Error al conectar con el servidor';
+                }
                 if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
                 this.cargando = false;
               }
@@ -399,11 +434,15 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
    * Se llama automáticamente al cargar datos, cambiar pestaña o escribir en el buscador.
    */
   filtrarFacturas() {
-    // Construir pestañas únicas por estatus de entrega (estado_factura / estatus_out)
-    const estatusUnicos = [...new Set(
-      this.facturas.map(f => f.estado_factura).filter(e => !!e)
-    )].sort();
-    this.tabsDisponibles = estatusUnicos.length > 1 ? ['Todas', ...estatusUnicos] : [];
+    // Pestañas fijas en orden definido — siempre visibles aunque tengan 0 productos
+    const TODAS_LAS_PESTANAS = [
+      'Almacén EB',
+      'En tránsito',
+      'Entregado',
+      'Falta de confirmación',
+      'Cancelado'
+    ];
+    this.tabsDisponibles = ['Todas', ...TODAS_LAS_PESTANAS];
 
     // Aplicar filtro de pestaña activa
     let base: Factura[];
@@ -429,7 +468,15 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     }
 
     this.totalPaginas = Math.ceil(this.facturasFiltradas.length / this.elementosPorPagina);
-    this.cambiarPagina(1);
+    // Si no hay resultados, limpiar explícitamente facturasPaginadas.
+    // cambiarPagina(1) haría return prematuro cuando totalPaginas=0 (1 > 0),
+    // dejando la tabla con datos obsoletos de la pestaña anterior.
+    if (this.facturasFiltradas.length === 0) {
+      this.paginaActual = 1;
+      this.facturasPaginadas = [];
+    } else {
+      this.cambiarPagina(1);
+    }
   }
 
   /**
@@ -655,6 +702,14 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(valor);
   }
 
+  /** Formatea 'YYYY-MM-DD' a texto corto como '11 jun 2025' para mostrar en el resumen. */
+  get fechaInicioFormateada(): string {
+    if (!this.fechaInicioTemporada) return 'MY26';
+    const [y, m, d] = this.fechaInicioTemporada.split('-').map(Number);
+    const fecha = new Date(y, m - 1, d);
+    return fecha.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
   /** Suma total de piezas pedidas en la vista filtrada activa. */
   get totalCantidad(): number {
     return this.facturasFiltradas.reduce((acc, f) => acc + (f.cantidad || 0), 0);
@@ -665,9 +720,57 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     return this.facturasFiltradas.reduce((acc, f) => acc + (f.cantidad_entregada || 0), 0);
   }
 
-  /** Suma total del importe (venta_total) en la vista filtrada activa. */
+  /** Suma total del importe en la vista filtrada activa.
+   * Para la pestaña "Entregado" usa avancePrevio (fuente de verdad de carátula) si está disponible.
+   * Para las demás tabs usa el total del pedido completo sumado de las filas. */
   get totalMonto(): number {
-    return this.facturasFiltradas.reduce((acc, f) => acc + (f.venta_total || 0), 0);
+    const sinBusqueda = this.textoBusqueda === '';
+
+    // Pestaña Entregado: muestra el valor exacto de la carátula (acumulado_anticipado)
+    if (this.tabActiva === 'Entregado' && this.avancePrevio != null && sinBusqueda) {
+      return this.avancePrevio;
+    }
+
+    // Pestaña Todas: solo suma los mismos estados de las pestañas individuales visibles
+    // Cancelado no entra. Entregado usa avancePrevio si está disponible.
+    if (this.tabActiva === 'Todas') {
+      const ESTADOS_CONTABLES = new Set(['Almacén EB', 'En tránsito', 'Falta de confirmación']);
+      const sumaResto = this.facturas
+        .filter(f => ESTADOS_CONTABLES.has(f.estado_factura))
+        .reduce((acc, f) => acc + (f.venta_total || 0), 0);
+
+      if (this.avancePrevio != null && sinBusqueda) {
+        return sumaResto + this.avancePrevio;
+      }
+      // Sin avancePrevio: suma Entregado con total_entregado
+      const sumaEntregado = this.facturas
+        .filter(f => f.estado_factura === 'Entregado' || f.estado_factura === 'Entregado Parcial')
+        .reduce((acc, f) => acc + ((f.total_entregado ?? f.venta_total) || 0), 0);
+      return sumaResto + sumaEntregado;
+    }
+
+    // Resto de pestañas individuales
+    const useEntregado = this.tabActiva === 'Entregado' || this.tabActiva === 'Entregado Parcial';
+    return this.facturasFiltradas.reduce((acc, f) =>
+      acc + ((useEntregado ? (f.total_entregado ?? f.venta_total) : f.venta_total) || 0), 0);
+  }
+
+  /** Devuelve el mensaje de vacío contextual según la pestaña activa. */
+  mensajeTabVacia(): string {
+    // Si no hay ninguna orden en absoluto (ni en otras pestañas)
+    if (this.facturas.length === 0) {
+      return 'Sin órdenes registradas para este distribuidor';
+    }
+    const mensajes: Record<string, string> = {
+      'Almacén EB':              'No hay órdenes en almacén por el momento',
+      'En tránsito':             'No hay órdenes en tránsito por el momento',
+      'Entregado':               'No hay órdenes entregadas por el momento',
+      'Entregado Parcial':       'No hay entregas parciales por el momento',
+      'Falta de confirmación':   'No hay órdenes pendientes de confirmación',
+      'Cancelado':               'No hay órdenes canceladas',
+      'Todas':                   'No se encontraron órdenes para este distribuidor',
+    };
+    return mensajes[this.tabActiva] ?? 'No se encontraron resultados';
   }
 
   /**

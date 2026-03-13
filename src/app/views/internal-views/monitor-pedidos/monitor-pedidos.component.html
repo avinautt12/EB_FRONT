@@ -79,11 +79,9 @@
               </span>
             </td>
             <td>
-              <span *ngIf="u.nombre_grupo" class="mp-grupo-chip">
+              <span *ngIf="u.clave" class="mp-clave-chip">{{ u.clave }}</span>
+              <span *ngIf="u.nombre_grupo" class="mp-grupo-chip" style="margin-left:4px;">
                 <i class="fas fa-layer-group"></i> {{ u.nombre_grupo }}
-              </span>
-              <span *ngIf="!u.nombre_grupo && u.clave" class="mp-clave-chip">
-                {{ u.clave }}
               </span>
               <span *ngIf="!u.nombre_grupo && !u.clave" class="mp-sin-asignar">—</span>
             </td>

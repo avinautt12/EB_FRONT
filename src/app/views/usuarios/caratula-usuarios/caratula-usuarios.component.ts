@@ -186,7 +186,10 @@ export class CaratulaUsuariosComponent implements OnInit {
       this.mostrarSelectorVista = true;
     } else {
       this.idDelGrupo = null;
-      this.clienteClaveModal = this.datosCliente?.nombre_cliente ?? this.datosCliente?.clave ?? null;
+      // Usar la clave exacta (ref en Odoo) para asegurar que se encuentren todos los pedidos,
+      // incluyendo órdenes bajo contactos hijo del partner.
+      this.clienteClaveModal = this.tokenData?.clave ?? this.datosCliente?.clave ?? null;
+      this.claveExactaModal = true;
       this.mostrarFacturas = true;
     }
   }

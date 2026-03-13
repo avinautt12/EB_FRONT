@@ -1,19 +1,23 @@
 <app-top-bar-usuarios></app-top-bar-usuarios>
 
-<div class="dashboard-container">
-  <h1>Inicio</h1>
+<div class="dashboard-page">
+  <div class="dashboard-bg"></div>
 
-  <div class="secciones">
-    <div class="seccion seccion-compra">
-      <h2><i class="fas fa-shopping-cart"></i> Proyección de Compra MY26 </h2>
-      <p>Consulta o planifica tu compra estimada con base en tus necesidades.</p>
-      <button type="button" [routerLink]="['/usuarios/proyeccion-compras']">Ir a Proyección</button>
-    </div>
+  <div class="dashboard-container">
+    <h1>Inicio</h1>
 
-    <div class="seccion seccion-my26">
-      <h2><i class="fas fa-chart-line"></i> Resumen de Temporada</h2>
-      <p>Aquí puedes ver tu progreso de compra anual, tus avances de compra y consultar el detalle de tus compras.</p>
-      <button type="button" [routerLink]="['/usuarios/caratula']">Ir a Resumen</button>
+    <div class="secciones">
+      <div class="seccion seccion-compra">
+        <h2><i class="fas fa-shopping-cart"></i> Proyección de Compra MY26</h2>
+        <p>Consulta o planifica tu compra estimada con base en tus necesidades.</p>
+        <button type="button" [routerLink]="['/usuarios/proyeccion-compras']">Ir a Proyección</button>
+      </div>
+
+      <div class="seccion seccion-my26">
+        <h2><i class="fas fa-chart-line"></i> Resumen de Temporada</h2>
+        <p>Aquí puedes ver tu progreso de compra anual, tus avances de compra y consultar el detalle de tus compras.</p>
+        <button type="button" [routerLink]="['/usuarios/caratula']">Ir a Resumen</button>
+      </div>
     </div>
   </div>
 </div>

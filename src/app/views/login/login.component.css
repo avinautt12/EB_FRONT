@@ -67,6 +67,16 @@
   box-shadow: 0 0 0 3px rgba(235, 94, 40, 0.1);
 }
 
+.input-base:-webkit-autofill,
+.input-base:-webkit-autofill:hover,
+.input-base:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #1e1d1b inset;
+  -webkit-text-fill-color: #FFFCF2;
+  caret-color: #FFFCF2;
+  border-color: rgba(255, 252, 242, 0.15);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 .input-wrap {
   position: relative;
   display: flex;

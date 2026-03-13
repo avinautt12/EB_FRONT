@@ -101,17 +101,14 @@ export class MonitorPedidosComponent implements OnInit {
     this.modalGrupoOdoo = null;
     this.modalClaveExacta = false;
 
-    if (u.id_grupo) {
-      // Usuario integral → Vista Global del grupo
-      this.modalGrupoOdoo = u.id_grupo;
-      this.modalEtiqueta = u.nombre_grupo ?? u.nombre;
-    } else if (u.clave) {
-      // Usuario con clave propia → búsqueda exacta
+    if (u.clave) {
+      // Siempre buscar por clave individual del usuario, aunque pertenezca a un integral.
+      // La Vista Global del grupo se consulta desde la pestaña "Por grupo integral".
       this.modalClave = u.clave;
       this.modalClaveExacta = true;
       this.modalEtiqueta = `${u.nombre} (${u.clave})`;
     } else {
-      // Usuario sin clave ni grupo → sin pedidos
+      // Usuario sin clave asignada → no hay pedidos que mostrar
       this.modalClave = '__sin_clave__';
       this.modalClaveExacta = true;
       this.modalEtiqueta = u.nombre;

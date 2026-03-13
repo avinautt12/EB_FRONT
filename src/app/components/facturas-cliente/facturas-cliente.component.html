@@ -14,7 +14,7 @@
             </div>
 
             <!-- Pestañas por estado de orden (solo si hay más de una) -->
-            <div *ngIf="!cargando && tabsDisponibles.length > 1" class="tabs-container">
+            <div *ngIf="!cargando && tabsDisponibles.length > 0" class="tabs-container">
                 <button
                     *ngFor="let tab of tabsDisponibles"
                     class="tab-btn"
@@ -62,6 +62,10 @@
                     </span>
                     <span class="resumen-valor resumen-valor-monto">{{ formatearMoneda(totalMonto) }}</span>
                 </div>
+                <div class="resumen-separador"></div>
+                <div class="resumen-item">
+                    <span class="resumen-temporada">(Desde {{ fechaInicioFormateada }})</span>
+                </div>
             </div>
 
             <!-- Spinner carga -->
@@ -76,8 +80,8 @@
             </div>
 
             <!-- Mensaje sin datos -->
-            <div *ngIf="!cargando && facturasPaginadas.length === 0" class="sin-datos">
-                <p>No se encontraron facturas para este cliente.</p>
+            <div *ngIf="!cargando && facturasPaginadas.length === 0 && !error" class="sin-datos">
+                <p>{{ mensajeTabVacia() }}</p>
             </div>
 
             <!-- Tabla facturas -->

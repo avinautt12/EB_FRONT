@@ -8,7 +8,8 @@
   background-color: rgba(0, 0, 0, 0.7);
   display: none;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding-top: calc(64px + 1rem);
   z-index: 1000;
   backdrop-filter: blur(5px);
 }
@@ -242,15 +243,27 @@
   position: relative;
   width: 100%;
   overflow: auto;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
   border: 1px solid #403D39;
   border-radius: 8px;
   background-color: #1e1e1c;
 }
 
 .tabla-contenedor::-webkit-scrollbar {
-  display: none;
+  height: 6px;
+  width: 6px;
+}
+
+.tabla-contenedor::-webkit-scrollbar-track {
+  background: #1e1d1b;
+}
+
+.tabla-contenedor::-webkit-scrollbar-thumb {
+  background: #4a4744;
+  border-radius: 3px;
+}
+
+.tabla-contenedor::-webkit-scrollbar-thumb:hover {
+  background: #EB5E28;
 }
 
 /* Tabla de facturas */
@@ -660,5 +673,13 @@
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 20px;
+  white-space: nowrap;
+}
+
+.resumen-temporada {
+  color: #6b6660;
+  font-size: 16px;
+  font-weight: 400;
+  font-style: italic;
   white-space: nowrap;
 }

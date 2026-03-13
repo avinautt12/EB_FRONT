@@ -1,72 +1,149 @@
+/* ── Host: columna full-height para que el flex centering funcione ──── */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ── Wrapper de página completa con fondo animado ─────────────────────── */
+.dashboard-page {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    #1e1d1b 0%,
+    #231f1c 38%,
+    rgba(235, 94, 40, 0.06) 50%,
+    #231f1d 65%,
+    #1e1d1b 100%
+  );
+  background-size: 400% 400%;
+  animation: dashGradientBG 12s ease-in-out infinite;
+}
+
+.dashboard-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+@keyframes dashGradientBG {
+  0%   { background-position: 0% 20%; }
+  50%  { background-position: 100% 80%; }
+  100% { background-position: 0% 20%; }
+}
+
+/* ── Contenedor centrado ───────────────────────────────────────────────── */
 .dashboard-container {
-  max-width: 1000px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: linear-gradient(135deg, #252422 0%, #1e1d1b 100%);
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
   color: #FFFCF2;
   font-family: 'Segoe UI', sans-serif;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
   text-align: center;
 }
 
 .dashboard-container h1 {
   color: #EB5E28;
   font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
   margin-bottom: 0.3rem;
 }
 
-.subtexto {
-  font-size: 1.1rem;
-  margin-bottom: 2rem;
-  color: #ccc;
-}
-
+/* ── Grid de tarjetas ──────────────────────────────────────────────────── */
 .secciones {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 3rem;
+  gap: 2rem;
+  margin-top: 2.5rem;
+  align-items: stretch;
 }
 
+/* ── Liquid glass card ─────────────────────────────────────────────────── */
 .seccion {
-  background-color: #1e1d1b;
-  border-radius: 10px;
-  padding: 1.5rem;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(30, 29, 27, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 252, 242, 0.1);
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2),
+              inset 0 1px 1px rgba(255, 252, 242, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.seccion::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 252, 242, 0.2), transparent);
+  pointer-events: none;
 }
 
 .seccion:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 20px rgba(255, 94, 40, 0.4);
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(235, 94, 40, 0.25),
+              inset 0 1px 1px rgba(255, 252, 242, 0.1);
+  border-color: rgba(235, 94, 40, 0.3);
+  background: rgba(30, 29, 27, 0.6);
 }
 
 .seccion h2 {
   font-size: 1.4rem;
   color: #EB5E28;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.seccion h2 i {
+  font-size: 1.2rem;
 }
 
 .seccion p {
   font-size: 1rem;
-  margin-bottom: 1.2rem;
-  color: #FFFCF2;
+  margin-bottom: 1.5rem;
+  color: rgba(255, 252, 242, 0.8);
+  line-height: 1.5;
+  flex: 1;
 }
 
 .seccion button {
-  background-color: #EB5E28;
+  background: linear-gradient(135deg, #EB5E28 0%, rgba(235, 94, 40, 0.8) 100%);
   color: #FFFCF2;
   border: none;
-  padding: 0.6rem 1.2rem;
+  padding: 0.7rem 1.5rem;
   font-size: 1rem;
   font-weight: 600;
   border-radius: 30px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 12px rgba(235, 94, 40, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
 .seccion button:hover {
-  background-color: #ff6b2c;
-  transform: scale(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(235, 94, 40, 0.35);
 }
+
+.seccion button:active {
+  transform: translateY(0);
+}
+
