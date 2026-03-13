@@ -2,35 +2,14 @@
 
 <div class="monitor-container">
 
-    <div class="search-card">
-        <button class="btn-volver-sm" [routerLink]="['/dashboard-retroactivos']">
-            <i class="fas fa-arrow-left"></i> Volver
+    <div class="action-bar">
+        <button class="btn-volver-sm" [routerLink]="['/usuarios/inicio']">
+            <i class="fas fa-arrow-left"></i> Volver al Inicio
         </button>
+    </div>
 
-        <div class="search-input-wrapper">
-            <input type="text" [(ngModel)]="terminoBusqueda" (input)="onInputChange($event)"
-                (keydown)="onKeyDown($event)" placeholder="Buscar por clave o nombre del cliente..."
-                class="buscador-input-clean" #searchInput [disabled]="isLoading">
-
-            <button class="btn-buscar-clean" (click)="buscarCliente()"
-                [disabled]="isLoading || !terminoBusqueda.trim()">
-                <i class="fas fa-search" *ngIf="!isLoading"></i>
-                <i class="fas fa-spinner fa-spin" *ngIf="isLoading"></i>
-                {{ isLoading ? 'Buscando...' : 'Buscar' }}
-            </button>
-
-            <button class="btn-clear-clean" (click)="limpiarBusqueda()" *ngIf="terminoBusqueda" title="Limpiar">
-                <i class="fas fa-times"></i>
-            </button>
-
-            <div *ngIf="mostrarSugerencias" class="sugerencias-dropdown-clean">
-                <div *ngFor="let sug of sugerenciasFiltradas" class="sugerencia-item-clean"
-                    (mousedown)="seleccionarSugerencia(sug)">
-                    <span class="sug-nombre-clean">{{ sug.CLIENTE }}</span>
-                    <span class="sug-clave-clean">{{ sug.CLAVE }}</span>
-                </div>
-            </div>
-        </div>
+    <div *ngIf="isLoading" class="loading-message">
+        <i class="fas fa-spinner fa-spin"></i> Cargando tu Estado de Cuenta...
     </div>
 
     <div *ngIf="error" class="error-message">
@@ -188,7 +167,7 @@
             <div class="row-calc row-dark">
                 <div class="calc-label">
                     MONTO ADICIONAL A CUMPLIMIENTO
-                    <span class="formula-text-light"> COMPRAS TOTALES (MENOS NOTAS DE CRÉDITO Y PRODUCTOS OFERTADOS) - META MÍNIMA ANUAL</span>
+                    <span class="formula-text-light">COMPRAS TOTALES (MENOS NOTAS DE CRÉDITO Y PRODUCTOS OFERTADOS) - META MÍNIMA ANUAL</span>
                 </div>
                 <div class="calc-value fw-bold fs-large" [style.color]="datosCliente.compra_adicional < 0 ? '#dc3545' : '#2e7d32'">
                     {{ datosCliente.compra_adicional | currency:'USD':'$':'1.2-2' }}

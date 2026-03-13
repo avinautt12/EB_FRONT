@@ -103,7 +103,7 @@
 }
 
 .seccion h2 {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   color: #EB5E28;
   margin-bottom: 0.8rem;
   display: flex;
@@ -123,14 +123,15 @@
   flex: 1;
 }
 
+/* ================= BOTONES ================= */
 .seccion button {
   background: linear-gradient(135deg, #EB5E28 0%, rgba(235, 94, 40, 0.8) 100%);
   color: #FFFCF2;
   border: none;
   padding: 0.7rem 1.5rem;
   font-size: 1rem;
-  font-weight: 600;
-  border-radius: 30px;
+  font-weight: 700;
+  border-radius: 8px; /* Botones más cuadrados y modernos, en lugar de píldora */
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 4px 12px rgba(235, 94, 40, 0.3);

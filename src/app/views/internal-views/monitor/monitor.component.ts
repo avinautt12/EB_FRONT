@@ -13,6 +13,8 @@ import { FiltroFechaComponent } from '../../../components/filtro-fecha/filtro-fe
 
 import { FechaActualizacionComponent } from '../../../components/fecha-actualizacion/fecha-actualizacion.component';
 
+import { Router } from '@angular/router';
+
 interface Factura {
   id: number;
   numero_factura: string;
@@ -152,7 +154,8 @@ export class MonitorComponent {
 
   constructor(
     private monitorService: MonitorOdooService,
-    private alertaService: AlertaService
+    private alertaService: AlertaService,
+    private router: Router
   ) { }
 
   ngOnInit() {
@@ -257,24 +260,29 @@ export class MonitorComponent {
   }
 
   importarArchivo(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files?.length) {
-      const formData = new FormData();
-      formData.append('file', input.files[0]);
+  const input = event.target as HTMLInputElement;
+  if (input.files?.length) {
+    const formData = new FormData();
+    formData.append('file', input.files[0]);
 
-      this.cargando = true;
-      this.monitorService.importarFacturas(formData).subscribe({
-        next: (res) => {
-          this.alertaService.mostrarExito(res.message);
-          this.obtenerFacturas();
-        },
-        error: (err) => {
-          this.alertaService.mostrarError(err.error?.error || 'Error al importar');
-          this.cargando = false;
-        }
-      });
-    }
+    this.cargando = true;
+    this.monitorService.importarFacturas(formData).subscribe({
+      next: (res) => {
+        this.alertaService.mostrarExito('Facturas importadas. Actualizando previo automáticamente...');
+        this.obtenerFacturas();
+
+        setTimeout(() => {
+          this.router.navigate(['/previo']);
+        }, 1500);
+
+      },
+      error: (err) => {
+        this.alertaService.mostrarError(err.error?.error || 'Error al importar');
+        this.cargando = false;
+      }
+    });
   }
+}
 
   // Métodos para exportación
   abrirDialogoExportar() {
