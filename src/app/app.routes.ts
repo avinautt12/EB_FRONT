@@ -44,6 +44,8 @@ import { DashboardRetroactivosComponent } from './views/internal-views/dashboard
 import { RetroactivosComponent } from './views/internal-views/retroactivos/retroactivos.component';
 import { CaratulaRetroactivosComponent } from './views/internal-views/caratula-retroactivos/caratula-retroactivos.component';
 
+import { CaratulaRetroactivosUsuarioComponent } from './views/usuarios/caratula-retroactivos-usuarios/caratula-retroactivos-usuarios.component';
+
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { usuarioGuard } from './guards/usuario.guard';
@@ -79,6 +81,7 @@ export const routes: Routes = [
   { path: 'usuarios/proyeccion-compras', component: ProyeccionUsuariosComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/crear-proyeccion', component: CrearProyeccionUsuariosComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/proyeccion-historial', component: ProyeccionHistorialComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/caratula-retroactivos', component: CaratulaRetroactivosUsuarioComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/caratula', component: CaratulaUsuariosComponent, canActivate: [usuarioGuard] },
   { path: 'flujo-dashboard', component: FlujoDashboardComponent, canActivate: [adminGuard] },
   { path: 'ordenes-compra', component: OrdenesCompraComponent, canActivate: [adminGuard] },

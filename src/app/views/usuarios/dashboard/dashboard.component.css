@@ -1,72 +1,109 @@
 .dashboard-container {
-  max-width: 1000px;
-  margin: 2rem auto;
-  padding: 2rem;
+  max-width: 1100px; /* Lo hice un poco más ancho para que las 3 tarjetas respiren mejor */
+  margin: 3rem auto;
+  padding: 3rem 2.5rem;
   background: linear-gradient(135deg, #252422 0%, #1e1d1b 100%);
   color: #FFFCF2;
-  font-family: 'Segoe UI', sans-serif;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  border-radius: 16px; /* Bordes un poco más suaves */
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
   text-align: center;
 }
 
 .dashboard-container h1 {
   color: #EB5E28;
-  font-size: 2rem;
-  margin-bottom: 0.3rem;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
 .subtexto {
   font-size: 1.1rem;
-  margin-bottom: 2rem;
-  color: #ccc;
+  margin-bottom: 3rem; /* Más espacio entre el título y las tarjetas */
+  color: #b0b0b0; /* Gris más suave para que no compita con el blanco */
 }
 
+/* ================= CONTENEDOR DE TARJETAS ================= */
 .secciones {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 3rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Tarjetas un poco más anchas */
+  gap: 2rem; /* AQUÍ ESTÁ LA MAGIA: Esto separa las tarjetas */
 }
 
+/* ================= DISEÑO DE TARJETAS ================= */
 .seccion {
-  background-color: #1e1d1b;
-  border-radius: 10px;
-  padding: 1.5rem;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background-color: #2a2927; /* Un tono sutilmente más claro que el fondo principal para que destaquen */
+  border: 1px solid #3c3b39; /* Un borde súper fino para darle elegancia */
+  border-radius: 12px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  
+  /* Flexbox para que los botones siempre queden alineados abajo sin importar el texto */
+  display: flex;
+  flex-direction: column;
 }
 
 .seccion:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 20px rgba(255, 94, 40, 0.4);
+  transform: translateY(-8px);
+  box-shadow: 0 15px 30px rgba(235, 94, 40, 0.25); /* Sombra naranja al pasar el mouse */
+  border-color: #EB5E28; /* El borde se ilumina */
 }
 
 .seccion h2 {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   color: #EB5E28;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column; /* Pone el icono arriba del texto */
+  align-items: center;
+  gap: 12px; /* Separación entre el icono y el título */
+  font-weight: 700;
+}
+
+.seccion h2 i {
+  font-size: 2.5rem; /* Iconos más grandes y llamativos */
+  color: #FFFCF2; /* Iconos blancos para contrastar con el naranja del texto */
+  margin-bottom: 5px;
 }
 
 .seccion p {
   font-size: 1rem;
-  margin-bottom: 1.2rem;
-  color: #FFFCF2;
+  color: #d1d1d1;
+  line-height: 1.6; /* Mejor interlineado para lectura */
+  margin-bottom: 2rem;
+  flex-grow: 1; /* Esto empuja el botón hacia el fondo de la tarjeta */
 }
 
+/* ================= BOTONES ================= */
 .seccion button {
   background-color: #EB5E28;
-  color: #FFFCF2;
+  color: #ffffff;
   border: none;
-  padding: 0.6rem 1.2rem;
+  padding: 14px 20px;
   font-size: 1rem;
-  font-weight: 600;
-  border-radius: 30px;
+  font-weight: 700;
+  border-radius: 8px; /* Botones más cuadrados y modernos, en lugar de píldora */
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(235, 94, 40, 0.3);
+  width: 100%; /* Botón de ancho completo */
+  margin-top: auto; /* Mantiene el botón pegado abajo */
 }
 
 .seccion button:hover {
-  background-color: #ff6b2c;
-  transform: scale(1.05);
+  background-color: #d15020;
+  transform: scale(1.02);
+}
+
+/* Responsive para celulares */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 2rem 1.5rem;
+    margin: 1.5rem;
+  }
+  .secciones {
+    gap: 1.5rem;
+  }
 }

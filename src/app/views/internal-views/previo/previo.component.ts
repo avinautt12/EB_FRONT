@@ -338,22 +338,22 @@ export class PrevioComponent implements OnInit, OnDestroy {
 
   guardarYRefrescar() {
     this.cargando = true;
-    
+
     // Preparar datos con porcentajes calculados
-    const datosParaGuardar = [...this.clientesOriginal, ...this.integralesOriginal].map(item => 
+    const datosParaGuardar = [...this.clientesOriginal, ...this.integralesOriginal].map(item =>
       this.calcularPorcentajes(item)
     );
 
     // 1. Enviar al backend
     this.previoService.actualizarPrevio(datosParaGuardar).subscribe({
       next: (res) => {
-        
+
         // 2. AHORA SÍ: Pedir la versión oficial al backend para asegurar que vemos lo real
         this.previoService.obtenerPrevio().subscribe({
           next: (datosBackend) => {
             // Aquí podrías actualizar this.todosLosDatos con datosBackend si quisieras
             // pero lo más importante es apagar el loading de forma segura:
-            
+
             this.cargando = false;
             this.cd.detectChanges(); // <--- ESTO ARREGLA EL ERROR NG0100
           },
@@ -1234,592 +1234,27 @@ export class PrevioComponent implements OnInit, OnDestroy {
   }
 
   private calcularAvanceJulAgo(cliente: Cliente, facturas: FacturaOdoo[]): number {
-    const clave = cliente.clave;
-    const nombreCliente = cliente.nombre_cliente?.toUpperCase() || '';
-    const fechaInicio = cliente.f_inicio ? new Date(cliente.f_inicio) : new Date('2025-07-01');
-    const fechaFin = new Date('2025-08-31');
-
-    // Casos especiales que requieren lógica particular
-    const esCasoEspecial = nombreCliente.includes('BROTHERS BIKE') ||
-      nombreCliente.includes('NARUCO') ||
-      clave === 'KC612' ||
-      clave === 'FD324' ||
-      nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ') ||
-      nombreCliente.includes('JOSE ANGEL DIAZ CORTES') ||
-      nombreCliente.includes('JUAN MANUEL RUACHO RANGEL');
-
-    let facturasValidas;
-
-    if (esCasoEspecial) {
-      facturasValidas = facturas.filter(factura => {
-        const coincideClave = factura.contacto_referencia === clave;
-
-        let coincideNombre = false;
-        if (nombreCliente.includes('BROTHERS BIKE')) {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes('BROTHERS BIKE');
-        }
-        else if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-        }
-        else {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-        }
-
-        const fechaFactura = new Date(factura.fecha_factura);
-        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-
-        const esMarcaScott = factura.marca === 'SCOTT';
-        const esApparelNo = factura.apparel === 'NO';
-
-        const categoria = factura.categoria_producto?.toUpperCase() || '';
-        const categoriaContieneScott = categoria.includes('SCOTT');
-        const categoriaContieneApparel = categoria.includes('APPAREL');
-        const esCategoriaValida = categoriaContieneScott && !categoriaContieneApparel;
-
-        const esProductoValido = esMarcaScott && esApparelNo && esCategoriaValida;
-
-        if (nombreCliente.includes('BROTHERS BIKE')) {
-          return coincideNombre && enRangoFechas && esProductoValido;
-        } else if (nombreCliente.includes('NARUCO') && ['LC625', 'LC626', 'LC627'].includes(clave)) {
-          return coincideClave && enRangoFechas && esProductoValido;
-        } else {
-          return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
-        }
-      });
-    } else {
-      facturasValidas = facturas.filter(factura => {
-        const esClienteCorrecto =
-          factura.contacto_referencia === clave ||
-          factura.contacto_referencia === `${clave}-CA`;
-
-        const fechaFactura = new Date(factura.fecha_factura);
-        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-
-        const esMarcaScott = factura.marca === 'SCOTT';
-        const esApparelNo = factura.apparel === 'NO';
-
-        const categoria = factura.categoria_producto?.toUpperCase() || '';
-        const categoriaContieneScott = categoria.includes('SCOTT');
-        const categoriaContieneApparel = categoria.includes('APPAREL');
-        const esCategoriaValida = categoriaContieneScott && !categoriaContieneApparel;
-
-        const esProductoValido = esMarcaScott && esApparelNo && esCategoriaValida;
-
-        return esClienteCorrecto && enRangoFechas && esProductoValido;
-      });
-
-      if (facturasValidas.length === 0) {
-        const facturasPorNombre = facturas.filter(factura => {
-          let coincideNombre = false;
-          if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
-            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-          } else if (!nombreCliente.includes('NARUCO')) {
-            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-          }
-
-          const fechaFactura = new Date(factura.fecha_factura);
-          const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-
-          const esMarcaScott = factura.marca === 'SCOTT';
-          const esApparelNo = factura.apparel === 'NO';
-
-          const categoria = factura.categoria_producto?.toUpperCase() || '';
-          const categoriaContieneScott = categoria.includes('SCOTT');
-          const categoriaContieneApparel = categoria.includes('APPAREL');
-          const esCategoriaValida = categoriaContieneScott && !categoriaContieneApparel;
-
-          const esProductoValido = esMarcaScott && esApparelNo && esCategoriaValida;
-
-          return coincideNombre && enRangoFechas && esProductoValido;
-        });
-
-        facturasValidas = facturasPorNombre;
-      }
-    }
-
-    return facturasValidas.reduce((total, factura) => total + (+factura.venta_total || 0), 0);
+    return this.calcularAvanceGenerico(cliente, facturas, '2025-07-01', '2025-08-31', false);
   }
 
   private calcularAvanceSepOct(cliente: Cliente, facturas: FacturaOdoo[]): number {
-    const clave = cliente.clave;
-    const nombreCliente = cliente.nombre_cliente?.toUpperCase() || '';
-    const fechaInicio = new Date('2025-09-01');
-    const fechaFin = new Date('2025-10-31');
-
-    const esCasoEspecial = nombreCliente.includes('BROTHERS BIKE') ||
-      nombreCliente.includes('NARUCO') ||
-      clave === 'KC612' ||
-      clave === 'FD324' ||
-      nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ') ||
-      nombreCliente.includes('JOSE ANGEL DIAZ CORTES') ||
-      nombreCliente.includes('JUAN MANUEL RUACHO RANGEL');
-
-    let facturasValidas;
-
-    if (esCasoEspecial) {
-      facturasValidas = facturas.filter(factura => {
-        const coincideClave = factura.contacto_referencia === clave;
-
-        let coincideNombre = false;
-        if (nombreCliente.includes('BROTHERS BIKE')) {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes('BROTHERS BIKE');
-        } else if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-        } else {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-        }
-
-        const fechaFactura = new Date(factura.fecha_factura);
-        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-        const esProductoValido = this.esFacturaProductoValido(factura);
-
-        if (nombreCliente.includes('BROTHERS BIKE')) {
-          return coincideNombre && enRangoFechas && esProductoValido;
-        } else if (nombreCliente.includes('NARUCO') && ['LC625', 'LC626', 'LC627'].includes(clave)) {
-          return coincideClave && enRangoFechas && esProductoValido;
-        } else {
-          return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
-        }
-      });
-    } else {
-      facturasValidas = facturas.filter(factura => {
-        const esClienteCorrecto = factura.contacto_referencia === clave || factura.contacto_referencia === `${clave}-CA`;
-        const fechaFactura = new Date(factura.fecha_factura);
-        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-        const esProductoValido = this.esFacturaProductoValido(factura);
-        return esClienteCorrecto && enRangoFechas && esProductoValido;
-      });
-
-      // Si la búsqueda por clave no tiene resultados, intentamos con el nombre del cliente
-      if (facturasValidas.length === 0) {
-        const facturasPorNombre = facturas.filter(factura => {
-          let coincideNombre = false;
-          if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
-            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-          } else if (!nombreCliente.includes('NARUCO')) {
-            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-          }
-          const fechaFactura = new Date(factura.fecha_factura);
-          const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-          const esProductoValido = this.esFacturaProductoValido(factura);
-          return coincideNombre && enRangoFechas && esProductoValido;
-        });
-        facturasValidas = facturasPorNombre;
-      }
-    }
-
-    return facturasValidas.reduce((total, factura) => total + (+factura.venta_total || 0), 0);
-  }
-
-  private esFacturaProductoValido(factura: FacturaOdoo): boolean {
-    const esMarcaScott = factura.marca === 'SCOTT';
-    const esApparelNo = factura.apparel === 'NO';
-    const categoria = factura.categoria_producto?.toUpperCase() || '';
-    const categoriaContieneScott = categoria.includes('SCOTT');
-    const categoriaNoContieneApparel = !categoria.includes('APPAREL');
-    const esCategoriaValida = categoriaContieneScott && categoriaNoContieneApparel;
-    const nombreProducto = factura.nombre_producto?.toUpperCase() || '';
-    const nombreProductoContieneScott = nombreProducto.includes('SCOTT');
-
-    return esMarcaScott &&
-      esApparelNo &&
-      (esCategoriaValida || nombreProductoContieneScott);
+    return this.calcularAvanceGenerico(cliente, facturas, '2025-09-01', '2025-10-31', false);
   }
 
   private calcularAvanceNovDic(cliente: Cliente, facturas: FacturaOdoo[]): number {
-    const clave = cliente.clave;
-    const nombreCliente = cliente.nombre_cliente?.toUpperCase() || '';
-    const fechaInicio = new Date('2025-11-01');
-    const fechaFin = new Date('2025-12-31');
-
-    const esCasoEspecial = nombreCliente.includes('BROTHERS BIKE') ||
-      nombreCliente.includes('NARUCO') ||
-      clave === 'KC612' ||
-      clave === 'FD324' ||
-      nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ') ||
-      nombreCliente.includes('JOSE ANGEL DIAZ CORTES') ||
-      nombreCliente.includes('JUAN MANUEL RUACHO RANGEL');
-
-    let facturasValidas;
-
-    if (esCasoEspecial) {
-      facturasValidas = facturas.filter(factura => {
-        const coincideClave = factura.contacto_referencia === clave;
-
-        let coincideNombre = false;
-        if (nombreCliente.includes('BROTHERS BIKE')) {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes('BROTHERS BIKE');
-        } else if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-        } else {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-        }
-
-        const fechaFactura = new Date(factura.fecha_factura);
-        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-        const esProductoValido = this.esFacturaProductoValido(factura);
-
-        if (nombreCliente.includes('BROTHERS BIKE')) {
-          return coincideNombre && enRangoFechas && esProductoValido;
-        } else if (nombreCliente.includes('NARUCO') && ['LC625', 'LC626', 'LC627'].includes(clave)) {
-          return coincideClave && enRangoFechas && esProductoValido;
-        } else {
-          return (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
-        }
-      });
-    } else {
-      facturasValidas = facturas.filter(factura => {
-        const esClienteCorrecto = factura.contacto_referencia === clave || factura.contacto_referencia === `${clave}-CA`;
-        const fechaFactura = new Date(factura.fecha_factura);
-        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-        const esProductoValido = this.esFacturaProductoValido(factura);
-        return esClienteCorrecto && enRangoFechas && esProductoValido;
-      });
-
-      if (facturasValidas.length === 0) {
-        const facturasPorNombre = facturas.filter(factura => {
-          let coincideNombre = false;
-          if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
-            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-          } else if (!nombreCliente.includes('NARUCO')) {
-            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-          }
-          const fechaFactura = new Date(factura.fecha_factura);
-          const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-          const esProductoValido = this.esFacturaProductoValido(factura);
-          return coincideNombre && enRangoFechas && esProductoValido;
-        });
-        facturasValidas = facturasPorNombre;
-      }
-    }
-
-    return facturasValidas.reduce((total, factura) => total + (+factura.venta_total || 0), 0);
+    return this.calcularAvanceGenerico(cliente, facturas, '2025-11-01', '2025-12-31', false);
   }
 
   private calcularAvanceJulAgoApp(cliente: Cliente, facturas: FacturaOdoo[]): number {
-    const clave = cliente.clave;
-    const nombreCliente = cliente.nombre_cliente?.toUpperCase() || '';
-    const fechaInicio = cliente.f_inicio ? new Date(cliente.f_inicio) : new Date('2025-07-01');
-    const fechaFin = new Date('2025-08-31');
-
-    // Casos especiales que requieren lógica particular
-    const esCasoEspecial = nombreCliente.includes('BROTHERS BIKE') ||
-      nombreCliente.includes('NARUCO') ||
-      clave === 'KC612' ||
-      clave === 'FD324' ||
-      nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ') ||
-      nombreCliente.includes('JOSE ANGEL DIAZ CORTES');
-
-    let facturasValidas;
-
-    if (esCasoEspecial) {
-      // Para casos especiales: lógica específica
-      facturasValidas = facturas.filter(factura => {
-        const coincideClave = factura.contacto_referencia === clave ||
-          factura.contacto_referencia === `${clave}-CA`;
-
-        // PARA BROTHERS BIKE: Buscar directamente por nombre
-        let coincideNombre = false;
-        if (nombreCliente.includes('BROTHERS BIKE')) {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes('BROTHERS BIKE');
-        }
-        // PARA NARUCO: Solo permitir coincidencia por nombre si la clave NO es LC625, LC626 o LC627
-        else if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-        }
-        // Para otros casos especiales
-        else {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-        }
-
-        const fechaFactura = new Date(factura.fecha_factura);
-        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-
-        const esProductoValido =
-          factura.marca === 'SYNCROS' ||
-          factura.marca === 'VITTORIA' ||
-          factura.apparel === 'SI';
-
-        // Lógica especial para cada caso
-        let esValida;
-        if (nombreCliente.includes('BROTHERS BIKE')) {
-          esValida = coincideNombre && enRangoFechas && esProductoValido;
-        } else if (nombreCliente.includes('NARUCO') && ['LC625', 'LC626', 'LC627'].includes(clave)) {
-          esValida = coincideClave && enRangoFechas && esProductoValido;
-        } else {
-          esValida = (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
-        }
-
-        return esValida;
-      });
-    } else {
-      // Para casos normales: primero buscar por clave
-      facturasValidas = facturas.filter(factura => {
-        const esClienteCorrecto =
-          factura.contacto_referencia === clave ||
-          factura.contacto_referencia === `${clave}-CA`;
-
-        const fechaFactura = new Date(factura.fecha_factura);
-        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-
-        const esProductoValido =
-          factura.marca === 'SYNCROS' ||
-          factura.marca === 'VITTORIA' ||
-          factura.apparel === 'SI';
-
-        return esClienteCorrecto && enRangoFechas && esProductoValido;
-      });
-
-      // FALLBACK: Si no hay resultados por clave, buscar por nombre
-      if (facturasValidas.length === 0) {
-        facturasValidas = facturas.filter(factura => {
-          // PARA NARUCO: Solo permitir coincidencia por nombre si la clave NO es LC625, LC626 o LC627
-          let coincideNombre = false;
-          if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
-            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-          } else if (!nombreCliente.includes('NARUCO')) {
-            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-          }
-
-          const fechaFactura = new Date(factura.fecha_factura);
-          const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-
-          const esProductoValido =
-            factura.marca === 'SYNCROS' ||
-            factura.marca === 'VITTORIA' ||
-            factura.apparel === 'SI';
-
-          return coincideNombre && enRangoFechas && esProductoValido;
-        });
-      }
-    }
-
-    return facturasValidas.reduce(
-      (total, factura) => total + (Number(factura.venta_total) || 0),
-      0
-    );
+    return this.calcularAvanceGenerico(cliente, facturas, cliente.f_inicio ? cliente.f_inicio : '2025-07-01', '2025-08-31', true);
   }
 
   private calcularAvanceSepOctApp(cliente: Cliente, facturas: FacturaOdoo[]): number {
-    const clave = cliente.clave;
-    const nombreCliente = cliente.nombre_cliente?.toUpperCase() || '';
-    const fechaInicio = new Date('2025-09-01');
-    const fechaFin = new Date('2025-10-31');
-
-    // Casos especiales que requieren lógica particular
-    const esCasoEspecial = nombreCliente.includes('BROTHERS BIKE') ||
-      nombreCliente.includes('NARUCO') ||
-      clave === 'KC612' ||
-      clave === 'FD324' ||
-      nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ') ||
-      nombreCliente.includes('JOSE ANGEL DIAZ CORTES');
-
-    let facturasValidas;
-
-    if (esCasoEspecial) {
-      // Para casos especiales: lógica específica
-      facturasValidas = facturas.filter(factura => {
-        const coincideClave = factura.contacto_referencia === clave ||
-          factura.contacto_referencia === `${clave}-CA`;
-
-        // PARA BROTHERS BIKE: Buscar directamente por nombre
-        let coincideNombre = false;
-        if (nombreCliente.includes('BROTHERS BIKE')) {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes('BROTHERS BIKE');
-        }
-        // PARA NARUCO: Solo permitir coincidencia por nombre si la clave NO es LC625, LC626 o LC627
-        else if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-        }
-        // Para otros casos especiales
-        else {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-        }
-
-        const fechaFactura = new Date(factura.fecha_factura);
-        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-
-        const esProductoValido =
-          factura.marca === 'SYNCROS' ||
-          factura.marca === 'VITTORIA' ||
-          factura.apparel === 'SI';
-
-        // Lógica especial para cada caso
-        let esValida;
-        if (nombreCliente.includes('BROTHERS BIKE')) {
-          esValida = coincideNombre && enRangoFechas && esProductoValido;
-        } else if (nombreCliente.includes('NARUCO') && ['LC625', 'LC626', 'LC627'].includes(clave)) {
-          esValida = coincideClave && enRangoFechas && esProductoValido;
-        } else {
-          esValida = (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
-        }
-
-        return esValida;
-      });
-    } else {
-      // Para casos normales: primero buscar por clave
-      facturasValidas = facturas.filter(factura => {
-        const esClienteCorrecto =
-          factura.contacto_referencia === clave ||
-          factura.contacto_referencia === `${clave}-CA`;
-
-        const fechaFactura = new Date(factura.fecha_factura);
-        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-
-        const esProductoValido =
-          factura.marca === 'SYNCROS' ||
-          factura.marca === 'VITTORIA' ||
-          factura.apparel === 'SI';
-
-        return esClienteCorrecto && enRangoFechas && esProductoValido;
-      });
-
-      // FALLBACK: Si no hay resultados por clave, buscar por nombre
-      if (facturasValidas.length === 0) {
-        facturasValidas = facturas.filter(factura => {
-          // PARA NARUCO: Solo permitir coincidencia por nombre si la clave NO es LC625, LC626 o LC627
-          let coincideNombre = false;
-          if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
-            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-          } else if (!nombreCliente.includes('NARUCO')) {
-            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-          }
-
-          const fechaFactura = new Date(factura.fecha_factura);
-          const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-
-          const esProductoValido =
-            factura.marca === 'SYNCROS' ||
-            factura.marca === 'VITTORIA' ||
-            factura.apparel === 'SI';
-
-          return coincideNombre && enRangoFechas && esProductoValido;
-        });
-      }
-    }
-
-    return facturasValidas.reduce(
-      (total, factura) => total + (Number(factura.venta_total) || 0),
-      0
-    );
+    return this.calcularAvanceGenerico(cliente, facturas, '2025-09-01', '2025-10-31', true);
   }
 
   private calcularAvanceNovDicApp(cliente: Cliente, facturas: FacturaOdoo[]): number {
-    const clave = cliente.clave;
-    const nombreCliente = cliente.nombre_cliente?.toUpperCase() || '';
-    const fechaInicio = new Date('2025-11-01');
-    const fechaFin = new Date('2025-12-31');
-
-    const esCasoEspecial = nombreCliente.includes('BROTHERS BIKE') ||
-      nombreCliente.includes('NARUCO') ||
-      clave === 'KC612' ||
-      clave === 'FD324' ||
-      nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ') ||
-      nombreCliente.includes('JOSE ANGEL DIAZ CORTES');
-
-    let facturasValidas;
-
-    if (esCasoEspecial) {
-      facturasValidas = facturas.filter(factura => {
-        const coincideClave = factura.contacto_referencia === clave ||
-          factura.contacto_referencia === `${clave}-CA`;
-
-        let coincideNombre = false;
-        if (nombreCliente.includes('BROTHERS BIKE')) {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes('BROTHERS BIKE');
-        }
-        else if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-        }
-        else {
-          coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-            nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-        }
-
-        const fechaFactura = new Date(factura.fecha_factura);
-        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-
-        const esProductoValido =
-          factura.marca === 'SYNCROS' ||
-          factura.marca === 'VITTORIA' ||
-          factura.apparel === 'SI';
-
-        let esValida;
-        if (nombreCliente.includes('BROTHERS BIKE')) {
-          esValida = coincideNombre && enRangoFechas && esProductoValido;
-        } else if (nombreCliente.includes('NARUCO') && ['LC625', 'LC626', 'LC627'].includes(clave)) {
-          esValida = coincideClave && enRangoFechas && esProductoValido;
-        } else {
-          esValida = (coincideClave || coincideNombre) && enRangoFechas && esProductoValido;
-        }
-
-        return esValida;
-      });
-    } else {
-      facturasValidas = facturas.filter(factura => {
-        const esClienteCorrecto =
-          factura.contacto_referencia === clave ||
-          factura.contacto_referencia === `${clave}-CA`;
-
-        const fechaFactura = new Date(factura.fecha_factura);
-        const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-
-        // Verificar criterios de producto
-        const esProductoValido =
-          factura.marca === 'SYNCROS' ||
-          factura.marca === 'VITTORIA' ||
-          factura.apparel === 'SI';
-
-        return esClienteCorrecto && enRangoFechas && esProductoValido;
-      });
-
-      if (facturasValidas.length === 0) {
-        facturasValidas = facturas.filter(factura => {
-          let coincideNombre = false;
-          if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
-            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-          } else if (!nombreCliente.includes('NARUCO')) {
-            coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) ||
-              nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
-          }
-
-          const fechaFactura = new Date(factura.fecha_factura);
-          const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-
-          // Verificar criterios de producto
-          const esProductoValido =
-            factura.marca === 'SYNCROS' ||
-            factura.marca === 'VITTORIA' ||
-            factura.apparel === 'SI';
-
-          return coincideNombre && enRangoFechas && esProductoValido;
-        });
-      }
-    }
-
-    return facturasValidas.reduce((total, factura) => total + (+factura.venta_total || 0), 0);
+    return this.calcularAvanceGenerico(cliente, facturas, '2025-11-01', '2025-12-31', true);
   }
 
   private calcularAcumuladoSyncros(cliente: Cliente, facturas: FacturaOdoo[]): number {
@@ -3048,11 +2483,13 @@ export class PrevioComponent implements OnInit, OnDestroy {
     const fechaInicio = new Date(fInicio);
     const fechaFin = new Date(fFin);
 
+    // Mantenemos TODOS tus casos especiales intactos
     const esCasoEspecial = nombreCliente.includes('BROTHERS BIKE') ||
       nombreCliente.includes('NARUCO') ||
       clave === 'KC612' || clave === 'FD324' ||
       nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ') ||
-      nombreCliente.includes('JOSE ANGEL DIAZ CORTES'); // Agregué el resto de tus casos especiales aquí si faltan
+      nombreCliente.includes('JOSE ANGEL DIAZ CORTES') ||
+      nombreCliente.includes('JUAN MANUEL RUACHO RANGEL');
 
     let facturasValidas;
 
@@ -3064,15 +2501,18 @@ export class PrevioComponent implements OnInit, OnDestroy {
       if (esApp) {
         esProductoValido = factura.marca === 'SYNCROS' || factura.marca === 'VITTORIA' || factura.apparel === 'SI';
       } else {
-        // Lógica Scott Normal (Simplificada basada en tu código)
-        const esMarcaScott = factura.marca === 'SCOTT';
+        // --- AQUÍ ESTÁ LA MAGIA PARA SCOTT Y MEGAMO ---
+        const marca = factura.marca?.toUpperCase() || '';
+        const esMarcaValida = marca === 'SCOTT' || marca === 'MEGAMO';
         const esApparelNo = factura.apparel === 'NO';
+
         const categoria = factura.categoria_producto?.toUpperCase() || '';
-        // Tu validación de Scott original:
-        const esCategoriaValida = categoria.includes('SCOTT') && !categoria.includes('APPAREL');
-        // O por nombre producto
+        const esCategoriaValida = (categoria.includes('SCOTT') || categoria.includes('MEGAMO')) && !categoria.includes('APPAREL');
+
         const nombreProducto = factura.nombre_producto?.toUpperCase() || '';
-        esProductoValido = esMarcaScott && esApparelNo && (esCategoriaValida || nombreProducto.includes('SCOTT'));
+        const nombreValido = nombreProducto.includes('SCOTT') || nombreProducto.includes('MEGAMO');
+
+        esProductoValido = esMarcaValida && esApparelNo && (esCategoriaValida || nombreValido);
       }
       return enRango && esProductoValido;
     };
@@ -3082,7 +2522,6 @@ export class PrevioComponent implements OnInit, OnDestroy {
         const coincideClave = factura.contacto_referencia === clave || factura.contacto_referencia === `${clave}-CA`;
 
         let coincideNombre = false;
-        // Tu lógica específica de nombres
         if (nombreCliente.includes('BROTHERS BIKE')) {
           coincideNombre = factura.contacto_nombre?.toUpperCase().includes('BROTHERS BIKE');
         } else if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
@@ -3093,23 +2532,19 @@ export class PrevioComponent implements OnInit, OnDestroy {
 
         const baseValida = filtroBase(factura);
 
-        // Lógica de retorno según caso
         if (nombreCliente.includes('BROTHERS BIKE')) return coincideNombre && baseValida;
         if (nombreCliente.includes('NARUCO') && ['LC625', 'LC626', 'LC627'].includes(clave)) return coincideClave && baseValida;
         return (coincideClave || coincideNombre) && baseValida;
       });
     } else {
-      // Caso Normal
       facturasValidas = facturas.filter(factura => {
         const coincideClave = factura.contacto_referencia === clave || factura.contacto_referencia === `${clave}-CA`;
         return coincideClave && filtroBase(factura);
       });
 
-      // Fallback nombre
       if (facturasValidas.length === 0) {
         facturasValidas = facturas.filter(factura => {
           let coincideNombre = false;
-          // Logica fallback naruco vs normal
           if (nombreCliente.includes('NARUCO') && !['LC625', 'LC626', 'LC627'].includes(clave)) {
             coincideNombre = factura.contacto_nombre?.toUpperCase().includes(nombreCliente) || nombreCliente.includes(factura.contacto_nombre?.toUpperCase() || '');
           } else if (!nombreCliente.includes('NARUCO')) {
