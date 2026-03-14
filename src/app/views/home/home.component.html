@@ -4,46 +4,65 @@
   <div class="home-bg"></div>
 
   <div class="home-container">
-    <h1>Panel Principal</h1>
-    <p class="subtexto">Bienvenido a tu panel de control</p>
+    <h1>Inicio</h1>
+    <p class="subtexto">Bienvenido a tu portal. Selecciona la opción que deseas consultar.</p>
 
     <div class="tarjetas-acciones">
+
       <div class="tarjeta">
-        <h2><i class="fas fa-folder-open tarjeta-icono"></i> Monitor</h2>
-        <p>Visualización y administración de Monitor MY26.</p>
-        <button [routerLink]="['/previo']">Ver MY26</button>
+        <div class="tarjeta-icono-wrap">
+          <i class="fas fa-desktop"></i>
+        </div>
+        <h2>Monitor MY26</h2>
+        <p>Visualización y administración de unidades, seguimiento de embarques y estatus de órdenes.</p>
+        <button [routerLink]="['/previo']">Ir a Monitor</button>
       </div>
 
       <div class="tarjeta">
-        <h2><i class="fas fa-exchange-alt tarjeta-icono"></i> Flujo de Efectivo</h2>
-        <p>Visualiza movimientos financieros clave.</p>
-        <button [routerLink]="['/flujo-dashboard']">Ver flujo</button>
+        <div class="tarjeta-icono-wrap">
+          <i class="fas fa-exchange-alt"></i>
+        </div>
+        <h2>Flujo de Efectivo</h2>
+        <p>Visualiza movimientos financieros clave y el estado de tus cuentas en tiempo real.</p>
+        <button [routerLink]="['/flujo-dashboard']">Ir a Flujo</button>
       </div>
 
       <div class="tarjeta">
-        <h2><i class="fas fa-users tarjeta-icono"></i> Usuarios</h2>
-        <p>Control de accesos y configuración de roles.</p>
-        <button [routerLink]="['/usuarios']">Administrar</button>
+        <div class="tarjeta-icono-wrap">
+          <i class="fas fa-users"></i>
+        </div>
+        <h2>Usuarios</h2>
+        <p>Control de accesos y configuración de roles para los usuarios del portal.</p>
+        <button [routerLink]="['/usuarios']">Ir a Usuarios</button>
       </div>
 
       <div class="tarjeta">
-        <h2><i class="fas fa-chart-line tarjeta-icono"></i> Monitor de Pedidos</h2>
+        <div class="tarjeta-icono-wrap">
+          <i class="fas fa-clipboard-list"></i>
+        </div>
+        <h2>Monitor de Pedidos</h2>
         <p>Consulta el historial de órdenes de cualquier cliente o grupo integral.</p>
-        <button [routerLink]="['/monitor-pedidos']">Ver pedidos</button>
+        <button [routerLink]="['/monitor-pedidos']">Ir a Pedidos</button>
       </div>
 
       <div class="tarjeta">
-        <h2><i class="fas fa-chart-bar tarjeta-icono"></i> Proyecciones de Compra</h2>
-        <p>Pronósticos y planificación de compras.</p>
-        <button [routerLink]="['/proyeccion']">Consultar</button>
+        <div class="tarjeta-icono-wrap">
+          <i class="fas fa-shopping-cart"></i>
+        </div>
+        <h2>Proyección de Compra MY26</h2>
+        <p>Consulta o planifica tu compra estimada con base en tus necesidades.</p>
+        <button [routerLink]="['/proyeccion']">Ir a Proyección</button>
       </div>
 
       <div class="tarjeta">
-        <h2><i class="fas fa-percentage tarjeta-icono"></i> Retroactivos</h2>
-        <p>Metas MY26 y bonificaciones por distribuidor.</p>
-        <button [routerLink]="['/dashboard-retroactivos']">Ver Cálculos</button>
+        <div class="tarjeta-icono-wrap">
+          <i class="fas fa-undo"></i>
+        </div>
+        <h2>Retroactivos</h2>
+        <p>Consulta tu carátula de retroactivos para conocer el estado de tus bonificaciones.</p>
+        <button [routerLink]="['/dashboard-retroactivos']">Ir a Retroactivos</button>
       </div>
+
     </div>
-
   </div>
 </div>

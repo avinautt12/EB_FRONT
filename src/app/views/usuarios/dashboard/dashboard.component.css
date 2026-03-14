@@ -40,7 +40,7 @@
 .dashboard-container {
   position: relative;
   z-index: 2;
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 3rem 2rem;
   color: #FFFCF2;
@@ -56,13 +56,27 @@
   margin-bottom: 0.3rem;
 }
 
-/* ── Grid de tarjetas ──────────────────────────────────────────────────── */
+/* subtexto debajo del h1 */
+.subtexto {
+  font-size: 1rem;
+  color: rgba(255, 252, 242, 0.7);
+  margin-top: 0.3rem;
+  margin-bottom: 0;
+}
+
+/* ── Grid de tarjetas: siempre 3 columnas ─────────────────────────────── */
 .secciones {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
   margin-top: 2.5rem;
   align-items: stretch;
+}
+
+@media (max-width: 750px) {
+  .secciones {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ── Liquid glass card ─────────────────────────────────────────────────── */
@@ -102,17 +116,19 @@
   background: rgba(30, 29, 27, 0.6);
 }
 
-.seccion h2 {
-  font-size: 1.3rem;
-  color: #EB5E28;
-  margin-bottom: 0.8rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.seccion-icono {
+  font-size: 2.8rem;
+  color: #ffffff;
+  margin-bottom: 1rem;
+  line-height: 1;
 }
 
-.seccion h2 i {
+.seccion h2 {
   font-size: 1.2rem;
+  color: #EB5E28;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+  line-height: 1.35;
 }
 
 .seccion p {
@@ -125,18 +141,17 @@
 
 /* ================= BOTONES ================= */
 .seccion button {
-  background: linear-gradient(135deg, #EB5E28 0%, rgba(235, 94, 40, 0.8) 100%);
+  width: 100%;
+  background: #EB5E28;
   color: #FFFCF2;
   border: none;
-  padding: 0.7rem 1.5rem;
+  padding: 0.85rem 1rem;
   font-size: 1rem;
   font-weight: 700;
-  border-radius: 8px; /* Botones más cuadrados y modernos, en lugar de píldora */
+  border-radius: 8px;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 4px 12px rgba(235, 94, 40, 0.3);
-  position: relative;
-  overflow: hidden;
+  transition: background 0.2s ease, transform 0.2s ease;
+  letter-spacing: 0.3px;
 }
 
 .seccion button:hover {
