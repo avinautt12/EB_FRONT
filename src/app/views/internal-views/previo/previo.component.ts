@@ -2501,18 +2501,15 @@ export class PrevioComponent implements OnInit, OnDestroy {
       if (esApp) {
         esProductoValido = factura.marca === 'SYNCROS' || factura.marca === 'VITTORIA' || factura.apparel === 'SI';
       } else {
-        // --- AQUÍ ESTÁ LA MAGIA PARA SCOTT Y MEGAMO ---
         const marca = factura.marca?.toUpperCase() || '';
         const esMarcaValida = marca === 'SCOTT' || marca === 'MEGAMO';
+        
+        const subcategoria = factura.subcategoria?.toUpperCase() || '';
+        const esBicicleta = subcategoria === 'BICICLETA';
+
         const esApparelNo = factura.apparel === 'NO';
 
-        const categoria = factura.categoria_producto?.toUpperCase() || '';
-        const esCategoriaValida = (categoria.includes('SCOTT') || categoria.includes('MEGAMO')) && !categoria.includes('APPAREL');
-
-        const nombreProducto = factura.nombre_producto?.toUpperCase() || '';
-        const nombreValido = nombreProducto.includes('SCOTT') || nombreProducto.includes('MEGAMO');
-
-        esProductoValido = esMarcaValida && esApparelNo && (esCategoriaValida || nombreValido);
+        esProductoValido = esMarcaValida && esBicicleta && esApparelNo;
       }
       return enRango && esProductoValido;
     };
