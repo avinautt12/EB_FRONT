@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild, Output, EventEmitter, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, Output, EventEmitter, Input, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClientesService } from '../../services/clientes.service';
@@ -39,6 +39,10 @@ interface Factura {
   estado_orden: string;
   /** Cantidad físicamente entregada según stock.move de Odoo */
   cantidad_entregada: number;
+  /** Fecha esperada de entrega del proveedor (desde purchase.order.line.date_planned). Solo para "En tránsito". */
+  fecha_esperada: string | null;
+  /** Número de la Orden de Compra relacionada (informativo). */
+  po_name: string | null;
 }
 
 /**
@@ -116,8 +120,26 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
 
   // ── Buscador ───────────────────────────────────────────────────────────────
   /** Cadena de texto ingresada por el usuario para filtrar resultados. */
-  textoBusqueda = '';
+  textoBusqueda = '';  /** Marca seleccionada en el filtro desplegable. Vacío = todas. */
+  filtroMarca = '';
+  /** Filtros activos por columna (estilo Excel). Clave = campo de Factura, valor = lista seleccionada. */
+  columnFilters: Record<string, string[]> = {};
+  /** Columna cuyo popover de filtro está abierto. */
+  openFilterCol: string | null = null;
+  /** Texto de búsqueda interno del popover. */
+  filterPopoverSearch = '';
+  /** Posición (fixed) del popover abierto. */
+  filterPopoverPosition = { top: 0, left: 0 };
+  /** Ordenamiento activo: columna + dirección. null = sin orden. */
+  colSort: { col: string; dir: 'asc' | 'desc' } | null = null;
 
+  /** Lista de marcas únicas disponibles en los datos actuales. */
+  get marcasDisponibles(): string[] {
+    const set = new Set(
+      this.facturas.map(f => (f.marca ?? '').trim()).filter(m => m)
+    );
+    return Array.from(set).sort();
+  }
   constructor(private clientesService: ClientesService) { }
 
   /** Ciclo de vida: sin lógica de inicialización (la carga se dispara en ngOnChanges). */
@@ -214,8 +236,12 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
             categoria_producto: r.categoria_producto ?? '',
             estado_factura: this.mapEstadoFactura(r.estatus_out ?? r.estado_factura ?? ''),
             estado_orden: r.estado_orden ?? '',
-            cantidad_entregada: Number(r.cantidad_entregada ?? 0) || 0
+            cantidad_entregada: Number(r.cantidad_entregada ?? 0) || 0,
+            fecha_esperada: r.fecha_esperada ?? null,
+            po_name: r.po_name ?? null
           }));
+          if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
+          this.error = null;
           if (this.facturas.length > 0) {
             this.filtrarFacturas();
           }
@@ -236,7 +262,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
         if (this.cargando) {
           this.error = 'La consulta está tardando más de lo esperado. Por favor espera o intenta más tarde.';
         }
-      }, 8000);
+      }, 30000);
       return;   // no continuar con las rutas siguientes
     }
 
@@ -309,8 +335,12 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
                 categoria_producto: r.categoria_producto ?? '',
                 estado_factura: this.mapEstadoFactura(r.estatus_out ?? r.estado_factura ?? ''),
                 estado_orden: r.estado_orden ?? '',
-                cantidad_entregada: Number(r.cantidad_entregada ?? 0) || 0
+                cantidad_entregada: Number(r.cantidad_entregada ?? 0) || 0,
+                fecha_esperada: r.fecha_esperada ?? null,
+                po_name: r.po_name ?? null
               }));
+              if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
+              this.error = null;
               if (this.facturas.length > 0) {
                 this.filtrarFacturas();
               }
@@ -332,12 +362,11 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
             this.cargando = false;
           }
         });
-        // show a friendly timeout message if the request is slow
         this.loadingTimer = setTimeout(() => {
           if (this.cargando) {
             this.error = 'La consulta está tardando más de lo esperado. Por favor espera o intenta más tarde.';
           }
-        }, 8000);
+        }, 30000);
       } else if (this.claveExacta) {
         // "Mis Pedidos" mode pero sin clave asignada → usuario nuevo sin órdenes propias
         this.error = 'Aún no tienes pedidos registrados a tu nombre.';
@@ -357,6 +386,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
             this.clientesService.getDetalleComprasCliente(undefined, undefined, undefined, clienteParam2, this.claveExacta).subscribe({
               next: (response: any) => {
                 if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
+                this.error = null;
                 this.fechaInicioTemporada = response.meta?.fecha_inicio_temporada ?? null;
                 this.avancePrevio = response.meta?.avance_previo != null ? Number(response.meta.avance_previo) : null;
                 const hasRows2 = Array.isArray(response?.rows) && response.rows.length > 0;
@@ -383,7 +413,9 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
                     categoria_producto: r.categoria_producto ?? '',
                     estado_factura: this.mapEstadoFactura(r.estatus_out ?? r.estado_factura ?? ''),
                     estado_orden: r.estado_orden ?? '',
-                    cantidad_entregada: Number(r.cantidad_entregada ?? 0) || 0
+                    cantidad_entregada: Number(r.cantidad_entregada ?? 0) || 0,
+                    fecha_esperada: r.fecha_esperada ?? null,
+                    po_name: r.po_name ?? null
                   }));
 
                   if (this.facturas.length > 0) {
@@ -410,7 +442,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
               if (this.cargando) {
                 this.error = 'La consulta está tardando más de lo esperado. Por favor espera o intenta más tarde.';
               }
-            }, 8000);
+            }, 30000);
           },
           error: (err) => {
             console.error('Error al obtener info cliente actual:', err);
@@ -439,7 +471,6 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
       'Almacén EB',
       'En tránsito',
       'Entregado',
-      'Falta de confirmación',
       'Cancelado'
     ];
     this.tabsDisponibles = ['Todas', ...TODAS_LAS_PESTANAS];
@@ -457,15 +488,37 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     // Aplicar filtro de texto (SKU, nombre, pedido, contacto)
     const q = this.textoBusqueda.trim().toLowerCase();
     if (q) {
-      this.facturasFiltradas = base.filter(f =>
+      base = base.filter(f =>
         String(f.referencia_interna ?? '').toLowerCase().includes(q) ||
         String(f.nombre_producto ?? '').toLowerCase().includes(q) ||
         String(f.numero_factura ?? '').toLowerCase().includes(q) ||
         String(f.contacto_nombre ?? '').toLowerCase().includes(q)
       );
-    } else {
-      this.facturasFiltradas = base;
     }
+
+    // Aplicar filtro de marca
+    if (this.filtroMarca) {
+      base = base.filter(f => (f.marca ?? '').trim() === this.filtroMarca);
+    }
+
+    // Filtros de columna estilo Excel
+    for (const [col, values] of Object.entries(this.columnFilters)) {
+      if (values.length > 0) {
+        base = base.filter(f => values.includes(String(f[col as keyof Factura] ?? '').trim()));
+      }
+    }
+
+    // Ordenamiento por columna
+    if (this.colSort) {
+      const { col, dir } = this.colSort;
+      base = [...base].sort((a, b) => {
+        const va = String((a as any)[col] ?? '').toLowerCase();
+        const vb = String((b as any)[col] ?? '').toLowerCase();
+        return dir === 'asc' ? va.localeCompare(vb, 'es') : vb.localeCompare(va, 'es');
+      });
+    }
+
+    this.facturasFiltradas = base;
 
     this.totalPaginas = Math.ceil(this.facturasFiltradas.length / this.elementosPorPagina);
     // Si no hay resultados, limpiar explícitamente facturasPaginadas.
@@ -486,6 +539,9 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
   seleccionarTab(tab: string) {
     this.tabActiva = tab;
     this.indiceTabActiva = this.tabsDisponibles.indexOf(tab);
+    this.columnFilters = {};
+    this.openFilterCol = null;
+    this.colSort = null;
     this.filtrarFacturas();
   }
 
@@ -513,10 +569,122 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     return this.facturas.filter(f => f.estado_factura === tab).length;
   }
 
+  /**
+   * Devuelve un tooltip descriptivo para cada pestaña de estatus.
+   * @param tab Nombre de la pestaña
+   */
+  getTabTooltip(tab: string): string {
+    const tooltips: Record<string, string> = {
+      'Todas':                  'Ver todas las órdenes',
+      'Entregado':              'Órdenes completamente entregadas',
+      'Almacén EB':             'Productos disponibles en almacén Elite Bike',
+      'En tránsito':            'Productos en camino desde el proveedor',
+      'Falta de confirmación':  'Órdenes pendientes de confirmar entrega',
+      'Cancelado':              'Órdenes canceladas',
+    };
+    return tooltips[tab] ?? tab;
+  }
+
   /** Limpia el texto del buscador y recalcula el filtro. */
   limpiarBusqueda() {
     this.textoBusqueda = '';
     this.filtrarFacturas();
+  }
+
+  /** Limpia el filtro de marca. */
+  limpiarFiltroMarca() {
+    this.filtroMarca = '';
+    this.filtrarFacturas();
+  }
+
+  /** Formatea una fecha ISO en formato corto: "15 mar 2026". Usado para mostrar fecha_esperada. */
+  formatearFechaCorta(fecha: string | null | undefined): string {
+    if (!fecha) return '';
+    try {
+      // Normalizar a YYYY-MM-DD para evitar interpretación UTC medianoche
+      // que en zonas UTC-N adelanta el día al anterior (ej. 21 mar → 20 mar)
+      const soloFecha = fecha.slice(0, 10); // "2026-03-21"
+      const d = new Date(`${soloFecha}T12:00:00`); // mediodía local = sin riesgo de salto
+      if (isNaN(d.getTime())) return fecha;
+      return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch { return fecha || ''; }
+  }
+
+  // ── Filtros de columna estilo Excel ───────────────────────────────────────────
+
+  /** Devuelve los valores únicos de una columna dentro de la pestaña activa. */
+  getColumnValues(col: string, search = ''): string[] {
+    const base = this.tabActiva !== 'Todas'
+      ? this.facturas.filter(f => f.estado_factura === this.tabActiva)
+      : this.facturas;
+    const set = new Set<string>();
+    for (const f of base) {
+      const v = String((f as any)[col] ?? '').trim();
+      if (v) set.add(v);
+    }
+    const all = Array.from(set).sort();
+    const q = search.trim().toLowerCase();
+    return q ? all.filter(v => v.toLowerCase().includes(q)) : all;
+  }
+
+  /** Abre o cierra el popover de filtro, calculando su posición fixed desde el botón. */
+  toggleFilterPopover(col: string | null, event?: MouseEvent) {
+    if (col === null || this.openFilterCol === col) {
+      this.openFilterCol = null;
+      this.filterPopoverSearch = '';
+      return;
+    }
+    if (event) {
+      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+      this.filterPopoverPosition = { top: rect.bottom + 4, left: rect.left };
+    }
+    this.openFilterCol = col;
+    this.filterPopoverSearch = '';
+  }
+
+  /** Activa o desactiva un valor en el filtro de columna. */
+  toggleColFilter(col: string, value: string) {
+    const current = this.columnFilters[col] ?? [];
+    const idx = current.indexOf(value);
+    if (idx >= 0) {
+      const updated = current.filter((_, i) => i !== idx);
+      if (updated.length === 0) { delete this.columnFilters[col]; }
+      else { this.columnFilters[col] = updated; }
+    } else {
+      this.columnFilters[col] = [...current, value];
+    }
+    this.filtrarFacturas();
+  }
+
+  /** Retorna true si hay algún filtro activo en la columna. */
+  isColFilterActive(col: string): boolean {
+    return (this.columnFilters[col]?.length ?? 0) > 0;
+  }
+
+  /** Retorna true si el valor está seleccionado en el filtro de la columna. */
+  isColValueSelected(col: string, value: string): boolean {
+    return this.columnFilters[col]?.includes(value) ?? false;
+  }
+  /** Establece el ordenamiento activo y recalcula. */
+  setColSort(col: string, dir: 'asc' | 'desc') {
+    this.colSort = { col, dir };
+    this.filtrarFacturas();
+  }
+  /** Limpia el filtro de la columna y cierra el popover. */
+  clearColFilter(col: string) {
+    delete this.columnFilters[col];
+    this.openFilterCol = null;
+    this.filterPopoverSearch = '';
+    this.filtrarFacturas();
+  }
+
+  /** Cierra el popover al hacer clic fuera de él. */
+  @HostListener('document:click')
+  onDocumentClick() {
+    if (this.openFilterCol !== null) {
+      this.openFilterCol = null;
+      this.filterPopoverSearch = '';
+    }
   }
 
   /**

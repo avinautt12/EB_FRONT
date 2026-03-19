@@ -607,6 +607,219 @@
   white-space: nowrap;
 }
 
+.filtro-marca-wrapper {
+  max-width: 220px;
+}
+
+.filtro-marca-select {
+  padding-left: 32px;
+  padding-right: 36px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* ==============================
+   FILTROS DE COLUMNA ESTILO EXCEL
+   ============================== */
+
+.th-filtrable {
+  white-space: nowrap;
+}
+
+.th-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.col-filter-btn {
+  background: none;
+  border: none;
+  color: #6b6560;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 0.68rem;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+
+.col-filter-btn:hover {
+  color: #EB5E28;
+  background: rgba(235, 94, 40, 0.12);
+}
+
+.col-filter-active {
+  color: #EB5E28 !important;
+  background: rgba(235, 94, 40, 0.12) !important;
+}
+
+/* Popover (posición fixed, fuera del overflow) */
+.col-filter-popover {
+  position: fixed;
+  z-index: 9999;
+  background: #1a1916;
+  border: 1px solid #403D39;
+  border-radius: 8px;
+  min-width: 200px;
+  max-width: 280px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  padding: 10px;
+}
+
+.col-filter-search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  background: #252320;
+  border: 1px solid #403D39;
+  border-radius: 6px;
+  color: #CCC5B9;
+  font-size: 0.82rem;
+  outline: none;
+  margin-bottom: 7px;
+}
+
+.col-filter-search:focus {
+  border-color: #EB5E28;
+}
+
+.col-filter-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+}
+
+.col-filter-list::-webkit-scrollbar { width: 4px; }
+.col-filter-list::-webkit-scrollbar-track { background: #1a1916; }
+.col-filter-list::-webkit-scrollbar-thumb { background: #4a4744; border-radius: 2px; }
+
+.col-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: #CCC5B9;
+  user-select: none;
+}
+
+.col-filter-item:hover {
+  background: rgba(235, 94, 40, 0.08);
+}
+
+.col-filter-item input[type="checkbox"] {
+  accent-color: #EB5E28;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.col-filter-empty {
+  color: #6b6560;
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 10px;
+}
+
+.col-filter-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  border-top: 1px solid #403D39;
+  padding-top: 8px;
+}
+
+.col-filter-clear {
+  background: none;
+  border: 1px solid #403D39;
+  color: #8a8077;
+  padding: 4px 12px;
+  border-radius: 5px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.col-filter-clear:hover {
+  border-color: #EB5E28;
+  color: #EB5E28;
+}
+
+.col-filter-ok {
+  background: #EB5E28;
+  border: none;
+  color: #fff;
+  padding: 4px 14px;
+  border-radius: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.col-filter-ok:hover {
+  background: #d45322;
+}
+
+/* Botones de ordenamiento en el popover */
+.col-sort-row {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.col-sort-btn {
+  flex: 1;
+  background: #252320;
+  border: 1px solid #403D39;
+  color: #CCC5B9;
+  padding: 5px 6px;
+  border-radius: 5px;
+  font-size: 0.76rem;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.col-sort-btn:hover {
+  border-color: #EB5E28;
+  color: #EB5E28;
+}
+
+.col-sort-active {
+  background: rgba(235, 94, 40, 0.15) !important;
+  border-color: #EB5E28 !important;
+  color: #EB5E28 !important;
+}
+
+.col-filter-divider {
+  height: 1px;
+  background: #403D39;
+  margin-bottom: 8px;
+}
+
+/* Indicador de columna ordenada (▲/▼) en el encabezado */
+.col-sort-badge {
+  font-size: 0.62rem;
+  color: #EB5E28;
+  flex-shrink: 0;
+}
+
+/* Fecha esperada de entrega (badge bajo el estado "En tránsito") */
+.fecha-esperada-badge {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: #6ec6ff;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
 /* ── Barra de totales ─────────────────────────────────────────────────────── */
 .resumen-totales {
   display: flex;

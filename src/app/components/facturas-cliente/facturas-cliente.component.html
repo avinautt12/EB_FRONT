@@ -19,6 +19,7 @@
                     *ngFor="let tab of tabsDisponibles"
                     class="tab-btn"
                     [class.tab-activa]="tabActiva === tab"
+                    [title]="getTabTooltip(tab)"
                     (click)="seleccionarTab(tab)">
                     {{ tab }}
                     <span class="tab-count">({{ contarTab(tab) }})</span>
@@ -39,7 +40,19 @@
                     />
                     <button *ngIf="textoBusqueda" class="buscador-limpiar" (click)="limpiarBusqueda()" title="Limpiar búsqueda">×</button>
                 </div>
-                <span *ngIf="textoBusqueda" class="buscador-resultado">
+                <!-- Filtro por marca -->
+                <div class="buscador-wrapper filtro-marca-wrapper" *ngIf="marcasDisponibles.length > 1">
+                    <i class="fas fa-tag buscador-icono"></i>
+                    <select
+                        class="buscador-input filtro-marca-select"
+                        [(ngModel)]="filtroMarca"
+                        (change)="filtrarFacturas()">
+                        <option value="">Todas las marcas</option>
+                        <option *ngFor="let m of marcasDisponibles" [value]="m">{{ m }}</option>
+                    </select>
+                    <button *ngIf="filtroMarca" class="buscador-limpiar" (click)="limpiarFiltroMarca()" title="Quitar filtro">×</button>
+                </div>
+                <span *ngIf="textoBusqueda || filtroMarca" class="buscador-resultado">
                     {{ facturasFiltradas.length }} resultado{{ facturasFiltradas.length !== 1 ? 's' : '' }}
                 </span>
             </div>
@@ -90,14 +103,38 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Clave producto</th>
-                            <th>Producto</th>
+                            <th class="th-filtrable">
+                                <div class="th-content">Clave producto
+                                    <span *ngIf="colSort?.col === 'referencia_interna'" class="col-sort-badge">{{ colSort!.dir === 'asc' ? '▲' : '▼' }}</span>
+                                    <button class="col-filter-btn" [class.col-filter-active]="isColFilterActive('referencia_interna')"
+                                        (click)="$event.stopPropagation(); toggleFilterPopover('referencia_interna', $event)">
+                                        <i class="fas fa-filter"></i>
+                                    </button>
+                                </div>
+                            </th>
+                            <th class="th-filtrable">
+                                <div class="th-content">Producto
+                                    <span *ngIf="colSort?.col === 'nombre_producto'" class="col-sort-badge">{{ colSort!.dir === 'asc' ? '▲' : '▼' }}</span>
+                                    <button class="col-filter-btn" [class.col-filter-active]="isColFilterActive('nombre_producto')"
+                                        (click)="$event.stopPropagation(); toggleFilterPopover('nombre_producto', $event)">
+                                        <i class="fas fa-filter"></i>
+                                    </button>
+                                </div>
+                            </th>
                             <th>Fecha</th>
                             <th>Precio Unit.</th>
                             <th>Cantidad</th>
                             <th>Entregado</th>
                             <th>Total</th>
-                            <th>Estatus Actual</th>
+                            <th class="th-filtrable">
+                                <div class="th-content">Estatus Actual
+                                    <span *ngIf="colSort?.col === 'estado_factura'" class="col-sort-badge">{{ colSort!.dir === 'asc' ? '▲' : '▼' }}</span>
+                                    <button class="col-filter-btn" [class.col-filter-active]="isColFilterActive('estado_factura')"
+                                        (click)="$event.stopPropagation(); toggleFilterPopover('estado_factura', $event)">
+                                        <i class="fas fa-filter"></i>
+                                    </button>
+                                </div>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -110,7 +147,7 @@
                             <td>{{ factura.cantidad }}</td>
                             <td>{{ factura.cantidad_entregada }}</td>
                             <td>{{ formatearMoneda(factura.venta_total) }}</td>
-                            <td>{{ factura.estado_factura }}</td>
+                            <td>{{ factura.estado_factura }}<span *ngIf="factura.estado_factura === 'En tránsito' && factura.fecha_esperada" class="fecha-esperada-badge"><i class="fas fa-truck"></i> {{ formatearFechaCorta(factura.fecha_esperada) }}</span></td>
                         </tr>
                     </tbody>
                 </table>
@@ -151,3 +188,37 @@
         </div>
     </div>
 </div>
+
+<!-- Popover de filtro de columna estilo Excel (position:fixed evita clipping del overflow del contenedor) -->
+<ng-container *ngIf="openFilterCol as col">
+    <div class="col-filter-popover"
+        [ngStyle]="{ top: filterPopoverPosition.top + 'px', left: filterPopoverPosition.left + 'px' }"
+        (click)="$event.stopPropagation()">
+        <div class="col-sort-row">
+            <button class="col-sort-btn" [class.col-sort-active]="colSort?.col === col && colSort?.dir === 'asc'"
+                (click)="setColSort(col, 'asc')">
+                <i class="fas fa-sort-alpha-down"></i> A → Z
+            </button>
+            <button class="col-sort-btn" [class.col-sort-active]="colSort?.col === col && colSort?.dir === 'desc'"
+                (click)="setColSort(col, 'desc')">
+                <i class="fas fa-sort-alpha-up-alt"></i> Z → A
+            </button>
+        </div>
+        <div class="col-filter-divider"></div>
+        <input class="col-filter-search" type="text" placeholder="Buscar valor..."
+            [(ngModel)]="filterPopoverSearch"
+            (click)="$event.stopPropagation()" />
+        <div class="col-filter-list">
+            <label class="col-filter-item" *ngFor="let v of getColumnValues(col, filterPopoverSearch)">
+                <input type="checkbox" [checked]="isColValueSelected(col, v)"
+                    (change)="toggleColFilter(col, v)" (click)="$event.stopPropagation()" />
+                <span>{{ v }}</span>
+            </label>
+            <div *ngIf="getColumnValues(col, filterPopoverSearch).length === 0" class="col-filter-empty">Sin resultados</div>
+        </div>
+        <div class="col-filter-footer">
+            <button class="col-filter-clear" (click)="clearColFilter(col)">Limpiar</button>
+            <button class="col-filter-ok" (click)="toggleFilterPopover(null)">OK</button>
+        </div>
+    </div>
+</ng-container>
