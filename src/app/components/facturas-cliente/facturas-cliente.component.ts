@@ -486,13 +486,18 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     }
 
     // Aplicar filtro de texto (SKU, nombre, pedido, contacto)
-    const q = this.textoBusqueda.trim().toLowerCase();
+    // normalize('NFD') + replace descompone los caracteres acentuados en letra + diacrítico
+    // y luego elimina el diacrítico, haciendo la búsqueda insensible a acentos:
+    // "garcía" === "garcia", "pérez" === "perez", etc.
+    const sinAcentos = (s: string) =>
+      s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const q = sinAcentos(this.textoBusqueda.trim().toLowerCase());
     if (q) {
       base = base.filter(f =>
-        String(f.referencia_interna ?? '').toLowerCase().includes(q) ||
-        String(f.nombre_producto ?? '').toLowerCase().includes(q) ||
-        String(f.numero_factura ?? '').toLowerCase().includes(q) ||
-        String(f.contacto_nombre ?? '').toLowerCase().includes(q)
+        sinAcentos(String(f.referencia_interna ?? '').toLowerCase()).includes(q) ||
+        sinAcentos(String(f.nombre_producto ?? '').toLowerCase()).includes(q) ||
+        sinAcentos(String(f.numero_factura ?? '').toLowerCase()).includes(q) ||
+        sinAcentos(String(f.contacto_nombre ?? '').toLowerCase()).includes(q)
       );
     }
 

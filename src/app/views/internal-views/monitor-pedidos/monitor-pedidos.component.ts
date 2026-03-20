@@ -43,14 +43,16 @@ export class MonitorPedidosComponent implements OnInit {
 
   // ── Búsqueda / filtro ─────────────────────────────────────────────────────
   textoBusqueda = '';
+  private sinAcentos = (s: string) =>
+    s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   get usuariosFiltrados(): UsuarioMonitor[] {
-    const q = this.textoBusqueda.trim().toLowerCase();
+    const q = this.sinAcentos(this.textoBusqueda.trim().toLowerCase());
     if (!q) return this.usuarios;
     return this.usuarios.filter(u =>
-      u.nombre.toLowerCase().includes(q) ||
-      u.usuario.toLowerCase().includes(q) ||
-      (u.clave ?? '').toLowerCase().includes(q) ||
-      (u.nombre_grupo ?? '').toLowerCase().includes(q)
+      this.sinAcentos(u.nombre.toLowerCase()).includes(q) ||
+      this.sinAcentos(u.usuario.toLowerCase()).includes(q) ||
+      this.sinAcentos((u.clave ?? '').toLowerCase()).includes(q) ||
+      this.sinAcentos((u.nombre_grupo ?? '').toLowerCase()).includes(q)
     );
   }
 
