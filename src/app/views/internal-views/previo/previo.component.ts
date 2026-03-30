@@ -1364,7 +1364,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
 
         const fechaFactura = new Date(factura.fecha_factura);
         const enRangoFechas = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
-        const esProductoValido = factura.apparel === 'SI';
+        const esProductoValido = factura.apparel?.toUpperCase() === 'SI' && factura.marca?.toUpperCase() === 'SCOTT';
 
         // Para BROTHERS BIKE: priorizar coincidencia por nombre
         // Para NARUCO con claves LC625/LC626/LC627, solo coincidencia por clave
@@ -2498,16 +2498,22 @@ export class PrevioComponent implements OnInit, OnDestroy {
       const enRango = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
 
       let esProductoValido = false;
+      const marca = factura.marca?.toUpperCase() || '';
+      const esApparelSi = factura.apparel?.toUpperCase() === 'SI';
+
       if (esApp) {
-        esProductoValido = factura.marca === 'SYNCROS' || factura.marca === 'VITTORIA' || factura.apparel === 'SI';
+        // Es válido si es Syncros, Vittoria, O (si es Scott y su columna apparel dice "SI")
+        esProductoValido = marca === 'SYNCROS' ||
+          marca === 'VITTORIA' ||
+          (marca === 'SCOTT' && esApparelSi);
       } else {
-        const marca = factura.marca?.toUpperCase() || '';
+        // --- AQUÍ SE MANTIENE LA MAGIA PARA SCOTT Y MEGAMO (Bicicletas) ---
         const esMarcaValida = marca === 'SCOTT' || marca === 'MEGAMO';
-        
+
         const subcategoria = factura.subcategoria?.toUpperCase() || '';
         const esBicicleta = subcategoria === 'BICICLETA';
 
-        const esApparelNo = factura.apparel === 'NO';
+        const esApparelNo = factura.apparel?.toUpperCase() === 'NO';
 
         esProductoValido = esMarcaValida && esBicicleta && esApparelNo;
       }
