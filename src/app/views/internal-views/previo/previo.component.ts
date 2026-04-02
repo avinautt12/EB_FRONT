@@ -855,14 +855,12 @@ export class PrevioComponent implements OnInit, OnDestroy {
       const sumaMarAbr = clientesGrupo.reduce((sum, c) => sum + (c.avance_mar_abr || 0), 0);
       const sumaMayJun = clientesGrupo.reduce((sum, c) => sum + (c.avance_may_jun || 0), 0);
 
-
       const sumaJulAgoApp = clientesGrupo.reduce((sum, c) => sum + (c.avance_jul_ago_app || 0), 0);
       const sumaSepOctApp = clientesGrupo.reduce((sum, c) => sum + (c.avance_sep_oct_app || 0), 0);
       const sumaNovDicApp = clientesGrupo.reduce((sum, c) => sum + (c.avance_nov_dic_app || 0), 0);
       const sumaEneFebApp = clientesGrupo.reduce((sum, c) => sum + (c.avance_ene_feb_app || 0), 0);
       const sumaMarAbrApp = clientesGrupo.reduce((sum, c) => sum + (c.avance_mar_abr_app || 0), 0);
       const sumaMayJunApp = clientesGrupo.reduce((sum, c) => sum + (c.avance_may_jun_app || 0), 0);
-
 
       const acumuladoSyncros = clientesGrupo.reduce((sum, c) => sum + (c.acumulado_syncros || 0), 0);
       const acumuladoApparel = clientesGrupo.reduce((sum, c) => sum + (c.acumulado_apparel || 0), 0);

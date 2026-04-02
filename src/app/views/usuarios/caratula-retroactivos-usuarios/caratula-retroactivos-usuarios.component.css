@@ -186,9 +186,92 @@
     line-height: 1.5;
 }
 
+/* ================= RESPONSIVIDAD PARA CELULARES ================= */
 @media (max-width: 768px) {
-    .caratula-wrapper { padding: 30px 20px; }
-    .row-calc { flex-direction: column; }
-    .row-calc .calc-label, .row-calc .calc-value { width: 100%; justify-content: center; text-align: center; padding: 15px; }
-    .row-calc .calc-value { border-left: none; border-top: 1px solid #dcdcdc; }
+    /* 1. Reducir márgenes del fondo para aprovechar pantalla */
+    .monitor-container { 
+        padding: 10px; 
+    }
+    
+    /* 2. Reducir padding de la "hoja blanca" */
+    .caratula-wrapper { 
+        padding: 25px 15px; 
+    }
+
+    /* 3. Centrar el botón de volver */
+    .action-bar { 
+        justify-content: center; 
+        margin-bottom: 15px; 
+    }
+
+    /* 4. Apilar el logo y los títulos */
+    .caratula-header { 
+        flex-direction: column; 
+        text-align: center; 
+        padding-bottom: 15px;
+    }
+    .logo-img { 
+        margin-right: 0; 
+        margin-bottom: 15px; 
+        height: 50px; 
+    }
+    .header-text h1 { 
+        font-size: 1.5rem; 
+    }
+    .header-text .subtitle { 
+        font-size: 0.85rem; 
+        line-height: 1.4; 
+        margin-top: 8px;
+    }
+
+    /* 5. Magia para las tablas: Scroll horizontal nativo */
+    .table-moderna { 
+        display: block; 
+        width: 100%; 
+        overflow-x: auto; 
+        -webkit-overflow-scrolling: touch; 
+        white-space: nowrap; /* Evita que el texto colapse hacia abajo */
+        font-size: 0.9rem;
+    }
+    .table-moderna th, .table-moderna td { 
+        padding: 10px; 
+    }
+
+    /* 6. Escalera de cálculos: Apilados y centrados */
+    .row-calc { 
+        flex-direction: column; 
+    }
+    .row-calc .calc-label { 
+        width: 100%; 
+        justify-content: center; 
+        align-items: center; 
+        text-align: center; 
+        padding: 15px 10px; 
+    }
+    .row-calc .calc-value { 
+        width: 100%; 
+        border-left: none; 
+        /* Usar currentColor con opacidad para que el borde se adapte si el fondo es oscuro o claro */
+        border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+        padding: 15px; 
+    }
+
+    /* 7. Corregir alineaciones y paddings laterales para pantallas chicas */
+    .text-right, 
+    .text-left { 
+        text-align: center !important; 
+    }
+    .ps-4, 
+    .pe-4 { 
+        padding-left: 10px !important; 
+        padding-right: 10px !important; 
+    }
+    .formula-text-dark { 
+        text-align: center !important; 
+        margin-top: 8px; 
+    }
+    
+    /* Ajustes de tamaño de fuente para celular */
+    .fs-xl { font-size: 1.25rem !important; }
+    .fs-large { font-size: 1.1rem !important; }
 }

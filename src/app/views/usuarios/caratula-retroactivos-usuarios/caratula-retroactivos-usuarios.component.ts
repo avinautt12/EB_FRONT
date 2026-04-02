@@ -55,29 +55,51 @@ export class CaratulaRetroactivosUsuarioComponent implements OnInit {
     this.isLoading = true;
     this.error = null;
 
-    // ====================================================================
-    // AQUÍ TOMAS LA CLAVE DEL TOKEN O SESIÓN.
-    // Reemplaza esto con tu servicio de Autenticación o LocalStorage.
-    // Ejemplo: const claveUsuario = this.authService.getUsuario().clave;
-    // ====================================================================
-    const claveUsuario = localStorage.getItem('clave_usuario') || 'EA219'; 
-
-    if (!claveUsuario) {
-      this.error = 'No se pudo identificar al usuario actual.';
-      this.isLoading = false;
-      return;
-    }
-
-    this.retroactivosService.getRetroactivoCliente(claveUsuario).subscribe({
-      next: (data) => {
-        this.datosCliente = data;
+    try {
+      // 1. Obtenemos el token del localStorage (igual que en tu otro componente)
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        this.error = 'No se encontró sesión activa. Por favor inicie sesión nuevamente.';
         this.isLoading = false;
-      },
-      error: (err) => {
-        this.error = 'No se encontró información de retroactivos para tu cuenta en este momento.';
-        this.isLoading = false;
-        console.error(err);
+        return;
       }
-    });
+
+      // 2. Decodificamos el payload del token
+      const payload = token.split('.')[1];
+      const decodedPayload = atob(payload);
+      const tokenData = JSON.parse(decodedPayload);
+
+      // 3. Determinamos la clave a buscar (Soporta clientes normales e Integrales)
+      let claveParaBuscar = tokenData.clave;
+      
+      if (tokenData.id_grupo) {
+        claveParaBuscar = `Integral ${tokenData.id_grupo}`;
+      }
+
+      if (!claveParaBuscar) {
+        this.error = 'No se pudo identificar la clave del usuario en el token.';
+        this.isLoading = false;
+        return;
+      }
+
+      // 4. Hacemos la petición al backend con la clave correcta
+      this.retroactivosService.getRetroactivoCliente(claveParaBuscar).subscribe({
+        next: (data) => {
+          this.datosCliente = data;
+          this.isLoading = false;
+        },
+        error: (err) => {
+          this.error = 'No se encontró información de retroactivos para tu cuenta en este momento.';
+          this.isLoading = false;
+          console.error(err);
+        }
+      });
+
+    } catch (error) {
+      console.error('Error al decodificar el token:', error);
+      this.error = 'Error al obtener la información de tu usuario.';
+      this.isLoading = false;
+    }
   }
 }
