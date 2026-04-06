@@ -900,19 +900,20 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     const sinBusqueda = this.textoBusqueda === '';
 
     // Pestaña Entregado: muestra el valor exacto de la carátula (acumulado_anticipado)
-    if (this.tabActiva === 'Entregado' && this.avancePrevio != null && sinBusqueda) {
+    // Solo si avancePrevio > 0; si es 0 la carátula no tiene datos y calculamos de las líneas
+    if (this.tabActiva === 'Entregado' && this.avancePrevio != null && this.avancePrevio > 0 && sinBusqueda) {
       return this.avancePrevio;
     }
 
     // Pestaña Todas: solo suma los mismos estados de las pestañas individuales visibles
-    // Cancelado no entra. Entregado usa avancePrevio si está disponible.
+    // Cancelado no entra. Entregado usa avancePrevio si está disponible y es > 0.
     if (this.tabActiva === 'Todas') {
       const ESTADOS_CONTABLES = new Set(['Almacén EB', 'En tránsito', 'Falta de confirmación']);
       const sumaResto = this.facturas
         .filter(f => ESTADOS_CONTABLES.has(f.estado_factura))
         .reduce((acc, f) => acc + (f.venta_total || 0), 0);
 
-      if (this.avancePrevio != null && sinBusqueda) {
+      if (this.avancePrevio != null && this.avancePrevio > 0 && sinBusqueda) {
         return sumaResto + this.avancePrevio;
       }
       // Sin avancePrevio: suma Entregado con total_entregado
