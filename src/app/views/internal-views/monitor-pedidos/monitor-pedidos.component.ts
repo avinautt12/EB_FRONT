@@ -7,9 +7,10 @@ import { FacturasClienteComponent } from '../../../components/facturas-cliente/f
 import { UsuariosService } from '../../../services/usuarios.service';
 
 interface UsuarioMonitor {
-  id: number;
+  id: number | null;
+  id_cliente: number | null;
   nombre: string;
-  usuario: string;
+  usuario: string | null;
   rol: string;
   activo: boolean;
   clave: string | null;
@@ -50,7 +51,7 @@ export class MonitorPedidosComponent implements OnInit {
     if (!q) return this.usuarios;
     return this.usuarios.filter(u =>
       this.sinAcentos(u.nombre.toLowerCase()).includes(q) ||
-      this.sinAcentos(u.usuario.toLowerCase()).includes(q) ||
+      this.sinAcentos((u.usuario ?? '').toLowerCase()).includes(q) ||
       this.sinAcentos((u.clave ?? '').toLowerCase()).includes(q) ||
       this.sinAcentos((u.nombre_grupo ?? '').toLowerCase()).includes(q)
     );

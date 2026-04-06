@@ -55,7 +55,7 @@ export class UsuariosService {
   /** Devuelve todos los usuarios enriquecidos con clave, id_grupo y nombre_grupo
    *  para el Monitor de Pedidos (solo admins). */
   getUsuariosParaMonitor(): Observable<{
-    id: number; nombre: string; usuario: string; rol: string;
+    id: number | null; id_cliente: number | null; nombre: string; usuario: string | null; rol: string;
     activo: boolean; clave: string | null; id_grupo: number | null; nombre_grupo: string | null;
   }[]> {
     return this.http.get<any[]>(`${this.apiUrl}/usuarios/para-monitor`);
