@@ -163,6 +163,32 @@
   cursor: pointer;
   padding: 0 3px;
   line-height: 1;
+}
+
+/* ── Toggle ocultar admins ───────────────────────────────────────────────── */
+.mp-filtros-extra {
+  display: flex;
+  justify-content: center;
+  margin: 0.4rem auto 0.6rem;
+}
+
+.mp-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #8a8077;
+  font-size: 0.82rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.mp-toggle-label input[type="checkbox"] {
+  accent-color: #EB5E28;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+.mp-buscador-limpiar {
   transition: color 0.2s;
 }
 .mp-buscador-limpiar:hover { color: #EB5E28; }

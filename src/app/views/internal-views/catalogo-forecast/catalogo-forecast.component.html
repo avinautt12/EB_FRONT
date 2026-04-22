@@ -1,0 +1,196 @@
+<div class="cf-container">
+
+  <!-- ── Header ── -->
+  <div class="cf-header">
+    <a routerLink="/proyeccion" class="cf-back-btn">
+      <i class="fas fa-arrow-left"></i> Volver
+    </a>
+    <div class="cf-title-row">
+      <div class="cf-icon-wrap"><i class="fas fa-file-excel"></i></div>
+      <div>
+        <h1>Catálogo de Productos — Forecast</h1>
+        <p class="cf-subtitle">
+          Carga el Excel con los productos disponibles para la proyección de compra.
+          Este catálogo se usa para validar SKUs al agregar productos manualmente o mediante plantilla.
+        </p>
+      </div>
+    </div>
+
+    <!-- Contador estado -->
+    <div class="cf-stat-bar">
+      <div class="cf-stat">
+        <i class="fas fa-box-open"></i>
+        <span>
+          <span *ngIf="cargandoEstado" class="cf-loading-dot">…</span>
+          <strong *ngIf="!cargandoEstado">{{ totalCargados | number }}</strong>
+          productos cargados
+        </span>
+      </div>
+      <button
+        *ngIf="totalCargados > 0"
+        class="cf-btn-danger-outline"
+        (click)="confirmarLimpiar()"
+        [disabled]="limpiando">
+        <i class="fas fa-trash-alt"></i> Limpiar catálogo
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Upload card ── -->
+  <div class="cf-card">
+    <h2 class="cf-card-title"><i class="fas fa-upload"></i> Subir archivo Excel</h2>
+    <p class="cf-card-hint">
+      El archivo debe tener una fila de encabezado con las columnas:
+      <code>SKU</code>, <code>NOMBRE</code>, <code>COLOR</code> (opcional), <code>TALLA</code> (opcional).
+    </p>
+
+    <!-- Zona de arrastre -->
+    <div
+      class="cf-dropzone"
+      [class.cf-dropzone-drag]="arrastrando"
+      [class.cf-dropzone-ready]="archivoSeleccionado"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave()"
+      (drop)="onDrop($event)"
+      (click)="fileInput.click()">
+
+      <input #fileInput type="file" accept=".xlsx,.xls" class="cf-file-hidden" (change)="onFileInput($event)" />
+
+      <ng-container *ngIf="!archivoSeleccionado">
+        <i class="fas fa-cloud-upload-alt cf-drop-icon"></i>
+        <p class="cf-drop-text">Arrastra tu Excel aquí o <span class="cf-drop-link">haz clic para seleccionar</span></p>
+        <p class="cf-drop-hint">Formatos aceptados: .xlsx, .xls</p>
+      </ng-container>
+
+      <ng-container *ngIf="archivoSeleccionado">
+        <i class="fas fa-file-excel cf-drop-icon cf-icon-ready"></i>
+        <p class="cf-drop-text">{{ archivoSeleccionado.name }}</p>
+        <p class="cf-drop-hint">{{ (archivoSeleccionado.size / 1024).toFixed(1) }} KB</p>
+      </ng-container>
+    </div>
+
+    <!-- Acciones -->
+    <div class="cf-upload-actions" *ngIf="archivoSeleccionado || resultadoCarga">
+      <button
+        *ngIf="archivoSeleccionado"
+        class="cf-btn-primary"
+        (click)="subirArchivo()"
+        [disabled]="subiendo">
+        <i class="fas" [class.fa-upload]="!subiendo" [class.fa-spinner]="subiendo" [class.fa-spin]="subiendo"></i>
+        {{ subiendo ? 'Subiendo…' : 'Cargar al catálogo' }}
+      </button>
+      <button
+        *ngIf="archivoSeleccionado && !subiendo"
+        class="cf-btn-ghost"
+        (click)="limpiarSeleccion()">
+        Cancelar
+      </button>
+    </div>
+
+    <!-- Resultado exitoso -->
+    <div *ngIf="resultadoCarga" class="cf-result cf-result-ok">
+      <i class="fas fa-check-circle"></i>
+      <div>
+        <strong>{{ resultadoCarga.cargados }} productos cargados correctamente</strong>
+        <span *ngIf="resultadoCarga.duplicados_actualizados > 0">
+          · {{ resultadoCarga.duplicados_actualizados }} actualizados
+        </span>
+        <ul *ngIf="resultadoCarga.advertencias?.length" class="cf-warn-list">
+          <li *ngFor="let w of resultadoCarga.advertencias">{{ w }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="errorCarga" class="cf-result cf-result-error">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span>{{ errorCarga }}</span>
+    </div>
+  </div>
+
+  <!-- ── Tabla de productos ── -->
+  <div class="cf-card" *ngIf="totalCargados > 0 || cargandoProductos">
+    <div class="cf-table-header">
+      <h2 class="cf-card-title"><i class="fas fa-list"></i> Productos en catálogo</h2>
+      <div class="cf-search-wrap">
+        <i class="fas fa-search cf-search-icon"></i>
+        <input
+          type="text"
+          class="cf-search-input"
+          [(ngModel)]="busqueda"
+          (input)="onBusqueda()"
+          placeholder="Buscar por SKU o nombre…"
+          autocomplete="off" />
+      </div>
+    </div>
+
+    <!-- Spinner -->
+    <div *ngIf="cargandoProductos" class="cf-spinner-wrap">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Tabla -->
+    <div *ngIf="!cargandoProductos" class="cf-tabla-wrap">
+      <table class="cf-tabla" *ngIf="productos.length > 0; else sinProductos">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Nombre</th>
+            <th>Color</th>
+            <th>Talla</th>
+            <th>Cargado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of productos">
+            <td class="cf-td-sku">{{ p.sku }}</td>
+            <td>{{ p.nombre }}</td>
+            <td>{{ p.color || '—' }}</td>
+            <td>{{ p.talla || '—' }}</td>
+            <td class="cf-td-fecha">{{ formatearFecha(p.cargado_en) }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ng-template #sinProductos>
+        <p class="cf-sin-datos">
+          {{ busqueda ? 'Sin resultados para "' + busqueda + '"' : 'No hay productos cargados.' }}
+        </p>
+      </ng-template>
+    </div>
+
+    <!-- Paginación -->
+    <div class="cf-paginador" *ngIf="!cargandoProductos && totalProductos > elementosPorPagina">
+      <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1">
+        <i class="fas fa-angle-double-left"></i>
+      </button>
+      <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">
+        <i class="fas fa-angle-left"></i>
+      </button>
+      <span>Página <strong>{{ paginaActual }}</strong> de <strong>{{ totalPaginas }}</strong></span>
+      <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">
+        <i class="fas fa-angle-right"></i>
+      </button>
+      <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">
+        <i class="fas fa-angle-double-right"></i>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Modal confirmar limpiar ── -->
+<div class="cf-overlay" *ngIf="mostrarConfirmLimpiar" (click)="cancelarLimpiar()">
+  <div class="cf-modal" (click)="$event.stopPropagation()">
+    <div class="cf-modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
+    <h3>¿Limpiar catálogo completo?</h3>
+    <p>Se eliminarán <strong>{{ totalCargados | number }}</strong> productos. Esta acción no se puede deshacer.</p>
+    <div class="cf-modal-actions">
+      <button class="cf-btn-ghost" (click)="cancelarLimpiar()" [disabled]="limpiando">Cancelar</button>
+      <button class="cf-btn-danger" (click)="ejecutarLimpiar()" [disabled]="limpiando">
+        <i class="fas" [class.fa-trash-alt]="!limpiando" [class.fa-spinner]="limpiando" [class.fa-spin]="limpiando"></i>
+        {{ limpiando ? 'Eliminando…' : 'Sí, limpiar todo' }}
+      </button>
+    </div>
+  </div>
+</div>

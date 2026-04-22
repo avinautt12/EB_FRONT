@@ -1,0 +1,469 @@
+<div class="proy-container">
+
+  <!-- ── Header: selector de periodo + botones ── -->
+  <div class="proy-toolbar">
+
+    <div class="proy-toolbar-left">
+      <div class="proy-selector-group">
+        <label class="proy-label"><i class="fas fa-calendar-alt"></i> Periodo comercial</label>
+        <select class="proy-select" [(ngModel)]="periodoSeleccionado" (change)="onPeriodoChange()">
+          <option value="" disabled>Seleccionar periodo...</option>
+          <option *ngFor="let p of periodosDisponibles" [value]="p">{{ p }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="proy-toolbar-right" *ngIf="!modoEdicion">
+      <button class="proy-btn proy-btn-outline"
+              [disabled]="!periodoSeleccionado"
+              (click)="exportarPlantilla()"
+              title="Exportar plantilla Excel prellenada con productos autorizados">
+        <i class="fas fa-file-excel"></i> Exportar plantilla
+      </button>
+      <button class="proy-btn proy-btn-outline"
+              [disabled]="!periodoSeleccionado || importando"
+              (click)="abrirSelector()"
+              title="Importar plantilla Excel con cantidades de forecast">
+        <i class="fas fa-file-import"></i>
+        {{ importando ? 'Importando...' : 'Importar plantilla' }}
+      </button>
+      <button class="proy-btn proy-btn-primary"
+              *ngIf="rows.length > 0"
+              (click)="activarEdicion()">
+        <i class="fas fa-edit"></i> Editar
+      </button>
+    </div>
+
+    <div class="proy-toolbar-right" *ngIf="modoEdicion">
+      <span class="proy-permiso-badge proy-permiso-{{ permisoEdicion }}">
+        <i class="fas fa-shield-alt"></i>
+        {{ permisoEdicion === 'super' ? 'Super' : permisoEdicion === 'eliminar' ? 'Solo eliminar' : 'Solo meses' }}
+      </span>
+      <button class="proy-btn proy-btn-success" (click)="guardarCambios()">
+        <i class="fas fa-save"></i> Guardar cambios
+      </button>
+      <button class="proy-btn proy-btn-danger-outline" (click)="cancelarEdicion()">
+        <i class="fas fa-times"></i> Cancelar
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ── Filtros ── -->
+  <div class="proy-filtros" *ngIf="rows.length > 0">
+    <div class="proy-filtro-grupo">
+      <i class="fas fa-tag"></i>
+      <select class="proy-select-sm" [(ngModel)]="filtroMarca">
+        <option value="">Todas las marcas</option>
+        <option *ngFor="let m of marcasDisponibles" [value]="m">{{ m }}</option>
+      </select>
+    </div>
+    <div class="proy-filtro-grupo">
+      <i class="fas fa-bicycle"></i>
+      <select class="proy-select-sm" [(ngModel)]="filtroModelo">
+        <option value="">Todos los modelos</option>
+        <option *ngFor="let m of modelosDisponibles" [value]="m">{{ m }}</option>
+      </select>
+    </div>
+    <button class="proy-btn-text"
+            *ngIf="filtroMarca || filtroModelo"
+            (click)="filtroMarca=''; filtroModelo=''">
+      <i class="fas fa-filter-circle-xmark"></i> Limpiar filtros
+    </button>
+    <span class="proy-conteo">{{ rowsFiltrados.length }} producto(s)</span>
+  </div>
+
+  <!-- ── Mensajes ── -->
+  <div class="proy-msg proy-msg-exito" *ngIf="mensajeExito">
+    <i class="fas fa-check-circle"></i> {{ mensajeExito }}
+  </div>
+  <div class="proy-msg proy-msg-error" *ngIf="importError">
+    <i class="fas fa-exclamation-triangle"></i> {{ importError }}
+  </div>
+  <div class="proy-advertencias" *ngIf="importAdvertencias.length > 0">
+    <div class="proy-adv-header"><i class="fas fa-exclamation-circle"></i> Advertencias ({{ importAdvertencias.length }})</div>
+    <ul class="proy-adv-lista">
+      <li *ngFor="let a of importAdvertencias">{{ a }}</li>
+    </ul>
+  </div>
+
+  <!-- ── Spinner ── -->
+  <div *ngIf="cargando" class="proy-spinner">
+    <div class="spinner"></div>
+    <p>Procesando...</p>
+  </div>
+
+  <!-- ── Estado vacío sin datos y sin loading ── -->
+  <div *ngIf="!cargando && rows.length === 0 && !error && periodoSeleccionado" class="proy-empty">
+    <i class="fas fa-chart-line proy-empty-icon"></i>
+    <p>Aún no tienes proyecciones registradas para el periodo <strong>{{ periodoSeleccionado }}</strong>.</p>
+    <p class="proy-empty-sub">
+      Descarga la plantilla Excel con tus productos, llena las cantidades que planeas pedir
+      mes a mes y luego cárgala de vuelta aquí con <strong>Importar plantilla</strong>.
+    </p>
+    <button class="proy-btn proy-btn-primary" (click)="exportarPlantilla()">
+      <i class="fas fa-file-excel"></i> Exportar plantilla ahora
+    </button>
+  </div>
+
+  <div *ngIf="!cargando && !periodoSeleccionado" class="proy-empty">
+    <i class="fas fa-calendar-check proy-empty-icon"></i>
+    <p>Selecciona un periodo comercial para visualizar o cargar el forecast.</p>
+  </div>
+
+  <!-- ── Error / estado vacío con botón Agregar ── -->
+  <div *ngIf="error && !cargando" class="proy-error-neutral">
+    <i class="fas fa-inbox proy-error-neutral-icon"></i>
+    <p class="proy-error-neutral-titulo">Aún no hay proyecciones para este periodo</p>
+    <p class="proy-error-neutral-sub">Importa una plantilla o agrega productos manualmente para comenzar.</p>
+  </div>
+
+  <!-- ── Botón Agregar producto (siempre visible cuando hay periodo) ── -->
+  <div *ngIf="!cargando && periodoSeleccionado" class="proy-tabla-acciones proy-acciones-standalone">
+    <button class="proy-btn proy-btn-outline-sm proy-btn-add"
+            (click)="agregarProducto()">
+      <i class="fas fa-plus"></i> Agregar producto manualmente
+    </button>
+    <button *ngIf="rows.length > 0" class="proy-btn proy-btn-outline-sm" (click)="toggleMeses()">
+      <i class="fas" [class.fa-compress]="modoExpandido" [class.fa-expand]="!modoExpandido"></i>
+      {{ modoExpandido ? 'Contraer meses' : 'Expandir meses' }}
+    </button>
+  </div>
+
+  <!-- ── Tabla principal ── -->
+  <div *ngIf="!cargando && rows.length > 0" class="proy-tabla-wrap">
+
+    <div class="proy-tabla-scroll">
+      <table class="proy-tabla">
+        <thead>
+          <!-- Encabezado modo compacto -->
+          <tr *ngIf="!modoExpandido">
+            <th class="th-sku">SKU</th>
+            <th class="th-producto">Producto</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Color</th>
+            <th>Talla</th>
+            <th class="th-total">Total periodo</th>
+            <th *ngIf="modoEdicion" class="th-acciones">Acciones</th>
+          </tr>
+          <!-- Encabezado modo expandido -->
+          <tr *ngIf="modoExpandido">
+            <th class="th-sku">SKU</th>
+            <th class="th-producto">Producto</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Color</th>
+            <th>Talla</th>
+            <th *ngFor="let label of mesesLabels" class="th-mes">{{ label }}</th>
+            <th class="th-total">Total</th>
+            <th *ngIf="modoEdicion" class="th-acciones">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let row of rowsFiltrados; trackBy: trackById"
+              [class.proy-fila-nueva]="row._nuevo"
+              [class.proy-fila-eliminar]="row._eliminar"
+              [class.proy-fila-editada]="row._editado && !row._nuevo">
+
+            <!-- SKU -->
+            <td class="td-sku">
+              <span *ngIf="!modoEdicion || !row._nuevo">{{ row.sku }}</span>
+
+              <!-- New row: select product button / chip -->
+              <ng-container *ngIf="modoEdicion && row._nuevo">
+                <!-- Already selected: chip with change button -->
+                <div *ngIf="row._searchSeleccionado" class="proy-search-selected">
+                  <span class="proy-search-chip">{{ row.sku }}</span>
+                  <button class="proy-btn-text proy-search-change" (click)="limpiarBusqueda(row)" title="Cambiar producto">
+                    <i class="fas fa-times-circle"></i>
+                  </button>
+                </div>
+                <!-- Not yet selected: open modal -->
+                <button *ngIf="!row._searchSeleccionado"
+                        class="proy-btn-buscar"
+                        (click)="abrirModalBusqueda(row)">
+                  <i class="fas fa-search"></i> Seleccionar producto...
+                </button>
+              </ng-container>
+            </td>
+
+            <!-- Producto -->
+            <td class="td-producto">
+              <span *ngIf="!modoEdicion || !row._nuevo">{{ row.producto }}</span>
+              <span *ngIf="modoEdicion && row._nuevo && row._searchSeleccionado" class="proy-field-selected">{{ row.producto }}</span>
+              <span *ngIf="modoEdicion && row._nuevo && !row._searchSeleccionado" class="proy-field-hint">&mdash;</span>
+            </td>
+
+            <!-- Marca -->
+            <td>
+              <span *ngIf="!modoEdicion || !row._nuevo">{{ row.marca }}</span>
+              <span *ngIf="modoEdicion && row._nuevo">{{ row._searchSeleccionado ? row.marca : '&mdash;' }}</span>
+            </td>
+
+            <!-- Modelo -->
+            <td>
+              <span *ngIf="!modoEdicion || !row._nuevo">{{ row.modelo }}</span>
+              <span *ngIf="modoEdicion && row._nuevo">{{ row._searchSeleccionado ? row.modelo : '&mdash;' }}</span>
+            </td>
+
+            <!-- Color -->
+            <td>
+              <span *ngIf="!modoEdicion || !row._nuevo">{{ row.color }}</span>
+              <span *ngIf="modoEdicion && row._nuevo">{{ row._searchSeleccionado ? row.color : '&mdash;' }}</span>
+            </td>
+
+            <!-- Talla -->
+            <td>
+              <span *ngIf="!modoEdicion || !row._nuevo">{{ row.talla }}</span>
+              <span *ngIf="modoEdicion && row._nuevo">{{ row._searchSeleccionado ? row.talla : '&mdash;' }}</span>
+            </td>
+
+            <!-- Meses (solo en modo expandido) -->
+            <ng-container *ngIf="modoExpandido">
+              <td *ngFor="let mes of mesesKeys" class="td-qty">
+                <span *ngIf="!modoEdicion || row._eliminar || !puedeEditarMeses">{{ getMes(row, mes) | number:'1.0-0' }}</span>
+                <input *ngIf="modoEdicion && !row._eliminar && puedeEditarMeses"
+                       class="proy-input-num"
+                       type="number"
+                       min="0"
+                       step="1"
+                       [ngModel]="getMes(row, mes)"
+                       (ngModelChange)="setMes(row, mes, $event); markEdited(row)" />
+              </td>
+            </ng-container>
+
+            <!-- Total -->
+            <td class="td-total">{{ getRestante(row) | number:'1.0-0' }}</td>
+
+            <!-- Acciones (modo edición) -->
+            <td *ngIf="modoEdicion" class="td-acciones">
+              <ng-container *ngIf="puedeEliminar">
+                <button *ngIf="!row._eliminar"
+                        class="proy-btn-icon proy-btn-danger"
+                        (click)="marcarEliminar(row)"
+                        title="Eliminar este producto del forecast">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+                <button *ngIf="row._eliminar"
+                        class="proy-btn-icon proy-btn-restore"
+                        (click)="restaurar(row)"
+                        title="Restaurar">
+                  <i class="fas fa-undo"></i>
+                </button>
+              </ng-container>
+            </td>
+
+          </tr>
+        </tbody>
+
+        <!-- Totales footer -->
+        <tfoot *ngIf="rowsFiltrados.length > 0">
+          <tr class="proy-fila-totales">
+            <td colspan="6"><strong>TOTAL PERIODO</strong></td>
+            <ng-container *ngIf="modoExpandido">
+              <td *ngFor="let mes of mesesKeys" class="td-total-foot">
+                <strong>{{ totalMes(mes) | number:'1.0-0' }}</strong>
+              </td>
+            </ng-container>
+            <td class="td-total"><strong>{{ totalRestante | number:'1.0-0' }}</strong></td>
+            <td *ngIf="modoEdicion"></td>
+          </tr>        </tfoot>
+      </table>
+    </div><!-- /scroll -->
+
+  </div><!-- /tabla wrap -->
+
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     Modal buscador de productos — rediseñado
+     ════════════════════════════════════════════════════ -->
+<div class="sbm-backdrop" *ngIf="searchModal.abierto" (click)="cerrarModalBusqueda()">
+  <div class="sbm-card" (click)="$event.stopPropagation()">
+
+    <!-- ── Header ── -->
+    <div class="sbm-hdr">
+      <div class="sbm-hdr-left">
+        <div class="sbm-hdr-icon">
+          <i class="fas" [class.fa-search]="!searchModal.grupoActivo" [class.fa-box-open]="!!searchModal.grupoActivo"></i>
+        </div>
+        <div class="sbm-hdr-titles">
+          <span class="sbm-hdr-sup">{{ searchModal.grupoActivo ? searchModal.grupoActivo.marca : 'Catálogo de productos' }}</span>
+          <span class="sbm-hdr-titulo">{{ searchModal.grupoActivo ? searchModal.grupoActivo.producto : 'Buscar producto' }}</span>
+        </div>
+      </div>
+      <div class="sbm-hdr-right">
+        <button class="sbm-btn-volver" *ngIf="searchModal.grupoActivo"
+                (click)="searchModal.grupoActivo = null; searchModal.colorActivo = null; cdr.markForCheck()">
+          <i class="fas fa-arrow-left"></i> Volver
+        </button>
+        <button class="sbm-btn-cerrar" (click)="cerrarModalBusqueda()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── PASO 1: Búsqueda ── -->
+    <ng-container *ngIf="!searchModal.grupoActivo">
+
+      <!-- Barra de búsqueda -->
+      <div class="sbm-search-bar">
+        <i class="fas sbm-search-ico"
+           [class.fa-search]="!searchModal.cargando"
+           [class.fa-circle-notch]="searchModal.cargando"
+           [class.fa-spin]="searchModal.cargando"></i>
+        <input class="sbm-search-input"
+               [value]="searchModal.query"
+               (input)="buscarEnModal($any($event.target).value)"
+               placeholder="Nombre, modelo, SKU..."
+               autofocus
+               autocomplete="off" />
+        <span *ngIf="searchModal.query.length >= 2 && !searchModal.cargando && searchModal.grupos.length > 0"
+              class="sbm-search-count">
+          {{ searchModal.grupos.length }}{{ searchModal.hasMore ? '+' : '' }}
+        </span>
+      </div>
+
+      <!-- Estado inicial -->
+      <div *ngIf="searchModal.query.length < 2 && !searchModal.cargando" class="sbm-estado">
+        <div class="sbm-estado-icono"><i class="fas fa-keyboard"></i></div>
+        <p class="sbm-estado-txt">Escribe al menos 2 caracteres para comenzar la búsqueda</p>
+      </div>
+
+      <!-- Sin resultados -->
+      <div *ngIf="searchModal.query.length >= 2 && !searchModal.cargando && searchModal.grupos.length === 0"
+           class="sbm-estado">
+        <div class="sbm-estado-icono sbm-estado-empty"><i class="fas fa-search-minus"></i></div>
+        <p class="sbm-estado-txt">Sin resultados para <strong>"{{ searchModal.query }}"</strong></p>
+        <p class="sbm-estado-sub">Intenta con otro nombre, modelo o SKU</p>
+      </div>
+
+      <!-- Lista de resultados -->
+      <div class="sbm-lista">
+        <div *ngFor="let g of searchModal.grupos"
+             class="sbm-item"
+             (click)="seleccionarGrupo(g)">
+          <div class="sbm-item-body">
+            <div class="sbm-item-top">
+              <span class="sbm-item-nombre">{{ g.producto }}</span>
+              <span class="sbm-item-marca-badge">{{ g.marca }}</span>
+            </div>
+            <div class="sbm-item-bot">
+              <span *ngIf="g.modelo" class="sbm-item-modelo"><i class="fas fa-tag"></i> {{ g.modelo }}</span>
+              <div class="sbm-item-colores">
+                <span *ngFor="let c of g.colores.slice(0,5)" class="sbm-ctag">{{ c.color }}</span>
+                <span *ngIf="g.colores.length > 5" class="sbm-ctag sbm-ctag-mas">+{{ g.colores.length - 5 }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="sbm-item-arrow"><i class="fas fa-chevron-right"></i></div>
+        </div>
+      </div>
+
+      <!-- Ver más -->
+      <div class="sbm-ver-mas-wrap" *ngIf="searchModal.hasMore || (searchModal.cargando && searchModal.offset > 0)">
+        <button class="sbm-btn-ver-mas" [disabled]="searchModal.cargando" (click)="cargarMas()">
+          <i class="fas" [class.fa-chevron-down]="!searchModal.cargando"
+             [class.fa-circle-notch]="searchModal.cargando" [class.fa-spin]="searchModal.cargando"></i>
+          {{ searchModal.cargando ? 'Cargando...' : 'Ver más resultados' }}
+        </button>
+      </div>
+
+    </ng-container><!-- /paso 1 -->
+
+    <!-- ── PASO 2: Selector de variante ── -->
+    <ng-container *ngIf="searchModal.grupoActivo">
+
+      <div class="sbm-variante-wrap">
+
+        <!-- Sub-info del producto -->
+        <div class="sbm-variante-info">
+          <span class="sbm-variante-modelo"><i class="fas fa-bicycle"></i> {{ searchModal.grupoActivo.modelo || 'Sin modelo' }}</span>
+        </div>
+
+        <!-- Selector de color -->
+        <div class="sbm-variante-sec">
+          <div class="sbm-variante-lbl-row">
+            <span class="sbm-variante-lbl"><i class="fas fa-palette"></i> Color</span>
+            <span class="sbm-variante-hint-inline" *ngIf="!searchModal.colorActivo">Selecciona un color</span>
+          </div>
+          <div class="sbm-chips-grid">
+            <button *ngFor="let vc of searchModal.grupoActivo.colores"
+                    class="sbm-chip"
+                    [class.sbm-chip-activo]="searchModal.colorActivo === vc.color"
+                    (click)="seleccionarColor(vc.color)">
+              <span class="sbm-chip-dot"></span>
+              {{ vc.color }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Selector de talla -->
+        <div *ngIf="searchModal.colorActivo" class="sbm-variante-sec sbm-variante-sec-talla">
+          <div class="sbm-variante-lbl-row">
+            <span class="sbm-variante-lbl"><i class="fas fa-ruler-horizontal"></i> Talla</span>
+            <span class="sbm-variante-hint-inline">Selecciona para confirmar</span>
+          </div>
+          <div class="sbm-tallas-grid">
+            <button *ngFor="let t of getTallasParaColor(searchModal.grupoActivo, searchModal.colorActivo)"
+                    class="sbm-talla-btn"
+                    (click)="confirmarVariante(searchModal.grupoActivo, searchModal.colorActivo!, t.talla)">
+              {{ t.talla }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Indicador color pendiente -->
+        <div *ngIf="!searchModal.colorActivo" class="sbm-estado sbm-estado-sm">
+          <i class="fas fa-hand-pointer sbm-estado-icono-sm"></i>
+          <span class="sbm-estado-txt-sm">Elige un color para ver las tallas disponibles</span>
+        </div>
+
+      </div>
+
+    </ng-container><!-- /paso 2 -->
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     Dialog OTP — acceso a edición
+     ════════════════════════════════════════════════════ -->
+<div class="proy-modal-backdrop" *ngIf="otpDialog.abierto" (click)="cerrarOtpDialog()">
+  <div class="proy-otp-card" (click)="$event.stopPropagation()">
+
+    <div class="proy-otp-header">
+      <i class="fas fa-lock proy-otp-icono"></i>
+      <h3 class="proy-otp-titulo">Acceso protegido</h3>
+      <button class="proy-modal-cerrar" (click)="cerrarOtpDialog()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <p class="proy-otp-desc">
+      Para editar las proyecciones necesitas un código de acceso único (OTP).
+      Solicítalo al administrador e ingrésalo a continuación.
+    </p>
+
+    <!-- Input verificación -->
+    <div class="proy-otp-input-row">
+      <input class="proy-otp-input"
+             type="text"
+             maxlength="6"
+             placeholder="Código de 6 dígitos"
+             [(ngModel)]="otpDialog.codigo"
+             (keyup.enter)="verificarOtp()" />
+      <button class="proy-btn proy-btn-primary"
+              [disabled]="otpDialog.verificando || !otpDialog.codigo"
+              (click)="verificarOtp()">
+        <i class="fas" [class.fa-check]="!otpDialog.verificando" [class.fa-spinner]="otpDialog.verificando" [class.fa-spin]="otpDialog.verificando"></i>
+        {{ otpDialog.verificando ? 'Verificando...' : 'Ingresar' }}
+      </button>
+    </div>
+
+    <div *ngIf="otpDialog.error" class="proy-msg proy-msg-error" style="margin-top:8px;">
+      <i class="fas fa-exclamation-triangle"></i> {{ otpDialog.error }}
+    </div>
+
+  </div>
+</div>

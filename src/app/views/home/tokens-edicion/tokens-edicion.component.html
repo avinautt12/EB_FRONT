@@ -1,0 +1,141 @@
+<div class="hp-overlay" (click)="onCerrar()">
+  <div class="hp-modal hp-modal-lg" (click)="$event.stopPropagation()">
+
+    <div class="hp-modal-header">
+      <div class="hp-modal-icon"><i class="fas fa-key"></i></div>
+      <div>
+        <h3>Tokens de Edicion por Usuario</h3>
+        <p class="hp-modal-sub">Genera un codigo de acceso por distribuidor. Cada codigo dura 1 hora y solo puede usarse una vez.</p>
+      </div>
+      <button class="hp-modal-close" (click)="onCerrar()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div *ngIf="cargando" class="hp-spinner-wrap">
+      <div class="hp-spinner"></div>
+    </div>
+
+    <div *ngIf="!cargando">
+
+      <div class="hp-token-search-wrap">
+        <i class="fas fa-search hp-token-search-icon"></i>
+        <input
+          class="hp-token-search"
+          type="text"
+          placeholder="Buscar por nombre o usuario..."
+          [ngModel]="busqueda"
+          (ngModelChange)="onBusquedaChange($event)"
+          autocomplete="off" />
+        <button *ngIf="busqueda" class="hp-token-search-clear" (click)="onBusquedaChange('')">×</button>
+      </div>
+
+      <div class="hp-token-list">
+
+        <p *ngIf="usuariosFiltrados.length === 0" class="hp-sin-datos">
+          {{ busqueda ? 'Sin resultados.' : 'No hay distribuidores activos.' }}
+        </p>
+
+        <div *ngFor="let u of usuariosFiltrados" class="hp-token-card">
+
+          <!-- Encabezado del usuario -->
+          <div class="hp-tc-header">
+            <div class="hp-tc-name-row">
+              <span class="hp-tc-name">{{ u.nombre }}</span>
+              <span *ngIf="!u.activo" class="hp-token-inactivo">Inactivo</span>
+              <span *ngIf="u.clave" class="hp-token-clave">{{ u.clave }}</span>
+              <span *ngIf="u.nombre_grupo" class="hp-token-grupo">
+                <i class="fas fa-layer-group"></i> {{ u.nombre_grupo }}
+              </span>
+            </div>
+            <span class="hp-tc-username">&#64;{{ u.usuario }}</span>
+          </div>
+
+          <!-- Filas de tokens por tipo -->
+          <div class="hp-tc-slots" *ngIf="u.tokens">
+
+            <!-- SUPER -->
+            <div class="hp-tc-slot">
+              <span class="hp-tc-tipo hp-tc-tipo-super">Super</span>
+              <span class="hp-tc-tipo-desc">Eliminar + editar meses</span>
+              <div class="hp-tc-slot-right">
+                <ng-container *ngIf="u.tokens.super">
+                  <span class="hp-tc-code">{{ u.tokens.super.codigo }}</span>
+                  <button class="hp-btn-copy"
+                          (click)="onCopiarToken(u.tokens.super.codigo!, u.id, 'super')"
+                          [title]="copiado[tokenKey(u.id,'super')] ? 'Copiado' : 'Copiar'">
+                    <i class="fas" [class.fa-copy]="!copiado[tokenKey(u.id,'super')]" [class.fa-check]="copiado[tokenKey(u.id,'super')]"></i>
+                  </button>
+                  <span class="hp-tc-expiry"><i class="fas fa-clock"></i> {{ calcularTiempoRestante(u.tokens.super.expira_en) }}</span>
+                </ng-container>
+                <span *ngIf="!u.tokens.super" class="hp-tc-empty">Sin token</span>
+                <button class="hp-btn-generar hp-btn-generar-xs"
+                        (click)="onGenerarToken(u, 'super')"
+                        [disabled]="generandoToken[tokenKey(u.id,'super')]">
+                  <i class="fas" [class.fa-sync-alt]="!generandoToken[tokenKey(u.id,'super')]"
+                     [class.fa-spinner]="generandoToken[tokenKey(u.id,'super')]"
+                     [class.fa-spin]="generandoToken[tokenKey(u.id,'super')]"></i>
+                  {{ u.tokens.super ? 'Renovar' : 'Generar' }}
+                </button>
+              </div>
+            </div>
+
+            <!-- ELIMINAR -->
+            <div class="hp-tc-slot">
+              <span class="hp-tc-tipo hp-tc-tipo-eliminar">Eliminar</span>
+              <span class="hp-tc-tipo-desc">Solo eliminar productos</span>
+              <div class="hp-tc-slot-right">
+                <ng-container *ngIf="u.tokens.eliminar">
+                  <span class="hp-tc-code">{{ u.tokens.eliminar.codigo }}</span>
+                  <button class="hp-btn-copy"
+                          (click)="onCopiarToken(u.tokens.eliminar.codigo!, u.id, 'eliminar')"
+                          [title]="copiado[tokenKey(u.id,'eliminar')] ? 'Copiado' : 'Copiar'">
+                    <i class="fas" [class.fa-copy]="!copiado[tokenKey(u.id,'eliminar')]" [class.fa-check]="copiado[tokenKey(u.id,'eliminar')]"></i>
+                  </button>
+                  <span class="hp-tc-expiry"><i class="fas fa-clock"></i> {{ calcularTiempoRestante(u.tokens.eliminar.expira_en) }}</span>
+                </ng-container>
+                <span *ngIf="!u.tokens.eliminar" class="hp-tc-empty">Sin token</span>
+                <button class="hp-btn-generar hp-btn-generar-xs"
+                        (click)="onGenerarToken(u, 'eliminar')"
+                        [disabled]="generandoToken[tokenKey(u.id,'eliminar')]">
+                  <i class="fas" [class.fa-sync-alt]="!generandoToken[tokenKey(u.id,'eliminar')]"
+                     [class.fa-spinner]="generandoToken[tokenKey(u.id,'eliminar')]"
+                     [class.fa-spin]="generandoToken[tokenKey(u.id,'eliminar')]"></i>
+                  {{ u.tokens.eliminar ? 'Renovar' : 'Generar' }}
+                </button>
+              </div>
+            </div>
+
+            <!-- MESES -->
+            <div class="hp-tc-slot">
+              <span class="hp-tc-tipo hp-tc-tipo-meses">Meses</span>
+              <span class="hp-tc-tipo-desc">Solo editar cantidades</span>
+              <div class="hp-tc-slot-right">
+                <ng-container *ngIf="u.tokens.meses">
+                  <span class="hp-tc-code">{{ u.tokens.meses.codigo }}</span>
+                  <button class="hp-btn-copy"
+                          (click)="onCopiarToken(u.tokens.meses.codigo!, u.id, 'meses')"
+                          [title]="copiado[tokenKey(u.id,'meses')] ? 'Copiado' : 'Copiar'">
+                    <i class="fas" [class.fa-copy]="!copiado[tokenKey(u.id,'meses')]" [class.fa-check]="copiado[tokenKey(u.id,'meses')]"></i>
+                  </button>
+                  <span class="hp-tc-expiry"><i class="fas fa-clock"></i> {{ calcularTiempoRestante(u.tokens.meses.expira_en) }}</span>
+                </ng-container>
+                <span *ngIf="!u.tokens.meses" class="hp-tc-empty">Sin token</span>
+                <button class="hp-btn-generar hp-btn-generar-xs"
+                        (click)="onGenerarToken(u, 'meses')"
+                        [disabled]="generandoToken[tokenKey(u.id,'meses')]">
+                  <i class="fas" [class.fa-sync-alt]="!generandoToken[tokenKey(u.id,'meses')]"
+                     [class.fa-spinner]="generandoToken[tokenKey(u.id,'meses')]"
+                     [class.fa-spin]="generandoToken[tokenKey(u.id,'meses')]"></i>
+                  {{ u.tokens.meses ? 'Renovar' : 'Generar' }}
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>

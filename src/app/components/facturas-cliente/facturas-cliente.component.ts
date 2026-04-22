@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ElementRef, ViewChild, Output, EventEmitt
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClientesService } from '../../services/clientes.service';
+import { ProyeccionesTabComponent } from '../proyecciones-tab/proyecciones-tab.component';
 import * as XLSX from 'xlsx';
 import { Observable } from 'rxjs';
 
@@ -59,7 +60,7 @@ interface Factura {
 @Component({
   selector: 'app-facturas-cliente',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProyeccionesTabComponent],
   templateUrl: './facturas-cliente.component.html',
   styleUrls: ['./facturas-cliente.component.css']
 })
@@ -71,6 +72,8 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
 
   /** ID del grupo de clientes (modo portal multi-empresa). Alternativo a clienteClave. */
   @Input() idGrupo: number | null = null;
+  /** ID numérico del cliente (para monitor de pedidos). */
+  @Input() idClienteNum: number | null = null;
   /** Clave o nombre del cliente para consultar Odoo directamente. */
   @Input() clienteClave: string | null = null;
   /**
@@ -105,8 +108,8 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
   // ── Pestañas por estatus de entrega ───────────────────────────────────────
   /** Lista dinámica de pestañas generadas a partir de los estatus presentes en los datos. */
   tabsDisponibles: string[] = [];
-  /** Pestaña actualmente activa ("Todas" o un estatus específico). */
-  tabActiva = 'Todas';
+  /** Pestaña actualmente activa ("Total", "Proyecciones" o un estatus específico). */
+  tabActiva = 'Total';
   /** Índice de tabActiva dentro de tabsDisponibles (para la navegación Anterior/Siguiente). */
   indiceTabActiva = 0;
 
@@ -200,7 +203,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     this.facturasFiltradas = [];
     this.facturasPaginadas = [];
     this.tabsDisponibles = [];
-    this.tabActiva = 'Todas';
+    this.tabActiva = 'Total';
     this.indiceTabActiva = 0;
     this.textoBusqueda = '';
     this.fechaInicioTemporada = null;
@@ -467,21 +470,21 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
    */
   filtrarFacturas() {
     // Pestañas fijas en orden definido — siempre visibles aunque tengan 0 productos
-    const TODAS_LAS_PESTANAS = [
-      'Almacén EB',
-      'En tránsito',
-      'Entregado',
-      'Cancelado'
-    ];
-    this.tabsDisponibles = ['Todas', ...TODAS_LAS_PESTANAS];
+    const PESTANAS_DATOS = ['En tránsito', 'Almacén EB', 'Entregado', 'Cancelado'];
+    const tabsBase = ['Total'];
+    if (this.clienteClave && this.clienteClave !== '__sin_clave__') tabsBase.push('Proyecciones');
+    this.tabsDisponibles = [...tabsBase, ...PESTANAS_DATOS];
 
     // Aplicar filtro de pestaña activa
     let base: Factura[];
-    if (this.tabActiva !== 'Todas' && this.tabsDisponibles.includes(this.tabActiva)) {
+    const tabDatos = this.tabActiva !== 'Total' && this.tabActiva !== 'Proyecciones' && this.tabsDisponibles.includes(this.tabActiva);
+    if (tabDatos) {
       base = this.facturas.filter(f => f.estado_factura === this.tabActiva);
     } else {
-      this.tabActiva = this.tabsDisponibles.length > 0 ? 'Todas' : '';
-      this.indiceTabActiva = 0;
+      if (!this.tabsDisponibles.includes(this.tabActiva)) {
+        this.tabActiva = 'Total';
+        this.indiceTabActiva = 0;
+      }
       base = [...this.facturas];
     }
 
@@ -539,7 +542,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
 
   /**
    * Activa la pestaña indicada y recalcula el filtro.
-   * @param tab Nombre de la pestaña (ej. 'Entregado', 'Todas')
+   * @param tab Nombre de la pestaña (ej. 'Entregado', 'Total')
    */
   seleccionarTab(tab: string) {
     this.tabActiva = tab;
@@ -566,11 +569,14 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
 
   /**
    * Devuelve el número de filas que pertenecen a una pestaña.
-   * Para 'Todas' retorna el total de `facturas` sin filtrar.
+   * Para 'Total' retorna el total de `facturas` sin filtrar.
    * @param tab Nombre de la pestaña
    */
+  proyeccionesCount = 0;
+
   contarTab(tab: string): number {
-    if (tab === 'Todas') return this.facturas.length;
+    if (tab === 'Total') return this.facturas.length;
+    if (tab === 'Proyecciones') return this.proyeccionesCount;
     return this.facturas.filter(f => f.estado_factura === tab).length;
   }
 
@@ -580,11 +586,11 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
    */
   getTabTooltip(tab: string): string {
     const tooltips: Record<string, string> = {
-      'Todas':                  'Ver todas las órdenes',
+      'Total':                  'Ver todas las órdenes',
+      'Proyecciones':           'Forecast de compra por periodo comercial',
       'Entregado':              'Órdenes completamente entregadas',
       'Almacén EB':             'Productos disponibles en almacén Elite Bike',
       'En tránsito':            'Productos en camino desde el proveedor',
-      'Falta de confirmación':  'Órdenes pendientes de confirmar entrega',
       'Cancelado':              'Órdenes canceladas',
     };
     return tooltips[tab] ?? tab;
@@ -619,7 +625,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
 
   /** Devuelve los valores únicos de una columna dentro de la pestaña activa. */
   getColumnValues(col: string, search = ''): string[] {
-    const base = this.tabActiva !== 'Todas'
+    const base = this.tabActiva !== 'Total'
       ? this.facturas.filter(f => f.estado_factura === this.tabActiva)
       : this.facturas;
     const set = new Set<string>();
@@ -828,7 +834,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Detalle Compras');
 
-    const tabLabel = this.tabActiva && this.tabActiva !== 'Todas' ? `_${this.tabActiva.replace(/ /g, '_')}` : '';
+    const tabLabel = this.tabActiva && this.tabActiva !== 'Total' ? `_${this.tabActiva.replace(/ /g, '_')}` : '';
     const fileName = `compras_${this.infoCliente?.clave || 'cliente'}${tabLabel}_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   }
@@ -907,7 +913,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
 
     // Pestaña Todas: solo suma los mismos estados de las pestañas individuales visibles
     // Cancelado no entra. Entregado usa avancePrevio si está disponible y es > 0.
-    if (this.tabActiva === 'Todas') {
+    if (this.tabActiva === 'Total') {
       const ESTADOS_CONTABLES = new Set(['Almacén EB', 'En tránsito', 'Falta de confirmación']);
       const sumaResto = this.facturas
         .filter(f => ESTADOS_CONTABLES.has(f.estado_factura))
@@ -942,7 +948,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
       'Entregado Parcial':       'No hay entregas parciales por el momento',
       'Falta de confirmación':   'No hay órdenes pendientes de confirmación',
       'Cancelado':               'No hay órdenes canceladas',
-      'Todas':                   'No se encontraron órdenes para este distribuidor',
+      'Total':                   'No se encontraron órdenes para este distribuidor',
     };
     return mensajes[this.tabActiva] ?? 'No se encontraron resultados';
   }

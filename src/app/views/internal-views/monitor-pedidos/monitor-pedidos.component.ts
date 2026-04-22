@@ -44,12 +44,16 @@ export class MonitorPedidosComponent implements OnInit {
 
   // ── Búsqueda / filtro ─────────────────────────────────────────────────────
   textoBusqueda = '';
+  ocultarAdmins = true;
   private sinAcentos = (s: string) =>
     s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   get usuariosFiltrados(): UsuarioMonitor[] {
+    const base = this.ocultarAdmins
+      ? this.usuarios.filter(u => u.rol !== 'Administrador')
+      : this.usuarios;
     const q = this.sinAcentos(this.textoBusqueda.trim().toLowerCase());
-    if (!q) return this.usuarios;
-    return this.usuarios.filter(u =>
+    if (!q) return base;
+    return base.filter(u =>
       this.sinAcentos(u.nombre.toLowerCase()).includes(q) ||
       this.sinAcentos((u.usuario ?? '').toLowerCase()).includes(q) ||
       this.sinAcentos((u.clave ?? '').toLowerCase()).includes(q) ||
@@ -61,6 +65,8 @@ export class MonitorPedidosComponent implements OnInit {
   modalAbierto = false;
   /** Clave para búsqueda directa (usuario normal con clave asignada) */
   modalClave: string | null = null;
+  /** ID numérico del cliente (para tab Proyecciones) */
+  modalIdCliente: number | null = null;
   /** ID grupo para Vista Global integral */
   modalGrupoOdoo: number | null = null;
   /** Etiqueta que se muestra en el header del modal */
@@ -103,15 +109,13 @@ export class MonitorPedidosComponent implements OnInit {
     this.modalClave = null;
     this.modalGrupoOdoo = null;
     this.modalClaveExacta = false;
+    this.modalIdCliente = u.id_cliente ?? null;
 
     if (u.clave) {
-      // Siempre buscar por clave individual del usuario, aunque pertenezca a un integral.
-      // La Vista Global del grupo se consulta desde la pestaña "Por grupo integral".
       this.modalClave = u.clave;
       this.modalClaveExacta = true;
       this.modalEtiqueta = `${u.nombre} (${u.clave})`;
     } else {
-      // Usuario sin clave asignada → no hay pedidos que mostrar
       this.modalClave = '__sin_clave__';
       this.modalClaveExacta = true;
       this.modalEtiqueta = u.nombre;
@@ -132,5 +136,6 @@ export class MonitorPedidosComponent implements OnInit {
     this.modalAbierto = false;
     this.modalClave = null;
     this.modalGrupoOdoo = null;
+    this.modalIdCliente = null;
   }
 }

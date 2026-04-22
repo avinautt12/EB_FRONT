@@ -1,0 +1,819 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Monitor de Ventas — estilos completos (versión única sin duplicados)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Layout contenedor ──────────────────────────────────────────────────────── */
+.vm-container {
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  color: #FFFCF2;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ── Encabezado ─────────────────────────────────────────────────────────────── */
+.vm-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  position: relative;
+}
+
+.vm-back-btn {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #aaa;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid #403d39;
+  border-radius: 8px;
+  background: #252422;
+  transition: all 0.2s ease;
+}
+
+.vm-back-btn:hover {
+  color: #EB5E28;
+  border-color: #EB5E28;
+  background: #2e2b28;
+}
+
+.vm-header h1 {
+  color: #EB5E28;
+  font-size: 2.4rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.vm-header h1 i {
+  flex-shrink: 0;
+  font-size: 1em;
+}
+
+.vm-subtexto {
+  color: #aaa;
+  font-size: 1rem;
+  font-weight: 300;
+}
+
+/* ── Tabs de modo ───────────────────────────────────────────────────────────── */
+.vm-modo-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.vm-tab {
+  background: #252422;
+  color: #FFFCF2;
+  border: 1px solid #403d39;
+  border-radius: 8px;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.vm-tab i {
+  flex-shrink: 0;
+  width: 1em;
+  text-align: center;
+}
+
+.vm-tab:hover {
+  border-color: #EB5E28;
+  color: #EB5E28;
+}
+
+.vm-tab.activo {
+  background: #EB5E28;
+  border-color: #EB5E28;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Controles ──────────────────────────────────────────────────────────────── */
+.vm-controles {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  background: #252422;
+  border: 1px solid #403d39;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+}
+
+/* Grid 4 columnas: [inputs1] [vs] [inputs2] [btn]
+   Fila 1: etiquetas | _ | etiquetas | _
+   Fila 2: controles | VS | controles | Comparar  ← centrado aquí */
+.vm-comparar-controles {
+  display: grid !important;
+  grid-template-columns: auto auto auto auto;
+  column-gap: 1.5rem;
+  row-gap: 0.45rem;
+  align-items: center !important;
+  justify-content: center;
+}
+
+/* Inputs de un periodo apilados (año + mes) */
+.vm-periodo-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.vm-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.vm-control-group label {
+  font-size: 0.78rem;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.vm-control-group select {
+  background: #1a1916;
+  color: #FFFCF2;
+  border: 1px solid #403d39;
+  border-radius: 6px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  min-width: 150px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.vm-control-group select:focus {
+  border-color: #EB5E28;
+}
+
+/* ── Comparar — selector de periodo ────────────────────────────────────────── */
+.vm-periodo-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+
+.vm-periodo-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #EB5E28;
+  font-weight: 700;
+}
+
+.vm-vs-badge {
+  background: #EB5E28;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.85rem;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Botón consultar ────────────────────────────────────────────────────────── */
+.vm-btn-consultar {
+  background: #EB5E28;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1.8rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.vm-btn-consultar i { flex-shrink: 0; }
+
+.vm-btn-consultar:hover:not(:disabled) {
+  background: #d94e1a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(235, 94, 40, 0.35);
+}
+
+.vm-btn-consultar:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Error ──────────────────────────────────────────────────────────────────── */
+.vm-error {
+  background: #3d1010;
+  color: #ff8080;
+  border: 1px solid #6b2020;
+  border-radius: 8px;
+  padding: 0.9rem 1.2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.vm-error i { flex-shrink: 0; }
+
+/* ── Spinner ────────────────────────────────────────────────────────────────── */
+.vm-spinner-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem;
+  color: #aaa;
+}
+
+.vm-spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid #403d39;
+  border-top-color: #EB5E28;
+  border-radius: 50%;
+  animation: vm-spin 0.8s linear infinite;
+}
+
+@keyframes vm-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Tarjetas KPI ───────────────────────────────────────────────────────────── */
+.vm-cards-row {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.vm-card {
+  background: #252422;
+  border: 1px solid #403d39;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 180px;
+  transition: border-color 0.2s;
+}
+
+.vm-card.positivo {
+  border-color: #2d7a2d;
+  background: #1a2d1a;
+}
+
+.vm-card.negativo {
+  border-color: #7a2d2d;
+  background: #2d1a1a;
+}
+
+/* Label de la tarjeta: flex para alinear ícono */
+.vm-card-label {
+  font-size: 0.75rem;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  line-height: 1.4;
+}
+
+.vm-card-label i {
+  flex-shrink: 0;
+  font-size: 0.9em;
+  width: 1.1em;
+  text-align: center;
+  color: #888;
+}
+
+.vm-card-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #EB5E28;
+  line-height: 1.2;
+}
+
+.vm-delta-pct {
+  font-size: 0.78rem;
+  color: #888;
+}
+
+/* KPI row dentro de columna comparar — tarjetas idénticas en ancho */
+.vm-kpi-row {
+  margin-bottom: 0;
+}
+
+.vm-kpi-row .vm-card {
+  min-width: 0;
+  flex: 1;
+}
+
+/* ── Secciones ──────────────────────────────────────────────────────────────── */
+.vm-seccion {
+  margin-bottom: 2.5rem;
+}
+
+/* Títulos h2 de sección — ícono alineado sin desbordarse */
+.vm-seccion h2,
+.vm-comparar-titulo {
+  color: #FFFCF2;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  overflow: visible;
+}
+
+.vm-seccion h2 i,
+.vm-comparar-titulo i {
+  color: #EB5E28;
+  flex-shrink: 0;
+  font-size: 1em;
+  width: 1.1em;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Subtítulos h3 dentro de vm-table-wrapper */
+.vm-table-wrapper > h3,
+.vm-seccion h3 {
+  color: #ccc;
+  font-size: 0.92rem;
+  font-weight: 600;
+  margin: 1rem 1rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.vm-table-wrapper > h3 i,
+.vm-seccion h3 i {
+  color: #EB5E28;
+  flex-shrink: 0;
+  font-size: 0.9em;
+  width: 1em;
+  text-align: center;
+}
+
+.vm-periodo-chip {
+  background: #EB5E28;
+  color: #fff;
+  font-size: 0.72rem;
+  border-radius: 20px;
+  padding: 0.18rem 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+/* ── Tabla ──────────────────────────────────────────────────────────────────── */
+.vm-table-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid #403d39;
+}
+
+/* Espaciado entre tablas consecutivas en comparar columns */
+.vm-table-mt {
+  margin-top: 1.25rem;
+}
+
+.vm-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  table-layout: auto;
+}
+
+.vm-tabla thead tr {
+  background: #2e2c29;
+}
+
+.vm-tabla th {
+  padding: 0.7rem 1rem;
+  color: #999;
+  font-weight: 600;
+  text-align: left;
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.vm-tabla td {
+  padding: 0.6rem 1rem;
+  border-top: 1px solid #2a2825;
+  color: #FFFCF2;
+  vertical-align: middle;
+}
+
+/* Celda de nombre de producto — permite wrap pero no desborda */
+.vm-tabla td.nombre-producto {
+  word-break: break-word;
+  max-width: 260px;
+}
+
+.vm-tabla tbody tr:hover td {
+  background: #2a2825;
+}
+
+.vm-tabla tfoot tr.fila-total td {
+  font-weight: 700;
+  color: #EB5E28;
+  background: #2e2c29;
+  border-top: 2px solid #403d39;
+}
+
+.vm-tabla .num { text-align: center; white-space: nowrap; }
+.vm-tabla th.num { text-align: center; }
+.vm-tabla .barra-col { width: 160px; min-width: 160px; }
+.vm-tabla .barra-td  { padding: 0.5rem 1rem; }
+
+.vm-tabla .rank {
+  color: #EB5E28;
+  font-weight: 800;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.vm-tabla .sku {
+  color: #777;
+  font-size: 0.8rem;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+/* ── Filas delta en comparar-anual ──────────────────────────────────────────── */
+.vm-tabla tbody tr.fila-positiva td { background: rgba(45, 122, 45, 0.06); }
+.vm-tabla tbody tr.fila-negativa td { background: rgba(122, 45, 45, 0.06); }
+.vm-tabla tbody tr.fila-positiva:hover td { background: rgba(45, 122, 45, 0.12); }
+.vm-tabla tbody tr.fila-negativa:hover td { background: rgba(122, 45, 45, 0.12); }
+
+.delta-cell.pos { color: #5dba5d; }
+.delta-cell.neg { color: #e05555; }
+.delta-cell i   { margin-right: 0.25rem; font-size: 0.78rem; }
+
+/* ── Mini barra horizontal ──────────────────────────────────────────────────── */
+.mini-barra-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 100px;
+}
+
+.mini-barra {
+  height: 7px;
+  background: linear-gradient(90deg, #EB5E28, #f5a07a);
+  border-radius: 4px;
+  min-width: 2px;
+  flex: 1;
+  transition: width 0.4s ease;
+}
+
+.mini-barra-pct {
+  font-size: 0.72rem;
+  color: #888;
+  white-space: nowrap;
+  min-width: 28px;
+  text-align: right;
+}
+
+/* ── Barras duales (comparar años) ──────────────────────────────────────────── */
+.dual-barra-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 100px;
+}
+
+.dual-barra {
+  height: 5px;
+  border-radius: 3px;
+  min-width: 2px;
+  transition: width 0.4s ease;
+}
+
+.dual-barra.anio1 { background: #5b9ac4; }
+.dual-barra.anio2 { background: #EB5E28; }
+
+/* ── Leyenda ────────────────────────────────────────────────────────────────── */
+.vm-leyenda {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.75rem;
+  padding-left: 0.5rem;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.leyenda-dot {
+  width: 14px;
+  height: 7px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.leyenda-dot.anio1 { background: #5b9ac4; }
+.leyenda-dot.anio2 { background: #EB5E28; }
+
+/* ── Modo comparar: panel de diferencia (arriba) ────────────────────────────── */
+.vm-diff-panel {
+  background: #252422;
+  border: 1px solid #403d39;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.vm-diff-titulo {
+  color: #FFFCF2;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vm-diff-titulo i {
+  color: #EB5E28;
+  flex-shrink: 0;
+  font-size: 1em;
+  width: 1.1em;
+  text-align: center;
+}
+
+/* ── Modo comparar: grid de dos columnas ────────────────────────────────────── */
+.vm-comparar-grid {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  align-items: start;
+}
+
+.vm-comparar-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;     /* evita overflow en celdas de tabla */
+}
+
+.vm-comparar-sep {
+  background: #403d39;
+  align-self: stretch;
+}
+
+.vm-diff-seccion {
+  border-top: 1px solid #403d39;
+  padding-top: 2rem;
+}
+
+/* ── Estado vacío ───────────────────────────────────────────────────────────── */
+.vm-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #555;
+}
+
+.vm-empty-icon {
+  font-size: 3rem;
+  color: #403d39;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.vm-sin-datos {
+  color: #666;
+  font-size: 0.9rem;
+  font-style: italic;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .vm-container {
+    padding: 1rem;
+  }
+
+  .vm-comparar-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .vm-comparar-sep {
+    height: 1px;
+    width: 100%;
+    align-self: auto;
+  }
+
+  .vm-controles {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .vm-btn-consultar {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .vm-cards-row {
+    flex-direction: column;
+  }
+
+  .vm-card {
+    min-width: 0;
+  }
+}
+
+/* ── Barra de integrales ──────────────────────────────────────────────────── */
+.vm-integral-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 1.2rem;
+  background: #1a1916;
+  border-bottom: 1px solid #403d39;
+}
+
+.vm-integral-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 0.25rem;
+}
+
+.vm-integral-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  border: 1.5px solid #403d39;
+  background: #252422;
+  color: #FFFCF2;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.vm-integral-chip:hover {
+  border-color: #EB5E28;
+  color: #EB5E28;
+  background: #2e2b28;
+}
+
+.vm-integral-chip.activo {
+  background: #EB5E28;
+  border-color: #EB5E28;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* ── Badge integral en encabezados de sección ────────────────────────────── */
+.vm-integral-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  background: #2e2b28;
+  border: 1.5px solid #EB5E28;
+  color: #EB5E28;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+/* ── Cabecera de sección con acciones (filtros + exportar) ───────────────────── */
+.vm-seccion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.vm-seccion-header h2 {
+  margin: 0;
+}
+
+.vm-seccion-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Toggle de ordenamiento */
+.vm-sort-toggle {
+  display: flex;
+  border: 1.5px solid #403d39;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.vm-sort-toggle button {
+  background: #252422;
+  color: #aaa;
+  border: none;
+  padding: 0.28rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.vm-sort-toggle button:not(:last-child) {
+  border-right: 1.5px solid #403d39;
+}
+
+.vm-sort-toggle button:hover {
+  color: #EB5E28;
+  background: #2e2b28;
+}
+
+.vm-sort-toggle button.activo {
+  background: #EB5E28;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Botón exportar */
+.vm-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.85rem;
+  background: #252422;
+  border: 1.5px solid #403d39;
+  border-radius: 6px;
+  color: #FFFCF2;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.vm-export-btn:hover {
+  border-color: #EB5E28;
+  color: #EB5E28;
+  background: #2e2b28;
+}
+
+.vm-export-btn i {
+  font-size: 0.85rem;
+}

@@ -53,6 +53,15 @@
       />
       <button *ngIf="textoBusqueda" class="mp-buscador-limpiar" (click)="textoBusqueda = ''">×</button>
     </div>
+
+    <!-- Toggle ocultar admins -->
+    <div class="mp-filtros-extra">
+      <label class="mp-toggle-label">
+        <input type="checkbox" [(ngModel)]="ocultarAdmins" />
+        Ocultar administradores
+      </label>
+    </div>
+
     <p class="mp-conteo">{{ usuariosFiltrados.length }} usuario{{ usuariosFiltrados.length !== 1 ? 's' : '' }}</p>
 
     <!-- Tabla de usuarios -->
@@ -130,5 +139,6 @@
   [clienteClave]="modalClave"
   [idGrupoOdoo]="modalGrupoOdoo"
   [claveExacta]="modalClaveExacta"
+  [idClienteNum]="modalIdCliente"
   (onClose)="cerrarModal()">
 </app-facturas-cliente>

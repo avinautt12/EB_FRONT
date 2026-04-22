@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -8,6 +9,7 @@ import { environment } from '../../environments/environment';
 })
 export class ClientesService {
   private apiUrl = `${environment.apiUrl}`;
+  private _pedidosCache = new Map<string, Observable<any>>();
 
   constructor(private http: HttpClient) { }
 
@@ -70,20 +72,31 @@ export class ClientesService {
   }
 
   getDetalleComprasCliente(limit?: number, offset?: number, estado?: string, cliente?: string, refExacta?: boolean, idGrupoOdoo?: number): Observable<any> {
-    const token = localStorage.getItem('token');
-    const headers = { Authorization: `Bearer ${token}` };
-    let params = new HttpParams();
-    if (limit !== undefined) params = params.set('limit', String(limit));
-    if (offset !== undefined) params = params.set('offset', String(offset));
-    if (estado) params = params.set('estado', estado);
-    if (cliente) params = params.set('cliente', cliente);
-    if (refExacta) params = params.set('ref_exacta', '1');
-    if (idGrupoOdoo != null) params = params.set('grupo', String(idGrupoOdoo));
+    const key = `detalle:${cliente ?? ''}:${refExacta ? '1' : '0'}:${idGrupoOdoo ?? ''}`;
+    if (!this._pedidosCache.has(key)) {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      let params = new HttpParams();
+      if (limit !== undefined) params = params.set('limit', String(limit));
+      if (offset !== undefined) params = params.set('offset', String(offset));
+      if (estado) params = params.set('estado', estado);
+      if (cliente) params = params.set('cliente', cliente);
+      if (refExacta) params = params.set('ref_exacta', '1');
+      if (idGrupoOdoo != null) params = params.set('grupo', String(idGrupoOdoo));
+      this._pedidosCache.set(key, this.http.get<any>(`${this.apiUrl}/detalle-compras-odoo`, { headers, params }).pipe(shareReplay(1)));
+    }
+    return this._pedidosCache.get(key)!;
+  }
 
-    return this.http.get<any>(`${this.apiUrl}/detalle-compras-odoo`, { headers, params });
+  invalidarCachePedidos(): void {
+    this._pedidosCache.clear();
   }
 
   getFacturasGrupo(idGrupo: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/facturas-grupo/${idGrupo}`);
+    const key = `grupo:${idGrupo}`;
+    if (!this._pedidosCache.has(key)) {
+      this._pedidosCache.set(key, this.http.get<any>(`${this.apiUrl}/facturas-grupo/${idGrupo}`).pipe(shareReplay(1)));
+    }
+    return this._pedidosCache.get(key)!;
   }
 }

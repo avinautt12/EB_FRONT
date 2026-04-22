@@ -1,0 +1,225 @@
+<div class="contenedor-catalogo">
+  <!-- ENCABEZADO -->
+  <div class="encabezado">
+    <div class="encabezado-titulo">
+      <h1>📊 Catálogo Excel - Proyecciones</h1>
+      <p class="descripcion">Gesiona los productos para proyecciones mientras Odoo se completa</p>
+    </div>
+    <button class="btn-principal" (click)="abrirModalCarga()" [disabled]="cargando">
+      <span>📤 Cargar Excel</span>
+    </button>
+  </div>
+
+  <!-- ESTADÍSTICAS -->
+  <div class="estadisticas">
+    <div class="stat-card">
+      <span class="stat-label">Productos</span>
+      <span class="stat-valor">{{ totalProductos }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Página</span>
+      <span class="stat-valor">{{ paginaActual }} / {{ totalPaginas }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Mostrando</span>
+      <span class="stat-valor">{{ rango }}</span>
+    </div>
+  </div>
+
+  <!-- BUSCADOR -->
+  <div class="buscador-container">
+    <input 
+      type="text" 
+      class="buscador-input" 
+      placeholder="🔍 Buscar por SKU, nombre o color..."
+      [(ngModel)]="busqueda"
+      (keyup)="aplicarFiltro()"
+    >
+  </div>
+
+  <!-- TABLA DE PRODUCTOS -->
+  <div class="tabla-contenedor">
+    <ng-container *ngIf="!cargando && productos.length > 0">
+      <table class="tabla-productos">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Nombre</th>
+            <th>Color</th>
+            <th>Talla</th>
+            <th>Origen</th>
+            <th>Cargado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let producto of productosFiltrados">
+            <td class="sku-cell">
+              <span class="sku-badge">{{ producto.sku }}</span>
+            </td>
+            <td>{{ producto.nombre }}</td>
+            <td>
+              <span *ngIf="producto.color" class="color-badge">{{ producto.color }}</span>
+              <span *ngIf="!producto.color" class="sin-dato">-</span>
+            </td>
+            <td>
+              <span *ngIf="producto.talla" class="talla-badge">{{ producto.talla }}</span>
+              <span *ngIf="!producto.talla" class="sin-dato">-</span>
+            </td>
+            <td>
+              <span [ngClass]="'origen-' + (producto.origen || 'excel')">
+                {{ producto.origen === 'excel' ? '📋 Excel' : '🔗 Odoo' }}
+              </span>
+            </td>
+            <td class="fecha-cell">
+              <small>{{ producto.cargado_en | date: 'short' }}</small>
+            </td>
+            <td class="acciones-cell">
+              <button 
+                class="btn-eliminar"
+                (click)="eliminarProducto(producto.sku, producto.nombre)"
+                title="Eliminar este producto"
+              >
+                🗑️
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-container>
+
+    <!-- ESTADO VACÍO -->
+    <div *ngIf="!cargando && productos.length === 0" class="sin-productos">
+      <div class="sin-productos-contenido">
+        <span class="icono-grande">📭</span>
+        <h3>No hay productos cargados</h3>
+        <p>Carga tu primer archivo Excel con los productos para proyecciones</p>
+        <button class="btn-principal" (click)="abrirModalCarga()">
+          📤 Cargar Excel Ahora
+        </button>
+      </div>
+    </div>
+
+    <!-- CARGANDO -->
+    <div *ngIf="cargando" class="estado-cargando">
+      <div class="spinner"></div>
+      <p>Cargando productos...</p>
+    </div>
+  </div>
+
+  <!-- PAGINACIÓN -->
+  <div *ngIf="totalPaginas > 1" class="paginacion">
+    <button 
+      class="btn-paginacion" 
+      (click)="irAPagina(paginaActual - 1)"
+      [disabled]="paginaActual === 1"
+    >
+      ← Anterior
+    </button>
+    
+    <div class="paginas">
+      <button 
+        *ngFor="let pagina of [].constructor(totalPaginas); let i = index"
+        class="btn-pagina"
+        [class.activa]="i + 1 === paginaActual"
+        (click)="irAPagina(i + 1)"
+      >
+        {{ i + 1 }}
+      </button>
+    </div>
+
+    <button 
+      class="btn-paginacion" 
+      (click)="irAPagina(paginaActual + 1)"
+      [disabled]="paginaActual === totalPaginas"
+    >
+      Siguiente →
+    </button>
+  </div>
+
+  <!-- FOOTER ACCIONES -->
+  <div class="footer-acciones">
+    <button 
+      class="btn-vaciar"
+      (click)="vaciarCatalogo()"
+      [disabled]="totalProductos === 0 || cargando"
+      title="Eliminar todos los productos del catálogo"
+    >
+      🔄 Vaciar Catálogo
+    </button>
+  </div>
+</div>
+
+<!-- MODAL DE CARGA -->
+<div [class.modal-overlay-visible]="mostrarModal" class="modal-overlay">
+  <div class="modal-contenido">
+    <!-- ENCABEZADO MODAL -->
+    <div class="modal-header">
+      <h2>Cargar Catálogo Excel</h2>
+      <button class="btn-cerrar" (click)="cerrarModal()">✕</button>
+    </div>
+
+    <!-- CUERPO MODAL -->
+    <div class="modal-body">
+      <!-- FORMULARIO DE CARGA -->
+      <div [class.oculto]="estadoUpload !== 'pendiente' && estadoUpload !== 'cargando'" class="formulario-carga">
+        <div class="zona-drop">
+          <input 
+            type="file"
+            #fileInput
+            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            (change)="seleccionarArchivo($event)"
+            class="input-archivo"
+          >
+          <label for="fileInput" class="label-archivo">
+            <span class="icono">📁</span>
+            <span class="texto-drag">Haz clic o arrastra tu archivo Excel aquí</span>
+            <span class="subtexto">Formatos soportados: .xlsx, .xls</span>
+          </label>
+        </div>
+
+        <p class="archivo-seleccionado" *ngIf="archivo">
+          ✅ {{ mensajeCarga }}
+        </p>
+
+        <div class="instrucciones">
+          <h4>📋 Formato esperado del Excel:</h4>
+          <ul>
+            <li><strong>Columna A:</strong> SKU (requerido)</li>
+            <li><strong>Columna B:</strong> NOMBRE (requerido)</li>
+            <li><strong>Columna C:</strong> COLOR (opcional)</li>
+            <li><strong>Columna D:</strong> TALLA (opcional)</li>
+          </ul>
+          <p class="nota">La primera fila se asume como encabezado</p>
+        </div>
+      </div>
+
+      <!-- ESTADO DE CARGA -->
+      <div [class.oculto]="estadoUpload === 'pendiente'" class="estado-upload">
+        <div [class]="'upload-' + estadoUpload">
+          <div class="spinner" *ngIf="estadoUpload === 'cargando'"></div>
+          <span class="icono-estado" *ngIf="estadoUpload === 'exitoso'">✅</span>
+          <span class="icono-estado" *ngIf="estadoUpload === 'error'">❌</span>
+        </div>
+        <p class="mensaje-estado">{{ mensajeCarga }}</p>
+      </div>
+    </div>
+
+    <!-- FOOTER MODAL -->
+    <div class="modal-footer">
+      <button class="btn-cancelar" (click)="cerrarModal()" [disabled]="modalCargando">
+        Cancelar
+      </button>
+      <button 
+        class="btn-cargar" 
+        (click)="subirArchivo()" 
+        [disabled]="!archivo || modalCargando || estadoUpload !== 'pendiente'"
+      >
+        <span *ngIf="!modalCargando">📤 Cargar</span>
+        <span *ngIf="modalCargando" class="cargando-text">
+          <span class="spinner-mini"></span> Procesando...
+        </span>
+      </button>
+    </div>
+  </div>
+</div>

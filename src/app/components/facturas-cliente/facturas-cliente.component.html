@@ -7,7 +7,7 @@
 
         <div class="modal-body">
             <!-- Barra de acciones -->
-            <div class="acciones-monitor">
+            <div *ngIf="tabActiva !== 'Proyecciones'" class="acciones-monitor">
                 <button (click)="exportarExcel()">
                     <i class="fas fa-file-export"></i> Exportar Excel
                 </button>
@@ -27,7 +27,7 @@
             </div>
 
             <!-- Buscador por SKU / producto / pedido -->
-            <div *ngIf="!cargando" class="buscador-container">
+            <div *ngIf="tabActiva !== 'Proyecciones' && !cargando" class="buscador-container">
                 <div class="buscador-wrapper">
                     <i class="fas fa-search buscador-icono"></i>
                     <input
@@ -58,7 +58,7 @@
             </div>
 
             <!-- Resumen de totales (respeta pestaña activa y búsqueda) -->
-            <div *ngIf="!cargando && facturasFiltradas.length > 0" class="resumen-totales">
+            <div *ngIf="tabActiva !== 'Proyecciones' && !cargando && facturasFiltradas.length > 0" class="resumen-totales">
                 <div *ngIf="tabActiva && tabActiva !== 'Todas'" class="resumen-tab-badge">
                     {{ tabActiva }}
                 </div>
@@ -81,24 +81,32 @@
                 </div>
             </div>
 
-            <!-- Spinner carga -->
-            <div *ngIf="cargando" class="cargando-spinner">
+            <!-- Spinner carga (solo para tabs de pedidos, no proyecciones) -->
+            <div *ngIf="tabActiva !== 'Proyecciones' && cargando" class="cargando-spinner">
                 <div class="spinner"></div>
                 <p>Cargando datos...</p>
             </div>
 
-            <!-- Mensaje de error (visible también si la petición tarda) -->
-            <div *ngIf="error && (!cargando || cargando)" class="sin-datos" style="margin-top:12px;">
+            <!-- Mensaje de error -->
+            <div *ngIf="tabActiva !== 'Proyecciones' && error && (!cargando || cargando)" class="sin-datos" style="margin-top:12px;">
                 <p>{{ error }}</p>
             </div>
 
+            <!-- Proyecciones tab (embebido) -->
+            <app-proyecciones-tab
+                *ngIf="tabActiva === 'Proyecciones'"
+                [clienteClave]="clienteClave"
+                [idCliente]="idClienteNum"
+                (rowCountChange)="proyeccionesCount = $event">
+            </app-proyecciones-tab>
+
             <!-- Mensaje sin datos -->
-            <div *ngIf="!cargando && facturasPaginadas.length === 0 && !error" class="sin-datos">
+            <div *ngIf="tabActiva !== 'Proyecciones' && !cargando && facturasPaginadas.length === 0 && !error" class="sin-datos">
                 <p>{{ mensajeTabVacia() }}</p>
             </div>
 
             <!-- Tabla facturas -->
-            <div *ngIf="!cargando && facturasPaginadas.length > 0" class="tabla-contenedor">
+            <div *ngIf="tabActiva !== 'Proyecciones' && !cargando && facturasPaginadas.length > 0" class="tabla-contenedor">
                 <table class="tabla-facturas">
                     <thead>
                         <tr>
@@ -154,7 +162,7 @@
             </div>
 
             <!-- Paginación -->
-            <div class="paginador" *ngIf="facturasFiltradas.length > elementosPorPagina">
+            <div class="paginador" *ngIf="tabActiva !== 'Proyecciones' && facturasFiltradas.length > elementosPorPagina">
                 <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1">
                     <i class="fas fa-angle-double-left"></i>
                 </button>
@@ -172,19 +180,6 @@
                 </button>
             </div>
 
-            <!-- Navegación entre pestañas (solo si hay más de una) -->
-            <div *ngIf="!cargando && tabsDisponibles.length > 1" class="tab-navegacion">
-                <button class="tab-nav-btn" (click)="tabAnterior()" [disabled]="indiceTabActiva === 0">
-                    <i class="fas fa-chevron-left"></i> Anterior
-                </button>
-                <span class="tab-nav-info">
-                    <strong>{{ tabActiva }}</strong>
-                    &nbsp;({{ indiceTabActiva + 1 }} / {{ tabsDisponibles.length }})
-                </span>
-                <button class="tab-nav-btn" (click)="tabSiguiente()" [disabled]="indiceTabActiva === tabsDisponibles.length - 1">
-                    Siguiente <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
         </div>
     </div>
 </div>
