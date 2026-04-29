@@ -27,6 +27,13 @@
         <i class="fas fa-file-import"></i>
         {{ importando ? 'Importando...' : 'Importar plantilla' }}
       </button>
+      <button class="proy-btn proy-btn-outline proy-btn-global"
+              [disabled]="importando"
+              (click)="abrirSelectorGlobal()"
+              title="Importar plantilla global enviada por cualquier distribuidor (la clave se lee del archivo)">
+        <i class="fas fa-globe"></i>
+        {{ importando ? 'Importando...' : 'Importar global' }}
+      </button>
       <button class="proy-btn proy-btn-primary"
               *ngIf="rows.length > 0"
               (click)="activarEdicion()">
@@ -76,6 +83,9 @@
   <!-- ── Mensajes ── -->
   <div class="proy-msg proy-msg-exito" *ngIf="mensajeExito">
     <i class="fas fa-check-circle"></i> {{ mensajeExito }}
+  </div>
+  <div class="proy-msg proy-msg-info" *ngIf="mensajeImportGlobal">
+    <i class="fas fa-info-circle"></i> {{ mensajeImportGlobal }}
   </div>
   <div class="proy-msg proy-msg-error" *ngIf="importError">
     <i class="fas fa-exclamation-triangle"></i> {{ importError }}
@@ -144,7 +154,9 @@
             <th>Modelo</th>
             <th>Color</th>
             <th>Talla</th>
-            <th class="th-total">Total periodo</th>
+            <th class="th-precio">Precio</th>
+            <th class="th-total">Total uds.</th>
+            <th class="th-total-precio">Total $</th>
             <th *ngIf="modoEdicion" class="th-acciones">Acciones</th>
           </tr>
           <!-- Encabezado modo expandido -->
@@ -155,8 +167,10 @@
             <th>Modelo</th>
             <th>Color</th>
             <th>Talla</th>
+            <th class="th-precio">Precio</th>
             <th *ngFor="let label of mesesLabels" class="th-mes">{{ label }}</th>
-            <th class="th-total">Total</th>
+            <th class="th-total">Total uds.</th>
+            <th class="th-total-precio">Total $</th>
             <th *ngIf="modoEdicion" class="th-acciones">Acciones</th>
           </tr>
         </thead>
@@ -220,6 +234,12 @@
               <span *ngIf="modoEdicion && row._nuevo">{{ row._searchSeleccionado ? row.talla : '&mdash;' }}</span>
             </td>
 
+            <!-- Precio (siempre visible) -->
+            <td class="td-precio">
+              <span *ngIf="row.precio">{{ row.precio | currency:'MXN':'symbol':'1.2-2' }}</span>
+              <span *ngIf="!row.precio" class="td-precio-nd">—</span>
+            </td>
+
             <!-- Meses (solo en modo expandido) -->
             <ng-container *ngIf="modoExpandido">
               <td *ngFor="let mes of mesesKeys" class="td-qty">
@@ -234,8 +254,13 @@
               </td>
             </ng-container>
 
-            <!-- Total -->
+            <!-- Total uds. -->
             <td class="td-total">{{ getRestante(row) | number:'1.0-0' }}</td>
+
+            <!-- Total $ -->
+            <td class="td-total-precio">
+              {{ (getRestante(row) * (row.precio || 0)) | currency:'MXN':'symbol':'1.0-0' }}
+            </td>
 
             <!-- Acciones (modo edición) -->
             <td *ngIf="modoEdicion" class="td-acciones">
@@ -260,16 +285,31 @@
 
         <!-- Totales footer -->
         <tfoot *ngIf="rowsFiltrados.length > 0">
+          <!-- Fila naranja: totales de unidades -->
           <tr class="proy-fila-totales">
-            <td colspan="6"><strong>TOTAL PERIODO</strong></td>
+            <td colspan="6"><strong>TOTALES</strong></td>
+            <!-- columna Precio vacía -->
+            <td class="td-precio-foot"></td>
             <ng-container *ngIf="modoExpandido">
               <td *ngFor="let mes of mesesKeys" class="td-total-foot">
                 <strong>{{ totalMes(mes) | number:'1.0-0' }}</strong>
               </td>
             </ng-container>
             <td class="td-total"><strong>{{ totalRestante | number:'1.0-0' }}</strong></td>
+            <td class="td-total-precio"><strong>{{ totalPrecioGeneral | currency:'MXN':'symbol':'1.0-0' }}</strong></td>
             <td *ngIf="modoEdicion"></td>
-          </tr>        </tfoot>
+          </tr>
+          <!-- Fila azul: total en precio por mes -->
+          <tr class="proy-fila-precio-mes" *ngIf="modoExpandido">
+            <td colspan="7" class="td-precio-mes-lbl"><strong>PRECIO POR MES</strong></td>
+            <td *ngFor="let mes of mesesKeys" class="td-precio-mes">
+              <strong>{{ totalPrecioMes(mes) | currency:'MXN':'symbol':'1.0-0' }}</strong>
+            </td>
+            <td class="td-precio-mes"></td>
+            <td class="td-precio-mes"></td>
+            <td *ngIf="modoEdicion"></td>
+          </tr>
+        </tfoot>
       </table>
     </div><!-- /scroll -->
 

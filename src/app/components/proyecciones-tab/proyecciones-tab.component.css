@@ -321,6 +321,18 @@
   border: 1px solid rgba(192,57,43,.35);
   color: #e74c3c;
 }
+.proy-msg-info {
+  background: rgba(52,152,219,.12);
+  border: 1px solid rgba(52,152,219,.35);
+  color: #74b9ff;
+}
+.proy-btn-global {
+  border-color: #3498db !important;
+  color: #74b9ff !important;
+}
+.proy-btn-global:hover:not(:disabled) {
+  background: rgba(52,152,219,.15) !important;
+}
 
 .proy-advertencias {
   background: rgba(241,196,15,.08);
@@ -477,6 +489,15 @@
 .td-qty             { text-align: center; }
 .th-acciones, .td-acciones { width: 48px; text-align: center; }
 
+/* Precio column */
+.th-precio          { min-width: 100px; text-align: right; background: rgba(26,58,43,.6) !important; color: #66FFB2 !important; }
+.td-precio          { text-align: right; font-size: 0.82rem; color: #a0d4b5; white-space: nowrap; }
+.td-precio-nd       { color: #555; }
+
+/* Total $ column */
+.th-total-precio    { min-width: 110px; text-align: right; background: rgba(235,94,40,.25) !important; color: #FFFCF2 !important; }
+.td-total-precio    { text-align: right; font-weight: 700; color: #EB5E28; white-space: nowrap; font-size: 0.85rem; }
+
 /* Row state classes */
 .proy-fila-nueva    { background: rgba(235,94,40,.06) !important; }
 .proy-fila-eliminar { background: rgba(192,57,43,.08) !important; opacity: 0.55; text-decoration: line-through; }
@@ -507,7 +528,21 @@
   color: #FFFCF2;
   font-size: 0.82rem;
 }
-.td-total-foot { text-align: center; font-weight: 700; color: #FFFCF2; }
+.td-total-foot      { text-align: center; font-weight: 700; color: #FFFCF2; }
+.td-precio-foot     { background: rgba(26,58,43,.25); }
+
+/* Fila azul: precio por mes */
+.proy-fila-precio-mes {
+  background: #0d2a4a;
+  border-top: 1px solid #1B5E9C;
+}
+.proy-fila-precio-mes td {
+  padding: 0.5rem 0.75rem;
+  color: #90CAF9;
+  font-size: 0.80rem;
+}
+.td-precio-mes-lbl  { text-align: right; color: #90CAF9 !important; font-weight: 700; letter-spacing: 0.03em; }
+.td-precio-mes      { text-align: center; font-weight: 700; white-space: nowrap; }
 
 /* ══════════════════════════════════════════
    MODAL BACKDROP (OTP)

@@ -70,6 +70,8 @@ export interface ForecastRow {
   marzo: number;
   abril: number;
   total?: number;
+  precio?: number;
+  nivel_precio?: string;
   // UI-only
   _editado?: boolean;
   _nuevo?: boolean;
@@ -155,6 +157,7 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit {
   importando = false;
   importError: string | null = null;
   importAdvertencias: string[] = [];
+  mensajeImportGlobal: string | null = null;
 
   // Computed options for filters
   get marcasDisponibles(): string[] {
@@ -228,6 +231,23 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit {
   totalMes(mes: keyof ForecastRow): number {
     return this.rowsFiltrados.reduce((s, r) => s + (Number(r[mes]) || 0), 0);
   }
+
+  totalPrecioMes(mes: keyof ForecastRow): number {
+    return this.rowsFiltrados.reduce((s, r) => {
+      const qty    = Number(r[mes]) || 0;
+      const precio = Number(r['precio']) || 0;
+      return s + qty * precio;
+    }, 0);
+  }
+
+  get totalPrecioGeneral(): number {
+    return this.rowsFiltrados.reduce((s, r) => {
+      const total  = MESES.reduce((t, m) => t + (Number(r[m]) || 0), 0);
+      const precio = Number(r['precio']) || 0;
+      return s + total * precio;
+    }, 0);
+  }
+
   constructor(private http: HttpClient, protected cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
@@ -364,6 +384,51 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit {
       if (file) this.importarArchivo(file);
     };
     input.click();
+  }
+
+  abrirSelectorGlobal(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx,.xls';
+    input.onchange = (e: Event) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) this.importarArchivoGlobal(file);
+    };
+    input.click();
+  }
+
+  importarArchivoGlobal(file: File): void {
+    this.importando = true;
+    this.importError = null;
+    this.importAdvertencias = [];
+    this.mensajeImportGlobal = null;
+    this.mensajeExito = null;
+    this.cdr.markForCheck();
+
+    const fd = new FormData();
+    // Sin clave_cliente ni periodo — el backend los lee del archivo
+    fd.append('file', file);
+
+    this.http.post<any>(`${this.apiUrl}/forecast/importar`, fd).subscribe({
+      next: res => {
+        this.importando = false;
+        this.importAdvertencias = res.advertencias || [];
+        const clave   = res.clave_cliente || '?';
+        const periodo = res.periodo || '?';
+        this.mensajeImportGlobal =
+          `Plantilla global importada: ${res.guardados} producto(s) para distribuidor "${clave}" — periodo ${periodo}.`;
+        // Si la plantilla era del cliente activo, refrescar la tabla
+        if (clave === this.clienteClave) {
+          this.cargarForecast();
+        }
+        this.cdr.markForCheck();
+      },
+      error: err => {
+        this.importando = false;
+        this.importError = err?.error?.error || 'Error al importar la plantilla global';
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   importarArchivo(file: File): void {

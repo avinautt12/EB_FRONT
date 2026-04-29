@@ -1,0 +1,149 @@
+[1m[33mPrebundling has been configured but will not be used because caching has been disabled.[39m[22m
+[1m[33mComponent HMR has been enabled, see https://angular.dev/hmr for more info.[39m[22m
+[33m❯[39m Building...
+[32m✔[39m Building...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m        [2m | [22m[1mRaw size[22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m         [2m | [22m [36m5.82 MB[39m[2m | [22m
+[32mpolyfills.js[39m       [2m | [22m[2mpolyfills[22m    [2m | [22m[36m89.77 kB[39m[2m | [22m
+[32mstyles.css[39m         [2m | [22m[2mstyles[22m       [2m | [22m[36m12.76 kB[39m[2m | [22m
+
+[1m [22m                  [2m | [22m[1mInitial total[22m[2m | [22m [1m5.93 MB[22m
+
+Application bundle generation complete. [24.449 seconds]
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m4200[22m/[39m
+[33m❯[39m Changes detected. Rebuilding...
+[32m✔[39m Changes detected. Rebuilding...
+
+No output file changes.
+
+Application bundle generation complete. [29.412 seconds]
+
+[33m❯[39m Changes detected. Rebuilding...
+[32m✔[39m Changes detected. Rebuilding...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m[2m | [22m[1mRaw size[22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m [2m | [22m [36m6.30 MB[39m[2m | [22m
+
+Application bundle generation complete. [6.200 seconds]
+
+Page reload sent to client(s).
+[33m❯[39m Changes detected. Rebuilding...
+[32m✔[39m Changes detected. Rebuilding...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m[2m | [22m[1mRaw size[22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m [2m | [22m [36m6.31 MB[39m[2m | [22m
+
+Application bundle generation complete. [7.360 seconds]
+
+Component update sent to client(s).
+[33m❯[39m Changes detected. Rebuilding...
+[32m✔[39m Changes detected. Rebuilding...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m[2m | [22m[1mRaw size[22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m [2m | [22m [36m6.31 MB[39m[2m | [22m
+
+Application bundle generation complete. [1.671 seconds]
+
+Component update sent to client(s).
+[33m❯[39m Changes detected. Rebuilding...
+[32m✔[39m Changes detected. Rebuilding...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m[2m | [22m[1mRaw size[22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m [2m | [22m [36m6.31 MB[39m[2m | [22m
+
+Application bundle generation complete. [1.493 seconds]
+
+Page reload sent to client(s).
+[33m❯[39m Changes detected. Rebuilding...
+[32m✔[39m Changes detected. Rebuilding...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m[2m | [22m[1mRaw size[22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m [2m | [22m [36m6.31 MB[39m[2m | [22m
+
+Application bundle generation complete. [7.164 seconds]
+
+Page reload sent to client(s).
+[33m❯[39m Changes detected. Rebuilding...
+[32m✔[39m Changes detected. Rebuilding...
+Application bundle generation failed. [1.323 seconds]
+
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG9: No overload matches this call.
+  Overload 1 of 3, '(obj: Observable<any> | Subscribable<any> | Promise<any>): any', gave the following error.
+    Argument of type 'KeyValue<string, number>[]' is not assignable to parameter of type 'Observable<any> | Subscribable<any> | Promise<any>'.
+      Type 'KeyValue<string, number>[]' is missing the following properties from type 'Observable<any>': source, operator, lift, subscribe, and 2 more.
+  Overload 2 of 3, '(obj: null | undefined): null', gave the following error.
+    Argument of type 'KeyValue<string, number>[]' is not assignable to parameter of type 'null | undefined'.
+  Overload 3 of 3, '(obj: Observable<any> | Subscribable<any> | Promise<any> | null | undefined): any', gave the following error.
+    Argument of type 'KeyValue<string, number>[]' is not assignable to parameter of type 'Observable<any> | Subscribable<any> | Promise<any> | null | undefined'.
+      Type 'KeyValue<string, number>[]' is missing the following properties from type 'Observable<any>': source, operator, lift, subscribe, and 2 more.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/views/internal-views/garantias/garantias.component.html:225:49:
+[37m      225 │ ..."modal-sub">{{ modalData | [32mkeyvalue[37m | async | json | slice:0:0...
+          ╵                               [32m~~~~~~~~[0m
+
+  Error occurs in the template of component GarantiasComponent.
+
+    src/app/views/internal-views/garantias/garantias.component.ts:61:15:
+[37m      61 │   templateUrl: [32m'./garantias.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[33m❯[39m Changes detected. Rebuilding...
+[32m✔[39m Changes detected. Rebuilding...
+Application bundle generation failed. [1.588 seconds]
+
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG9: Property 'modalItemCount' does not exist on type 'GarantiasComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/views/internal-views/garantias/garantias.component.html:225:37:
+[37m      225 │ ...   <span class="modal-sub">{{ [32mmodalItemCount[37m }} resultados</span>
+          ╵                                  [32m~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component GarantiasComponent.
+
+    src/app/views/internal-views/garantias/garantias.component.ts:61:15:
+[37m      61 │   templateUrl: [32m'./garantias.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[33m❯[39m Changes detected. Rebuilding...
+[32m✔[39m Changes detected. Rebuilding...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m        [2m | [22m[1mRaw size[22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m         [2m | [22m [36m6.32 MB[39m[2m | [22m
+[32mpolyfills.js[39m       [2m | [22m[2mpolyfills[22m    [2m | [22m[36m89.77 kB[39m[2m | [22m
+[32mstyles.css[39m         [2m | [22m[2mstyles[22m       [2m | [22m[36m12.76 kB[39m[2m | [22m
+
+[1m [22m                  [2m | [22m[1mInitial total[22m[2m | [22m [1m6.43 MB[22m
+
+Application bundle generation complete. [1.555 seconds]
+
+Page reload sent to client(s).
+[33m❯[39m Changes detected. Rebuilding...
+[32m✔[39m Changes detected. Rebuilding...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m[2m | [22m[1mRaw size[22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m [2m | [22m [36m6.33 MB[39m[2m | [22m
+
+Application bundle generation complete. [2.088 seconds]
+
+Component update sent to client(s).
+[33m❯[39m Changes detected. Rebuilding...
+[32m✔[39m Changes detected. Rebuilding...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m[2m | [22m[1mRaw size[22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m [2m | [22m [36m6.33 MB[39m[2m | [22m
+
+Application bundle generation complete. [1.551 seconds]
+
+Page reload sent to client(s).
+[33m❯[39m Changes detected. Rebuilding...
+[32m✔[39m Changes detected. Rebuilding...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m[2m | [22m[1mRaw size[22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m [2m | [22m [36m6.33 MB[39m[2m | [22m
+
+Application bundle generation complete. [10.618 seconds]
+
+Page reload sent to client(s).
+[33m❯[39m Changes detected. Rebuilding...
+[32m✔[39m Changes detected. Rebuilding...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m[2m | [22m[1mRaw size[22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m [2m | [22m [36m6.33 MB[39m[2m | [22m
+
+Application bundle generation complete. [1.853 seconds]
+
+Page reload sent to client(s).

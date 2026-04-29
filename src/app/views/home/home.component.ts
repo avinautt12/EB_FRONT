@@ -218,7 +218,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   cargarTokens(): void {
     this.cargandoTokens = true;
-    this.http.get<UsuarioToken[]>(`${this.apiUrl}/edicion/tokens`).subscribe({
+    this.http.get<UsuarioToken[]>(`${this.apiUrl}/edicion/tokens-monitor`).subscribe({
       next: lista => { this.usuariosTokens = lista; this.cargandoTokens = false; },
       error: () => { this.cargandoTokens = false; }
     });

@@ -45,6 +45,7 @@ import { RetroactivosComponent } from './views/internal-views/retroactivos/retro
 import { CaratulaRetroactivosComponent } from './views/internal-views/caratula-retroactivos/caratula-retroactivos.component';
 import { VentasMonitorComponent } from './views/internal-views/ventas-monitor/ventas-monitor.component';
 import { CatalogoForecastComponent } from './views/internal-views/catalogo-forecast/catalogo-forecast.component';
+import { GarantiasComponent } from './views/internal-views/garantias/garantias.component';
 
 import { CaratulaRetroactivosUsuarioComponent } from './views/usuarios/caratula-retroactivos-usuarios/caratula-retroactivos-usuarios.component';
 
@@ -100,5 +101,6 @@ export const routes: Routes = [
   { path: 'retroactivos', component: RetroactivosComponent, canActivate: [adminGuard] },
   { path: 'ventas-monitor', component: VentasMonitorComponent, canActivate: [adminGuard] },
   { path: 'catalogo-forecast', component: CatalogoForecastComponent, canActivate: [adminGuard] },
+  { path: 'garantias', component: GarantiasComponent, canActivate: [adminGuard] },
   { path: '**', redirectTo: '' }
 ];
