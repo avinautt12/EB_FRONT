@@ -152,8 +152,8 @@
             <th class="th-producto">Producto</th>
             <th>Marca</th>
             <th>Modelo</th>
-            <th>Color</th>
-            <th>Talla</th>
+            <th class="th-center">Color</th>
+            <th class="th-center">Talla</th>
             <th class="th-precio">Precio</th>
             <th class="th-total">Total uds.</th>
             <th class="th-total-precio">Total $</th>
@@ -163,8 +163,8 @@
           <tr *ngIf="modoExpandido">
             <th class="th-sku">SKU</th>
             <th class="th-producto">Producto</th>
-            <th>Color</th>
-            <th>Talla</th>
+            <th class="th-center">Color</th>
+            <th class="th-center">Talla</th>
             <th class="th-precio">Precio</th>
             <th *ngFor="let label of mesesLabels" class="th-mes">{{ label }}</th>
             <th class="th-total">Total uds.</th>
@@ -221,13 +221,13 @@
             </td>
 
             <!-- Color -->
-            <td>
+            <td class="td-center">
               <span *ngIf="!modoEdicion || !row._nuevo">{{ row.color }}</span>
               <span *ngIf="modoEdicion && row._nuevo">{{ row._searchSeleccionado ? row.color : '&mdash;' }}</span>
             </td>
 
             <!-- Talla -->
-            <td>
+            <td class="td-center">
               <span *ngIf="!modoEdicion || !row._nuevo">{{ row.talla }}</span>
               <span *ngIf="modoEdicion && row._nuevo">{{ row._searchSeleccionado ? row.talla : '&mdash;' }}</span>
             </td>

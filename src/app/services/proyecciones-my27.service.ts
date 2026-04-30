@@ -10,6 +10,7 @@ export interface MesData {
 
 export interface DesgloseDist {
   clave_cliente: string;
+  nombre_cliente: string;
   total: number;
   meses: Record<string, number>;
 }

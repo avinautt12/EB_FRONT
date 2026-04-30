@@ -396,6 +396,7 @@
               <th class="num">Facturas</th>
               <th class="num">Total (con IVA)</th>
               <th class="barra-col">Participación</th>
+              <th style="width:44px"></th>
             </tr>
           </thead>
           <tbody>
@@ -410,6 +411,11 @@
                   </div>
                   <span class="mini-barra-pct">{{ resumen.total > 0 ? (e.total / resumen.total * 100 | number:'1.0-0') : 0 }}%</span>
                 </div>
+              </td>
+              <td class="td-estado-action">
+                <button class="vm-btn-desglose" (click)="verDesglosePorEstado(e)" title="Ver productos más vendidos">
+                  <i class="fas fa-list-ul"></i>
+                </button>
               </td>
             </tr>
           </tbody>
@@ -930,4 +936,85 @@
     <p>Selecciona el periodo y presiona <strong>Consultar</strong> para ver los datos.</p>
   </div>
 
+</div>
+
+<!-- ═══ MODAL DESGLOSE POR ESTADO ═══ -->
+<div class="vm-modal-overlay" *ngIf="estadoDesgloseAbierto" (click)="cerrarModalEstado()">
+  <div class="vm-modal-panel" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="vm-modal-hdr">
+      <div class="vm-modal-hdr-left">
+        <div class="vm-modal-icon"><i class="fas fa-map-marker-alt"></i></div>
+        <div>
+          <h2>Productos más vendidos</h2>
+          <p class="vm-modal-sub" *ngIf="estadoDesglose">
+            {{ estadoDesglose.estado }}
+            &nbsp;·&nbsp;
+            {{ estadoDesglose.facturas }} facturas
+            &nbsp;·&nbsp;
+            {{ formatCurrency(estadoDesglose.total) }}
+          </p>
+          <p class="vm-modal-sub" *ngIf="!estadoDesglose && estadoDesglosesCargando">Cargando...</p>
+        </div>
+      </div>
+      <button class="vm-modal-close" (click)="cerrarModalEstado()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Cargando -->
+    <div class="vm-modal-body" *ngIf="estadoDesglosesCargando">
+      <div class="vm-modal-state">
+        <div class="vm-spinner"></div>
+        <span>Consultando Odoo...</span>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div class="vm-modal-body" *ngIf="!estadoDesglosesCargando && estadoDesglosError">
+      <div class="vm-modal-state vm-modal-state-error">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>{{ estadoDesglosError }}</span>
+      </div>
+    </div>
+
+    <!-- Tabla productos -->
+    <div class="vm-modal-body" *ngIf="!estadoDesglosesCargando && estadoDesglose">
+      <div *ngIf="estadoDesglose.productos.length === 0" class="vm-modal-state">
+        <i class="fas fa-inbox"></i>
+        <span>Sin productos registrados para este estado.</span>
+      </div>
+      <div class="vm-table-wrapper" *ngIf="estadoDesglose.productos.length > 0">
+        <table class="vm-tabla">
+          <thead>
+            <tr>
+              <th class="num">#</th>
+              <th>Producto</th>
+              <th class="num">Unidades</th>
+              <th class="num">Total (sin IVA)</th>
+              <th class="barra-col">% Part.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of estadoDesglose.productos">
+              <td class="num rank">{{ p.rank }}</td>
+              <td class="nombre-producto">{{ p.nombre }}</td>
+              <td class="num">{{ p.cantidad | number:'1.0-0' }}</td>
+              <td class="num">{{ formatCurrency(p.total) }}</td>
+              <td class="barra-td">
+                <div class="mini-barra-wrap">
+                  <div class="mini-barra-track">
+                    <div class="mini-barra" [style.width.%]="barWidth(p.total, maxProdEstadoTotal)"></div>
+                  </div>
+                  <span class="mini-barra-pct">{{ (p.participacion_pct ?? 0) | number:'1.1-1' }}%</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
 </div>

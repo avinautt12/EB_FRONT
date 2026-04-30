@@ -110,7 +110,7 @@
             <th *ngFor="let label of mesesLabels" class="col-mes">{{ label }}</th>
             <th class="col-total">Total</th>
             <th class="col-dists">Dists.</th>
-            <th class="col-actions"></th>
+            <th class="col-actions" style="min-width:40px"></th>
           </tr>
         </thead>
         <tbody>
@@ -202,10 +202,16 @@
         </thead>
         <tbody>
           <tr *ngFor="let d of articuloModal.desglose; trackBy: trackByCliente">
-            <td class="dist-cel">{{ d.clave_cliente }}</td>
-            <td *ngFor="let mes of mesesKeys" class="col-mes">{{ d.meses[mes] || '' }}</td>
+            <td class="dist-cel">
+              <span class="dist-nombre">{{ d.nombre_cliente }}</span>
+              <span class="dist-clave">{{ d.clave_cliente }}</span>
+            </td>
+            <td *ngFor="let mes of mesesKeys" class="col-mes">
+              <span *ngIf="d.meses[mes]" class="cel-val">{{ d.meses[mes] }}</span>
+              <span *ngIf="!d.meses[mes]" class="cel-empty">—</span>
+            </td>
             <td class="col-total">
-              <span class="total-badge">{{ d.total }}</span>
+              <span class="total-badge" [class.total-cero]="d.total === 0">{{ d.total }}</span>
             </td>
           </tr>
         </tbody>

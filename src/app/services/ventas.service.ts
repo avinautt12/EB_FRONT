@@ -34,6 +34,13 @@ export interface PorEstado {
   facturas: number;
 }
 
+export interface DesglosePorEstado {
+  estado: string;
+  total: number;
+  facturas: number;
+  productos: TopProducto[];
+}
+
 export interface ResumenVentas {
   total: number;
   cantidad_facturas: number;
@@ -116,6 +123,13 @@ export class VentasService {
   compararAnual(anio1: number, anio2: number): Observable<ComparacionAnual> {
     return this.http.get<ComparacionAnual>(
       `${this.apiUrl}/ventas/comparar-anual?anio1=${anio1}&anio2=${anio2}`
+    );
+  }
+
+  getProductosPorEstado(fechaInicio: string, fechaFin: string, estado: string): Observable<DesglosePorEstado> {
+    const e = encodeURIComponent(estado);
+    return this.http.get<DesglosePorEstado>(
+      `${this.apiUrl}/ventas/productos-por-estado?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}&estado=${e}`
     );
   }
 }

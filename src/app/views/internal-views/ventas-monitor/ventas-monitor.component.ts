@@ -12,6 +12,8 @@ import {
   MesComparado,
   TopCliente,
   TopProducto,
+  PorEstado,
+  DesglosePorEstado,
 } from '../../../services/ventas.service';
 
 type Modo = 'anual' | 'mensual' | 'comparar' | 'comparar-anual' | 'comparar-integrales';
@@ -77,6 +79,12 @@ export class VentasMonitorComponent implements OnInit {
   cmpIntAnio: number = new Date().getFullYear();
   cmpIntMes: number = new Date().getMonth() + 1;
   cmpIntTipo: 'anual' | 'mensual' = 'anual';
+
+  // ── Modal desglose por estado ───────────────────────────────────────────────
+  estadoDesglose: DesglosePorEstado | null = null;
+  estadoDesgloseAbierto = false;
+  estadoDesglosesCargando = false;
+  estadoDesglosError: string | null = null;
 
   // ── Máximo de barras / ordenamiento ────────────────────────────────────────
   sortProductos: 'total' | 'unidades' = 'total';
@@ -341,7 +349,7 @@ export class VentasMonitorComponent implements OnInit {
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
-  private rangoMes(anio: number, mes: number): { inicio: string; fin: string } {
+  rangoMes(anio: number, mes: number): { inicio: string; fin: string } {
     const mm   = mes.toString().padStart(2, '0');
     const dias = new Date(anio, mes, 0).getDate();
     return {
@@ -407,5 +415,36 @@ export class VentasMonitorComponent implements OnInit {
     if (this.modo === 'anual')   return String(this.anioSeleccionado);
     if (this.modo === 'mensual') return `${this.anioSeleccionado}_${String(this.mesSeleccionado).padStart(2, '0')}`;
     return 'periodo';
+  }
+
+  // ── Modal desglose por estado ───────────────────────────────────────────────
+  verDesglosePorEstado(e: PorEstado): void {
+    this.estadoDesglose = null;
+    this.estadoDesglosError = null;
+    this.estadoDesglosesCargando = true;
+    this.estadoDesgloseAbierto = true;
+
+    const inicio = this.modo === 'anual'
+      ? `${this.anioSeleccionado}-01-01`
+      : this.rangoMes(this.anioSeleccionado, this.mesSeleccionado).inicio;
+    const fin = this.modo === 'anual'
+      ? `${this.anioSeleccionado}-12-31`
+      : this.rangoMes(this.anioSeleccionado, this.mesSeleccionado).fin;
+
+    this.ventasService.getProductosPorEstado(inicio, fin, e.estado).subscribe({
+      next: (d) => { this.estadoDesglose = d; this.estadoDesglosesCargando = false; },
+      error: () => { this.estadoDesglosError = 'Error al cargar los productos.'; this.estadoDesglosesCargando = false; },
+    });
+  }
+
+  cerrarModalEstado(): void {
+    this.estadoDesgloseAbierto = false;
+    this.estadoDesglose = null;
+    this.estadoDesglosError = null;
+  }
+
+  get maxProdEstadoTotal(): number {
+    if (!this.estadoDesglose?.productos?.length) return 1;
+    return Math.max(...this.estadoDesglose.productos.map(p => p.total));
   }
 }
