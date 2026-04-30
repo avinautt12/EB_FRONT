@@ -1,6 +1,6 @@
 import {
   Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnInit,
-  ChangeDetectionStrategy, ChangeDetectorRef
+  ChangeDetectionStrategy, ChangeDetectorRef, ViewChild, ElementRef, AfterViewInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -93,11 +93,15 @@ const MESES_LABELS = ['May','Jun','Jul','Ago','Sep','Oct','Nov','Dic','Ene','Feb
   styleUrls: ['./proyecciones-tab.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProyeccionesTabComponent implements OnChanges, OnInit {
+export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewInit {
 
   @Input() clienteClave: string | null = null;
   @Input() idCliente: number | null = null;
   @Output() rowCountChange = new EventEmitter<number>();
+
+  @ViewChild('tableScroll',  { read: ElementRef }) tableScroll!:  ElementRef<HTMLElement>;
+  @ViewChild('stickyScroll', { read: ElementRef }) stickyScroll!: ElementRef<HTMLElement>;
+  @ViewChild('stickyInner',  { read: ElementRef }) stickyInner!:  ElementRef<HTMLElement>;
 
   private apiUrl = environment.apiUrl;
 
@@ -254,9 +258,40 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit {
     this._initPeriodo();
   }
 
+  ngAfterViewInit(): void {
+    this._setupScrollSync();
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['clienteClave'] && this.clienteClave) {
       this._initPeriodo();
+    }
+  }
+
+  private _setupScrollSync(): void {
+    const ts = this.tableScroll?.nativeElement;
+    const ss = this.stickyScroll?.nativeElement;
+    if (!ts || !ss) return;
+
+    // Table → sticky (only this direction needs addEventListener;
+    // sticky → table is handled by (scroll)="_onStickyScroll()" in template)
+    ts.addEventListener('scroll', () => { ss.scrollLeft = ts.scrollLeft; });
+
+    setTimeout(() => this._updateStickyInnerWidth(), 150);
+  }
+
+  _onStickyScroll(): void {
+    const ts = this.tableScroll?.nativeElement;
+    const ss = this.stickyScroll?.nativeElement;
+    if (ts && ss) ts.scrollLeft = ss.scrollLeft;
+  }
+
+  private _updateStickyInnerWidth(): void {
+    const ts = this.tableScroll?.nativeElement;
+    const si = this.stickyInner?.nativeElement;
+    if (ts && si) {
+      si.style.width  = ts.scrollWidth + 'px';
+      si.style.height = '1px';
     }
   }
 
@@ -338,6 +373,7 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit {
         this.cargando     = false;
         this.rowCountChange.emit(this.rows.length);
         this.cdr.markForCheck();
+        setTimeout(() => this._updateStickyInnerWidth(), 200);
       },
       error: err => {
         this.error    = err?.error?.error || 'Error al cargar proyecciones';
@@ -469,6 +505,8 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit {
 
   toggleMeses(): void {
     this.modoExpandido = !this.modoExpandido;
+    // Recalcular el ancho después de que la tabla se renderice con los meses expandidos
+    setTimeout(() => this._updateStickyInnerWidth(), 100);
   }
 
   // ─────────────────────────────────────────

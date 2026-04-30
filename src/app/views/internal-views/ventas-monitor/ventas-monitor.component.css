@@ -300,6 +300,17 @@
   background: #2d1a1a;
 }
 
+.vm-card.vm-card-highlight {
+  border-color: #EB5E28;
+  background: #2a1e16;
+}
+
+.vm-card-sub {
+  font-size: 0.72rem;
+  color: #777;
+  margin-top: 0.1rem;
+}
+
 /* Label de la tarjeta: flex para alinear ícono */
 .vm-card-label {
   font-size: 0.75rem;
@@ -498,13 +509,20 @@
   min-width: 100px;
 }
 
-.mini-barra {
+.mini-barra-track {
+  flex: 1;
   height: 7px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mini-barra {
+  height: 100%;
   background: linear-gradient(90deg, #EB5E28, #f5a07a);
   border-radius: 4px;
   min-width: 2px;
-  flex: 1;
-  transition: width 0.4s ease;
+  transition: width 0.5s ease;
 }
 
 .mini-barra-pct {
@@ -523,11 +541,19 @@
   min-width: 100px;
 }
 
-.dual-barra {
+.dual-barra-track {
+  width: 100%;
   height: 5px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dual-barra {
+  height: 100%;
   border-radius: 3px;
   min-width: 2px;
-  transition: width 0.4s ease;
+  transition: width 0.5s ease;
 }
 
 .dual-barra.anio1 { background: #5b9ac4; }
@@ -816,4 +842,49 @@
 
 .vm-export-btn i {
   font-size: 0.85rem;
+}
+
+/* ── Controles Comparar Integrales ───────────────────────────────────────────── */
+.vm-controles-integrales {
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.vm-int-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.vm-int-row-periodo {
+  padding-top: 4px;
+  border-top: 1px solid #333;
+}
+
+.vm-int-select {
+  flex: 1;
+  min-width: 200px;
+}
+
+.vm-int-select select {
+  width: 100%;
+}
+
+/* ── Label de período activo en comparación ──────────────────────────────────── */
+.vm-int-periodo-label {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  color: #8a8077;
+  margin-bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.vm-int-periodo-label strong {
+  color: #FFFCF2;
 }

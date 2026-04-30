@@ -17,6 +17,7 @@ export interface TopCliente {
   nombre: string;
   facturas: number;
   total: number;
+  participacion_pct?: number;
 }
 
 export interface TopProducto {
@@ -24,6 +25,7 @@ export interface TopProducto {
   nombre: string;
   cantidad: number;
   total: number;
+  participacion_pct?: number;
 }
 
 export interface PorEstado {
@@ -35,6 +37,8 @@ export interface PorEstado {
 export interface ResumenVentas {
   total: number;
   cantidad_facturas: number;
+  participacion_total_pct?: number;
+  global_total?: number;
   por_mes: PorMes[];
   top_clientes: TopCliente[];
   top_productos: TopProducto[];

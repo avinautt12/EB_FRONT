@@ -1,0 +1,225 @@
+<app-home-bar></app-home-bar>
+
+<div class="my27-page">
+
+  <!-- ── HEADER ── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="title-icon"><i class="fas fa-chart-line"></i></span>
+        Proyecciones MY27
+      </h1>
+      <p class="subtitle" *ngIf="datos">
+        <i class="fas fa-clock"></i>
+        Generado: {{ datos.generado_en }}
+        &nbsp;·&nbsp;
+        <span class="chip">{{ datos.periodo }}</span>
+      </p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline" (click)="cargar()">
+        <i class="fas fa-sync-alt"></i> Actualizar
+      </button>
+      <button class="btn btn-primary" (click)="exportar()">
+        <i class="fas fa-file-excel"></i> Exportar Excel
+      </button>
+    </div>
+  </div>
+
+  <!-- ── CARGANDO ── -->
+  <div class="state-box" *ngIf="cargando">
+    <div class="spinner"></div>
+    <span>Cargando proyecciones...</span>
+  </div>
+
+  <!-- ── ERROR ── -->
+  <div class="state-box state-error" *ngIf="!cargando && error">
+    <i class="fas fa-exclamation-triangle"></i>
+    <span>{{ error }}</span>
+    <button class="btn btn-outline" (click)="cargar()">Reintentar</button>
+  </div>
+
+  <ng-container *ngIf="!cargando && !error && datos">
+
+    <!-- ── KPI CARDS ── -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">Total Artículos</span>
+          <div class="kpi-icon-wrap"><i class="fas fa-bicycle"></i></div>
+        </div>
+        <div class="kpi-value">{{ datos.kpis.total_articulos }}</div>
+        <div class="kpi-foot">artículos MY27</div>
+      </div>
+
+      <div class="kpi-card kpi-green">
+        <div class="kpi-header">
+          <span class="kpi-label">Con Pedido</span>
+          <div class="kpi-icon-wrap kpi-icon-green"><i class="fas fa-check-circle"></i></div>
+        </div>
+        <div class="kpi-value kpi-val-green">{{ datos.kpis.articulos_con_pedido }}</div>
+        <div class="kpi-foot">tienen proyección</div>
+      </div>
+
+      <div class="kpi-card kpi-red">
+        <div class="kpi-header">
+          <span class="kpi-label">Sin Pedido</span>
+          <div class="kpi-icon-wrap kpi-icon-red"><i class="fas fa-minus-circle"></i></div>
+        </div>
+        <div class="kpi-value kpi-val-red">{{ datos.kpis.articulos_sin_pedido }}</div>
+        <div class="kpi-foot">sin proyección</div>
+      </div>
+
+      <div class="kpi-card kpi-orange">
+        <div class="kpi-header">
+          <span class="kpi-label">Total Unidades</span>
+          <div class="kpi-icon-wrap kpi-icon-orange"><i class="fas fa-boxes"></i></div>
+        </div>
+        <div class="kpi-value kpi-val-orange">{{ datos.kpis.total_unidades | number }}</div>
+        <div class="kpi-foot">unidades proyectadas</div>
+      </div>
+
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-header">
+          <span class="kpi-label">Distribuidores</span>
+          <div class="kpi-icon-wrap kpi-icon-blue"><i class="fas fa-store"></i></div>
+        </div>
+        <div class="kpi-value kpi-val-blue">{{ datos.kpis.distribuidores_activos }}</div>
+        <div class="kpi-foot">con proyecciones activas</div>
+      </div>
+    </div>
+
+    <!-- ── BUSCADOR ── -->
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input
+        type="text"
+        placeholder="Buscar por SKU, producto, marca o modelo..."
+        [(ngModel)]="busqueda"
+      />
+      <span class="search-count">{{ articulosFiltrados.length }} artículos</span>
+    </div>
+
+    <!-- ── TABLA ── -->
+    <div class="table-wrap">
+      <table class="tabla-proyecciones">
+        <thead>
+          <tr>
+            <th class="col-sku">SKU</th>
+            <th class="col-desc">Producto</th>
+            <th *ngFor="let label of mesesLabels" class="col-mes">{{ label }}</th>
+            <th class="col-total">Total</th>
+            <th class="col-dists">Dists.</th>
+            <th class="col-actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let art of articulosFiltrados; trackBy: trackBySku">
+            <!-- Fila principal -->
+            <tr class="fila-articulo" [class.fila-con-pedido]="art.total_anual > 0">
+              <td class="col-sku">
+                <span class="sku-badge">{{ art.sku }}</span>
+              </td>
+              <td class="col-desc">
+                <div class="desc-wrap">
+                  <span class="marca-tag">{{ art.marca }}</span>
+                  <span class="prod-nombre" [title]="art.producto">{{ art.producto || art.modelo }}</span>
+                  <span class="prod-det" *ngIf="art.color || art.talla">{{ art.color }} {{ art.talla }}</span>
+                </div>
+              </td>
+              <td
+                *ngFor="let mes of mesesKeys"
+                [class]="getCelClass(art, mes)"
+                class="col-mes"
+              >
+                <span *ngIf="isDisponible(art, mes)">{{ getCantidad(art, mes) || '' }}</span>
+                <span *ngIf="!isDisponible(art, mes)" class="bloq-icon" title="No disponible">—</span>
+              </td>
+              <td class="col-total">
+                <span class="total-badge" [class.total-cero]="art.total_anual === 0">
+                  {{ art.total_anual }}
+                </span>
+              </td>
+              <td class="col-dists">{{ art.num_distribuidores }}</td>
+              <td class="col-actions">
+                <button
+                  class="btn-expand"
+                  *ngIf="art.desglose.length > 0"
+                  (click)="abrirModal(art)"
+                  title="Ver desglose por distribuidor"
+                >
+                  <i class="fas fa-expand-alt"></i>
+                </button>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+
+        <!-- FILA TOTALES -->
+        <tfoot>
+          <tr class="fila-totales">
+            <td colspan="2" class="lbl-totales">TOTAL GENERAL</td>
+            <td *ngFor="let mes of mesesKeys" class="col-mes total-cel">
+              {{ getTotalMes(mes) || '' }}
+            </td>
+            <td class="col-total total-cel total-general">{{ datos.total_general | number }}</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+  </ng-container>
+</div>
+
+<!-- ═══ MODAL DESGLOSE ═══ -->
+<div class="modal-overlay" *ngIf="modalAbierto && articuloModal" (click)="cerrarModal()">
+  <div class="modal-panel modal-wide" (click)="$event.stopPropagation()">
+
+    <div class="modal-hdr">
+      <div class="modal-hdr-left">
+        <div class="modal-icon-wrap"><i class="fas fa-store"></i></div>
+        <div>
+          <h2>Desglose por Distribuidor</h2>
+          <p class="modal-sub">
+            {{ articuloModal.sku }} &nbsp;·&nbsp; {{ articuloModal.producto || articuloModal.modelo }}
+          </p>
+        </div>
+      </div>
+      <button class="modal-close" (click)="cerrarModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <table class="tabla-desglose">
+        <thead>
+          <tr>
+            <th>Distribuidor</th>
+            <th *ngFor="let label of mesesLabels" class="col-mes">{{ label }}</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of articuloModal.desglose; trackBy: trackByCliente">
+            <td class="dist-cel">{{ d.clave_cliente }}</td>
+            <td *ngFor="let mes of mesesKeys" class="col-mes">{{ d.meses[mes] || '' }}</td>
+            <td class="col-total">
+              <span class="total-badge">{{ d.total }}</span>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="fila-totales">
+            <td class="lbl-totales">TOTAL</td>
+            <td *ngFor="let mes of mesesKeys" class="col-mes total-cel">
+              {{ getCantidad(articuloModal, mes) || '' }}
+            </td>
+            <td class="total-cel total-general">{{ articuloModal.total_anual }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+  </div>
+</div>

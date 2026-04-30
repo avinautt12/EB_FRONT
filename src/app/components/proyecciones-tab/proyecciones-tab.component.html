@@ -141,9 +141,9 @@
   </div>
 
   <!-- ── Tabla principal ── -->
-  <div *ngIf="!cargando && rows.length > 0" class="proy-tabla-wrap">
+  <div *ngIf="!cargando && rows.length > 0" class="proy-tabla-wrap" [class.expandido]="modoExpandido">
 
-    <div class="proy-tabla-scroll">
+    <div class="proy-tabla-scroll" #tableScroll>
       <table class="proy-tabla">
         <thead>
           <!-- Encabezado modo compacto -->
@@ -163,8 +163,6 @@
           <tr *ngIf="modoExpandido">
             <th class="th-sku">SKU</th>
             <th class="th-producto">Producto</th>
-            <th>Marca</th>
-            <th>Modelo</th>
             <th>Color</th>
             <th>Talla</th>
             <th class="th-precio">Precio</th>
@@ -210,14 +208,14 @@
               <span *ngIf="modoEdicion && row._nuevo && !row._searchSeleccionado" class="proy-field-hint">&mdash;</span>
             </td>
 
-            <!-- Marca -->
-            <td>
+            <!-- Marca (oculta en modo expandido) -->
+            <td *ngIf="!modoExpandido">
               <span *ngIf="!modoEdicion || !row._nuevo">{{ row.marca }}</span>
               <span *ngIf="modoEdicion && row._nuevo">{{ row._searchSeleccionado ? row.marca : '&mdash;' }}</span>
             </td>
 
-            <!-- Modelo -->
-            <td>
+            <!-- Modelo (oculto en modo expandido) -->
+            <td *ngIf="!modoExpandido">
               <span *ngIf="!modoEdicion || !row._nuevo">{{ row.modelo }}</span>
               <span *ngIf="modoEdicion && row._nuevo">{{ row._searchSeleccionado ? row.modelo : '&mdash;' }}</span>
             </td>
@@ -287,7 +285,7 @@
         <tfoot *ngIf="rowsFiltrados.length > 0">
           <!-- Fila naranja: totales de unidades -->
           <tr class="proy-fila-totales">
-            <td colspan="6"><strong>TOTALES</strong></td>
+            <td [attr.colspan]="modoExpandido ? 4 : 6"><strong>TOTALES</strong></td>
             <!-- columna Precio vacía -->
             <td class="td-precio-foot"></td>
             <ng-container *ngIf="modoExpandido">
@@ -301,7 +299,7 @@
           </tr>
           <!-- Fila azul: total en precio por mes -->
           <tr class="proy-fila-precio-mes" *ngIf="modoExpandido">
-            <td colspan="7" class="td-precio-mes-lbl"><strong>PRECIO POR MES</strong></td>
+            <td colspan="5" class="td-precio-mes-lbl"><strong>PRECIO POR MES</strong></td>
             <td *ngFor="let mes of mesesKeys" class="td-precio-mes">
               <strong>{{ totalPrecioMes(mes) | currency:'MXN':'symbol':'1.0-0' }}</strong>
             </td>
@@ -312,6 +310,11 @@
         </tfoot>
       </table>
     </div><!-- /scroll -->
+
+    <!-- Barra scrollbar sticky — siempre visible en la parte inferior -->
+    <div class="proy-scroll-sticky" #stickyScroll (scroll)="_onStickyScroll()">
+      <div class="proy-scroll-inner" #stickyInner></div>
+    </div>
 
   </div><!-- /tabla wrap -->
 

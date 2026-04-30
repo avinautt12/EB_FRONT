@@ -438,12 +438,49 @@
   overflow: hidden;
   border-radius: 8px;
   border: 1px solid #2e2c29;
+  display: flex;
+  flex-direction: column;
 }
 
 .proy-tabla-scroll {
-  overflow-x: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: calc(100vh - 280px);
   width: 100%;
+  /* vertical scrollbar only */
+  scrollbar-width: thin;
+  scrollbar-color: #4a4744 #1a1917;
 }
+
+/* Webkit vertical scrollbar */
+.proy-tabla-scroll::-webkit-scrollbar { width: 7px; height: 0; }
+.proy-tabla-scroll::-webkit-scrollbar-track { background: #1a1917; }
+.proy-tabla-scroll::-webkit-scrollbar-thumb { background: #4a4744; border-radius: 4px; }
+.proy-tabla-scroll::-webkit-scrollbar-thumb:hover { background: #EB5E28; }
+.proy-tabla-scroll::-webkit-scrollbar-corner { background: #1a1917; }
+
+/* ── Barra scrollbar sticky horizontal ── */
+.proy-scroll-sticky {
+  width: 100%;
+  height: 14px;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  background: #1a1917;
+  border-top: 1px solid #2e2c29;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 999;
+  scrollbar-width: thin;
+  scrollbar-color: #4a4744 #1a1917;
+}
+
+.proy-scroll-sticky::-webkit-scrollbar { height: 8px; }
+.proy-scroll-sticky::-webkit-scrollbar-track { background: #1a1917; }
+.proy-scroll-sticky::-webkit-scrollbar-thumb { background: #4a4744; border-radius: 4px; }
+.proy-scroll-sticky::-webkit-scrollbar-thumb:hover { background: #EB5E28; }
+
+.proy-scroll-inner { height: 1px; }
 
 .proy-tabla {
   width: 100%;
@@ -466,6 +503,11 @@
   letter-spacing: 0.05em;
   white-space: nowrap;
   text-align: left;
+  /* Sticky header */
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #1e1d1b;
 }
 
 .proy-tabla tbody tr {
@@ -481,9 +523,55 @@
   vertical-align: middle;
 }
 
-/* Column sizing */
-.th-sku, .td-sku    { min-width: 90px; max-width: 120px; font-size: 0.78rem; color: #888; }
-.th-producto, .td-producto { min-width: 160px; }
+/* Column sizing + sticky columns */
+.th-sku, .td-sku {
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+  font-size: 0.78rem;
+  color: #888;
+  /* Sticky izquierda */
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #1e1d1b;
+}
+
+.th-producto, .td-producto {
+  min-width: 180px;
+  /* Sticky izquierda después de SKU */
+  position: sticky;
+  left: 100px;
+  z-index: 2;
+  background: #1e1d1b;
+  border-right: 1px solid #403d39;
+}
+
+/* Intersección sticky header + sticky columna → z-index máximo */
+.proy-tabla thead .th-sku,
+.proy-tabla thead .th-producto {
+  z-index: 5;
+}
+
+/* Fondo de celdas sticky en tbody (más oscuro que el header) */
+.proy-tabla tbody .td-sku,
+.proy-tabla tbody .td-producto {
+  background: #181715;
+}
+
+/* Hover sobre fila aplica a celdas sticky */
+.proy-tabla tbody tr:hover .td-sku,
+.proy-tabla tbody tr:hover .td-producto {
+  background: #222020;
+}
+
+/* Filas con estado especial */
+.proy-tabla tbody .proy-fila-nueva .td-sku,
+.proy-tabla tbody .proy-fila-nueva .td-producto    { background: #231810; }
+.proy-tabla tbody .proy-fila-eliminar .td-sku,
+.proy-tabla tbody .proy-fila-eliminar .td-producto { background: #1f1212; }
+.proy-tabla tbody .proy-fila-editada .td-sku,
+.proy-tabla tbody .proy-fila-editada .td-producto  { background: #1c1b10; }
 .th-total, .td-total { text-align: right; font-weight: 700; color: #FFFCF2; white-space: nowrap; }
 .th-mes             { min-width: 52px; text-align: center; }
 .td-qty             { text-align: center; }

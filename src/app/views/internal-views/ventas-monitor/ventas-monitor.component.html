@@ -13,22 +13,25 @@
 
   <!-- SELECTOR DE MODO -->
   <div class="vm-modo-tabs">
-    <button class="vm-tab" [class.activo]="modo === 'anual'"         (click)="cambiarModo('anual')">
+    <button class="vm-tab" [class.activo]="modo === 'anual'"                 (click)="cambiarModo('anual')">
       <i class="fas fa-calendar-alt"></i> Por Año
     </button>
-    <button class="vm-tab" [class.activo]="modo === 'mensual'"       (click)="cambiarModo('mensual')">
+    <button class="vm-tab" [class.activo]="modo === 'mensual'"               (click)="cambiarModo('mensual')">
       <i class="fas fa-calendar-day"></i> Por Mes
     </button>
-    <button class="vm-tab" [class.activo]="modo === 'comparar'"      (click)="cambiarModo('comparar')">
+    <button class="vm-tab" [class.activo]="modo === 'comparar'"              (click)="cambiarModo('comparar')">
       <i class="fas fa-exchange-alt"></i> Comparar Meses
     </button>
-    <button class="vm-tab" [class.activo]="modo === 'comparar-anual'"(click)="cambiarModo('comparar-anual')">
+    <button class="vm-tab" [class.activo]="modo === 'comparar-anual'"        (click)="cambiarModo('comparar-anual')">
       <i class="fas fa-chart-line"></i> Comparar Años
+    </button>
+    <button class="vm-tab" [class.activo]="modo === 'comparar-integrales'" (click)="cambiarModo('comparar-integrales')">
+      <i class="fas fa-layer-group"></i> Comparar Integrales
     </button>
   </div>
 
   <!-- FILTRO INTEGRAL -->
-  <div class="vm-integral-bar" *ngIf="grupos.length > 0">
+  <div class="vm-integral-bar" *ngIf="grupos.length > 0 && modo !== 'comparar-integrales'">
     <span class="vm-integral-label"><i class="fas fa-layer-group"></i> Integral:</span>
     <button
       class="vm-integral-chip"
@@ -149,6 +152,56 @@
     </button>
   </div>
 
+  <!-- ── CONTROLES ► COMPARAR INTEGRALES ── -->
+  <div class="vm-controles vm-controles-integrales" *ngIf="modo === 'comparar-integrales'">
+
+    <!-- Fila de integrales -->
+    <div class="vm-int-row">
+      <div class="vm-control-group vm-int-select">
+        <label><i class="fas fa-layer-group"></i> Integral A</label>
+        <select [(ngModel)]="cmpIntGrupo1">
+          <option [ngValue]="null">— Seleccionar —</option>
+          <option *ngFor="let g of grupos" [ngValue]="g.id">{{ g.nombre_grupo }}</option>
+        </select>
+      </div>
+      <div class="vm-vs-badge">VS</div>
+      <div class="vm-control-group vm-int-select">
+        <label><i class="fas fa-layer-group"></i> Integral B</label>
+        <select [(ngModel)]="cmpIntGrupo2">
+          <option [ngValue]="null">— Seleccionar —</option>
+          <option *ngFor="let g of grupos" [ngValue]="g.id">{{ g.nombre_grupo }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Fila de período -->
+    <div class="vm-int-row vm-int-row-periodo">
+      <div class="vm-control-group">
+        <label>Tipo</label>
+        <select [(ngModel)]="cmpIntTipo">
+          <option value="anual">Anual</option>
+          <option value="mensual">Mensual</option>
+        </select>
+      </div>
+      <div class="vm-control-group">
+        <label>Año</label>
+        <select [(ngModel)]="cmpIntAnio">
+          <option *ngFor="let a of aniosDisponibles" [value]="a">{{ a }}</option>
+        </select>
+      </div>
+      <div class="vm-control-group" *ngIf="cmpIntTipo === 'mensual'">
+        <label>Mes</label>
+        <select [(ngModel)]="cmpIntMes">
+          <option *ngFor="let m of meses" [value]="m.num">{{ m.nombre }}</option>
+        </select>
+      </div>
+      <button class="vm-btn-consultar" (click)="consultar()" [disabled]="cargando || !cmpIntGrupo1 || !cmpIntGrupo2">
+        <i class="fas fa-layer-group"></i> {{ cargando ? 'Cargando...' : 'Comparar' }}
+      </button>
+    </div>
+
+  </div>
+
   <!-- ERROR -->
   <div class="vm-error" *ngIf="error">
     <i class="fas fa-exclamation-triangle"></i> {{ error }}
@@ -179,6 +232,11 @@
         <span class="vm-card-label"><i class="fas fa-calculator"></i> Ticket Promedio</span>
         <span class="vm-card-value">{{ formatCurrency(resumen.total / resumen.cantidad_facturas) }}</span>
       </div>
+      <div class="vm-card vm-card-highlight" *ngIf="grupoSeleccionado && resumen.participacion_total_pct != null">
+        <span class="vm-card-label"><i class="fas fa-chart-pie"></i> Participación en Ventas Totales</span>
+        <span class="vm-card-value">{{ resumen.participacion_total_pct | number:'1.1-1' }}%</span>
+        <span class="vm-card-sub" *ngIf="resumen.global_total">de {{ formatCurrency(resumen.global_total) }} total</span>
+      </div>
     </div>
 
     <!-- Desglose mensual (sólo modo anual) con mini barras -->
@@ -200,7 +258,9 @@
               <td class="num">{{ formatCurrency(fila.total) }}</td>
               <td class="barra-td">
                 <div class="mini-barra-wrap">
-                  <div class="mini-barra" [style.width.%]="barWidth(fila.total, maxMesTotal)"></div>
+                  <div class="mini-barra-track">
+                    <div class="mini-barra" [style.width.%]="barWidth(fila.total, maxMesTotal)"></div>
+                  </div>
                   <span class="mini-barra-pct">{{ resumen.total > 0 ? (fila.total / resumen.total * 100 | number:'1.0-0') : 0 }}%</span>
                 </div>
               </td>
@@ -246,6 +306,7 @@
               <th>Cliente</th>
               <th class="num">Facturas</th>
               <th class="num">Total (con IVA)</th>
+              <th class="barra-col">% Part.</th>
             </tr>
           </thead>
           <tbody>
@@ -254,6 +315,14 @@
               <td>{{ p.nombre }}</td>
               <td class="num">{{ p.facturas }}</td>
               <td class="num">{{ formatCurrency(p.total) }}</td>
+              <td class="barra-td">
+                <div class="mini-barra-wrap">
+                  <div class="mini-barra-track">
+                    <div class="mini-barra" [style.width.%]="p.participacion_pct ?? 0"></div>
+                  </div>
+                  <span class="mini-barra-pct">{{ (p.participacion_pct ?? 0) | number:'1.1-1' }}%</span>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -289,6 +358,7 @@
               <th>Producto</th>
               <th class="num">Unidades</th>
               <th class="num">Total (sin IVA)</th>
+              <th class="barra-col">% Part.</th>
             </tr>
           </thead>
           <tbody>
@@ -297,6 +367,14 @@
               <td class="nombre-producto">{{ p.nombre }}</td>
               <td class="num">{{ p.cantidad | number:'1.0-0' }}</td>
               <td class="num">{{ formatCurrency(p.total) }}</td>
+              <td class="barra-td">
+                <div class="mini-barra-wrap">
+                  <div class="mini-barra-track">
+                    <div class="mini-barra" [style.width.%]="p.participacion_pct ?? 0"></div>
+                  </div>
+                  <span class="mini-barra-pct">{{ (p.participacion_pct ?? 0) | number:'1.1-1' }}%</span>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -327,7 +405,9 @@
               <td class="num">{{ formatCurrency(e.total) }}</td>
               <td class="barra-td">
                 <div class="mini-barra-wrap">
-                  <div class="mini-barra" [style.width.%]="barWidth(e.total, maxEstadoTotal)"></div>
+                  <div class="mini-barra-track">
+                    <div class="mini-barra" [style.width.%]="barWidth(e.total, maxEstadoTotal)"></div>
+                  </div>
                   <span class="mini-barra-pct">{{ resumen.total > 0 ? (e.total / resumen.total * 100 | number:'1.0-0') : 0 }}%</span>
                 </div>
               </td>
@@ -391,7 +471,7 @@
           <h3><i class="fas fa-trophy"></i> Top 10 Clientes</h3>
           <table class="vm-tabla">
             <thead>
-              <tr><th class="num">#</th><th>Cliente</th><th class="num">Facturas</th><th class="num">Total</th></tr>
+              <tr><th class="num">#</th><th>Cliente</th><th class="num">Facturas</th><th class="num">Total</th><th class="barra-col">% Part.</th></tr>
             </thead>
             <tbody>
               <tr *ngFor="let p of resumen1.top_clientes">
@@ -399,6 +479,14 @@
                 <td>{{ p.nombre }}</td>
                 <td class="num">{{ p.facturas }}</td>
                 <td class="num">{{ formatCurrency(p.total) }}</td>
+                <td class="barra-td">
+                <div class="mini-barra-wrap">
+                  <div class="mini-barra-track">
+                    <div class="mini-barra" [style.width.%]="p.participacion_pct ?? 0"></div>
+                  </div>
+                  <span class="mini-barra-pct">{{ (p.participacion_pct ?? 0) | number:'1.1-1' }}%</span>
+                </div>
+              </td>
               </tr>
             </tbody>
           </table>
@@ -409,7 +497,7 @@
           <h3><i class="fas fa-bicycle"></i> Top 10 Productos</h3>
           <table class="vm-tabla">
             <thead>
-              <tr><th class="num">#</th><th>Producto</th><th class="num">Uds.</th><th class="num">Total</th></tr>
+              <tr><th class="num">#</th><th>Producto</th><th class="num">Uds.</th><th class="num">Total</th><th class="barra-col">% Part.</th></tr>
             </thead>
             <tbody>
               <tr *ngFor="let p of resumen1.top_productos">
@@ -417,6 +505,14 @@
                 <td class="nombre-producto">{{ p.nombre }}</td>
                 <td class="num">{{ p.cantidad | number:'1.0-0' }}</td>
                 <td class="num">{{ formatCurrency(p.total) }}</td>
+                <td class="barra-td">
+                <div class="mini-barra-wrap">
+                  <div class="mini-barra-track">
+                    <div class="mini-barra" [style.width.%]="p.participacion_pct ?? 0"></div>
+                  </div>
+                  <span class="mini-barra-pct">{{ (p.participacion_pct ?? 0) | number:'1.1-1' }}%</span>
+                </div>
+              </td>
               </tr>
             </tbody>
           </table>
@@ -446,7 +542,7 @@
           <h3><i class="fas fa-trophy"></i> Top 10 Clientes</h3>
           <table class="vm-tabla">
             <thead>
-              <tr><th class="num">#</th><th>Cliente</th><th class="num">Facturas</th><th class="num">Total</th></tr>
+              <tr><th class="num">#</th><th>Cliente</th><th class="num">Facturas</th><th class="num">Total</th><th class="barra-col">% Part.</th></tr>
             </thead>
             <tbody>
               <tr *ngFor="let p of resumen2.top_clientes">
@@ -454,6 +550,14 @@
                 <td>{{ p.nombre }}</td>
                 <td class="num">{{ p.facturas }}</td>
                 <td class="num">{{ formatCurrency(p.total) }}</td>
+                <td class="barra-td">
+                <div class="mini-barra-wrap">
+                  <div class="mini-barra-track">
+                    <div class="mini-barra" [style.width.%]="p.participacion_pct ?? 0"></div>
+                  </div>
+                  <span class="mini-barra-pct">{{ (p.participacion_pct ?? 0) | number:'1.1-1' }}%</span>
+                </div>
+              </td>
               </tr>
             </tbody>
           </table>
@@ -464,7 +568,7 @@
           <h3><i class="fas fa-bicycle"></i> Top 10 Productos</h3>
           <table class="vm-tabla">
             <thead>
-              <tr><th class="num">#</th><th>Producto</th><th class="num">Uds.</th><th class="num">Total</th></tr>
+              <tr><th class="num">#</th><th>Producto</th><th class="num">Uds.</th><th class="num">Total</th><th class="barra-col">% Part.</th></tr>
             </thead>
             <tbody>
               <tr *ngFor="let p of resumen2.top_productos">
@@ -472,6 +576,14 @@
                 <td class="nombre-producto">{{ p.nombre }}</td>
                 <td class="num">{{ p.cantidad | number:'1.0-0' }}</td>
                 <td class="num">{{ formatCurrency(p.total) }}</td>
+                <td class="barra-td">
+                <div class="mini-barra-wrap">
+                  <div class="mini-barra-track">
+                    <div class="mini-barra" [style.width.%]="p.participacion_pct ?? 0"></div>
+                  </div>
+                  <span class="mini-barra-pct">{{ (p.participacion_pct ?? 0) | number:'1.1-1' }}%</span>
+                </div>
+              </td>
               </tr>
             </tbody>
           </table>
@@ -540,8 +652,8 @@
               </td>
               <td class="barra-td">
                 <div class="dual-barra-wrap" *ngIf="fila.total1 > 0 || fila.total2 > 0">
-                  <div class="dual-barra anio1" [style.width.%]="barWidth(fila.total1, maxCmpTotal)"></div>
-                  <div class="dual-barra anio2" [style.width.%]="barWidth(fila.total2, maxCmpTotal)"></div>
+                  <div class="dual-barra-track"><div class="dual-barra anio1" [style.width.%]="barWidth(fila.total1, maxCmpTotal)"></div></div>
+                  <div class="dual-barra-track"><div class="dual-barra anio2" [style.width.%]="barWidth(fila.total2, maxCmpTotal)"></div></div>
                 </div>
               </td>
             </tr>
@@ -567,6 +679,243 @@
         <span class="leyenda-item"><span class="leyenda-dot anio1"></span> {{ comparacionAnual.anio1 }}</span>
         <span class="leyenda-item"><span class="leyenda-dot anio2"></span> {{ comparacionAnual.anio2 }}</span>
       </div>
+    </div>
+
+  </ng-container>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!--  RESULTADOS ► COMPARAR INTEGRALES                     -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="!cargando && modo === 'comparar-integrales' && (resumen1 || resumen2)">
+
+    <!-- Chip de período -->
+    <div class="vm-int-periodo-label">
+      <i class="fas fa-calendar-alt"></i>
+      Período: <strong>{{ etiquetaIntegralPeriodo }}</strong>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="vm-cards-row">
+      <div class="vm-card">
+        <span class="vm-card-label"><i class="fas fa-layer-group"></i> {{ nombreGrupo1 }}</span>
+        <span class="vm-card-value">{{ formatCurrency(resumen1?.total ?? 0) }}</span>
+        <span class="vm-delta-pct">{{ resumen1?.cantidad_facturas ?? 0 }} facturas</span>
+      </div>
+      <div class="vm-card">
+        <span class="vm-card-label"><i class="fas fa-layer-group"></i> {{ nombreGrupo2 }}</span>
+        <span class="vm-card-value">{{ formatCurrency(resumen2?.total ?? 0) }}</span>
+        <span class="vm-delta-pct">{{ resumen2?.cantidad_facturas ?? 0 }} facturas</span>
+      </div>
+      <div class="vm-card"
+        [class.positivo]="(resumen2?.total ?? 0) >= (resumen1?.total ?? 0)"
+        [class.negativo]="(resumen2?.total ?? 0) < (resumen1?.total ?? 0)"
+        *ngIf="resumen1 && resumen2">
+        <span class="vm-card-label">Diferencia {{ nombreGrupo2 }} vs {{ nombreGrupo1 }}</span>
+        <span class="vm-card-value">
+          <i class="fas" [class.fa-arrow-up]="resumen2!.total >= resumen1!.total" [class.fa-arrow-down]="resumen2!.total < resumen1!.total"></i>
+          {{ formatCurrency(resumen2!.total - resumen1!.total) }}
+        </span>
+        <span class="vm-delta-pct" *ngIf="resumen1!.total > 0">
+          {{ ((resumen2!.total - resumen1!.total) / resumen1!.total * 100) | number:'1.1-1' }}%
+        </span>
+      </div>
+    </div>
+
+    <!-- Tabla mes a mes (solo modo anual) -->
+    <div class="vm-seccion" *ngIf="cmpIntTipo === 'anual'">
+      <h2>Comparación Mes a Mes — {{ nombreGrupo1 }} vs {{ nombreGrupo2 }}</h2>
+      <div class="vm-table-wrapper">
+        <table class="vm-tabla">
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th class="num">{{ nombreGrupo1 }}</th>
+              <th class="num">{{ nombreGrupo2 }}</th>
+              <th class="num">Δ Importe</th>
+              <th class="num">Δ %</th>
+              <th class="barra-col">Tendencia</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let fila of cmpIntMesesComparados"
+              [class.fila-positiva]="fila.delta > 0"
+              [class.fila-negativa]="fila.delta < 0 && fila.total1 > 0">
+              <td>{{ fila.mes_nombre }}</td>
+              <td class="num">{{ formatCurrency(fila.total1) }}</td>
+              <td class="num">{{ formatCurrency(fila.total2) }}</td>
+              <td class="num delta-cell" [class.pos]="fila.delta > 0" [class.neg]="fila.delta < 0 && fila.total1 > 0">
+                <i class="fas" [class.fa-arrow-up]="fila.delta > 0" [class.fa-arrow-down]="fila.delta < 0 && fila.total1 > 0"
+                   *ngIf="fila.total1 > 0 || fila.total2 > 0"></i>
+                {{ formatCurrency(fila.delta) }}
+              </td>
+              <td class="num delta-cell" [class.pos]="fila.delta > 0" [class.neg]="fila.delta < 0 && fila.total1 > 0">
+                {{ fila.total1 > 0 ? (fila.delta_pct > 0 ? '+' : '') + fila.delta_pct + '%' : '—' }}
+              </td>
+              <td class="barra-td">
+                <div class="dual-barra-wrap" *ngIf="fila.total1 > 0 || fila.total2 > 0">
+                  <div class="dual-barra-track"><div class="dual-barra anio1" [style.width.%]="barWidth(fila.total1, maxCmpIntTotal)"></div></div>
+                  <div class="dual-barra-track"><div class="dual-barra anio2" [style.width.%]="barWidth(fila.total2, maxCmpIntTotal)"></div></div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="fila-total">
+              <td>Total</td>
+              <td class="num">{{ formatCurrency(resumen1?.total ?? 0) }}</td>
+              <td class="num">{{ formatCurrency(resumen2?.total ?? 0) }}</td>
+              <td class="num delta-cell"
+                [class.pos]="(resumen2?.total ?? 0) >= (resumen1?.total ?? 0)"
+                [class.neg]="(resumen2?.total ?? 0) < (resumen1?.total ?? 0)">
+                {{ formatCurrency((resumen2?.total ?? 0) - (resumen1?.total ?? 0)) }}
+              </td>
+              <td class="num delta-cell"
+                [class.pos]="(resumen2?.total ?? 0) >= (resumen1?.total ?? 0)"
+                [class.neg]="(resumen2?.total ?? 0) < (resumen1?.total ?? 0)">
+                {{ (resumen1?.total ?? 0) > 0
+                  ? (((resumen2?.total ?? 0) - (resumen1?.total ?? 0)) / (resumen1?.total ?? 1) * 100 | number:'1.1-1') + '%'
+                  : '—' }}
+              </td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="vm-leyenda">
+        <span class="leyenda-item"><span class="leyenda-dot anio1"></span> {{ nombreGrupo1 }}</span>
+        <span class="leyenda-item"><span class="leyenda-dot anio2"></span> {{ nombreGrupo2 }}</span>
+      </div>
+    </div>
+
+    <!-- Top clientes side-by-side -->
+    <div class="vm-comparar-grid" *ngIf="resumen1 || resumen2">
+
+      <div class="vm-comparar-col" *ngIf="resumen1">
+        <h2 class="vm-comparar-titulo"><i class="fas fa-layer-group"></i> {{ nombreGrupo1 }}</h2>
+        <div class="vm-cards-row vm-kpi-row">
+          <div class="vm-card">
+            <span class="vm-card-label">Total (con IVA)</span>
+            <span class="vm-card-value">{{ formatCurrency(resumen1.total) }}</span>
+          </div>
+          <div class="vm-card">
+            <span class="vm-card-label">Facturas</span>
+            <span class="vm-card-value">{{ resumen1.cantidad_facturas }}</span>
+          </div>
+          <div class="vm-card vm-card-highlight" *ngIf="resumen1.participacion_total_pct != null">
+            <span class="vm-card-label"><i class="fas fa-chart-pie"></i> Participación</span>
+            <span class="vm-card-value">{{ resumen1.participacion_total_pct | number:'1.1-1' }}%</span>
+          </div>
+        </div>
+        <div class="vm-table-wrapper" *ngIf="resumen1.top_clientes.length">
+          <h3><i class="fas fa-trophy"></i> Top 10 Clientes</h3>
+          <table class="vm-tabla">
+            <thead><tr><th class="num">#</th><th>Cliente</th><th class="num">Facturas</th><th class="num">Total</th><th class="barra-col">% Part.</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let p of resumen1.top_clientes">
+                <td class="num rank">{{ p.rank }}</td>
+                <td>{{ p.nombre }}</td>
+                <td class="num">{{ p.facturas }}</td>
+                <td class="num">{{ formatCurrency(p.total) }}</td>
+                <td class="barra-td">
+                <div class="mini-barra-wrap">
+                  <div class="mini-barra-track">
+                    <div class="mini-barra" [style.width.%]="p.participacion_pct ?? 0"></div>
+                  </div>
+                  <span class="mini-barra-pct">{{ (p.participacion_pct ?? 0) | number:'1.1-1' }}%</span>
+                </div>
+              </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="vm-table-wrapper vm-table-mt" *ngIf="resumen1.top_productos?.length">
+          <h3><i class="fas fa-bicycle"></i> Top 10 Productos</h3>
+          <table class="vm-tabla">
+            <thead><tr><th class="num">#</th><th>Producto</th><th class="num">Uds.</th><th class="num">Total</th><th class="barra-col">% Part.</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let p of resumen1.top_productos">
+                <td class="num rank">{{ p.rank }}</td>
+                <td class="nombre-producto">{{ p.nombre }}</td>
+                <td class="num">{{ p.cantidad | number:'1.0-0' }}</td>
+                <td class="num">{{ formatCurrency(p.total) }}</td>
+                <td class="barra-td">
+                <div class="mini-barra-wrap">
+                  <div class="mini-barra-track">
+                    <div class="mini-barra" [style.width.%]="p.participacion_pct ?? 0"></div>
+                  </div>
+                  <span class="mini-barra-pct">{{ (p.participacion_pct ?? 0) | number:'1.1-1' }}%</span>
+                </div>
+              </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="vm-comparar-sep"></div>
+
+      <div class="vm-comparar-col" *ngIf="resumen2">
+        <h2 class="vm-comparar-titulo"><i class="fas fa-layer-group"></i> {{ nombreGrupo2 }}</h2>
+        <div class="vm-cards-row vm-kpi-row">
+          <div class="vm-card">
+            <span class="vm-card-label">Total (con IVA)</span>
+            <span class="vm-card-value">{{ formatCurrency(resumen2.total) }}</span>
+          </div>
+          <div class="vm-card">
+            <span class="vm-card-label">Facturas</span>
+            <span class="vm-card-value">{{ resumen2.cantidad_facturas }}</span>
+          </div>
+          <div class="vm-card vm-card-highlight" *ngIf="resumen2.participacion_total_pct != null">
+            <span class="vm-card-label"><i class="fas fa-chart-pie"></i> Participación</span>
+            <span class="vm-card-value">{{ resumen2.participacion_total_pct | number:'1.1-1' }}%</span>
+          </div>
+        </div>
+        <div class="vm-table-wrapper" *ngIf="resumen2.top_clientes.length">
+          <h3><i class="fas fa-trophy"></i> Top 10 Clientes</h3>
+          <table class="vm-tabla">
+            <thead><tr><th class="num">#</th><th>Cliente</th><th class="num">Facturas</th><th class="num">Total</th><th class="barra-col">% Part.</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let p of resumen2.top_clientes">
+                <td class="num rank">{{ p.rank }}</td>
+                <td>{{ p.nombre }}</td>
+                <td class="num">{{ p.facturas }}</td>
+                <td class="num">{{ formatCurrency(p.total) }}</td>
+                <td class="barra-td">
+                <div class="mini-barra-wrap">
+                  <div class="mini-barra-track">
+                    <div class="mini-barra" [style.width.%]="p.participacion_pct ?? 0"></div>
+                  </div>
+                  <span class="mini-barra-pct">{{ (p.participacion_pct ?? 0) | number:'1.1-1' }}%</span>
+                </div>
+              </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="vm-table-wrapper vm-table-mt" *ngIf="resumen2.top_productos?.length">
+          <h3><i class="fas fa-bicycle"></i> Top 10 Productos</h3>
+          <table class="vm-tabla">
+            <thead><tr><th class="num">#</th><th>Producto</th><th class="num">Uds.</th><th class="num">Total</th><th class="barra-col">% Part.</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let p of resumen2.top_productos">
+                <td class="num rank">{{ p.rank }}</td>
+                <td class="nombre-producto">{{ p.nombre }}</td>
+                <td class="num">{{ p.cantidad | number:'1.0-0' }}</td>
+                <td class="num">{{ formatCurrency(p.total) }}</td>
+                <td class="barra-td">
+                <div class="mini-barra-wrap">
+                  <div class="mini-barra-track">
+                    <div class="mini-barra" [style.width.%]="p.participacion_pct ?? 0"></div>
+                  </div>
+                  <span class="mini-barra-pct">{{ (p.participacion_pct ?? 0) | number:'1.1-1' }}%</span>
+                </div>
+              </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
 
   </ng-container>

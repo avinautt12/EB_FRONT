@@ -14,7 +14,7 @@ import {
   TopProducto,
 } from '../../../services/ventas.service';
 
-type Modo = 'anual' | 'mensual' | 'comparar' | 'comparar-anual';
+type Modo = 'anual' | 'mensual' | 'comparar' | 'comparar-anual' | 'comparar-integrales';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const round1 = (n: number) => Math.round(n * 10)  / 10;
@@ -71,6 +71,13 @@ export class VentasMonitorComponent implements OnInit {
   cmpAAnio2: number = new Date().getFullYear();
   comparacionAnual: ComparacionAnual | null = null;
 
+  // ── Modo comparar integrales ─────────────────────────────────────────────────
+  cmpIntGrupo1: number | null = null;
+  cmpIntGrupo2: number | null = null;
+  cmpIntAnio: number = new Date().getFullYear();
+  cmpIntMes: number = new Date().getMonth() + 1;
+  cmpIntTipo: 'anual' | 'mensual' = 'anual';
+
   // ── Máximo de barras / ordenamiento ────────────────────────────────────────
   sortProductos: 'total' | 'unidades' = 'total';
   sortClientes:  'total' | 'facturas' = 'total';
@@ -85,6 +92,42 @@ export class VentasMonitorComponent implements OnInit {
     return Math.max(
       ...this.comparacionAnual.meses.map(m => Math.max(m.total1, m.total2))
     );
+  }
+
+  get maxCmpIntTotal(): number {
+    const meses1 = this.resumen1?.por_mes ?? [];
+    const meses2 = this.resumen2?.por_mes ?? [];
+    const all = [...meses1, ...meses2].map(m => m.total);
+    return Math.max(...all, 1);
+  }
+
+  get nombreGrupo1(): string {
+    return this.grupos.find(g => g.id === this.cmpIntGrupo1)?.nombre_grupo ?? 'Integral 1';
+  }
+
+  get nombreGrupo2(): string {
+    return this.grupos.find(g => g.id === this.cmpIntGrupo2)?.nombre_grupo ?? 'Integral 2';
+  }
+
+  get cmpIntMesesComparados(): MesComparado[] {
+    if (!this.resumen1 && !this.resumen2) return [];
+    return MESES.map(({ num, nombre }) => {
+      const t1 = this.resumen1?.por_mes.find(x => x.mes === num)?.total ?? 0;
+      const t2 = this.resumen2?.por_mes.find(x => x.mes === num)?.total ?? 0;
+      const delta = round2(t2 - t1);
+      const delta_pct = t1 > 0 ? round1((delta / t1) * 100) : (t2 > 0 ? 100 : 0);
+      return {
+        mes: num, mes_nombre: nombre,
+        total1: t1, cantidad1: this.resumen1?.por_mes.find(x => x.mes === num)?.cantidad_facturas ?? 0,
+        total2: t2, cantidad2: this.resumen2?.por_mes.find(x => x.mes === num)?.cantidad_facturas ?? 0,
+        delta, delta_pct,
+      };
+    });
+  }
+
+  get etiquetaIntegralPeriodo(): string {
+    if (this.cmpIntTipo === 'anual') return String(this.cmpIntAnio);
+    return `${this.nombreMes(this.cmpIntMes)} ${this.cmpIntAnio}`;
   }
 
   get maxEstadoTotal(): number {
@@ -163,7 +206,39 @@ export class VentasMonitorComponent implements OnInit {
   // ── Consultar datos ─────────────────────────────────────────────────────────
   consultar(): void {
     this.error = null; this.cargando = true;
-    this.grupoSeleccionado ? this._consultarIntegral() : this._consultarOdoo();
+    if (this.modo === 'comparar-integrales') {
+      this._consultarComparacionIntegrales();
+    } else {
+      this.grupoSeleccionado ? this._consultarIntegral() : this._consultarOdoo();
+    }
+  }
+
+  private _consultarComparacionIntegrales(): void {
+    if (!this.cmpIntGrupo1 || !this.cmpIntGrupo2) {
+      this.error = 'Selecciona dos integrales para comparar.';
+      this.cargando = false;
+      return;
+    }
+    this.resumen1 = null; this.resumen2 = null;
+
+    const rango = this.cmpIntTipo === 'anual'
+      ? { inicio: `${this.cmpIntAnio}-01-01`, fin: `${this.cmpIntAnio}-12-31` }
+      : this.rangoMes(this.cmpIntAnio, this.cmpIntMes);
+
+    forkJoin({
+      r1: this.ventasService.getResumenIntegral(rango.inicio, rango.fin, this.cmpIntGrupo1),
+      r2: this.ventasService.getResumenIntegral(rango.inicio, rango.fin, this.cmpIntGrupo2),
+    }).subscribe({
+      next: ({ r1, r2 }) => {
+        this.resumen1 = r1;
+        this.resumen2 = r2;
+        this.cargando = false;
+      },
+      error: (e) => {
+        this.error = e?.error?.error || 'Error al comparar integrales.';
+        this.cargando = false;
+      },
+    });
   }
 
   private _consultarOdoo(): void {
@@ -299,8 +374,8 @@ export class VentasMonitorComponent implements OnInit {
     const sorted = this.sortClientes === 'facturas'
       ? [...data].sort((a, b) => b.facturas - a.facturas)
       : [...data].sort((a, b) => b.total - a.total);
-    const rows = sorted.map((c, i) => [i + 1, c.nombre, c.facturas, c.total]);
-    this._descargarExcel(['#', 'Cliente', 'Facturas', 'Total (con IVA)'], rows,
+    const rows = sorted.map((c, i) => [i + 1, c.nombre, c.facturas, c.total, c.participacion_pct ?? 0]);
+    this._descargarExcel(['#', 'Cliente', 'Facturas', 'Total (con IVA)', '% Part.'], rows,
       `clientes_${this._labelPeriodo()}.xlsx`);
   }
 
@@ -309,8 +384,8 @@ export class VentasMonitorComponent implements OnInit {
     const sorted = this.sortProductos === 'unidades'
       ? [...data].sort((a, b) => b.cantidad - a.cantidad)
       : [...data].sort((a, b) => b.total - a.total);
-    const rows = sorted.map((p, i) => [i + 1, p.nombre, p.cantidad, p.total]);
-    this._descargarExcel(['#', 'Producto', 'Unidades', 'Total (sin IVA)'], rows,
+    const rows = sorted.map((p, i) => [i + 1, p.nombre, p.cantidad, p.total, p.participacion_pct ?? 0]);
+    this._descargarExcel(['#', 'Producto', 'Unidades', 'Total (sin IVA)', '% Part.'], rows,
       `productos_${this._labelPeriodo()}.xlsx`);
   }
 
