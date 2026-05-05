@@ -80,6 +80,9 @@ export class VentasMonitorComponent implements OnInit {
   cmpIntMes: number = new Date().getMonth() + 1;
   cmpIntTipo: 'anual' | 'mensual' = 'anual';
 
+  // ── Vista facturas / cobranza ───────────────────────────────────────────────
+  vista: 'facturas' | 'cobranza' = 'cobranza';
+
   // ── Modal desglose por estado ───────────────────────────────────────────────
   estadoDesglose: DesglosePorEstado | null = null;
   estadoDesgloseAbierto = false;
@@ -198,11 +201,23 @@ export class VentasMonitorComponent implements OnInit {
     });
   }
 
-  // ── Navegación entre modos ──────────────────────────────────────────────────
+  // ── Navegación entre modos y vistas ────────────────────────────────────────
   cambiarModo(nuevo: Modo): void {
     this.modo = nuevo;
     this.resumen = null; this.resumen1 = null; this.resumen2 = null;
     this.comparacionAnual = null; this.error = null;
+  }
+
+  cambiarVista(v: 'facturas' | 'cobranza'): void {
+    if (this.vista === v) return;
+    this.vista = v;
+    if (this.resumen || this.comparacionAnual || this.resumen1 || this.resumen2) {
+      this.consultar();
+    }
+  }
+
+  get etiquetaVista(): string {
+    return this.vista === 'facturas' ? 'Ventas Totales (Facturadas)' : 'Cobranza (Pagado / Parcial)';
   }
 
   seleccionarGrupo(id: number | null): void {
@@ -234,8 +249,8 @@ export class VentasMonitorComponent implements OnInit {
       : this.rangoMes(this.cmpIntAnio, this.cmpIntMes);
 
     forkJoin({
-      r1: this.ventasService.getResumenIntegral(rango.inicio, rango.fin, this.cmpIntGrupo1),
-      r2: this.ventasService.getResumenIntegral(rango.inicio, rango.fin, this.cmpIntGrupo2),
+      r1: this.ventasService.getResumenIntegral(rango.inicio, rango.fin, this.cmpIntGrupo1, this.vista),
+      r2: this.ventasService.getResumenIntegral(rango.inicio, rango.fin, this.cmpIntGrupo2, this.vista),
     }).subscribe({
       next: ({ r1, r2 }) => {
         this.resumen1 = r1;
@@ -253,13 +268,13 @@ export class VentasMonitorComponent implements OnInit {
     if (this.modo === 'anual') {
       const inicio = `${this.anioSeleccionado}-01-01`;
       const fin    = `${this.anioSeleccionado}-12-31`;
-      this.ventasService.getResumen(inicio, fin).subscribe({
+      this.ventasService.getResumen(inicio, fin, this.vista).subscribe({
         next: (d) => { this.resumen = d; this.cargando = false; },
         error: (e) => { this.error = e?.error?.error || 'Error al cargar datos.'; this.cargando = false; },
       });
     } else if (this.modo === 'mensual') {
       const { inicio, fin } = this.rangoMes(this.anioSeleccionado, this.mesSeleccionado);
-      this.ventasService.getResumen(inicio, fin).subscribe({
+      this.ventasService.getResumen(inicio, fin, this.vista).subscribe({
         next: (d) => { this.resumen = d; this.cargando = false; },
         error: (e) => { this.error = e?.error?.error || 'Error al cargar datos.'; this.cargando = false; },
       });
@@ -269,11 +284,11 @@ export class VentasMonitorComponent implements OnInit {
       this.resumen1 = null; this.resumen2 = null;
       let pendientes = 2;
       const check = () => { if (--pendientes === 0) this.cargando = false; };
-      this.ventasService.getResumen(r1.inicio, r1.fin).subscribe({
+      this.ventasService.getResumen(r1.inicio, r1.fin, this.vista).subscribe({
         next: (d) => { this.resumen1 = d; check(); },
         error: (e) => { this.error = e?.error?.error || 'Error periodo 1.'; check(); },
       });
-      this.ventasService.getResumen(r2.inicio, r2.fin).subscribe({
+      this.ventasService.getResumen(r2.inicio, r2.fin, this.vista).subscribe({
         next: (d) => { this.resumen2 = d; check(); },
         error: (e) => { this.error = e?.error?.error || 'Error periodo 2.'; check(); },
       });
@@ -290,13 +305,13 @@ export class VentasMonitorComponent implements OnInit {
     if (this.modo === 'anual') {
       const inicio = `${this.anioSeleccionado}-01-01`;
       const fin    = `${this.anioSeleccionado}-12-31`;
-      this.ventasService.getResumenIntegral(inicio, fin, gid).subscribe({
+      this.ventasService.getResumenIntegral(inicio, fin, gid, this.vista).subscribe({
         next: (d) => { this.resumen = d; this.cargando = false; },
         error: (e) => { this.error = e?.error?.error || 'Error al cargar datos.'; this.cargando = false; },
       });
     } else if (this.modo === 'mensual') {
       const { inicio, fin } = this.rangoMes(this.anioSeleccionado, this.mesSeleccionado);
-      this.ventasService.getResumenIntegral(inicio, fin, gid).subscribe({
+      this.ventasService.getResumenIntegral(inicio, fin, gid, this.vista).subscribe({
         next: (d) => { this.resumen = d; this.cargando = false; },
         error: (e) => { this.error = e?.error?.error || 'Error al cargar datos.'; this.cargando = false; },
       });
@@ -306,18 +321,18 @@ export class VentasMonitorComponent implements OnInit {
       this.resumen1 = null; this.resumen2 = null;
       let pendientes = 2;
       const check = () => { if (--pendientes === 0) this.cargando = false; };
-      this.ventasService.getResumenIntegral(r1.inicio, r1.fin, gid).subscribe({
+      this.ventasService.getResumenIntegral(r1.inicio, r1.fin, gid, this.vista).subscribe({
         next: (d) => { this.resumen1 = d; check(); },
         error: (e) => { this.error = e?.error?.error || 'Error periodo 1.'; check(); },
       });
-      this.ventasService.getResumenIntegral(r2.inicio, r2.fin, gid).subscribe({
+      this.ventasService.getResumenIntegral(r2.inicio, r2.fin, gid, this.vista).subscribe({
         next: (d) => { this.resumen2 = d; check(); },
         error: (e) => { this.error = e?.error?.error || 'Error periodo 2.'; check(); },
       });
     } else {
       forkJoin({
-        r1: this.ventasService.getResumenIntegral(`${this.cmpAAnio1}-01-01`, `${this.cmpAAnio1}-12-31`, gid),
-        r2: this.ventasService.getResumenIntegral(`${this.cmpAAnio2}-01-01`, `${this.cmpAAnio2}-12-31`, gid),
+        r1: this.ventasService.getResumenIntegral(`${this.cmpAAnio1}-01-01`, `${this.cmpAAnio1}-12-31`, gid, this.vista),
+        r2: this.ventasService.getResumenIntegral(`${this.cmpAAnio2}-01-01`, `${this.cmpAAnio2}-12-31`, gid, this.vista),
       }).subscribe({
         next: ({ r1, r2 }) => {
           this.comparacionAnual = this._buildComparacion(r1, r2, this.cmpAAnio1, this.cmpAAnio2);
@@ -383,8 +398,9 @@ export class VentasMonitorComponent implements OnInit {
       ? [...data].sort((a, b) => b.facturas - a.facturas)
       : [...data].sort((a, b) => b.total - a.total);
     const rows = sorted.map((c, i) => [i + 1, c.nombre, c.facturas, c.total, c.participacion_pct ?? 0]);
-    this._descargarExcel(['#', 'Cliente', 'Facturas', 'Total (con IVA)', '% Part.'], rows,
-      `clientes_${this._labelPeriodo()}.xlsx`);
+    const label = this.vista === 'facturas' ? 'facturado' : 'cobrado';
+    this._descargarExcel(['#', 'Cliente', 'Facturas', `Total ${label} (con IVA)`, '% Part.'], rows,
+      `clientes_${label}_${this._labelPeriodo()}.xlsx`);
   }
 
   exportarProductos(): void {
@@ -393,8 +409,9 @@ export class VentasMonitorComponent implements OnInit {
       ? [...data].sort((a, b) => b.cantidad - a.cantidad)
       : [...data].sort((a, b) => b.total - a.total);
     const rows = sorted.map((p, i) => [i + 1, p.nombre, p.cantidad, p.total, p.participacion_pct ?? 0]);
-    this._descargarExcel(['#', 'Producto', 'Unidades', 'Total (sin IVA)', '% Part.'], rows,
-      `productos_${this._labelPeriodo()}.xlsx`);
+    const label = this.vista === 'facturas' ? 'facturado' : 'cobrado';
+    this._descargarExcel(['#', 'Producto', 'Unidades', `Total ${label} (sin IVA)`, '% Part.'], rows,
+      `productos_${label}_${this._labelPeriodo()}.xlsx`);
   }
 
   private _descargarExcel(headers: string[], rows: (string | number)[][], filename: string): void {
@@ -431,7 +448,7 @@ export class VentasMonitorComponent implements OnInit {
       ? `${this.anioSeleccionado}-12-31`
       : this.rangoMes(this.anioSeleccionado, this.mesSeleccionado).fin;
 
-    this.ventasService.getProductosPorEstado(inicio, fin, e.estado).subscribe({
+    this.ventasService.getProductosPorEstado(inicio, fin, e.estado, this.vista).subscribe({
       next: (d) => { this.estadoDesglose = d; this.estadoDesglosesCargando = false; },
       error: () => { this.estadoDesglosError = 'Error al cargar los productos.'; this.estadoDesglosesCargando = false; },
     });

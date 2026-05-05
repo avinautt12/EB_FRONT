@@ -202,6 +202,25 @@
 
   </div>
 
+  <!-- ── SELECTOR VISTA: FACTURAS vs COBRANZA ── -->
+  <div class="vm-vista-bar" *ngIf="modo !== 'comparar-anual'">
+    <span class="vm-vista-label"><i class="fas fa-eye"></i> Vista:</span>
+    <div class="vm-vista-pills">
+      <button
+        class="vm-vista-pill"
+        [class.activa]="vista === 'facturas'"
+        (click)="cambiarVista('facturas')">
+        <i class="fas fa-file-invoice-dollar"></i> Ventas Totales (Facturadas)
+      </button>
+      <button
+        class="vm-vista-pill"
+        [class.activa]="vista === 'cobranza'"
+        (click)="cambiarVista('cobranza')">
+        <i class="fas fa-hand-holding-usd"></i> Cobranza (Pagado / Parcial)
+      </button>
+    </div>
+  </div>
+
   <!-- ERROR -->
   <div class="vm-error" *ngIf="error">
     <i class="fas fa-exclamation-triangle"></i> {{ error }}
@@ -221,11 +240,17 @@
     <!-- Tarjetas KPI -->
     <div class="vm-cards-row">
       <div class="vm-card">
-        <span class="vm-card-label"><i class="fas fa-dollar-sign"></i> Total Facturado (con IVA)</span>
+        <span class="vm-card-label">
+          <i class="fas fa-dollar-sign"></i>
+          {{ vista === 'cobranza' ? 'Total Cobrado (con IVA)' : 'Total Facturado (con IVA)' }}
+        </span>
         <span class="vm-card-value">{{ formatCurrency(resumen.total) }}</span>
       </div>
       <div class="vm-card">
-        <span class="vm-card-label"><i class="fas fa-file-invoice"></i> Facturas Emitidas</span>
+        <span class="vm-card-label">
+          <i class="fas fa-file-invoice"></i>
+          {{ vista === 'cobranza' ? 'Facturas Cobradas' : 'Facturas Emitidas' }}
+        </span>
         <span class="vm-card-value">{{ resumen.cantidad_facturas }}</span>
       </div>
       <div class="vm-card" *ngIf="resumen.cantidad_facturas > 0">

@@ -1015,3 +1015,58 @@
 }
 
 .vm-modal-state-error { color: #e53935; }
+
+/* ── Selector Vista: Facturas / Cobranza ───────────────────────────────────── */
+.vm-vista-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0.75rem 0 1rem;
+  padding: 0.65rem 1rem;
+  background: #252422;
+  border: 1px solid #403d39;
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+.vm-vista-label {
+  color: #8a8077;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.vm-vista-pills {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.vm-vista-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  border: 1.5px solid #403d39;
+  background: transparent;
+  color: #8a8077;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vm-vista-pill:hover {
+  border-color: #EB5E28;
+  color: #EB5E28;
+}
+
+.vm-vista-pill.activa {
+  background: #EB5E28;
+  border-color: #EB5E28;
+  color: #fff;
+  font-weight: 600;
+}

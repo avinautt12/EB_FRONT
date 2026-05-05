@@ -168,7 +168,10 @@
 /* ── Toggle ocultar admins ───────────────────────────────────────────────── */
 .mp-filtros-extra {
   display: flex;
+  align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
   margin: 0.4rem auto 0.6rem;
 }
 
@@ -187,6 +190,49 @@
   width: 14px;
   height: 14px;
   cursor: pointer;
+}
+
+.mp-toggle-proy { color: #4ade80; }
+
+/* ── Sync Odoo ───────────────────────────────────────────────────────────── */
+.mp-sync-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mp-sync-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  background: #252422;
+  border: 1px solid #403d39;
+  border-radius: 7px;
+  color: #CCC5B9;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+}
+.mp-sync-btn:hover:not(:disabled) { border-color: #EB5E28; color: #EB5E28; }
+.mp-sync-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+.mp-sync-msg {
+  font-size: 0.78rem;
+  color: #4ade80;
+  max-width: 260px;
+}
+
+/* ── Badge de proyección ─────────────────────────────────────────────────── */
+.mp-proy-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  color: #4ade80;
+  font-size: 0.72rem;
+  vertical-align: middle;
 }
 .mp-buscador-limpiar {
   transition: color 0.2s;

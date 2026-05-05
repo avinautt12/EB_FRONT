@@ -57,7 +57,15 @@ export class UsuariosService {
   getUsuariosParaMonitor(): Observable<{
     id: number | null; id_cliente: number | null; nombre: string; usuario: string | null; rol: string;
     activo: boolean; clave: string | null; id_grupo: number | null; nombre_grupo: string | null;
+    tiene_proyeccion: boolean;
   }[]> {
     return this.http.get<any[]>(`${this.apiUrl}/usuarios/para-monitor`);
+  }
+
+  /** Sincroniza partners de Odoo a la tabla local clientes. */
+  syncClientesOdoo(): Observable<{ agregados: number; ya_existian: number; total_odoo: number }> {
+    return this.http.post<{ agregados: number; ya_existian: number; total_odoo: number }>(
+      `${this.apiUrl}/usuarios/sync-odoo`, {}
+    );
   }
 }

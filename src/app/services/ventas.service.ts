@@ -107,16 +107,16 @@ export class VentasService {
     return this.grupos$;
   }
 
-  getResumen(fechaInicio: string, fechaFin: string): Observable<ResumenVentas> {
+  getResumen(fechaInicio: string, fechaFin: string, vista: 'facturas' | 'cobranza' = 'cobranza'): Observable<ResumenVentas> {
     return this.http.get<ResumenVentas>(
-      `${this.apiUrl}/ventas/resumen?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`
+      `${this.apiUrl}/ventas/resumen?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}&vista=${vista}`
     );
   }
 
-  getResumenIntegral(fechaInicio: string, fechaFin: string, grupoId?: number | null): Observable<ResumenVentas> {
+  getResumenIntegral(fechaInicio: string, fechaFin: string, grupoId?: number | null, vista: 'facturas' | 'cobranza' = 'cobranza'): Observable<ResumenVentas> {
     const gParam = grupoId ? `&grupo_id=${grupoId}` : '';
     return this.http.get<ResumenVentas>(
-      `${this.apiUrl}/ventas/resumen-integral?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}${gParam}`
+      `${this.apiUrl}/ventas/resumen-integral?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}${gParam}&vista=${vista}`
     );
   }
 
@@ -126,10 +126,10 @@ export class VentasService {
     );
   }
 
-  getProductosPorEstado(fechaInicio: string, fechaFin: string, estado: string): Observable<DesglosePorEstado> {
+  getProductosPorEstado(fechaInicio: string, fechaFin: string, estado: string, vista: 'facturas' | 'cobranza' = 'cobranza'): Observable<DesglosePorEstado> {
     const e = encodeURIComponent(estado);
     return this.http.get<DesglosePorEstado>(
-      `${this.apiUrl}/ventas/productos-por-estado?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}&estado=${e}`
+      `${this.apiUrl}/ventas/productos-por-estado?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}&estado=${e}&vista=${vista}`
     );
   }
 }

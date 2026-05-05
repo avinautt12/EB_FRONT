@@ -54,12 +54,24 @@
       <button *ngIf="textoBusqueda" class="mp-buscador-limpiar" (click)="textoBusqueda = ''">×</button>
     </div>
 
-    <!-- Toggle ocultar admins -->
+    <!-- Filtros extra -->
     <div class="mp-filtros-extra">
       <label class="mp-toggle-label">
         <input type="checkbox" [(ngModel)]="ocultarAdmins" />
         Ocultar administradores
       </label>
+      <label class="mp-toggle-label mp-toggle-proy">
+        <input type="checkbox" [(ngModel)]="soloConProyecciones" />
+        <i class="fas fa-chart-bar"></i> Solo con proyecciones
+      </label>
+      <div class="mp-sync-wrap">
+        <button class="mp-sync-btn" (click)="syncOdoo()" [disabled]="sincronizando">
+          <i class="fas" [class.fa-sync-alt]="!sincronizando" [class.fa-spinner]="sincronizando"
+             [class.fa-spin]="sincronizando"></i>
+          {{ sincronizando ? 'Sincronizando...' : 'Sync desde Odoo' }}
+        </button>
+        <span class="mp-sync-msg" *ngIf="syncMensaje">{{ syncMensaje }}</span>
+      </div>
     </div>
 
     <p class="mp-conteo">{{ usuariosFiltrados.length }} usuario{{ usuariosFiltrados.length !== 1 ? 's' : '' }}</p>
@@ -97,6 +109,9 @@
             <td>
               <span class="mp-estado" [class.activo]="u.activo" [class.inactivo-badge]="!u.activo">
                 {{ u.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+              <span class="mp-proy-badge" *ngIf="u.tiene_proyeccion" title="Tiene proyecciones cargadas">
+                <i class="fas fa-chart-bar"></i>
               </span>
             </td>
             <td>

@@ -16,6 +16,7 @@ interface UsuarioMonitor {
   clave: string | null;
   id_grupo: number | null;
   nombre_grupo: string | null;
+  tiene_proyeccion: boolean;
 }
 
 interface GrupoIntegral {
@@ -45,12 +46,17 @@ export class MonitorPedidosComponent implements OnInit {
   // ── Búsqueda / filtro ─────────────────────────────────────────────────────
   textoBusqueda = '';
   ocultarAdmins = true;
+  soloConProyecciones = false;
   private sinAcentos = (s: string) =>
-    s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+
   get usuariosFiltrados(): UsuarioMonitor[] {
-    const base = this.ocultarAdmins
+    let base = this.ocultarAdmins
       ? this.usuarios.filter(u => u.rol !== 'Administrador')
       : this.usuarios;
+    if (this.soloConProyecciones) {
+      base = base.filter(u => u.tiene_proyeccion);
+    }
     const q = this.sinAcentos(this.textoBusqueda.trim().toLowerCase());
     if (!q) return base;
     return base.filter(u =>
@@ -61,17 +67,34 @@ export class MonitorPedidosComponent implements OnInit {
     );
   }
 
+  // ── Sync Odoo ─────────────────────────────────────────────────────────────
+  sincronizando = false;
+  syncMensaje: string | null = null;
+
+  syncOdoo(): void {
+    this.sincronizando = true;
+    this.syncMensaje = null;
+    this.usuariosService.syncClientesOdoo().subscribe({
+      next: (res) => {
+        this.sincronizando = false;
+        this.syncMensaje = res.agregados > 0
+          ? `${res.agregados} cliente(s) nuevos agregados desde Odoo.`
+          : `Sin cambios — todos los clientes ya estaban registrados (${res.ya_existian}).`;
+        if (res.agregados > 0) this.cargarDatos();
+      },
+      error: () => {
+        this.sincronizando = false;
+        this.syncMensaje = 'Error al sincronizar con Odoo.';
+      }
+    });
+  }
+
   // ── Modal FacturasCliente ─────────────────────────────────────────────────
   modalAbierto = false;
-  /** Clave para búsqueda directa (usuario normal con clave asignada) */
   modalClave: string | null = null;
-  /** ID numérico del cliente (para tab Proyecciones) */
   modalIdCliente: number | null = null;
-  /** ID grupo para Vista Global integral */
   modalGrupoOdoo: number | null = null;
-  /** Etiqueta que se muestra en el header del modal */
   modalEtiqueta = '';
-  /** Búsqueda exacta por ref (usuario con clave propia) */
   modalClaveExacta = false;
 
   ngOnInit(): void {
@@ -81,7 +104,6 @@ export class MonitorPedidosComponent implements OnInit {
   cargarDatos(): void {
     this.cargando = true;
     this.error = null;
-    // Cargamos usuarios y grupos en paralelo
     let usuariosCargados = false;
     let gruposCargados = false;
     const verificarListo = () => {
@@ -104,7 +126,6 @@ export class MonitorPedidosComponent implements OnInit {
     this.textoBusqueda = '';
   }
 
-  /** Abre el modal para un usuario específico */
   verPedidosUsuario(u: UsuarioMonitor): void {
     this.modalClave = null;
     this.modalGrupoOdoo = null;
@@ -123,7 +144,6 @@ export class MonitorPedidosComponent implements OnInit {
     this.modalAbierto = true;
   }
 
-  /** Abre el modal para un grupo integral completo */
   verPedidosGrupo(g: GrupoIntegral): void {
     this.modalClave = null;
     this.modalGrupoOdoo = g.id;
