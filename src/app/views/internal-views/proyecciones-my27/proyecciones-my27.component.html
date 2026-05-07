@@ -165,14 +165,16 @@
                 </span>
               </td>
               <td class="col-costo-u">
-                <span class="costo-val" [class.costo-cero]="!art.costo_unitario">
+                <span *ngIf="art.costo_unitario > 0" class="costo-chip">
                   {{ formatCosto(art.costo_unitario) }}
                 </span>
+                <span *ngIf="!art.costo_unitario" class="costo-cero">—</span>
               </td>
               <td class="col-costo-t">
-                <span class="costo-total-val" [class.costo-cero]="!art.costo_total">
+                <span *ngIf="art.costo_total > 0" class="costo-total-chip">
                   {{ formatCosto(art.costo_total) }}
                 </span>
+                <span *ngIf="!art.costo_total" class="costo-cero">—</span>
               </td>
               <td class="col-dists">{{ art.num_distribuidores }}</td>
               <td class="col-actions">
@@ -200,7 +202,8 @@
             <td class="col-total total-cel total-general">{{ datos.total_general | number }}</td>
             <td class="col-costo-u total-cel tc-center">—</td>
             <td class="col-costo-t total-cel tc-center">—</td>
-            <td colspan="2"></td>
+            <td class="col-dists total-cel tc-center"></td>
+            <td class="col-actions"></td>
           </tr>
           <!-- Fila 2: costo total por mes (suma qty×costo para cada mes) -->
           <tr class="fila-costo-total">
@@ -214,7 +217,8 @@
             <td class="col-costo-t total-costo-cel costo-grand-total tc-center">
               {{ datos.total_costo_general > 0 ? formatCosto(datos.total_costo_general) : '—' }}
             </td>
-            <td colspan="2"></td>
+            <td class="col-dists total-costo-cel tc-center"></td>
+            <td class="col-actions"></td>
           </tr>
         </tfoot>
       </table>

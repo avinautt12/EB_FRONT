@@ -151,4 +151,5 @@ export class ProyeccionesMY27Component implements OnInit {
     if (!v || v === 0) return '—';
     return '$' + v.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
+
 }
