@@ -510,3 +510,71 @@
 
 .cel-val   { font-weight: 700; color: #4caf50; }
 .cel-empty { color: #2a2a2a; }
+
+/* ── Columnas de costo ───────────────────────────────────────────────────── */
+.col-costo-u,
+.col-costo-t {
+  text-align: center;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  padding: 0 6px;
+}
+
+.col-costo-u { min-width: 90px; }
+.col-costo-t { min-width: 110px; }
+
+.costo-val {
+  display: block;
+  text-align: center;
+  color: #b0a090;
+  font-size: 0.75rem;
+}
+
+.costo-total-val {
+  display: block;
+  text-align: center;
+  color: #e8c98a;
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+
+.costo-cero { color: #2a2a2a; }
+
+/* Utilitario centrado */
+.tc-center { text-align: center !important; }
+
+/* Fila de totales de costo (tfoot) */
+.fila-costo-total td {
+  background: #1a1208 !important;
+  color: #e8c98a;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-align: center !important;
+  padding: 6px 4px;
+  border-top: 1px solid #3d2e0a;
+}
+
+.lbl-costo {
+  color: #e8c98a !important;
+  font-size: 0.75rem !important;
+  text-align: left !important;
+}
+
+.total-costo-cel {
+  text-align: center !important;
+  color: #e8c98a;
+}
+
+.costo-cero-cel { color: #3a2e18; }
+
+.costo-grand-total {
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  color: #ffb74d !important;
+}
+
+/* ── KPI Cards — Costo (dorado) ─────────────────────────────────────────── */
+.kpi-icon-gold  { color: #f59e0b; }
+.kpi-icon-gold2 { color: #d97706; }
+.kpi-val-gold   { color: #f59e0b; font-size: 1.25rem; }
+.kpi-val-gold2  { color: #d97706; font-size: 1.25rem; }

@@ -52,11 +52,11 @@ export class ProyeccionesMY27Component implements OnInit {
     this.cargar();
   }
 
-  cargar(): void {
+  cargar(refresh = false): void {
     this.cargando = true;
     this.error = '';
     this.cdr.markForCheck();
-    this.svc.getDatos().subscribe({
+    this.svc.getDatos('2026-2027', refresh).subscribe({
       next: (d) => {
         this.datos = d;
         this.cargando = false;
@@ -139,7 +139,16 @@ export class ProyeccionesMY27Component implements OnInit {
     return this.datos?.totales_mes[mes] ?? 0;
   }
 
+  getTotalCostoMes(mes: string): number {
+    return this.datos?.total_costo_mes?.[mes] ?? 0;
+  }
+
   formatPrecio(v: number): string {
     return v > 0 ? '$' + v.toLocaleString('es-MX', { minimumFractionDigits: 0 }) : '—';
+  }
+
+  formatCosto(v: number): string {
+    if (!v || v === 0) return '—';
+    return '$' + v.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 }
