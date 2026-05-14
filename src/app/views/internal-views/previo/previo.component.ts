@@ -1293,9 +1293,9 @@ export class PrevioComponent implements OnInit, OnDestroy {
       const enRango = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
 
       let esProductoValido = false;
-      const marca = factura.marca?.toUpperCase() || '';
-      const esApparelSi = factura.apparel?.toUpperCase() === 'SI';
-      const nombreProducto = factura.nombre_producto?.toUpperCase() || '';
+      const marca = String(factura.marca || '').toUpperCase();
+      const esApparelSi = String(factura.apparel || '').toUpperCase() === 'SI';
+      const nombreProducto = String(factura.nombre_producto || '').toUpperCase();
       const contieneBicicleta = nombreProducto.includes('BICICLETA');
 
       // Aquí separamos exactamente qué marca queremos sumar
@@ -2287,9 +2287,9 @@ export class PrevioComponent implements OnInit, OnDestroy {
       const enRango = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
 
       let esProductoValido = false;
-      const marca = factura.marca?.toUpperCase() || '';
-      const esApparelSi = factura.apparel?.toUpperCase() === 'SI';
-      const nombreProducto = factura.nombre_producto?.toUpperCase() || '';
+      const marca = String(factura.marca || '').toUpperCase();
+      const esApparelSi = String(factura.apparel || '').toUpperCase() === 'SI';
+      const nombreProducto = String(factura.nombre_producto || '').toUpperCase();
       const contieneBicicleta = nombreProducto.includes('BICICLETA');
 
       if (esApp) {
