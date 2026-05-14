@@ -665,8 +665,8 @@ export class PrevioComponent implements OnInit, OnDestroy {
       return new Date(cliente.fecha_inicio_calculo);
     }
 
-    const nombreUpper = cliente.nombre_cliente.toUpperCase();
-    const claveUpper = cliente.clave.toUpperCase();
+    const nombreUpper = (cliente.nombre_cliente || '').toUpperCase(); 
+    const claveUpper = (cliente.clave || '').toUpperCase();
 
     for (const grupo of this.fechasEspeciales) {
       const encontrado = grupo.patrones.some(patron =>

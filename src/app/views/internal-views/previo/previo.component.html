@@ -360,7 +360,7 @@
             <td class="td-number">{{ cliente.acumulado_bold | currency:'USD':'$':'1.2-2' }}</td>
           </tr>
 
-          <div *ngIf="mostrarIntegrales">
+          <ng-container *ngIf="mostrarIntegrales">
             <tr *ngIf="integrales.length > 0" class="separador-integral">
               <td colspan="57">INTEGRALES</td>
             </tr>
@@ -447,7 +447,7 @@
               <td class="td-number">{{ integral.acumulado_vittoria | currency:'USD':'$':'1.2-2' }}</td>
               <td class="td-number">{{ integral.acumulado_bold | currency:'USD':'$':'1.2-2' }}</td>
             </tr>
-          </div>
+          </ng-container>
 
           <tr class="fila-totales">
             <td class="columna-fija fija-clave texto-total">TOTALES</td>
