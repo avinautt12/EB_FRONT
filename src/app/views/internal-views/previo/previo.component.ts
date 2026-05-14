@@ -1293,10 +1293,8 @@ export class PrevioComponent implements OnInit, OnDestroy {
       const enRango = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
 
       let esProductoValido = false;
-      const marca = String(factura.marca || '').toUpperCase();
-      const esApparelSi = String(factura.apparel || '').toUpperCase() === 'SI';
-      const nombreProducto = String(factura.nombre_producto || '').toUpperCase();
-      const contieneBicicleta = nombreProducto.includes('BICICLETA');
+      const marca = String(factura?.marca || '').toUpperCase();
+      const esApparelSi = String(factura?.apparel || '').toUpperCase() === 'SI';
 
       // Aquí separamos exactamente qué marca queremos sumar
       if (tipoFiltro === 'SYNCROS') {
@@ -1304,7 +1302,10 @@ export class PrevioComponent implements OnInit, OnDestroy {
       } else if (tipoFiltro === 'VITTORIA') {
         esProductoValido = marca === 'VITTORIA';
       } else if (tipoFiltro === 'APPAREL') {
-        esProductoValido = (marca === 'SCOTT' && esApparelSi && !contieneBicicleta); // La regla estricta de Scott
+        if (marca === 'SCOTT' && esApparelSi) {
+          const nombreProducto = String(factura?.nombre_producto || '').toUpperCase();
+          esProductoValido = !nombreProducto.includes('BICICLETA');
+        }
       } else if (tipoFiltro === 'BOLD') {
         esProductoValido = marca === 'BOLD';
       }
@@ -2287,26 +2288,29 @@ export class PrevioComponent implements OnInit, OnDestroy {
       const enRango = fechaFactura >= fechaInicio && fechaFactura <= fechaFin;
 
       let esProductoValido = false;
-      const marca = String(factura.marca || '').toUpperCase();
-      const esApparelSi = String(factura.apparel || '').toUpperCase() === 'SI';
-      const nombreProducto = String(factura.nombre_producto || '').toUpperCase();
-      const contieneBicicleta = nombreProducto.includes('BICICLETA');
+      const marca = String(factura?.marca || '').toUpperCase();
 
       if (esApp) {
-        // Es válido si es Syncros, Vittoria, O (si es Scott y su columna apparel dice "SI" y no es bicicleta)
-        esProductoValido = marca === 'SYNCROS' ||
-          marca === 'VITTORIA' ||
-          (marca === 'SCOTT' && esApparelSi && !contieneBicicleta);
+        if (marca === 'SYNCROS') esProductoValido = true;
+        else if (marca === 'VITTORIA') esProductoValido = true;
+        else if (marca === 'SCOTT') {
+          const esApparelSi = String(factura?.apparel || '').toUpperCase() === 'SI';
+          if (esApparelSi) {
+            const nombreProducto = String(factura?.nombre_producto || '').toUpperCase();
+            esProductoValido = !nombreProducto.includes('BICICLETA');
+          }
+        }
       } else {
-        // --- AQUÍ SE MANTIENE LA MAGIA PARA SCOTT Y MEGAMO (Bicicletas) ---
         const esMarcaValida = marca === 'SCOTT' || marca === 'MEGAMO';
-
-        const subcategoria = factura.subcategoria?.toUpperCase() || '';
-        const esBicicleta = subcategoria === 'BICICLETA' || contieneBicicleta;
-
-        const esApparelNo = factura.apparel?.toUpperCase() === 'NO' || contieneBicicleta;
-
-        esProductoValido = esMarcaValida && esBicicleta && esApparelNo;
+        if (esMarcaValida) {
+          const nombreProducto = String(factura?.nombre_producto || '').toUpperCase();
+          const contieneBicicleta = nombreProducto.includes('BICICLETA');
+          const subcategoria = String(factura?.subcategoria || '').toUpperCase();
+          const esBicicleta = subcategoria === 'BICICLETA' || contieneBicicleta;
+          const esApparelNo = String(factura?.apparel || '').toUpperCase() === 'NO' || contieneBicicleta;
+          
+          esProductoValido = esBicicleta && esApparelNo;
+        }
       }
       return enRango && esProductoValido;
     };
