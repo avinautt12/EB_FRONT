@@ -1295,6 +1295,8 @@ export class PrevioComponent implements OnInit, OnDestroy {
       let esProductoValido = false;
       const marca = factura.marca?.toUpperCase() || '';
       const esApparelSi = factura.apparel?.toUpperCase() === 'SI';
+      const nombreProducto = factura.nombre_producto?.toUpperCase() || '';
+      const contieneBicicleta = nombreProducto.includes('BICICLETA');
 
       // Aquí separamos exactamente qué marca queremos sumar
       if (tipoFiltro === 'SYNCROS') {
@@ -1302,7 +1304,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
       } else if (tipoFiltro === 'VITTORIA') {
         esProductoValido = marca === 'VITTORIA';
       } else if (tipoFiltro === 'APPAREL') {
-        esProductoValido = (marca === 'SCOTT' && esApparelSi); // La regla estricta de Scott
+        esProductoValido = (marca === 'SCOTT' && esApparelSi && !contieneBicicleta); // La regla estricta de Scott
       } else if (tipoFiltro === 'BOLD') {
         esProductoValido = marca === 'BOLD';
       }
@@ -2287,20 +2289,22 @@ export class PrevioComponent implements OnInit, OnDestroy {
       let esProductoValido = false;
       const marca = factura.marca?.toUpperCase() || '';
       const esApparelSi = factura.apparel?.toUpperCase() === 'SI';
+      const nombreProducto = factura.nombre_producto?.toUpperCase() || '';
+      const contieneBicicleta = nombreProducto.includes('BICICLETA');
 
       if (esApp) {
-        // Es válido si es Syncros, Vittoria, O (si es Scott y su columna apparel dice "SI")
+        // Es válido si es Syncros, Vittoria, O (si es Scott y su columna apparel dice "SI" y no es bicicleta)
         esProductoValido = marca === 'SYNCROS' ||
           marca === 'VITTORIA' ||
-          (marca === 'SCOTT' && esApparelSi);
+          (marca === 'SCOTT' && esApparelSi && !contieneBicicleta);
       } else {
         // --- AQUÍ SE MANTIENE LA MAGIA PARA SCOTT Y MEGAMO (Bicicletas) ---
         const esMarcaValida = marca === 'SCOTT' || marca === 'MEGAMO';
 
         const subcategoria = factura.subcategoria?.toUpperCase() || '';
-        const esBicicleta = subcategoria === 'BICICLETA';
+        const esBicicleta = subcategoria === 'BICICLETA' || contieneBicicleta;
 
-        const esApparelNo = factura.apparel?.toUpperCase() === 'NO';
+        const esApparelNo = factura.apparel?.toUpperCase() === 'NO' || contieneBicicleta;
 
         esProductoValido = esMarcaValida && esBicicleta && esApparelNo;
       }
