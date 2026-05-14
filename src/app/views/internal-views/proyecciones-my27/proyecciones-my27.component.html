@@ -17,7 +17,7 @@
       </p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-outline" (click)="cargar()">
+      <button class="btn btn-outline" (click)="cargar(true)">
         <i class="fas fa-sync-alt"></i> Actualizar
       </button>
       <button class="btn btn-primary" (click)="exportar()">
@@ -87,6 +87,28 @@
         <div class="kpi-value kpi-val-blue">{{ datos.kpis.distribuidores_activos }}</div>
         <div class="kpi-foot">con proyecciones activas</div>
       </div>
+
+      <div class="kpi-card kpi-gold">
+        <div class="kpi-header">
+          <span class="kpi-label">Inversión Total</span>
+          <div class="kpi-icon-wrap kpi-icon-gold"><i class="fas fa-dollar-sign"></i></div>
+        </div>
+        <div class="kpi-value kpi-val-gold">
+          {{ datos.kpis.inversion_total > 0 ? formatCosto(datos.kpis.inversion_total) : '$0' }}
+        </div>
+        <div class="kpi-foot">costo total proyectado</div>
+      </div>
+
+      <div class="kpi-card kpi-gold2">
+        <div class="kpi-header">
+          <span class="kpi-label">Costo Promedio</span>
+          <div class="kpi-icon-wrap kpi-icon-gold2"><i class="fas fa-tag"></i></div>
+        </div>
+        <div class="kpi-value kpi-val-gold2">
+          {{ datos.kpis.inversion_promedio > 0 ? formatCosto(datos.kpis.inversion_promedio) : '$0' }}
+        </div>
+        <div class="kpi-foot">por unidad proyectada · {{ datos.kpis.skus_con_costo }} SKUs con costo</div>
+      </div>
     </div>
 
     <!-- ── BUSCADOR ── -->
@@ -109,6 +131,8 @@
             <th class="col-desc">Producto</th>
             <th *ngFor="let label of mesesLabels" class="col-mes">{{ label }}</th>
             <th class="col-total">Total</th>
+            <th class="col-costo-u">Costo Unit.</th>
+            <th class="col-costo-t">Costo Total</th>
             <th class="col-dists">Dists.</th>
             <th class="col-actions" style="min-width:40px"></th>
           </tr>
@@ -140,6 +164,18 @@
                   {{ art.total_anual }}
                 </span>
               </td>
+              <td class="col-costo-u">
+                <span *ngIf="art.costo_unitario > 0" class="costo-chip">
+                  {{ formatCosto(art.costo_unitario) }}
+                </span>
+                <span *ngIf="!art.costo_unitario" class="costo-cero">—</span>
+              </td>
+              <td class="col-costo-t">
+                <span *ngIf="art.costo_total > 0" class="costo-total-chip">
+                  {{ formatCosto(art.costo_total) }}
+                </span>
+                <span *ngIf="!art.costo_total" class="costo-cero">—</span>
+              </td>
               <td class="col-dists">{{ art.num_distribuidores }}</td>
               <td class="col-actions">
                 <button
@@ -155,15 +191,34 @@
           </ng-container>
         </tbody>
 
-        <!-- FILA TOTALES -->
+        <!-- FILAS TOTALES -->
         <tfoot>
+          <!-- Fila 1: totales de unidades por mes -->
           <tr class="fila-totales">
-            <td colspan="2" class="lbl-totales">TOTAL GENERAL</td>
+            <td colspan="2" class="lbl-totales">TOTAL UNIDADES</td>
             <td *ngFor="let mes of mesesKeys" class="col-mes total-cel">
               {{ getTotalMes(mes) || '' }}
             </td>
             <td class="col-total total-cel total-general">{{ datos.total_general | number }}</td>
-            <td colspan="2"></td>
+            <td class="col-costo-u total-cel tc-center">—</td>
+            <td class="col-costo-t total-cel tc-center">—</td>
+            <td class="col-dists total-cel tc-center"></td>
+            <td class="col-actions"></td>
+          </tr>
+          <!-- Fila 2: costo total por mes (suma qty×costo para cada mes) -->
+          <tr class="fila-costo-total">
+            <td colspan="2" class="lbl-totales lbl-costo">COSTO x MES</td>
+            <td *ngFor="let mes of mesesKeys" class="col-mes total-costo-cel tc-center">
+              <span *ngIf="getTotalCostoMes(mes) > 0">{{ formatCosto(getTotalCostoMes(mes)) }}</span>
+              <span *ngIf="getTotalCostoMes(mes) === 0" class="costo-cero-cel">—</span>
+            </td>
+            <td class="col-total total-costo-cel tc-center">—</td>
+            <td class="col-costo-u total-costo-cel tc-center">—</td>
+            <td class="col-costo-t total-costo-cel costo-grand-total tc-center">
+              {{ datos.total_costo_general > 0 ? formatCosto(datos.total_costo_general) : '—' }}
+            </td>
+            <td class="col-dists total-costo-cel tc-center"></td>
+            <td class="col-actions"></td>
           </tr>
         </tfoot>
       </table>

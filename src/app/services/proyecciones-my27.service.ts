@@ -23,6 +23,9 @@ export interface ArticuloMY27 {
   color: string;
   talla: string;
   precio_dist: number;
+  costo_unitario: number;
+  costo_total: number;
+  costos_mes: Record<string, number>;
   num_distribuidores: number;
   total_anual: number;
   meses: Record<string, MesData>;
@@ -35,12 +38,17 @@ export interface KpisMY27 {
   articulos_sin_pedido: number;
   total_unidades: number;
   distribuidores_activos: number;
+  skus_con_costo: number;
+  inversion_total: number;
+  inversion_promedio: number;
 }
 
 export interface ProyeccionesMY27Response {
   articulos: ArticuloMY27[];
   totales_mes: Record<string, number>;
   total_general: number;
+  total_costo_mes: Record<string, number>;
+  total_costo_general: number;
   kpis: KpisMY27;
   meses: string[];
   meses_labels: string[];
@@ -54,8 +62,9 @@ export class ProyeccionesMY27Service {
 
   constructor(private http: HttpClient) {}
 
-  getDatos(periodo = '2026-2027'): Observable<ProyeccionesMY27Response> {
-    const params = new HttpParams().set('periodo', periodo);
+  getDatos(periodo = '2026-2027', refresh = false): Observable<ProyeccionesMY27Response> {
+    let params = new HttpParams().set('periodo', periodo);
+    if (refresh) params = params.set('refresh', '1');
     return this.http.get<ProyeccionesMY27Response>(`${this.api}/proyecciones-my27`, { params });
   }
 
