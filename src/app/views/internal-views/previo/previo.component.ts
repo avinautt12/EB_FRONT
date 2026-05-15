@@ -816,7 +816,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
       };
 
       // Caso especial para CHRISTIAN BOCCALETTI
-      if (cliente.nombre_cliente.toUpperCase() === 'CHRISTIAN BOCCALETTI') {
+      if ((cliente.nombre_cliente || '').toUpperCase() === 'CHRISTIAN BOCCALETTI') {
         clienteConValores.compra_minima_anual = 3800000;
         clienteConValores.compra_minima_inicial = 2395000;
         clienteConValores.compromiso_scott = 3300000;
@@ -1001,7 +1001,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
   calcularCompraMinimaInicial(nivel: string): number {
     if (!nivel) return 0;
 
-    switch (nivel.toUpperCase()) {
+    switch ((nivel || '').toUpperCase()) {
       case 'PARTNER ELITE PLUS':
         return 4230000;
       case 'PARTNER ELITE':
@@ -1018,7 +1018,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
   calcularCompromisoScott(nivel: string): number {
     if (!nivel) return 0;
 
-    switch (nivel.toUpperCase()) {
+    switch ((nivel || '').toUpperCase()) {
       case 'PARTNER ELITE PLUS':
         return 6000000;
       case 'PARTNER ELITE':
@@ -1033,7 +1033,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
   }
 
   calcularCompromisoJulAgo(nivel: string, nombreCliente: string): number {
-    switch (nivel.toUpperCase()) {
+    switch ((nivel || '').toUpperCase()) {
       case 'PARTNER ELITE PLUS':
         return 1287000;
       case 'PARTNER ELITE':
@@ -1050,7 +1050,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
   }
 
   calcularCompromisoSepOct(nivel: string, nombreCliente: string): number {
-    switch (nivel.toUpperCase()) {
+    switch ((nivel || '').toUpperCase()) {
       case 'PARTNER ELITE PLUS':
         return 1365000;
       case 'PARTNER ELITE':
@@ -1067,7 +1067,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
   }
 
   calcularCompromisoNovDic(nivel: string, nombreCliente: string): number {
-    switch (nivel.toUpperCase()) {
+    switch ((nivel || '').toUpperCase()) {
       case 'PARTNER ELITE PLUS':
         return 1248000;
       case 'PARTNER ELITE':
@@ -1084,7 +1084,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
   }
 
   calcularCompromisoApparelSyncrosVittoria(nivel: string, nombreCliente: string): number {
-    switch (nivel.toUpperCase()) {
+    switch ((nivel || '').toUpperCase()) {
       case 'PARTNER ELITE PLUS':
         return 660000;
       case 'PARTNER ELITE':
@@ -1101,7 +1101,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
   }
 
   calcularCompromisoJulAgoApp(nivel: string, nombreCliente: string): number {
-    switch (nivel.toUpperCase()) {
+    switch ((nivel || '').toUpperCase()) {
       case 'PARTNER ELITE PLUS':
         return 108900;
       case 'PARTNER ELITE':
@@ -1118,7 +1118,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
   }
 
   private calcularCompromisoSepOctApp(nivel: string, nombreCliente: string): number {
-    switch (nivel.toUpperCase()) {
+    switch ((nivel || '').toUpperCase()) {
       case 'PARTNER ELITE PLUS':
         return 115500;
       case 'PARTNER ELITE':
@@ -1135,7 +1135,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
   }
 
   private calcularCompromisoNovDicApp(nivel: string, nombreCliente: string): number {
-    switch (nivel.toUpperCase()) {
+    switch ((nivel || '').toUpperCase()) {
       case 'PARTNER ELITE PLUS':
         return 105600;
       case 'PARTNER ELITE':
@@ -1360,8 +1360,10 @@ export class PrevioComponent implements OnInit, OnDestroy {
     return Math.round(valor * 100) / 100;
   }
 
-  getValoresIntegral(nombreCliente: string): any {
-    switch (nombreCliente.toUpperCase()) {
+  getValoresIntegral(nombreCliente: string) {
+    if (!nombreCliente) return null;
+
+    switch ((nombreCliente || '').toUpperCase()) {
       case 'MARCO TULIO ANDRADE NAVARRO':
         return {
           compraMinimaAnual: 12200000, compraMinimaInicial: 6345000, compromisoScott: 9000000,
@@ -1393,7 +1395,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
   calculoPorcentajeCompraAnual(integral: any): string {
     if (!integral || !integral.nombre_cliente) return '0%';
 
-    const nombreCliente = integral.nombre_cliente.toUpperCase();
+    const nombreCliente = (integral.nombre_cliente || '').toUpperCase();
     const valores = this.getValoresIntegral(nombreCliente);
 
     if (!valores || !valores.compraMinimaAnual || valores.compraMinimaAnual <= 0) {
@@ -1412,7 +1414,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
   calculoPorcentajeCompraInicial(integral: any): string {
     if (!integral || !integral.nombre_cliente) return '0%';
 
-    const nombreCliente = integral.nombre_cliente.toUpperCase();
+    const nombreCliente = (integral.nombre_cliente || '').toUpperCase();
     const valores = this.getValoresIntegral(nombreCliente);
 
     if (!valores || !valores.compraMinimaInicial || valores.compraMinimaInicial <= 0) {
