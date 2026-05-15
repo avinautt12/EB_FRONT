@@ -665,7 +665,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
       return new Date(cliente.fecha_inicio_calculo);
     }
 
-    const nombreUpper = (cliente.nombre_cliente || '').toUpperCase(); 
+    const nombreUpper = (cliente.nombre_cliente || '').toUpperCase();
     const claveUpper = (cliente.clave || '').toUpperCase();
 
     for (const grupo of this.fechasEspeciales) {
@@ -1232,7 +1232,7 @@ export class PrevioComponent implements OnInit, OnDestroy {
   }
 
   private calcularAvanceJulAgo(cliente: Cliente, facturas: FacturaOdoo[]): number {
-    return this.calcularAvanceGenerico(cliente, facturas, '2025-07-01', '2025-08-31', false);
+    return this.calcularAvanceGenerico(cliente, facturas, cliente.f_inicio ? cliente.f_inicio : '2025-07-01', '2025-08-31', false);
   }
 
   private calcularAvanceSepOct(cliente: Cliente, facturas: FacturaOdoo[]): number {
@@ -1283,8 +1283,8 @@ export class PrevioComponent implements OnInit, OnDestroy {
       clave === 'KC612' || clave === 'FD324' ||
       nombreCliente.includes('MANUEL ALEJANDRO NAVARRO GONZALEZ') ||
       nombreCliente.includes('JOSE ANGEL DIAZ CORTES') ||
-      nombreCliente.includes('JUAN MANUEL RUACHO RANGEL') || 
-      clave === 'KA578'; 
+      nombreCliente.includes('JUAN MANUEL RUACHO RANGEL') ||
+      clave === 'KA578';
 
     let facturasValidas;
 
@@ -1360,9 +1360,8 @@ export class PrevioComponent implements OnInit, OnDestroy {
     return Math.round(valor * 100) / 100;
   }
 
-  getValoresIntegral(nombreCliente: string) {
+  getValoresIntegral(nombreCliente: string): any {
     if (!nombreCliente) return null;
-
     switch ((nombreCliente || '').toUpperCase()) {
       case 'MARCO TULIO ANDRADE NAVARRO':
         return {
