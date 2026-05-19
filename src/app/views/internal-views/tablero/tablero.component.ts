@@ -242,4 +242,43 @@ export class TableroComponent implements OnInit {
       error: (err) => this.alertaService.mostrarError('Error al generar Excel')
     });
   }
+
+  obtenerSignoConcepto(categoria: string, concepto: string): string {
+    const c = (concepto || '')
+      .toUpperCase()
+      .trim()
+      .replace(/\s+/g, ' ');
+
+    const suman = [
+      'SALDO INICIAL',
+      'VENTAS GENERALES',
+      'CREDITOS BANCARIOS (ENTRADAS)',
+      'OTROS INGRESOS Y RENDIMIENTOS',
+      'SALDOS OTROS BANCOS',
+      'SALDO EN INVERSION',
+      'TRASPASO DE INVERSION',
+    ];
+
+    // ESTA ES LA LISTA EXACTA QUE EL BACKEND RESTA PARA EL SALDO REAL
+    const restan = [
+      'COMPRA DE DIVISAS',
+      'IMPORTACIONES Y ADUANAS',
+      'ANTICIPO A PROVEEDORES',
+      'GASTOS GENERALES FIJOS',
+      'NOMINA - IMSS - PTU',
+      'IMPUESTOS (ISR/IVA)',
+      'PAGO CREDITOS BANCARIOS',
+      'PAGO CREDITOS (VICTOR)',
+      'DEVOLUCIONES',
+      'TRASPASO A OTROS BANCOS',
+      'INVERSIONES (SALIDAS)'
+    ];
+
+    if (suman.includes(c)) return '(+) ';
+    if (restan.includes(c)) return '(-) ';
+
+    // Si no está en ninguna lista (como Proveedores Scott, Megamo o Comisiones), no se le pone nada.
+    return '';
+  }
+
 }

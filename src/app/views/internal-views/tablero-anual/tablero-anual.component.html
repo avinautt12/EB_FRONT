@@ -61,7 +61,7 @@
             @for (fila of grupo.filas; track $index) {
               <tr [ngClass]="getClaseFila(fila.categoria)" class="fila-dato">
                 <td class="sticky-col-first">
-                  <div class="concepto-inner fw-bold">{{ fila.concepto }}</div>
+                  <div class="concepto-inner fw-bold">{{ obtenerSignoConcepto(fila.categoria, fila.concepto) }}{{ fila.concepto }}</div>
                 </td>
 
                 @for (dato of fila.datos; track $index) {
@@ -114,7 +114,7 @@
               @for (fila of grupo.filas; track $index) {
                 <tr [ngClass]="getClaseFila(fila.categoria)" class="fila-dato">
                   <td class="sticky-col-first">
-                    <div class="concepto-inner pl-4" style="padding-left: 20px;">{{ fila.concepto }}</div>
+                    <div class="concepto-inner pl-4" style="padding-left: 20px;">{{ obtenerSignoConcepto(fila.categoria, fila.concepto) }}{{ fila.concepto }}</div>
                   </td>
 
                   @for (dato of fila.datos; track $index) {

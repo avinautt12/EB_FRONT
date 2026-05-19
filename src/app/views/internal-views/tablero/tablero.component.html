@@ -124,7 +124,7 @@
 
           <td class="col-concepto">
             <div [class.pl-3]="!esFilaNegrita(item.categoria)">
-              {{ item.concepto }}
+              {{ obtenerSignoConcepto(item.categoria, item.concepto) }}{{ item.concepto }}
               @if(!esFilaNegrita(item.categoria)) {
               <span class="cat-tag">{{ item.categoria }}</span>
               }
