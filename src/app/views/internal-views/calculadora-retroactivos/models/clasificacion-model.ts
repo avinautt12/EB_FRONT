@@ -88,7 +88,7 @@ export const LISTA_CLASIFICACIONES: Clasificacion[] =
       { descripcion: "ebike", valor: 960 },
       { descripcion: "caja_acc", valor: 270 }
     ],
-    porcentaje_subsidio: 30,
+    porcentaje_subsidio: 25,
     precio_pagar_temporada_bici_cn: 0, //Calculado
     precio_pagar_temporada_bici_tw: 0, //Calculado
     precio_pagar_temporada_ebike: 0, //Calculado

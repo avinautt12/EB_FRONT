@@ -116,12 +116,11 @@
   <table class="tabla">
     <thead>
       <tr class="cabecera">
-        <th rowspan="1"></th>
+        <th rowspan="3"></th>
         <th colspan="3">PRIMER SEMESTRE</th>
         <th colspan="3">SEGUNDO SEMESTRE</th>
       </tr>
       <tr class="cabecera">
-        <th rowspan="2"></th>
         <th colspan="3">COMPRA INICIAL</th>
         <th>4To. Bimestre</th>
         <th>5To. Bimestre</th>
@@ -217,7 +216,9 @@
     <tbody>
       <ng-container *ngFor="let item of listaAnualPorCumplimiento">
         <tr>
-          <td><input type="checkbox" [(ngModel)]="item.seleccionado" (ngModelChange)="obtenerAnualPorCumplimiento()"></td>
+          <td class="checkbox">
+            <input type="checkbox" [(ngModel)]="item.seleccionado" (ngModelChange)="obtenerAnualPorCumplimiento()">
+          </td>
           <td>{{ item.descripcion | uppercase }}</td>
           <td class="alineacion-derecha">{{ item.descuento }}</td>
         </tr>
@@ -288,13 +289,13 @@
             Se obtiene por el cumplimiento de compromisos
           </div>
         </th>
-        <th class="tooltip-informacion">
+        <!-- <th class="tooltip-informacion">
           TOTAL BENEFICIOS 
           <i class="fa fa-question-circle" aria-hidden="true"></i>
           <div class="tooltip-informacion-recuadro">
             Se obtiene en base categoría seleccionada.
           </div>
-        </th>
+        </th> -->
         <th>TOTAL MARGEN CATEGORIA, RETROACTIVO Y BENEFICIOS</th>
       </tr>
     </thead>
@@ -303,18 +304,22 @@
         <tr>
           @if(item.id !== 3) {
             <td>{{ item.descripcion | uppercase }}</td>    
-            <td><input class="numberbox" type="text" (input)="validarCantidad($event, item)" [(ngModel)]="item.cantidadAMostrar" (change)="calcularSimuladorRetroactivo()" placeholder="Ingresa la cantidad"/> </td>
+            <td>
+              <div class="table-numberbox">
+                <input class="numberbox" type="text" (input)="validarCantidad($event, item)" [(ngModel)]="item.cantidadAMostrar" (change)="calcularSimuladorRetroactivo()" placeholder="Ingresa la cantidad"/>
+              </div>
+            </td>
             <td class="alineacion-derecha">{{ item.compraMinima | currency:'MXN':'symbol':'1.0-0' }}</td>
             <td class="alineacion-derecha">{{ item.totalCompraConDescuento | currency:'MXN':'symbol':'1.0-0' }}</td>
-            <td class="alineacion-derecha">{{ item.porcentaje }}%</td>
-            <td class="alineacion-derecha">{{ item.totalMargenConDescuento | currency:'MXN':'symbol':'1.0-0' }}</td>
-            <td class="alineacion-derecha">{{ item.totalMargenConPorcentaje | currency:'MXN':'symbol':'1.0-0' }}</td>
-            <td class="alineacion-derecha">{{ item.totalBeneficios | currency:'MXN':'symbol':'1.0-0' }}</td>
+            <td class="alineacion-derecha">{{ item.porcentajeRetroactivo }}%</td>
+            <td class="alineacion-derecha">{{ item.totalMargenPorCategoria | currency:'MXN':'symbol':'1.0-0' }}</td>
+            <td class="alineacion-derecha">{{ item.totalMargenRetroactivo | currency:'MXN':'symbol':'1.0-0' }}</td>
+            <!-- <td class="alineacion-derecha">{{ item.totalBeneficios | currency:'MXN':'symbol':'1.0-0' }}</td> -->
             <td class="alineacion-derecha">{{ item.totalMargenCalculado | currency:'MXN':'symbol':'1.0-0' }}</td>
           }
           @else {
             @if (clasificacionSeleccionadaSimulador.valor >= 3){
-              <td colspan="8">{{ item.descripcion | uppercase }}</td>    
+              <td colspan="7">{{ item.descripcion | uppercase }}</td>    
               <td class="alineacion-derecha">{{ item.totalMargenCalculado | currency:'MXN':'symbol':'1.2-2' }}</td>
             }
           }
@@ -324,9 +329,9 @@
     <tfoot>
       <tr>
         <td colspan="5">TOTALES</td>
-        <td class="alineacion-centrada totales">{{ totalMargenConDescuentoSimulador() | currency:'MXN':'symbol':'1.0-0' }}</td>
-        <td class="alineacion-centrada totales">{{ totalMargenConPorcentajeSimulador() | currency:'MXN':'symbol':'1.0-0'}}</td>
-        <td class="alineacion-centrada totales">{{ totalBeneficiosSimulador() | currency:'MXN':'symbol':'1.0-0'}}</td>
+        <td class="alineacion-centrada totales">{{ totalMargenPorCategoriaSimulador() | currency:'MXN':'symbol':'1.0-0' }}</td>
+        <td class="alineacion-centrada totales">{{ totalMargenRetroactivoSimulador() | currency:'MXN':'symbol':'1.0-0'}}</td>
+        <!-- <td class="alineacion-centrada totales">{{ totalBeneficiosSimulador() | currency:'MXN':'symbol':'1.0-0'}}</td> -->
         <td class="alineacion-centrada totales">{{ totalMargenBeneficiosCalculadoSimulador() | currency:'MXN':'symbol':'1.0-0'}}</td>
       </tr>
     </tfoot>
@@ -339,7 +344,6 @@
     **EL MONTO RESULTANTE EQUIVALE A UN SUBSIDIO DEL 30 % PARA PARTNER ELITE Y DEL 50 % PARA PARTNER ELITE PLUS.
     </p>
   </div>
-
   <p class="titulo">BENEFICIOS</p>
   <table class="tabla">
     <thead>
