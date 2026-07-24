@@ -5,10 +5,10 @@ export interface SimuladorRetroactivo {
   cantidadAMostrar: string;
   compraMinima: number;
   totalCompraConDescuento: number;
-  porcentaje: number;
-  totalMargenConDescuento: number;
-  totalMargenConPorcentaje: number;
-  totalBeneficios: number
+  porcentajeRetroactivo: number;
+  totalMargenPorCategoria: number;
+  totalMargenRetroactivo: number;
+  // totalBeneficios: number
   totalMargenCalculado: number;
   //Fletes
   promedioBicicleta: number;
