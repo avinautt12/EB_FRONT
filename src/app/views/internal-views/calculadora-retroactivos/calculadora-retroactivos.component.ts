@@ -125,7 +125,6 @@ export class CalculadoraRetroactivosComponent {
       totalMargenPorCategoria: 0, 
       totalMargenRetroactivo: 0, 
       totalMargenCalculado: 0, 
-      // totalBeneficios: 0,
       promedioBicicleta: 0
     },
     { 
@@ -139,7 +138,6 @@ export class CalculadoraRetroactivosComponent {
       totalMargenPorCategoria: 0, 
       totalMargenRetroactivo: 0, 
       totalMargenCalculado: 0, 
-      // totalBeneficios: 0,
       promedioBicicleta: 0
     },
     { 
@@ -153,7 +151,6 @@ export class CalculadoraRetroactivosComponent {
       totalMargenPorCategoria: 0, 
       totalMargenRetroactivo: 0, 
       totalMargenCalculado: 0, 
-      // totalBeneficios: 0,
       promedioBicicleta: 26400
     },
   ]);
@@ -237,10 +234,6 @@ export class CalculadoraRetroactivosComponent {
   totalMargenRetroactivoSimulador = computed(() => {
     return this.listaSimuladorRetroactivo().reduce((acc, item) => acc + item.totalMargenRetroactivo, 0);
   });
-
-  // totalBeneficiosSimulador = computed(() => {
-  //   return this.listaSimuladorRetroactivo().reduce((acc, item) => acc + item.totalBeneficios, 0);
-  // });
   
   totalMargenBeneficiosCalculadoSimulador = computed(() => {
     return this.listaSimuladorRetroactivo().reduce((acc, item) => acc + item.totalMargenCalculado, 0);
@@ -276,7 +269,6 @@ export class CalculadoraRetroactivosComponent {
   obtenerTotalMargenCalculadoSimulador() {            
     let margenBicicleta = this.listaCalculoMargenesRetroActivosSimulador().find(item => item.id === 1) //margn de bicicletas   
     let margenAparel = this.listaCalculoMargenesRetroActivosSimulador().find(item => item.id === 4); //margn de apparel
-    // let sumaPorcentajes = this.listaSimuladorRetroactivo().reduce((acc, item) => acc + item.porcentaje, 0);
     let sumaCantidadIngresada = this.listaSimuladorRetroactivo().reduce((acc, item) => acc + item.cantidadIngresada, 0);
 
     
@@ -318,8 +310,6 @@ export class CalculadoraRetroactivosComponent {
         })
       );
     }
-
-    console.log(this.listaSimuladorRetroactivo());
   }
 
   validarCantidad(e: any, item: SimuladorRetroactivo) {
@@ -430,10 +420,8 @@ export class CalculadoraRetroactivosComponent {
   }
 
   calcularDetalleRetroActivo(){
-    if (this.validarDatos()){
-      
+    if (this.validarDatos()){  
       let redondeoBiciMinimaCompraLinea = this.clasificacionSeleccionada.id === 2 ? 5000 : 10000; //Nivel Patner
-      //let redondeoBiciMultimarcaCompraInicial = this.clasificacionSeleccionada.id === 4 ? 500 : 5000;
 
       //Detalle Retroactivo resumen
       this.bicicletaPorcentajeInicial = this.clasificacionSeleccionada.bicicleta_porcentaje_compra_inicial;
@@ -561,7 +549,6 @@ export class CalculadoraRetroactivosComponent {
         return {
           ...item,
           importe_minimo_total_anual_con_iva: (this.bicicletaMinimaCompraInicialLinea + this.multimarcaMinimaCompraInicialLinea),
-          // importe_total_compra_adicional_con_iva: Math.ceil((this.clasificacionSeleccionada.importe_compra_minimo_anual_adicional_iva_incluido * this.sucursalSeleccionada.multiplo) / 10000 ) * 10000,
           importe_total_compra_adicional_con_iva: (this.anualAdicionalPorNivel.valor * this.sucursalSeleccionada.multiplo),
           descuento_retroactivo_por_logro: this.anualAdicionalPorNivel.descuento_retroactivo
         };
@@ -594,7 +581,6 @@ export class CalculadoraRetroactivosComponent {
 
   buscarPoligonoExclusivoPorNivel(){
     if (this.clasificacionSugerida().valor >0 ){
-      //let valorPoligonoExclusivo = this.clasificacionSugerida().valor === this.clasificacionSeleccionada.valor ? "SI" : "NO"
       let poligonExclusivo = this.clasificacionSeleccionada.valor >= 2 ? "SI" : "NO";
 
       this.clasificacionSeleccionada.beneficios_dinamicos = [
@@ -608,7 +594,6 @@ export class CalculadoraRetroactivosComponent {
 
   inicializarAtributosClasificaciones(){
     this.listaClasificaciones = this.listaClasificaciones.map(item => {
-      //const factorPorcentaje = (item.valor === 4) ? 0.11 : 0.15;
       let bicicletaCompraMinimaAnual = Math.ceil(item.bicicleta_compra_minima_anual * item.bicicleta_compra_minima_anual_multiplo);
       let compraMinimaAnualCalculado = Math.ceil((bicicletaCompraMinimaAnual * item.multimarca_compra_minima_anual_multiplo) / 5000) * 5000;
       let precioActualBiciCnCalculado = item.fletes.find(p => p.descripcion === "bici_cn")?.valor ?? 0;
