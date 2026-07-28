@@ -100,6 +100,24 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
   countEtapa(key: string): number {
     return this.data?.embarques?.filter((e: any) => e.estado_actual === key).length ?? 0;
   }
+
+  // Etapas del pipeline para la vista de tarjetas (tira horizontal)
+  readonly PIPELINE_STAGES = [
+    { key: 'entrega',    label: 'Entrega',   realOnly: false },
+    { key: 'booking',    label: 'Booking',   realOnly: false },
+    { key: 'transito',   label: 'Mar / Aér', realOnly: false },
+    { key: 'aduana',     label: 'Aduana',    realOnly: false },
+    { key: 'trans_dest', label: 'Destino',   realOnly: false },
+    { key: 'en_almacen', label: 'Almacén',   realOnly: true  },
+    { key: 'verif',      label: 'Verif.',    realOnly: true  },
+    { key: 'etiquetado', label: 'Etiq.',     realOnly: false },
+    { key: 'liberado',   label: 'Liberado',  realOnly: true  },
+  ];
+
+  stage(e: any, key: string): { proy: string | null; real: string | null; delta: number | null } | undefined {
+    return e?.pipeline?.[key] ?? undefined;
+  }
+
   notasEditId: number | null = null;
   notasEditVal = '';
 
