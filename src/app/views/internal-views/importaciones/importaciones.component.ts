@@ -4,12 +4,13 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
 import { DatePickerComponent } from '../../../components/date-picker/date-picker.component';
+import { TemporadaSelectorComponent, TEMPORADA_HISTORICO } from '../../../components/temporada-selector/temporada-selector.component';
 import { ImportacionesService, Importacion } from '../../../services/importaciones.service';
 
 @Component({
   selector: 'app-importaciones',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, HomeBarComponent, DatePickerComponent],
+  imports: [CommonModule, RouterModule, FormsModule, HomeBarComponent, DatePickerComponent, TemporadaSelectorComponent],
   templateUrl: './importaciones.component.html',
   styleUrl: './importaciones.component.css',
 })
@@ -25,6 +26,27 @@ export class ImportacionesComponent implements OnInit, AfterViewInit, OnDestroy 
   filtroEtapa = '';
   filtroFechaDesde = '';
   filtroFechaHasta = '';
+
+  // ── Temporadas (MY27 desde R26-1414; anteriores = MY26) ──────────────────
+  temporadaSel: 'MY27' | 'MY26' | 'todas' = 'MY27';
+  private static readonly _CORTE_MY27 = 1414;
+  readonly temporadasCerradas = ['MY26'];
+
+  temporadaDe(e: Importacion): 'MY27' | 'MY26' {
+    const ref = (e?.referencia || '').toUpperCase();
+    const m = /R\d+-(\d+)/.exec(ref) || /(\d{3,})/.exec(ref);
+    const num = m ? parseInt(m[1], 10) : 0;
+    return num >= ImportacionesComponent._CORTE_MY27 ? 'MY27' : 'MY26';
+  }
+  get temporadaSelValor(): string {
+    if (this.temporadaSel === 'MY26')  return 'MY26';
+    if (this.temporadaSel === 'todas') return TEMPORADA_HISTORICO;
+    return '';
+  }
+  onTemporadaCambio(v: string): void {
+    this.temporadaSel = v === TEMPORADA_HISTORICO ? 'todas' : (v === 'MY26' ? 'MY26' : 'MY27');
+    this.filtrar();
+  }
 
   readonly ETAPAS = [
     { key: 'Booking',           bg: 'rgba(59,130,246,.18)',  color: '#60a5fa' },
@@ -98,9 +120,10 @@ export class ImportacionesComponent implements OnInit, AfterViewInit, OnDestroy 
         || (est === 'activo'    && (e as any).estado !== 'cerrado')
         || (est === 'pendiente' && this.progresoPct(e) === 0);
       const matchEtapa = !etapa || this.estadoActual(e) === etapa;
+      const matchTemp  = this.temporadaSel === 'todas' || this.temporadaDe(e) === this.temporadaSel;
       const eta    = e.log_eta_puerto || '';
       const matchF = (!desde && !hasta) || ((!desde || eta >= desde) && (!hasta || eta <= hasta));
-      return matchQ && matchO && matchV && matchE && matchEtapa && matchF;
+      return matchQ && matchO && matchV && matchE && matchEtapa && matchTemp && matchF;
     });
     // Dar un tick para que Angular renderice los nuevos <tr> antes de observar
     setTimeout(() => this.observeRows(), 0);
@@ -117,8 +140,13 @@ export class ImportacionesComponent implements OnInit, AfterViewInit, OnDestroy 
     this.filtrar();
   }
 
+  get embarquesTemporada(): Importacion[] {
+    if (this.temporadaSel === 'todas') return this.embarques;
+    return this.embarques.filter(e => this.temporadaDe(e) === this.temporadaSel);
+  }
+
   countEtapa(key: string): number {
-    return this.embarques.filter(e => this.estadoActual(e) === key).length;
+    return this.embarquesTemporada.filter(e => this.estadoActual(e) === key).length;
   }
 
   toggleFiltroVia(val: string): void {
@@ -182,9 +210,20 @@ export class ImportacionesComponent implements OnInit, AfterViewInit, OnDestroy 
 
   private _normOrigen(s: string): string {
     if (!s) return '';
-    const key = s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toUpperCase();
-    const canon: Record<string, string> = { 'ESPANA': 'ESPAÑA', 'BELGICA': 'BÉLGICA' };
+    const key = s.normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')   // acentos
+      .replace(/[�?]/g, '')         // � y ? (corrupción de ñ/é en la BD)
+      .trim().toUpperCase();
+    const canon: Record<string, string> = {
+      'ESPANA': 'ESPAÑA', 'ESPAA': 'ESPAÑA',
+      'BELGICA': 'BÉLGICA', 'BLGICA': 'BÉLGICA',
+    };
     return canon[key] ?? key;
+  }
+
+  /** Origen normalizado para mostrar en plantilla (arregla ñ/é dañadas). */
+  origenBonito(s: string | null | undefined): string {
+    return this._normOrigen(s || '');
   }
 
   get origenes(): string[] {

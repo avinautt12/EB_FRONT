@@ -3,13 +3,18 @@
   /* Tokens propios, autocontenidos -- este componente se usa dentro de 6
      pantallas distintas que no comparten las mismas variables de tema, asi
      que no depende de heredar nada del padre. */
-  --ts-orange: #EB5E28;
+  --ts-accent: #EB5E28;          /* color de acento (override por consumidor) */
+  --ts-accent-rgb: 235, 94, 40;  /* mismo acento en RGB para capas rgba() */
   --ts-bg-trigger: #403F3F;
+  --ts-border-trigger: transparent;  /* contorno del trigger en reposo */
   --ts-bg-popover: #131313;
   --ts-border: #272727;
   --ts-t1: #FFFCF2;
   --ts-t2: #b8b6ae;
   --ts-t3: #7a7870;
+  --ts-trigger-height: 44px;
+  --ts-trigger-font: 0.9rem;
+  --ts-trigger-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .ts-wrap { position: relative; display: inline-block; }
@@ -19,30 +24,30 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 44px;
-  padding: 0 16px;
+  height: var(--ts-trigger-height);
+  padding: 0 14px;
   background: var(--ts-bg-trigger);
   color: var(--ts-t1);
-  border: 1px solid transparent;
+  border: 1px solid var(--ts-border-trigger);
   border-radius: 8px;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: var(--ts-trigger-font);
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--ts-trigger-shadow);
   transition: background 150ms ease-out, border-color 150ms ease-out, transform 120ms ease-out;
 }
-.ts-trigger:hover  { background: var(--ts-orange); }
+.ts-trigger:hover  { background: var(--ts-accent); }
 .ts-trigger:active { transform: scale(0.97); }
 .ts-trigger.ts-active {
-  border-color: rgba(235, 94, 40, 0.6);
-  box-shadow: 0 0 0 3px rgba(235, 94, 40, 0.15);
+  border-color: rgba(var(--ts-accent-rgb), 0.6);
+  box-shadow: 0 0 0 3px rgba(var(--ts-accent-rgb), 0.15);
 }
 .ts-trigger.ts-historico {
-  background: rgba(235, 94, 40, 0.16);
-  color: var(--ts-orange);
+  background: rgba(var(--ts-accent-rgb), 0.16);
+  color: var(--ts-accent);
 }
-.ts-trigger.ts-historico:hover { background: var(--ts-orange); color: var(--ts-t1); }
+.ts-trigger.ts-historico:hover { background: var(--ts-accent); color: var(--ts-t1); }
 
 .ts-trigger:disabled {
   opacity: 0.45;
@@ -69,7 +74,7 @@
   background: var(--ts-bg-popover);
   border: 1px solid var(--ts-border);
   border-radius: 12px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(235, 94, 40, 0.06);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(var(--ts-accent-rgb), 0.06);
   padding: 6px;
   transform-origin: top left;
   animation: tsIn 180ms cubic-bezier(0.23, 1, 0.32, 1);
@@ -111,15 +116,15 @@
   cursor: pointer;
   transition: background 120ms ease-out, color 120ms ease-out;
 }
-.ts-item:hover { background: rgba(235, 94, 40, 0.12); color: var(--ts-orange); }
+.ts-item:hover { background: rgba(var(--ts-accent-rgb), 0.12); color: var(--ts-accent); }
 .ts-item:active { transform: scale(0.98); }
 
 .ts-item-sel {
-  background: var(--ts-orange);
+  background: var(--ts-accent);
   color: #fff;
   font-weight: 700;
 }
-.ts-item-sel:hover { background: var(--ts-orange); color: #fff; }
+.ts-item-sel:hover { background: var(--ts-accent); color: #fff; }
 
 .ts-item-actual { margin-bottom: 2px; }
 
@@ -136,5 +141,5 @@
 
 /* Touch devices shouldn't get hover-triggered states */
 @media (hover: hover) and (pointer: fine) {
-  .ts-trigger:hover { background: var(--ts-orange); }
+  .ts-trigger:hover { background: var(--ts-accent); }
 }

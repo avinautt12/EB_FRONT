@@ -38,6 +38,9 @@ export class TemporadaSelectorComponent {
   @Input() seleccionada: string | null = null;
   @Input() disabled = false;
   @Input() incluirHistorico = false;
+  /** Texto para la opción "temporada actual" (default preserva el comportamiento
+   *  de las pantallas existentes; importaciones lo usa para mostrar "MY27"). */
+  @Input() labelActual = 'Temporada actual';
 
   readonly HISTORICO = TEMPORADA_HISTORICO;
 
@@ -80,6 +83,6 @@ export class TemporadaSelectorComponent {
 
   get etiquetaActual(): string {
     if (this.seleccionada === this.HISTORICO) return 'Histórico completo';
-    return this.seleccionada || 'Temporada actual';
+    return this.seleccionada || this.labelActual;
   }
 }

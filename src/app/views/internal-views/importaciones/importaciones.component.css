@@ -155,14 +155,40 @@
   font-size: 1.1rem; cursor: pointer; padding: 0;
 }
 .imp-filtros select {
-  background: #1a1f2e; border: 1px solid #2d3748; border-radius: 8px;
-  color: #e2e8f0; padding: 9px 12px; font-size: .875rem; outline: none; cursor: pointer;
+  appearance: none; -webkit-appearance: none;
+  background: #1a1f2e url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 12px center;
+  border: 1px solid #2d3748; border-radius: 8px;
+  color: #e2e8f0; padding: 9px 34px 9px 12px; font-size: .875rem; outline: none; cursor: pointer;
+  min-width: 190px; font-weight: 500;
+  transition: border-color 150ms ease, background-color 150ms ease;
 }
+.imp-filtros select:hover  { background-color: #202636; border-color: #3a465c; }
+.imp-filtros select:focus  { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+.imp-filtros select option { background: #1a1f2e; color: #e2e8f0; }
 .filtro-fecha-wrap {
   width: 220px; flex-shrink: 0;
   --surface2: #1a1f2e; --border2: #2d3748;
   --t1: #e2e8f0; --t2: #cbd5e1; --t3: #64748b;
   --orange: #EB5E28;
+}
+.filtro-temporada-wrap { display: flex; align-items: center; gap: 8px; }
+.filtro-temporada-lbl { font-size: .8rem; color: #64748b; white-space: nowrap; }
+.filtro-temporada-lbl i { color: #3b82f6; margin-right: 3px; }
+
+/* Paleta importaciones: acento azul + superficies del módulo + contorno */
+.filtro-temporada-wrap app-temporada-selector {
+  --ts-accent: #3b82f6;
+  --ts-accent-rgb: 59, 130, 246;
+  --ts-bg-trigger: #1a1f2e;
+  --ts-border-trigger: #2d3748;
+  --ts-bg-popover: #0f1623;
+  --ts-border: #1e2535;
+  --ts-t1: #e2e8f0;
+  --ts-t2: #cbd5e1;
+  --ts-t3: #64748b;
+  --ts-trigger-height: 40px;
+  --ts-trigger-font: .875rem;
+  --ts-trigger-shadow: none;
 }
 
 /* ── Spinner / Error ── */

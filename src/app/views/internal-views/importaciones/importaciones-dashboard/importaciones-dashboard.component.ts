@@ -6,6 +6,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HomeBarComponent } from '../../../../components/home-bar/home-bar.component';
+import { TemporadaSelectorComponent, TEMPORADA_HISTORICO } from '../../../../components/temporada-selector/temporada-selector.component';
 import { ImportacionesService } from '../../../../services/importaciones.service';
 import { Chart, registerables } from 'chart.js';
 
@@ -58,7 +59,7 @@ interface DashData {
 @Component({
   selector: 'app-importaciones-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, HomeBarComponent, DatePipe],
+  imports: [CommonModule, RouterModule, FormsModule, HomeBarComponent, DatePipe, TemporadaSelectorComponent],
   templateUrl: './importaciones-dashboard.component.html',
   styleUrl: './importaciones-dashboard.component.css',
 })
@@ -97,8 +98,37 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
     { key: 'Pendiente',         bg: 'rgba(71,85,105,.18)',   color: '#94a3b8' },
   ];
 
+  // ── Temporadas (MY27 desde R26-1414; anteriores = MY26) ──────────────────
+  temporadaSel: 'MY27' | 'MY26' | 'todas' = 'MY27';
+  private static readonly _CORTE_MY27 = 1414;
+  readonly temporadasCerradas = ['MY26'];   // para <app-temporada-selector>
+
+  /** Valor que espera el selector compartido: '' actual (MY27), 'MY26', o HISTÓRICO. */
+  get temporadaSelValor(): string {
+    if (this.temporadaSel === 'MY26')  return 'MY26';
+    if (this.temporadaSel === 'todas') return TEMPORADA_HISTORICO;
+    return '';
+  }
+  onTemporadaCambio(v: string): void {
+    this.temporadaSel = v === TEMPORADA_HISTORICO ? 'todas' : (v === 'MY26' ? 'MY26' : 'MY27');
+  }
+
+  temporadaDe(e: any): 'MY27' | 'MY26' {
+    const ref = (e?.referencia || '').toUpperCase();
+    const m = /R\d+-(\d+)/.exec(ref) || /(\d{3,})/.exec(ref);
+    const num = m ? parseInt(m[1], 10) : 0;
+    return num >= ImportacionesDashboardComponent._CORTE_MY27 ? 'MY27' : 'MY26';
+  }
+
+  /** Embarques del periodo seleccionado (antes de búsqueda / filtro de etapa). */
+  get embarquesTemporada(): any[] {
+    if (!this.data?.embarques) return [];
+    if (this.temporadaSel === 'todas') return this.data.embarques;
+    return this.data.embarques.filter((e: any) => this.temporadaDe(e) === this.temporadaSel);
+  }
+
   countEtapa(key: string): number {
-    return this.data?.embarques?.filter((e: any) => e.estado_actual === key).length ?? 0;
+    return this.embarquesTemporada.filter((e: any) => e.estado_actual === key).length;
   }
 
   // Etapas del pipeline para la vista de tarjetas (tira horizontal)
@@ -584,9 +614,10 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
 
   get embarquesOrdenados(): any[] {
     if (!this.data) return [];
+    const base = this.embarquesTemporada;
     const q = this.textoBuscador.trim().toLowerCase();
     let filtrados: any[] = q
-      ? this.data.embarques.filter((e: any) =>
+      ? base.filter((e: any) =>
           (e.referencia || '').toLowerCase().includes(q) ||
           (e.nombre || '').toLowerCase().includes(q) ||
           (e.log_origen || '').toLowerCase().includes(q) ||
@@ -594,7 +625,7 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
           (e.estado || '').toLowerCase().includes(q) ||
           (e.notas || '').toLowerCase().includes(q)
         )
-      : this.data.embarques;
+      : base;
     if (this.filtroEtapa) {
       filtrados = filtrados.filter((e: any) => e.estado_actual === this.filtroEtapa);
     }
@@ -613,6 +644,20 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
     if (!s) return '—';
     const first = s.split('/')[0].split(',')[0].trim();
     return first.length > 18 ? first.slice(0, 18) + '…' : first;
+  }
+
+  /** Origen normalizado para mostrar (arregla ñ/é dañadas en la BD). */
+  origenBonito(s: string | null | undefined): string {
+    if (!s) return '—';
+    const key = s.normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[�?]/g, '')
+      .trim().toUpperCase();
+    const canon: Record<string, string> = {
+      'ESPANA': 'ESPAÑA', 'ESPAA': 'ESPAÑA',
+      'BELGICA': 'BÉLGICA', 'BLGICA': 'BÉLGICA',
+    };
+    return canon[key] ?? key;
   }
 
   llegadaRelativa(fecha: string): string {
@@ -781,9 +826,8 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
   }
 
   stageCls(stage: { proy?: string | null; real?: string | null; delta?: number | null } | undefined): string {
-    if (!stage?.real) return stage?.proy ? 'stage-pending' : '';
-    if (stage.delta != null) return stage.delta <= 0 ? 'stage-ok' : 'stage-late';
-    return 'stage-done';
+    // Solo se resalta (verde) cuando la etapa tiene fecha REAL registrada.
+    return stage?.real ? 'stage-real' : '';
   }
 
   latTotalColor(dias: number | null | undefined): string {
