@@ -481,16 +481,23 @@
           <span class="leg-divider"></span>
           <span class="leg-sep">Filtrar por etapa:</span>
           <button class="etapa-pill etapa-all"
-                  [class.active]="!filtroEtapa"
-                  (click)="filtroEtapa = ''">
+                  [class.active]="!filtroEtapa && !soloPendientes"
+                  (click)="seleccionarTodas()">
             Todas <span class="etapa-count">{{ embarquesTemporada.length }}</span>
           </button>
+          <button class="etapa-pill pill-pendientes"
+                  [class.active]="soloPendientes"
+                  (click)="toggleSinLiberar()"
+                  title="Todo lo que sigue en proceso (aún no Liberado)">
+            <i class="fas fa-hourglass-half"></i> Sin liberar <span class="etapa-count">{{ countPendientes }}</span>
+          </button>
+          <span class="etapa-divider"></span>
           <button *ngFor="let et of ETAPAS"
                   class="etapa-pill"
                   [class.active]="filtroEtapa === et.key"
                   [style.--ec]="et.color"
                   [style.--eb]="et.bg"
-                  (click)="filtroEtapa = filtroEtapa === et.key ? '' : et.key">
+                  (click)="seleccionarEtapa(et.key)">
             {{ et.key }} <span class="etapa-count">{{ countEtapa(et.key) }}</span>
           </button>
         </div>
@@ -579,13 +586,13 @@
             <div class="ec-pipeline">
               <div *ngFor="let st of PIPELINE_STAGES" class="ec-stage" [ngClass]="stageCls(stage(e, st.key))">
                 <span class="ec-stage-lbl">{{ st.label }}</span>
-                <span class="ec-stage-p" *ngIf="!st.realOnly">
+                <span class="ec-stage-p">
                   <span class="rk rk-p" title="Proyectado">P</span>{{ fmtD(stage(e, st.key)?.proy) }}
                 </span>
                 <span class="ec-stage-r">
                   <span class="rk rk-r" title="Real">R</span>{{ fmtD(stage(e, st.key)?.real) }}
                 </span>
-                <span class="ec-stage-d" *ngIf="!st.realOnly && stage(e, st.key)?.delta != null"
+                <span class="ec-stage-d" *ngIf="stage(e, st.key)?.delta != null"
                       [ngClass]="deltaClass(stage(e, st.key)!.delta)">
                   {{ absDelta(stage(e, st.key)!.delta!) }}d
                 </span>

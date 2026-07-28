@@ -131,17 +131,38 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
     return this.embarquesTemporada.filter((e: any) => e.estado_actual === key).length;
   }
 
+  /** Oculta los embarques ya liberados (todo lo que sigue en proceso). */
+  soloPendientes = false;
+
+  get countPendientes(): number {
+    return this.embarquesTemporada.filter((e: any) => e.estado_actual !== 'Liberado').length;
+  }
+
+  /** Selección mutuamente excluyente: "Todas", una etapa, o "Sin liberar". */
+  seleccionarTodas(): void {
+    this.filtroEtapa = '';
+    this.soloPendientes = false;
+  }
+  seleccionarEtapa(key: string): void {
+    this.filtroEtapa = this.filtroEtapa === key ? '' : key;
+    this.soloPendientes = false;
+  }
+  toggleSinLiberar(): void {
+    this.soloPendientes = !this.soloPendientes;
+    this.filtroEtapa = '';
+  }
+
   // Etapas del pipeline para la vista de tarjetas (tira horizontal)
   readonly PIPELINE_STAGES = [
-    { key: 'entrega',    label: 'Entrega',   realOnly: false },
-    { key: 'booking',    label: 'Booking',   realOnly: false },
-    { key: 'transito',   label: 'Mar / Aér', realOnly: false },
-    { key: 'aduana',     label: 'Aduana',    realOnly: false },
-    { key: 'trans_dest', label: 'Destino',   realOnly: false },
-    { key: 'en_almacen', label: 'Almacén',   realOnly: true  },
-    { key: 'verif',      label: 'Verif.',    realOnly: true  },
-    { key: 'etiquetado', label: 'Etiq.',     realOnly: false },
-    { key: 'liberado',   label: 'Liberado',  realOnly: true  },
+    { key: 'entrega',    label: 'Entrega'   },
+    { key: 'booking',    label: 'Booking'   },
+    { key: 'transito',   label: 'Mar / Aér' },
+    { key: 'aduana',     label: 'Aduana'    },
+    { key: 'trans_dest', label: 'Destino'   },
+    { key: 'en_almacen', label: 'Almacén'   },
+    { key: 'verif',      label: 'Verif.'    },
+    { key: 'etiquetado', label: 'Etiq.'     },
+    { key: 'liberado',   label: 'Liberado'  },
   ];
 
   stage(e: any, key: string): { proy: string | null; real: string | null; delta: number | null } | undefined {
@@ -628,6 +649,9 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
       : base;
     if (this.filtroEtapa) {
       filtrados = filtrados.filter((e: any) => e.estado_actual === this.filtroEtapa);
+    }
+    if (this.soloPendientes) {
+      filtrados = filtrados.filter((e: any) => e.estado_actual !== 'Liberado');
     }
     return [...filtrados].sort((a, b) => {
       if (this.ordenTabla === 'llegada') {
