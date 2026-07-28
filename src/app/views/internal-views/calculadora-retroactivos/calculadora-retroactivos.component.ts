@@ -416,8 +416,6 @@ export class CalculadoraRetroactivosComponent {
         };
       })
     );  
-
-    console.log(this.listaSimuladorRetroactivo())
   }
 
   calcularDetalleRetroActivo(){
@@ -466,11 +464,6 @@ export class CalculadoraRetroactivosComponent {
       
       this.detalleTotalCompraInicialPrimerSemestre = (this.bicicletaMinimaCompraInicial + this.multimarcaMinimaCompraInicial);
       this.detalleTotalCompraInicialSegundoSemestre = (this.segundoSemestreMinimaBicicletaCompraInicial + this.multimarcaMinimaCompraInicial);
-
-      console.log("BICI")
-      console.log(this.segundoSemestreMinimaBicicletaCompraInicial)
-      console.log("MULTIMARCA")
-      console.log(this.multimarcaMinimaCompraInicial)
 
       this.actualizarMargenRetroactivo()
       this.actualizarAnualAdicionalPorNivelCantidad(this.listaAnualAdicionalPorNivelCantidad, this.sucursalSeleccionada);
