@@ -225,6 +225,7 @@ export class CalculadoraRetroactivosComponent {
   detalleMultimarcaCompraNovDic = 0;
 
   detalleTotalCompraInicialPrimerSemestre = 0;
+  detalleTotalCompraInicialSegundoSemestre = 0;
 
   //SIMULADOR
   totalMargenPorCategoriaSimulador = computed(() => {
@@ -464,6 +465,12 @@ export class CalculadoraRetroactivosComponent {
       this.detalleMultimarcaCompraNovDic = (this.porcentajeSemestreNovDic * this.multimarcaMinimaCompraInicial) / 100;
       
       this.detalleTotalCompraInicialPrimerSemestre = (this.bicicletaMinimaCompraInicial + this.multimarcaMinimaCompraInicial);
+      this.detalleTotalCompraInicialSegundoSemestre = (this.segundoSemestreMinimaBicicletaCompraInicial + this.multimarcaMinimaCompraInicial);
+
+      console.log("BICI")
+      console.log(this.segundoSemestreMinimaBicicletaCompraInicial)
+      console.log("MULTIMARCA")
+      console.log(this.multimarcaMinimaCompraInicial)
 
       this.actualizarMargenRetroactivo()
       this.actualizarAnualAdicionalPorNivelCantidad(this.listaAnualAdicionalPorNivelCantidad, this.sucursalSeleccionada);
