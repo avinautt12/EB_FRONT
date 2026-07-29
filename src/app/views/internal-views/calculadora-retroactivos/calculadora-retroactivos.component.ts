@@ -116,7 +116,7 @@ export class CalculadoraRetroactivosComponent {
   listaSimuladorRetroactivo = signal<SimuladorRetroactivo[]>([
     { 
       id: 1, 
-      descripcion: "BICICLETAS", 
+      descripcion: "TOTAL DE LA COMPRA", 
       cantidadIngresada: 0, 
       cantidadAMostrar: "", 
       compraMinima: 0, 
@@ -270,10 +270,11 @@ export class CalculadoraRetroactivosComponent {
   obtenerTotalMargenCalculadoSimulador() {            
     let margenBicicleta = this.listaCalculoMargenesRetroActivosSimulador().find(item => item.id === 1) //margn de bicicletas   
     let margenAparel = this.listaCalculoMargenesRetroActivosSimulador().find(item => item.id === 4); //margn de apparel
-    let sumaCantidadIngresada = this.listaSimuladorRetroactivo().reduce((acc, item) => acc + item.cantidadIngresada, 0);
+    // let sumaCantidadIngresada = this.listaSimuladorRetroactivo().reduce((acc, item) => acc + item.cantidadIngresada, 0);
+    let bicicleta = this.listaSimuladorRetroactivo().find(item => item.id === 1) //margn de bicicletas  
 
     
-    if (margenBicicleta && margenAparel){
+    if (margenBicicleta && margenAparel && bicicleta){
         this.listaSimuladorRetroactivo.update(listaActual => 
         listaActual.map(item => {
           let totalMargenPorCategoriaCalculado = 0;
@@ -282,11 +283,13 @@ export class CalculadoraRetroactivosComponent {
           let totalFletePorNivelCalculado = 0;
 
           if (item.id === 1 || item.id === 2) {
-            let margenCalculado = item.id === 1 ? margenBicicleta.margen_inicio_temporada : margenAparel.margen_inicio_temporada;
-            totalMargenPorCategoriaCalculado = ((item.cantidadIngresada * margenCalculado) / 100);
+            if (item.id === 1) {
+              let margenCalculado = item.id === 1 ? margenBicicleta.margen_inicio_temporada : margenAparel.margen_inicio_temporada;
+              totalMargenPorCategoriaCalculado = ((item.cantidadIngresada * margenCalculado) / 100);
+            }
             
             if (item.cantidadIngresada >= item.compraMinima) {
-              totalMargenRetroactivoCalculado = ((sumaCantidadIngresada * item.porcentajeRetroactivo ) / 100);
+              totalMargenRetroactivoCalculado = ((bicicleta.cantidadIngresada * item.porcentajeRetroactivo ) / 100);
             }       
 
             totalMargenCalculado = totalMargenPorCategoriaCalculado + totalMargenRetroactivoCalculado;
@@ -416,8 +419,6 @@ export class CalculadoraRetroactivosComponent {
         };
       })
     );  
-
-    console.log(this.listaSimuladorRetroactivo())
   }
 
   calcularDetalleRetroActivo(){
@@ -466,11 +467,6 @@ export class CalculadoraRetroactivosComponent {
       
       this.detalleTotalCompraInicialPrimerSemestre = (this.bicicletaMinimaCompraInicial + this.multimarcaMinimaCompraInicial);
       this.detalleTotalCompraInicialSegundoSemestre = (this.segundoSemestreMinimaBicicletaCompraInicial + this.multimarcaMinimaCompraInicial);
-
-      console.log("BICI")
-      console.log(this.segundoSemestreMinimaBicicletaCompraInicial)
-      console.log("MULTIMARCA")
-      console.log(this.multimarcaMinimaCompraInicial)
 
       this.actualizarMargenRetroactivo()
       this.actualizarAnualAdicionalPorNivelCantidad(this.listaAnualAdicionalPorNivelCantidad, this.sucursalSeleccionada);
