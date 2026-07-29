@@ -576,9 +576,14 @@
                     </div>
                   </div>
                 </div>
-                <span class="ec-notas-text" *ngIf="notasEditId !== e.id" [class.notas-empty]="!e.notas" [title]="e.notas || ''">
-                  {{ e.notas || 'Sin notas — clic para agregar' }}
-                </span>
+                <ng-container *ngIf="notasEditId !== e.id">
+                  <div class="ec-notas-lista" *ngIf="e.notas; else sinNotas" [title]="e.notas">
+                    <div class="ec-nota-linea" *ngFor="let linea of notasLineas(e.notas)">{{ linea }}</div>
+                  </div>
+                  <ng-template #sinNotas>
+                    <span class="ec-notas-text notas-empty">Sin notas — clic para agregar</span>
+                  </ng-template>
+                </ng-container>
               </div>
             </div>
 

@@ -1156,6 +1156,31 @@ td { padding: 10px 14px; vertical-align: middle; }
 }
 .ec-notas-text.notas-empty { color: #475569; font-style: italic; }
 
+/* Lista de entradas de la bitácora de notas — cada segmento "// ..." en su
+   propia línea, con un marcador para que no se lean como texto repetido. */
+.ec-notas-lista {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ec-nota-linea {
+  position: relative;
+  font-size: .72rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+  padding-left: 10px;
+}
+.ec-nota-linea::before {
+  content: '';
+  position: absolute;
+  left: 0; top: .55em;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #3b82f6;
+}
+.ec-nota-linea:not(:last-child) { margin-bottom: 3px; }
+
 /* ── Banda inferior: tira de etapas ── */
 .ec-pipeline {
   display: flex;

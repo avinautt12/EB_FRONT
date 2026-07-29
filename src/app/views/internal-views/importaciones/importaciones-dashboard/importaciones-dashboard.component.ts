@@ -153,16 +153,21 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
   }
 
   // Etapas del pipeline para la vista de tarjetas (tira horizontal)
+  // Cada key coincide 1:1 con el campo que usa el badge de estado (backend
+  // _estado_actual) para avanzar de etapa — así el pipeline y el badge
+  // siempre muestran lo mismo.
   readonly PIPELINE_STAGES = [
-    { key: 'entrega',    label: 'Entrega'   },
-    { key: 'booking',    label: 'Booking'   },
-    { key: 'transito',   label: 'Mar / Aér' },
-    { key: 'aduana',     label: 'Aduana'    },
-    { key: 'trans_dest', label: 'Destino'   },
-    { key: 'en_almacen', label: 'Almacén'   },
-    { key: 'verif',      label: 'Verif.'    },
-    { key: 'etiquetado', label: 'Etiq.'     },
-    { key: 'liberado',   label: 'Liberado'  },
+    { key: 'entrega',          label: 'Entrega'   },
+    { key: 'booking',          label: 'Booking'   },
+    { key: 'transito',         label: 'Lleg. Puerto' },
+    { key: 'aduana',           label: 'Aduana'    },
+    { key: 'trans_dest',       label: 'Destino'   },
+    { key: 'en_almacen',       label: 'Almacén'   },
+    { key: 'recepcion_odoo',   label: 'Rec. Odoo' },
+    { key: 'verif',            label: 'Verif.'    },
+    { key: 'liberacion_verif', label: 'Lib. Verif.' },
+    { key: 'etiquetado',       label: 'Etiq.'     },
+    { key: 'liberado',         label: 'Liberado'  },
   ];
 
   stage(e: any, key: string): { proy: string | null; real: string | null; delta: number | null } | undefined {
@@ -713,6 +718,13 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
   }
 
   cancelarNotas(): void { this.notasEditId = null; }
+
+  /** Divide una nota tipo bitácora ("Al 25.07 ... // Al 20.07 ...") en líneas
+   *  separadas para lectura clara — el dato guardado no cambia, solo la vista. */
+  notasLineas(notas: string | null | undefined): string[] {
+    if (!notas) return [];
+    return notas.split(/\s*\/\/\s*/).map(s => s.trim()).filter(Boolean);
+  }
 
   abrirModalLat(tipo: 'almacen' | 'contabilidad' | 'transito' | 'total'): void {
     if (!this.data) return;

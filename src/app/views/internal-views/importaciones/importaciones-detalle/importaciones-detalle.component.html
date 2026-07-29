@@ -238,8 +238,16 @@
           <label>· Días en salir tras entrega Scott</label>
           <span class="calc-val">{{ embarque.log_dias_salida_tras_entrega ?? '—' }} días</span>
         </div>
+        <div class="field-row">
+          <label>14. ETA Puerto (Proyectado)</label>
+          <app-date-picker
+              mode="single"
+              [value]="embarque.log_eta_puerto_prog || ''"
+              (dateChange)="marcarCambio('log_eta_puerto_prog', $event || null)">
+            </app-date-picker>
+        </div>
         <div class="field-row" [class.campo-error]="esCampoError('log_eta_puerto')" [class.campo-faltante]="esCampoFaltante('log_eta_puerto')">
-          <label>14. ETA Puerto</label>
+          <label>14. ETA Puerto (Real)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.log_eta_puerto || ''"
@@ -773,8 +781,12 @@
           </div>
         </div>
 
+        <div class="field-row">
+          <label>6. Envío de información a la UVA (Proyectado)</label>
+          <app-date-picker mode="single" [value]="embarque.alm_envio_info_uva_prog || ''" (dateChange)="marcarCambio('alm_envio_info_uva_prog', $event || null)"></app-date-picker>
+        </div>
         <div class="field-row" [class.campo-faltante]="esCampoFaltante('alm_envio_info_uva')">
-          <label>6. Envío de información a la UVA</label>
+          <label>6. Envío de información a la UVA (Real)</label>
           <div class="na-wrap">
             <ng-container *ngIf="!esNA('alm_envio_info_uva')">
               <app-date-picker mode="single" [value]="embarque.alm_envio_info_uva || ''" (dateChange)="marcarCambio('alm_envio_info_uva', $event || null)"></app-date-picker>
