@@ -104,11 +104,14 @@
           </div>
         </div>
 
-        <div class="kpi-card kpi-card--clickable" (click)="abrirModalResumen('transito')" title="Ver embarques marítimos">
+        <div class="kpi-card kpi-card--clickable" (click)="abrirModalResumen('transito')" title="Ver embarques marítimos · booking → almacén">
           <div class="kpi-icon kpi-cyan"><i class="fas fa-ship"></i></div>
           <div class="kpi-info">
-            <span class="kpi-num">{{ data.kpis.transito_maritimo_promedio_dias || '—' }}<small> días</small></span>
+            <span class="kpi-num">
+              {{ data.kpis.transito_maritimo_promedio_dias != null ? data.kpis.transito_maritimo_promedio_dias : '—' }}<small *ngIf="data.kpis.transito_maritimo_promedio_dias != null"> días</small>
+            </span>
             <span class="kpi-lbl">Tránsito Marítimo</span>
+            <span class="kpi-sub">Booking → Almacén<span *ngIf="data.kpis.transito_maritimo_n"> · n={{ data.kpis.transito_maritimo_n }}</span></span>
           </div>
         </div>
 
@@ -119,7 +122,7 @@
               {{ data.kpis.transito_aereo_promedio_dias != null ? data.kpis.transito_aereo_promedio_dias : '—' }}<small *ngIf="data.kpis.transito_aereo_promedio_dias != null"> días</small>
             </span>
             <span class="kpi-lbl">Tránsito Aéreo</span>
-            <span class="kpi-sub" *ngIf="data.kpis.transito_aereo_n">n={{ data.kpis.transito_aereo_n }}</span>
+            <span class="kpi-sub">Booking → Almacén<span *ngIf="data.kpis.transito_aereo_n"> · n={{ data.kpis.transito_aereo_n }}</span></span>
           </div>
         </div>
 

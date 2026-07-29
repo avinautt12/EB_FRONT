@@ -15,7 +15,8 @@ Chart.register(...registerables);
 interface Kpis {
   total: number; activos: number; cerrados: number; cancelados: number;
   flete_total_usd: number; flete_promedio_usd: number;
-  transito_maritimo_promedio_dias: number; pct_avance_promedio: number;
+  transito_maritimo_promedio_dias: number | null; transito_maritimo_n: number;
+  pct_avance_promedio: number;
   transito_aereo_promedio_dias: number | null; transito_aereo_n: number;
 }
 interface LatEmbarqDet { id: number; referencia: string; nombre: string; log_origen: string; fecha_ini: string; fecha_fin: string; dias: number; }
@@ -747,16 +748,34 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
   cerrarModalLat():  void { this.modalLat  = null; }
   cerrarModalEtiq(): void { this.modalEtiq = false; }
 
+  /** Mismo criterio que usa el backend para el promedio "Tránsito" del
+   *  Resumen: booking → llegada a almacén, ambas fechas capturadas y con
+   *  un tramo válido (no negativo). Si un embarque no cumple esto, no
+   *  cuenta en el promedio y tampoco debe listarse aquí. */
+  private _transitoValido(e: any, via: 'MARITIMO' | 'AEREO'): boolean {
+    const viaEmb = e.via_transporte || 'MARITIMO';
+    if (viaEmb !== via) return false;
+    const booking = e.pipeline?.booking?.real;
+    if (!booking || !e.des_llegada_almacen) return false;
+    const dias = (+new Date(e.des_llegada_almacen) - +new Date(booking)) / 86400000;
+    return dias >= 0;
+  }
+
   abrirModalResumen(tipo: 'total' | 'activos' | 'cerrados' | 'transito' | 'transito_aereo' | 'avance'): void {
     if (!this.data) return;
     const emb = this.data.embarques;
+    const sortPorLlegada = (a: any, b: any) => {
+      const da = a.des_llegada_almacen ? +new Date(a.des_llegada_almacen) : 0;
+      const db = b.des_llegada_almacen ? +new Date(b.des_llegada_almacen) : 0;
+      return db - da;
+    };
     type Cfg = { titulo: string; subtitulo: string; filter: (e: any) => boolean; sort: (a: any, b: any) => number };
     const cfgBase: Record<string, Cfg> = {
       total:    { titulo: 'Todos los Embarques',   subtitulo: `${emb.length} embarques registrados`,          filter: () => true,                           sort: (a, b) => (b.pct_avance ?? 0) - (a.pct_avance ?? 0) },
       activos:  { titulo: 'Embarques en Proceso',  subtitulo: 'Estado activo · ordenado por avance',          filter: e => e.estado === 'activo',           sort: (a, b) => (b.pct_avance ?? 0) - (a.pct_avance ?? 0) },
-      cerrados: { titulo: 'Embarques Cerrados',    subtitulo: 'Estado cerrado · más recientes primero',       filter: e => e.estado === 'cerrado',          sort: (a, b) => { const da = a.des_llegada_almacen ? +new Date(a.des_llegada_almacen) : 0; const db = b.des_llegada_almacen ? +new Date(b.des_llegada_almacen) : 0; return db - da; } },
-      transito:       { titulo: 'Embarques Marítimos', subtitulo: 'Vía marítima · ordenado por avance',           filter: e => e.via_transporte === 'MARITIMO', sort: (a, b) => (b.pct_avance ?? 0) - (a.pct_avance ?? 0) },
-      transito_aereo: { titulo: 'Embarques Aéreos',    subtitulo: 'Vía aérea · booking → llegada almacén',       filter: e => e.via_transporte === 'AEREO',    sort: (a, b) => { const da = a.des_llegada_almacen ? +new Date(a.des_llegada_almacen) : 0; const db = b.des_llegada_almacen ? +new Date(b.des_llegada_almacen) : 0; return db - da; } },
+      cerrados: { titulo: 'Embarques Cerrados',    subtitulo: 'Estado cerrado · más recientes primero',       filter: e => e.estado === 'cerrado',          sort: sortPorLlegada },
+      transito:       { titulo: 'Embarques Marítimos', subtitulo: 'Vía marítima · booking → llegada almacén', filter: e => this._transitoValido(e, 'MARITIMO'), sort: sortPorLlegada },
+      transito_aereo: { titulo: 'Embarques Aéreos',    subtitulo: 'Vía aérea · booking → llegada almacén',    filter: e => this._transitoValido(e, 'AEREO'),    sort: sortPorLlegada },
       avance:   { titulo: 'Avance por Embarque',   subtitulo: 'Menor avance primero · todos los embarques',  filter: () => true,                           sort: (a, b) => (a.pct_avance ?? 101) - (b.pct_avance ?? 101) },
     };
     const { titulo, subtitulo, filter, sort } = cfgBase[tipo];
