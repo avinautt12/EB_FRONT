@@ -55,6 +55,24 @@
 }
 .btn-volver-sm:hover { background-color: #5a5a5a; }
 
+.btn-calculadora {
+    background-color: #F07D22;
+    color: #ffffff;
+    border: 1px solid #C96510;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s ease;
+    box-shadow: 0 2px 5px rgba(240,125,34,0.35);
+    margin-left: 10px;
+}
+.btn-calculadora:hover { background-color: #C96510; }
+
 .loading-message, .error-message {
     background: #ffffff;
     color: #333;

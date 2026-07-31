@@ -1,5 +1,5 @@
 import { Component, computed, signal, WritableSignal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
@@ -95,6 +95,25 @@ const calculoMargenesRetroactivosBase = (): CalculoMargenesRetroactivos[] => [
   styleUrl: './calculadora-retroactivos.component.css'
 })
 export class CalculadoraRetroactivosComponent {
+
+  constructor(private location: Location) {}
+
+  goBack() { this.location.back(); }
+
+  // Retorna 2.5 si el nivel elegido es >= al sugerido, 1.5 si es menor
+  get descuentoApparelCalculadora(): number {
+    const sugerida = this.clasificacionSugerida().valor;
+    const seleccionada = this.clasificacionSeleccionada.valor;
+    if (sugerida === 0 || seleccionada === 0) return 2.5;
+    return sugerida > seleccionada ? this.porcentajeVariableNivel : 2.5;
+  }
+
+  get descuentoApparelSimulador(): number {
+    const sugerida = this.clasificacionSugeridaSimulador().valor;
+    const seleccionada = this.clasificacionSeleccionadaSimulador.valor;
+    if (sugerida === 0 || seleccionada === 0) return 2.5;
+    return sugerida > seleccionada ? this.porcentajeVariableNivel : 2.5;
+  }
 
   listaPoligonos = LISTA_POLIGONOS;
   listaSucursales = SUCURSAL;

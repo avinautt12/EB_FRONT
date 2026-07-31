@@ -7,6 +7,10 @@
             <i class="fas fa-arrow-left"></i> Volver al Inicio
         </button>
 
+        <button class="btn-calculadora" [routerLink]="['/usuarios/calculadora-retroactivos']">
+            <i class="fas fa-calculator"></i> Calculadora de Retroactivos
+        </button>
+
         <app-temporada-selector *ngIf="temporadasDisponibles.length"
             [temporadas]="temporadasDisponibles"
             [seleccionada]="temporadaHistoricaSeleccionada"

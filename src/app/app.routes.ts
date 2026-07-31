@@ -101,6 +101,7 @@ export const routes: Routes = [
   { path: 'usuarios/caratula', component: CaratulaUsuariosComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/garantias', component: GarantiasUsuarioComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/solicitud-retroactivo', component: SolicitudRetroactivoComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/calculadora-retroactivos', component: CalculadoraRetroactivosComponent, canActivate: [usuarioGuard] },
   { path: 'flujo-dashboard', component: FlujoDashboardComponent, canActivate: [adminGuard] },
   { path: 'ordenes-compra', component: OrdenesCompraComponent, canActivate: [adminGuard] },
   { path: 'logistica', component: LogisticaComponent, canActivate: [adminGuard] },
