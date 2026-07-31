@@ -318,7 +318,12 @@
   height: 100%; border-radius: 3px;
   transition: width 0.55s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.rank-value { font-size: 0.83rem; font-weight: 700; color: var(--t1); min-width: 38px; text-align: right; flex-shrink: 0; }
+.rank-value {
+  font-size: 0.83rem; font-weight: 700; color: var(--t1);
+  min-width: 38px; text-align: right; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 1px;
+}
+.rank-value-meta { font-size: 0.68rem; font-weight: 500; color: var(--t4); white-space: nowrap; }
 
 /* ═══════════════════════════════
    MODAL
@@ -490,6 +495,7 @@
 .kardex-resumen-label { font-size: 0.72rem; color: var(--t4); }
 .kardex-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .kardex-latencias { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.8rem; color: var(--t3); }
+.kardex-lat-conteo { font-size: 0.72rem; color: var(--t4); margin-left: 4px; }
 .kardex-export-btn { margin-left: auto; }
 
 /* ── Cuadros: vista de conteo / detalle ── */

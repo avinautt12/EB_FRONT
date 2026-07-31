@@ -322,7 +322,10 @@
             <div class="rank-bar-track">
               <div class="rank-bar-fill" [style.width.%]="item.pct" [style.background]="item.color"></div>
             </div>
-            <span class="rank-value">{{ item.value }}&nbsp;d</span>
+            <span class="rank-value">
+              <span>{{ item.value }}&nbsp;d</span>
+              <span class="rank-value-meta" *ngIf="item.meta" [title]="'Promedio sobre ' + item.meta + ' tickets con validación registrada'">{{ item.meta }}</span>
+            </span>
           </div>
         </div>
       </div>
@@ -654,9 +657,11 @@
         <div class="kardex-latencias">
           <span *ngIf="r.latAtencionProm !== null">
             Lat. atención prom.: <strong [style.color]="colorLatencia(r.latAtencionProm)">{{ r.latAtencionProm }}&nbsp;d</strong>
+            <span class="kardex-lat-conteo">({{ r.latAtencionConteo }}/{{ r.total }} con validación)</span>
           </span>
           <span *ngIf="r.latCierreProm !== null">
             Lat. cierre prom.: <strong [style.color]="colorLatencia(r.latCierreProm)">{{ r.latCierreProm }}&nbsp;d</strong>
+            <span class="kardex-lat-conteo">({{ r.latCierreConteo }}/{{ r.total }} cerrados)</span>
           </span>
         </div>
         <button class="btn-ver-todos kardex-export-btn" (click)="exportarKardexActual()">

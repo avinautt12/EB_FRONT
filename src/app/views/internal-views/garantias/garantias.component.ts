@@ -54,7 +54,7 @@ const PRIORIDAD_ESTATUS: Record<string, number> = {
 
 type ColLista = 'folio' | 'distribuidor' | 'contacto' | 'marca' | 'estatus' | 'estatus_pieza' | 'fecha_creacion';
 
-export interface RankItem { key: string; value: number; pct: number; color: string; }
+export interface RankItem { key: string; value: number; pct: number; color: string; meta?: string; }
 export type ModalKey = 'garantias_cliente' | 'latencia_cliente' | 'piezas_reemplazo' | 'ubicacion_dano';
 
 export interface ClienteResumen {
@@ -62,7 +62,9 @@ export interface ClienteResumen {
   total: number;
   porEstatus: Record<string, number>;
   latAtencionProm: number | null;
+  latAtencionConteo: number;
   latCierreProm: number | null;
+  latCierreConteo: number;
 }
 
 type ColKardex = 'folio' | 'marca' | 'estatus' | 'fecha_creacion' | 'lat_atencion' | 'lat_cierre';
@@ -130,7 +132,6 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
   ];
 
   // Rankings pre-calculados — evita llamar métodos en *ngFor (causa de crashes)
-  topLatencia:    RankItem[] = [];
   topPiezas:      RankItem[] = [];
   topUbicaciones: RankItem[] = [];
 
@@ -588,8 +589,6 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private procesarRankings(): void {
     if (!this.dashboard) return;
-    // Latencia por Cliente ya no se limita a 10 — la tarjeta se desplaza (scroll).
-    this.topLatencia    = this.buildRank(this.dashboard.latencia_por_cliente,  999);
     this.topPiezas      = this.buildRank(this.dashboard.piezas_reemplazo,       5);
     this.topUbicaciones = this.buildRank(this.dashboard.ubicacion_dano,         5);
   }
@@ -622,12 +621,16 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
     grupos.forEach((tickets, cliente) => {
       const porEstatus: Record<string, number> = {};
       for (const t of tickets) porEstatus[t.estatus] = (porEstatus[t.estatus] ?? 0) + 1;
+      const atencionVals = tickets.map(t => t.lat_atencion).filter((v): v is number => v !== null && v !== undefined);
+      const cierreVals   = tickets.map(t => t.lat_cierre).filter((v): v is number => v !== null && v !== undefined);
       resumen.push({
         cliente,
         total: tickets.length,
         porEstatus,
-        latAtencionProm: promedio(tickets.map(t => t.lat_atencion).filter((v): v is number => v !== null && v !== undefined)),
-        latCierreProm:   promedio(tickets.map(t => t.lat_cierre).filter((v): v is number => v !== null && v !== undefined)),
+        latAtencionProm:   promedio(atencionVals),
+        latAtencionConteo: atencionVals.length,
+        latCierreProm:     promedio(cierreVals),
+        latCierreConteo:   cierreVals.length,
       });
     });
     this.clientesResumen = resumen;
@@ -643,6 +646,25 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
       key: c.cliente, value: c.total,
       pct:   Math.round((c.total / max) * 100),
       color: PALETA[i % PALETA.length],
+    }));
+  }
+
+  /**
+   * Latencia de atención por cliente -- calculada del mismo `clientesResumen` que alimenta
+   * el Kardex (una sola fuente de verdad, ya no una consulta SQL separada que puede
+   * desalinearse). Solo incluye clientes con al menos un ticket con validación registrada;
+   * `meta` lleva "N/total" para dejar claro sobre cuántos tickets se promedia.
+   */
+  get topLatencia(): RankItem[] {
+    const filtrados = this.clientesResumen
+      .filter(c => c.latAtencionProm !== null)
+      .sort((a, b) => b.latAtencionProm! - a.latAtencionProm!);
+    const max = Math.max(...filtrados.map(c => c.latAtencionProm!), 1);
+    return filtrados.map((c, i) => ({
+      key: c.cliente, value: c.latAtencionProm!,
+      pct:   Math.round((c.latAtencionProm! / max) * 100),
+      color: PALETA[i % PALETA.length],
+      meta:  `${c.latAtencionConteo}/${c.total}`,
     }));
   }
 
