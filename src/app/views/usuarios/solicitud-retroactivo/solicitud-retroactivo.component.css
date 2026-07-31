@@ -6,6 +6,34 @@
   padding: 1rem;
 }
 
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+
+.btn-volver {
+  background-color: transparent;
+  border-color: #666;
+  color: #bbb;
+  z-index: 1;
+}
+
+.btn-volver:hover {
+  background-color: #333;
+  color: #fff;
+  border-color: #fff;
+}
+
 h2 {
   color: #EB5E28;
   font-weight: 700;
