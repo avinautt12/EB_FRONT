@@ -139,6 +139,10 @@ export class SolicitudRetroactivoComponent implements OnInit {
     const token = localStorage.getItem('token');
 
     if (token){
+      // GUÍA: usuarioGuard permite entrar aquí también con rol 1 (admin), desde
+      // el botón del monitor "Retroactivos". Si quien llena el formulario es un
+      // admin, este id sale de SU token, no del cliente real -> la venta queda
+      // registrada a nombre del admin. Ver usuario.guard.ts (rutasUsuarioYAdmin).
       formData.set('id_usuario', JSON.parse(atob(token.split('.')[1])).id);
 
       this.http.post(`${environment.apiUrl}/api/solicitud-retroactivo/registrar/venta`, formData)
