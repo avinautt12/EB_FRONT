@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 
@@ -38,7 +39,7 @@ const tipoFormularioVacio = (): Formulario => ({
 
 @Component({
   selector: 'app-solicitud-retroactivo',
-  imports: [CommonModule, ReactiveFormsModule, TopBarUsuariosComponent],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, TopBarUsuariosComponent],
   templateUrl: './solicitud-retroactivo.component.html',
   styleUrl: './solicitud-retroactivo.component.css'
 })
