@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
@@ -28,7 +28,7 @@ export interface TendenciaDashboard {
 }
 
 export interface MovimientoDashboard {
-  id: number | null;
+  id: string | number | null;
   tipo_movimiento: string;
   descripcion: string;
   responsable_anterior: string;
@@ -37,6 +37,15 @@ export interface MovimientoDashboard {
   fecha: string;
   numero_inventario: string;
   equipo: string;
+}
+
+export type TipoDetalleDashboard =
+  | 'equipos'
+  | 'responsivas'
+  | 'auditorias';
+
+export interface DetalleDashboardFila {
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface DashboardInventarioData {
@@ -101,26 +110,53 @@ export class DashboardInventarioService {
   constructor(private http: HttpClient) {}
 
   obtenerCatalogos(): Observable<DashboardCatalogos> {
-    return this.http.get<DashboardCatalogos>(`${this.apiUrl}/catalogos`);
+    return this.http.get<DashboardCatalogos>(
+      `${this.apiUrl}/catalogos`
+    );
   }
 
-  obtenerDashboard(filtros: DashboardFiltros = {}): Observable<DashboardInventarioData> {
+  obtenerDashboard(
+    filtros: DashboardFiltros = {}
+  ): Observable<DashboardInventarioData> {
+    return this.http.get<DashboardInventarioData>(
+      `${this.apiUrl}/dashboard`,
+      { params: this.crearParametros(filtros) }
+    );
+  }
+
+  obtenerDetalle(
+    tipo: TipoDetalleDashboard,
+    filtros: DashboardFiltros = {}
+  ): Observable<DetalleDashboardFila[]> {
+    return this.http.get<DetalleDashboardFila[]>(
+      `${this.apiUrl}/detalle/${tipo}`,
+      { params: this.crearParametros(filtros) }
+    );
+  }
+
+  private crearParametros(
+    filtros: DashboardFiltros
+  ): HttpParams {
     let params = new HttpParams();
 
     if (filtros.empresa && filtros.empresa !== 'Todas') {
       params = params.set('empresa', filtros.empresa);
     }
 
-    if (filtros.departamento && filtros.departamento !== 'Todos') {
-      params = params.set('departamento', filtros.departamento);
+    if (
+      filtros.departamento &&
+      filtros.departamento !== 'Todos'
+    ) {
+      params = params.set(
+        'departamento',
+        filtros.departamento
+      );
     }
 
     if (filtros.estado && filtros.estado !== 'Todos') {
       params = params.set('estado', filtros.estado);
     }
 
-    return this.http.get<DashboardInventarioData>(`${this.apiUrl}/dashboard`, {
-      params
-    });
+    return params;
   }
 }

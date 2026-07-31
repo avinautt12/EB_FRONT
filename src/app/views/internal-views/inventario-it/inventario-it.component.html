@@ -1,101 +1,223 @@
-<section class="inventario-page">
-  <header class="inventario-header">
-    <p class="eyebrow">MÓDULO DE CONTROL TECNOLÓGICO</p>
+<section class="inventory-home">
+  <!-- Luces ambientales decorativas -->
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
 
-    <h1 class="main-title">
-      <span>Inventario</span><strong>IT</strong>
-    </h1>
+  <!-- BARRA SUPERIOR -->
+  <header class="topbar">
+    <a
+      class="back-link"
+      routerLink="/">
+      <span aria-hidden="true">←</span>
+      Regresar al Inicio
+    </a>
 
-    <p class="subtitle">
-      Administración de activos tecnológicos, asignaciones, responsivas,
-      auditorías e historial de movimientos.
-    </p>
+    <button
+      type="button"
+      class="refresh-button"
+      [disabled]="cargando"
+      (click)="cargarResumen()">
+
+      <span [class.rotating]="cargando">
+        ↻
+      </span>
+
+      {{ cargando ? 'Actualizando' : 'Actualizar' }}
+    </button>
   </header>
 
-  <section class="cards-grid">
-   <article class="module-card">
-  <h3>Dashboard</h3>
+  <main class="content">
+    <!-- ENCABEZADO PRINCIPAL -->
+    <section class="hero">
+      <p class="eyebrow">
+        <span></span>
 
-  <p>
-    Consulta indicadores, alertas, actividad mensual y el estado
-    general del Inventario IT.
-  </p>
+        INVENTARIO IT
 
-  <button
-    type="button"
-    routerLink="/inventario-it/dashboard">
-    Ir al Dashboard
-  </button>
-</article>
+        <b>·</b>
 
-    <article class="module-card featured">
-      <h3>Gestión de Equipos</h3>
-      <p>Registra y administra activos tecnológicos.</p>
-     <button type="button" routerLink="/inventario-it/equipos">Ir a Equipos</button>
-    </article>
+        ELITE BIKE
+      </p>
 
-  
-<article class="module-card">
-      <h3>Colaboradores</h3>
-      <p>Administra responsables de equipos.</p>
-    <button type="button" routerLink="/inventario-it/colaboradores">Ir a Colaboradores</button>
-    </article>
+      <h1>
+        Gestión de
+        <strong>Inventario IT</strong>
+      </h1>
 
-  <article class="module-card">
-  <h3>Asignación</h3>
-  <p> Asigna equipos tecnológicos a colaboradores.</p>
-  <button
-    type="button"routerLink="/inventario-it/asignaciones"> Ir a Asignación</button>
-</article>
+      <p class="hero-description">
+        Plataforma centralizada para el control, seguimiento,
+        auditoría y administración de los activos tecnológicos.
+      </p>
 
-    <article class="module-card">
-      <h3>Responsivas</h3>
-      <p>Gestiona documentos de asignación.</p>
-     <button
-      type="button"routerLink="/inventario-it/responsivas"> Ir Responsivas</button>
-</article>
+    
 
-    <article class="module-card">
-  <h3>Historial</h3>
+      <!-- ERROR DE CARGA -->
+      <div
+        class="status-message error"
+        *ngIf="errorCarga">
 
-  <p>
-    Consulta la trazabilidad y los cambios realizados sobre cada equipo.
-  </p>
+        <span>
+          !
+        </span>
 
-  <button
-    type="button"
-    [routerLink]="['/inventario-it/historial']">
-    Ir a Historial
-  </button>
-</article>
+        {{ errorCarga }}
+      </div>
+    </section>
 
-<article class="module-card">
-  <h3>Auditorías</h3>
+    <!-- MÓDULOS DESTACADOS -->
+    <section class="featured-layout">
+      <!-- DASHBOARD PRINCIPAL -->
+      <a
+        class="dashboard-card"
+        routerLink="/inventario-it/dashboard">
 
-  <p>
-    Realiza revisiones físicas, registra diferencias y da seguimiento a las correcciones del inventario.
-  </p>
+        <div class="dashboard-top">
+          <span class="module-icon orange-icon">
+            ◔
+          </span>
 
-  <button
-    type="button"
-    [routerLink]="['/inventario-it/auditorias']">
-    Ir a Auditorías
-  </button>
-</article>
+          <span
+            class="pending-badge"
+            [class.clear]="pendientesTotales === 0">
 
-    <article class="module-card">
-  <h3>Reportes</h3>
+            {{ etiquetaPendientes }}
+          </span>
+        </div>
 
-  <p>
-    Consulta indicadores, analiza la información del inventario
-    y exporta reportes detallados a Excel.
-  </p>
+        <div class="dashboard-copy">
+          <p class="card-kicker">
+            MÓDULO PRINCIPAL
+          </p>
 
-  <button
-    type="button"
-    routerLink="/inventario-it/reportes">
-    Ir a Reportes
-  </button>
-</article>
-  </section>
+          <h2>
+            Dashboard
+            <br />
+            General
+          </h2>
+
+          <p>
+            Consulta indicadores, alertas, actividad mensual,
+            movimientos recientes y el estado general del inventario.
+          </p>
+        </div>
+
+        <div class="card-action">
+          <span>
+            Abrir módulo
+          </span>
+
+          <b>
+            →
+          </b>
+        </div>
+
+        <span class="card-number">
+          01
+        </span>
+      </a>
+
+      <!-- EQUIPOS, ASIGNACIONES Y REPORTES -->
+      <div class="featured-stack">
+        <a
+          *ngFor="
+            let modulo of modulosDestacados;
+            trackBy: trackByModulo
+          "
+          class="compact-card"
+          [ngClass]="modulo.clase"
+          [routerLink]="modulo.ruta">
+
+          <span class="module-icon">
+            {{ modulo.icono }}
+          </span>
+
+          <div>
+            <h3>
+              {{ modulo.titulo }}
+            </h3>
+
+            <p>
+              {{ modulo.descripcion }}
+            </p>
+          </div>
+
+          <b class="compact-arrow">
+            ›
+          </b>
+
+          <span class="compact-number">
+            {{ modulo.numero }}
+          </span>
+        </a>
+      </div>
+    </section>
+
+    <!-- MÓDULOS SECUNDARIOS -->
+    <section class="secondary-section">
+      <div class="section-title">
+        <div>
+          <p>
+            MÁS HERRAMIENTAS
+          </p>
+
+          <h2>
+            Administración y control
+          </h2>
+        </div>
+
+        <span>
+          {{ modulosSecundarios.length }} módulos
+        </span>
+      </div>
+
+      <div class="secondary-grid">
+        <a
+          *ngFor="
+            let modulo of modulosSecundarios;
+            trackBy: trackByModulo
+          "
+          class="secondary-card"
+          [ngClass]="modulo.clase"
+          [routerLink]="modulo.ruta">
+
+          <div class="secondary-top">
+            <span class="module-icon">
+              {{ modulo.icono }}
+            </span>
+
+            <b>
+              ↗
+            </b>
+          </div>
+
+          <div>
+            <h3>
+              {{ modulo.titulo }}
+            </h3>
+
+            <p>
+              {{ modulo.descripcion }}
+            </p>
+          </div>
+
+          <span class="secondary-number">
+            {{ modulo.numero }}
+          </span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- PIE DE PÁGINA -->
+  <footer class="page-footer">
+    <span>
+      ELITE BIKE
+    </span>
+
+    <i></i>
+
+    <span>
+      SISTEMA DE GESTIÓN DE INVENTARIO IT
+    </span>
+  </footer>
 </section>

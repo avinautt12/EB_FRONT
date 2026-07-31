@@ -1,23 +1,33 @@
 <section class="dashboard-page">
+  <!-- ENCABEZADO -->
+
   <header class="page-header">
-    <button
-      type="button"
-      class="back-btn"
-      routerLink="/inventario-it">
-      ← Volver
-    </button>
+    <div class="header-left">
+      <button
+        type="button"
+        class="back-btn"
+        routerLink="/inventario-it"
+        aria-label="Volver a Inventario IT">
+        ←
+      </button>
 
-    <div class="title-block">
-      <p class="eyebrow">
-        INVENTARIO IT · ELITE BIKE
-      </p>
+      <div class="title-block">
+        <div class="title-line">
+          <span class="title-icon">▤</span>
 
-      <h1>Dashboard General</h1>
+          <div>
+            <h1>Dashboard de Inventario IT</h1>
 
-      <p>
-        Resumen ejecutivo del inventario, documentos,
-        auditorías, alertas y movimientos recientes.
-      </p>
+            <p>
+              Control operativo de activos tecnológicos · Elite Bike
+            </p>
+          </div>
+        </div>
+
+        <small *ngIf="ultimaActualizacion">
+          Actualizado: {{ ultimaActualizacion }}
+        </small>
+      </div>
     </div>
 
     <button
@@ -25,7 +35,10 @@
       class="refresh-btn"
       [disabled]="cargando"
       (click)="cargarDashboard()">
-      {{ cargando ? 'Actualizando...' : 'Actualizar datos' }}
+
+      <span [class.rotating]="cargando">↻</span>
+
+      {{ cargando ? 'Actualizando' : 'Actualizar' }}
     </button>
   </header>
 
@@ -33,12 +46,15 @@
   <!-- FILTROS -->
 
   <section class="filters-panel">
-    <label>
-      Empresa
+    <div class="filter-group">
+      <label for="empresa">Empresa</label>
 
-      <select [(ngModel)]="filtroEmpresa">
+      <select
+        id="empresa"
+        [(ngModel)]="filtroEmpresa">
+
         <option value="Todas">
-          Todas
+          Todas las empresas
         </option>
 
         <option
@@ -47,14 +63,17 @@
           {{ empresa }}
         </option>
       </select>
-    </label>
+    </div>
 
-    <label>
-      Departamento
+    <div class="filter-group">
+      <label for="departamento">Departamento</label>
 
-      <select [(ngModel)]="filtroDepartamento">
+      <select
+        id="departamento"
+        [(ngModel)]="filtroDepartamento">
+
         <option value="Todos">
-          Todos
+          Todos los departamentos
         </option>
 
         <option
@@ -63,42 +82,46 @@
           {{ departamento }}
         </option>
       </select>
-    </label>
+    </div>
 
-    <label>
-      Estado del equipo
+    <div class="filter-group">
+      <label for="estado">Estado</label>
 
-      <select [(ngModel)]="filtroEstado">
+      <select
+        id="estado"
+        [(ngModel)]="filtroEstado">
+
         <option
           *ngFor="let estado of estados"
           [value]="estado">
-          {{ estado }}
+
+          {{
+            estado === 'Todos'
+              ? 'Todos los estados'
+              : estado
+          }}
         </option>
       </select>
-    </label>
+    </div>
 
-    <button
-      type="button"
-      class="apply-btn"
-      [disabled]="cargando"
-      (click)="aplicarFiltros()">
-      Aplicar filtros
-    </button>
+    <div class="filter-actions">
+      <button
+        type="button"
+        class="apply-btn"
+        [disabled]="cargando"
+        (click)="aplicarFiltros()">
+        Aplicar
+      </button>
 
-    <button
-      type="button"
-      class="clear-btn"
-      *ngIf="tieneFiltrosActivos()"
-      [disabled]="cargando"
-      (click)="limpiarFiltros()">
-      Limpiar
-    </button>
-
-    <span
-      class="updated-at"
-      *ngIf="ultimaActualizacion">
-      Actualizado: {{ ultimaActualizacion }}
-    </span>
+      <button
+        type="button"
+        class="clear-btn"
+        *ngIf="tieneFiltrosActivos()"
+        [disabled]="cargando"
+        (click)="limpiarFiltros()">
+        Limpiar
+      </button>
+    </div>
   </section>
 
 
@@ -107,642 +130,788 @@
   <div
     class="loading-message"
     *ngIf="cargando">
-    Cargando información del Dashboard...
+
+    <span class="loader"></span>
+
+    Actualizando información del inventario...
   </div>
 
   <div
-    class="alert error"
+    class="error-message"
     *ngIf="errorCarga">
     {{ errorCarga }}
   </div>
 
 
-  <!-- INDICADORES PRINCIPALES -->
+  <!-- TARJETAS PRIORITARIAS -->
 
-  <section class="kpi-grid">
-    <article class="kpi-card orange">
-      <div class="kpi-label">
-        <span>Inventario</span>
-        <i>IT</i>
+  <div class="section-label">
+    <span>!</span>
+    REQUIERE ATENCIÓN
+  </div>
+
+  <section class="priority-grid">
+    <button
+      type="button"
+      class="priority-card responsivas"
+      [class.is-zero]="
+        dashboard.resumen.responsivas.pendientes === 0
+      "
+      (click)="abrirDetalle('responsivas', 'Pendiente')">
+
+      <div class="priority-card-header">
+        <span class="priority-icon">▥</span>
+        <span class="priority-arrow">→</span>
       </div>
 
-      <strong>
-        {{ dashboard.resumen.equipos.total }}
-      </strong>
+      <div class="priority-card-body">
+        <span>Responsivas pendientes</span>
 
-      <p>
-        Total de equipos registrados
-      </p>
+        <strong>
+          {{ dashboard.resumen.responsivas.pendientes }}
+        </strong>
 
-      <div class="mini-progress">
-        <span
-          [style.width.%]="porcentajeAsignados">
-        </span>
+        <small>
+          {{
+            dashboard.resumen.responsivas.pendientes > 0
+              ? 'Haz clic para consultar los documentos'
+              : 'No hay documentos pendientes'
+          }}
+        </small>
+      </div>
+    </button>
+
+    <button
+      type="button"
+      class="priority-card auditorias"
+      [class.is-zero]="
+        dashboard.resumen.auditorias.enProceso === 0
+      "
+      (click)="abrirDetalle('auditorias', 'En proceso')">
+
+      <div class="priority-card-header">
+        <span class="priority-icon">◎</span>
+        <span class="priority-arrow">→</span>
       </div>
 
-      <small>
-        {{ porcentajeAsignados }}% se encuentra asignado
-      </small>
-    </article>
+      <div class="priority-card-body">
+        <span>Auditorías en proceso</span>
 
+        <strong>
+          {{ dashboard.resumen.auditorias.enProceso }}
+        </strong>
 
-    <article class="kpi-card green">
-      <div class="kpi-label">
-        <span>Asignados</span>
-        <i>✓</i>
+        <small>
+          {{
+            dashboard.resumen.auditorias.enProceso > 0
+              ? 'Haz clic para consultar las revisiones'
+              : 'No hay auditorías abiertas'
+          }}
+        </small>
+      </div>
+    </button>
+
+    <button
+      type="button"
+      class="priority-card bajas"
+      [class.is-zero]="
+        dashboard.resumen.equipos.bajas === 0
+      "
+      (click)="abrirDetalle('equipos', 'Baja')">
+
+      <div class="priority-card-header">
+        <span class="priority-icon">↓</span>
+        <span class="priority-arrow">→</span>
       </div>
 
-      <strong>
-        {{ dashboard.resumen.equipos.asignados }}
-      </strong>
+      <div class="priority-card-body">
+        <span>Equipos de baja</span>
 
-      <p>
-        Equipos bajo resguardo
-      </p>
+        <strong>
+          {{ dashboard.resumen.equipos.bajas }}
+        </strong>
 
-      <small>
-        {{ dashboard.resumen.asignaciones.activas }}
-        asignaciones activas
-      </small>
-    </article>
-
-
-    <article class="kpi-card blue">
-      <div class="kpi-label">
-        <span>Disponibles</span>
-        <i>+</i>
+        <small>
+          {{
+            dashboard.resumen.equipos.bajas > 0
+              ? 'Haz clic para consultar los activos'
+              : 'No hay equipos dados de baja'
+          }}
+        </small>
       </div>
-
-      <strong>
-        {{ dashboard.resumen.equipos.disponibles }}
-      </strong>
-
-      <p>
-        Equipos listos para asignación
-      </p>
-
-      <small>
-        {{ porcentajeDisponibles }}% del inventario
-      </small>
-    </article>
-
-
-    <article class="kpi-card yellow">
-      <div class="kpi-label">
-        <span>Responsivas</span>
-        <i>!</i>
-      </div>
-
-      <strong>
-        {{ dashboard.resumen.responsivas.pendientes }}
-      </strong>
-
-      <p>
-        Documentos pendientes de firma
-      </p>
-
-      <small>
-        {{ porcentajeResponsivasFirmadas }}%
-        de responsivas firmadas
-      </small>
-    </article>
-
-
-    <article class="kpi-card purple">
-      <div class="kpi-label">
-        <span>Auditorías</span>
-        <i>◎</i>
-      </div>
-
-      <strong>
-        {{ dashboard.resumen.auditorias.enProceso }}
-      </strong>
-
-      <p>
-        Revisiones actualmente en proceso
-      </p>
-
-      <small>
-        {{ dashboard.resumen.auditorias.planeadas }}
-        auditorías planeadas
-      </small>
-    </article>
-
-
-    <article class="kpi-card red">
-      <div class="kpi-label">
-        <span>Hallazgos</span>
-        <i>×</i>
-      </div>
-
-      <strong>
-        {{
-          dashboard.resumen.hallazgos
-            .correccionesPendientes
-        }}
-      </strong>
-
-      <p>
-        Correcciones pendientes
-      </p>
-
-      <small>
-        {{ dashboard.resumen.hallazgos.noLocalizados }}
-        equipos no localizados
-      </small>
-    </article>
+    </button>
   </section>
 
 
-  <!-- ALERTAS -->
+  <!-- RESUMEN OPERATIVO -->
 
-  <section class="alerts-section">
-    <div class="section-heading">
-      <div>
-        <h2>Alertas y pendientes</h2>
+  <div class="section-label">
+    <span>◔</span>
+    RESUMEN OPERATIVO
+  </div>
 
-        <p>
-          Situaciones que requieren atención dentro del
-          inventario.
-        </p>
-      </div>
-
-      <span class="alert-count">
-        {{ alertas.length }}
-      </span>
-    </div>
-
-    <div
-      class="alerts-grid"
-      *ngIf="alertas.length; else sinAlertas">
-
-      <article
-        class="alert-card"
-        *ngFor="let alerta of alertas"
-        [ngClass]="alerta.clase">
-
+  <section class="summary-grid">
+    <article class="panel state-panel">
+      <header class="panel-header">
         <div>
-          <h3>
-            {{ alerta.titulo }}
-          </h3>
+          <h2>Estado del inventario</h2>
 
           <p>
-            {{ alerta.descripcion }}
+            Distribución actual de los equipos registrados.
           </p>
         </div>
 
-        <button
-          type="button"
-          [routerLink]="alerta.ruta">
-          {{ alerta.boton }}
-        </button>
+        <a
+          class="panel-link"
+          routerLink="/inventario-it/equipos">
+          Ver equipos →
+        </a>
+      </header>
+
+      <div class="donut-layout">
+        <div
+          class="donut"
+          [style.background]="fondoGraficaEstado">
+
+          <div class="donut-center">
+            <strong>
+              {{ dashboard.resumen.equipos.total }}
+            </strong>
+
+            <span>equipos</span>
+          </div>
+        </div>
+
+        <div class="donut-legend">
+          <a
+            class="legend-row asignados"
+            routerLink="/inventario-it/equipos"
+            [queryParams]="{ estado: 'Asignado' }">
+
+            <span class="legend-dot"></span>
+
+            <div>
+              <span>Asignados</span>
+
+              <small>
+                {{ dashboard.resumen.equipos.asignados }}
+                equipos
+              </small>
+            </div>
+
+            <strong>
+              {{ porcentajeAsignados }}%
+            </strong>
+          </a>
+
+          <a
+            class="legend-row disponibles"
+            routerLink="/inventario-it/equipos"
+            [queryParams]="{ estado: 'Disponible' }">
+
+            <span class="legend-dot"></span>
+
+            <div>
+              <span>Disponibles</span>
+
+              <small>
+                {{ dashboard.resumen.equipos.disponibles }}
+                equipos
+              </small>
+            </div>
+
+            <strong>
+              {{ porcentajeDisponibles }}%
+            </strong>
+          </a>
+
+          <a
+            class="legend-row bajas"
+            routerLink="/inventario-it/equipos"
+            [queryParams]="{ estado: 'Baja' }">
+
+            <span class="legend-dot"></span>
+
+            <div>
+              <span>Bajas</span>
+
+              <small>
+                {{ dashboard.resumen.equipos.bajas }}
+                equipos
+              </small>
+            </div>
+
+            <strong>
+              {{ porcentajeBajas }}%
+            </strong>
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel operation-panel">
+      <header class="panel-header">
+        <div>
+          <h2>Avance de procesos</h2>
+
+          <p>
+            Seguimiento de los procesos administrativos.
+          </p>
+        </div>
+      </header>
+
+      <div class="operation-list">
+        <a
+          class="operation-item"
+          routerLink="/inventario-it/responsivas"
+          [queryParams]="{ estado: 'Firmada' }">
+
+          <div class="operation-title">
+            <span>Responsivas firmadas</span>
+
+            <strong>
+              {{ dashboard.resumen.responsivas.firmadas }}
+              de
+              {{ dashboard.resumen.responsivas.total }}
+            </strong>
+          </div>
+
+          <div class="operation-track naranja">
+            <span
+              [style.width.%]="
+                porcentajeResponsivasFirmadas
+              ">
+            </span>
+          </div>
+
+          <small>
+            {{ porcentajeResponsivasFirmadas }}%
+            completado
+          </small>
+        </a>
+
+        <a
+          class="operation-item"
+          routerLink="/inventario-it/auditorias"
+          [queryParams]="{ estado: 'Finalizada' }">
+
+          <div class="operation-title">
+            <span>Auditorías finalizadas</span>
+
+            <strong>
+              {{ dashboard.resumen.auditorias.finalizadas }}
+              de
+              {{ dashboard.resumen.auditorias.total }}
+            </strong>
+          </div>
+
+          <div class="operation-track morado">
+            <span
+              [style.width.%]="
+                porcentajeAuditoriasFinalizadas
+              ">
+            </span>
+          </div>
+
+          <small>
+            {{ porcentajeAuditoriasFinalizadas }}%
+            completado
+          </small>
+        </a>
+
+        <a
+          class="operation-item"
+          routerLink="/inventario-it/asignaciones"
+          [queryParams]="{ estado: 'Activa' }">
+
+          <div class="operation-title">
+            <span>Asignaciones activas</span>
+
+            <strong>
+              {{ dashboard.resumen.asignaciones.activas }}
+              de
+              {{ dashboard.resumen.asignaciones.total }}
+            </strong>
+          </div>
+
+          <div class="operation-track verde">
+            <span
+              [style.width.%]="
+                porcentajeAsignacionesActivas
+              ">
+            </span>
+          </div>
+
+          <small>
+            {{ porcentajeAsignacionesActivas }}%
+            activas
+          </small>
+        </a>
+      </div>
+    </article>
+  </section>
+
+
+  <!-- ANÁLISIS COMPLEMENTARIO -->
+
+  <details class="details-section">
+    <summary class="details-summary">
+      <div>
+        <span class="details-icon">▸</span>
+
+        <div>
+          <strong>
+            Ver análisis complementario
+          </strong>
+
+          <small>
+            Distribución del inventario y actividad mensual.
+          </small>
+        </div>
+      </div>
+
+      <span class="details-arrow">⌄</span>
+    </summary>
+
+    <div class="details-content">
+      <article class="panel distribution-panel">
+        <header class="panel-header distribution-header">
+          <div>
+            <h2>{{ tituloDistribucion }}</h2>
+            <p>{{ descripcionDistribucion }}</p>
+          </div>
+
+          <div class="distribution-tabs">
+            <button
+              type="button"
+              [class.active]="
+                tipoDistribucion === 'categoria'
+              "
+              (click)="
+                seleccionarDistribucion('categoria')
+              ">
+              Categoría
+            </button>
+
+            <button
+              type="button"
+              [class.active]="
+                tipoDistribucion === 'empresa'
+              "
+              (click)="
+                seleccionarDistribucion('empresa')
+              ">
+              Empresa
+            </button>
+
+            <button
+              type="button"
+              [class.active]="
+                tipoDistribucion === 'departamento'
+              "
+              (click)="
+                seleccionarDistribucion('departamento')
+              ">
+              Departamento
+            </button>
+          </div>
+        </header>
+
+        <div
+          class="distribution-list"
+          *ngIf="
+            distribucionSeleccionada.length;
+            else sinDistribucion
+          ">
+
+          <div
+            class="distribution-row"
+            *ngFor="
+              let item of
+                distribucionSeleccionada | slice: 0 : 8;
+              trackBy: trackByDistribucion
+            ">
+
+            <span class="distribution-name">
+              {{ item.etiqueta || 'Sin información' }}
+            </span>
+
+            <div class="distribution-track">
+              <span
+                [style.width.%]="
+                  porcentajeDistribucion(
+                    item.total,
+                    distribucionSeleccionada
+                  )
+                ">
+              </span>
+            </div>
+
+            <strong>{{ item.total }}</strong>
+          </div>
+        </div>
+
+        <ng-template #sinDistribucion>
+          <div class="empty-state">
+            No hay información disponible para esta distribución.
+          </div>
+        </ng-template>
+      </article>
+
+      <article class="panel trend-panel">
+        <header class="panel-header">
+          <div>
+            <h2>Actividad mensual</h2>
+
+            <p>
+              Asignaciones y devoluciones registradas por periodo.
+            </p>
+          </div>
+
+          <div class="trend-legend">
+            <span>
+              <i class="assignment-dot"></i>
+              Asignaciones
+            </span>
+
+            <span>
+              <i class="return-dot"></i>
+              Devoluciones
+            </span>
+          </div>
+        </header>
+
+        <div
+          class="vertical-chart"
+          *ngIf="
+            periodosTendencia.length;
+            else sinTendencia
+          ">
+
+          <div
+            class="period-group"
+            *ngFor="let periodo of periodosTendencia">
+
+            <div class="columns">
+              <div class="column-wrap">
+                <span>
+                  {{
+                    valorPeriodo(
+                      dashboard.tendencias.asignacionesPorMes,
+                      periodo
+                    )
+                  }}
+                </span>
+
+                <div
+                  class="column assignment-column"
+                  [style.height.%]="
+                    alturaTendencia(
+                      valorPeriodo(
+                        dashboard.tendencias.asignacionesPorMes,
+                        periodo
+                      )
+                    )
+                  ">
+                </div>
+              </div>
+
+              <div class="column-wrap">
+                <span>
+                  {{
+                    valorPeriodo(
+                      dashboard.tendencias.devolucionesPorMes,
+                      periodo
+                    )
+                  }}
+                </span>
+
+                <div
+                  class="column return-column"
+                  [style.height.%]="
+                    alturaTendencia(
+                      valorPeriodo(
+                        dashboard.tendencias.devolucionesPorMes,
+                        periodo
+                      )
+                    )
+                  ">
+                </div>
+              </div>
+            </div>
+
+            <small>
+              {{ formatearPeriodo(periodo) }}
+            </small>
+          </div>
+        </div>
+
+        <ng-template #sinTendencia>
+          <div class="empty-state">
+            Todavía no hay movimientos suficientes para mostrar
+            una tendencia.
+          </div>
+        </ng-template>
       </article>
     </div>
-
-    <ng-template #sinAlertas>
-      <div class="all-clear">
-        ✓ No existen alertas pendientes con los filtros
-        seleccionados.
-      </div>
-    </ng-template>
-  </section>
-
-
-  <!-- ACCESOS RÁPIDOS -->
-
-  <section class="quick-links">
-    <a routerLink="/inventario-it/equipos">
-      <span>Equipos</span>
-      <small>Consultar activos</small>
-    </a>
-
-    <a routerLink="/inventario-it/asignaciones">
-      <span>Asignaciones</span>
-      <small>Entregas y devoluciones</small>
-    </a>
-
-    <a routerLink="/inventario-it/responsivas">
-      <span>Responsivas</span>
-      <small>Documentos y firmas</small>
-    </a>
-
-    <a routerLink="/inventario-it/auditorias">
-      <span>Auditorías</span>
-      <small>Revisiones físicas</small>
-    </a>
-
-    <a routerLink="/inventario-it/reportes">
-      <span>Reportes</span>
-      <small>Análisis y exportación</small>
-    </a>
-  </section>
-
-
-  <!-- GRÁFICAS -->
-
-  <section class="analytics-grid">
-    <article class="chart-card">
-      <div class="chart-header">
-        <h2>Equipos por estado</h2>
-
-        <p>
-          Situación actual de los activos.
-        </p>
-      </div>
-
-      <div
-        class="bars"
-        *ngIf="
-          dashboard.distribuciones.porEstado.length;
-          else sinEstados
-        ">
-
-        <div
-          class="bar-row"
-          *ngFor="
-            let item of dashboard.distribuciones.porEstado
-          ">
-
-          <div class="bar-title">
-            <span>
-              {{ item.etiqueta }}
-            </span>
-
-            <strong>
-              {{ item.total }}
-            </strong>
-          </div>
-
-          <div class="bar-track">
-            <span
-              [style.width.%]="
-                porcentajeDistribucion(
-                  item.total,
-                  dashboard.distribuciones.porEstado
-                )
-              ">
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <ng-template #sinEstados>
-        <p class="empty-chart">
-          Sin datos disponibles.
-        </p>
-      </ng-template>
-    </article>
-
-
-    <article class="chart-card">
-      <div class="chart-header">
-        <h2>Equipos por empresa</h2>
-
-        <p>
-          Distribución por razón social.
-        </p>
-      </div>
-
-      <div
-        class="bars"
-        *ngIf="
-          dashboard.distribuciones.porEmpresa.length;
-          else sinEmpresas
-        ">
-
-        <div
-          class="bar-row"
-          *ngFor="
-            let item of dashboard.distribuciones.porEmpresa
-          ">
-
-          <div class="bar-title">
-            <span>
-              {{ item.etiqueta }}
-            </span>
-
-            <strong>
-              {{ item.total }}
-            </strong>
-          </div>
-
-          <div class="bar-track purple-bar">
-            <span
-              [style.width.%]="
-                porcentajeDistribucion(
-                  item.total,
-                  dashboard.distribuciones.porEmpresa
-                )
-              ">
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <ng-template #sinEmpresas>
-        <p class="empty-chart">
-          Sin datos disponibles.
-        </p>
-      </ng-template>
-    </article>
-
-
-    <article class="chart-card">
-      <div class="chart-header">
-        <h2>Categorías principales</h2>
-
-        <p>
-          Activos con mayor presencia.
-        </p>
-      </div>
-
-      <div
-        class="bars"
-        *ngIf="
-          dashboard.distribuciones.porCategoria.length;
-          else sinCategorias
-        ">
-
-        <div
-          class="bar-row"
-          *ngFor="
-            let item of
-            dashboard.distribuciones.porCategoria
-            | slice: 0 : 7
-          ">
-
-          <div class="bar-title">
-            <span>
-              {{ item.etiqueta }}
-            </span>
-
-            <strong>
-              {{ item.total }}
-            </strong>
-          </div>
-
-          <div class="bar-track green-bar">
-            <span
-              [style.width.%]="
-                porcentajeDistribucion(
-                  item.total,
-                  dashboard.distribuciones.porCategoria
-                )
-              ">
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <ng-template #sinCategorias>
-        <p class="empty-chart">
-          Sin datos disponibles.
-        </p>
-      </ng-template>
-    </article>
-
-
-    <article class="chart-card">
-      <div class="chart-header">
-        <h2>Estado de responsivas</h2>
-
-        <p>
-          Avance de la documentación.
-        </p>
-      </div>
-
-      <div
-        class="bars"
-        *ngIf="
-          dashboard.distribuciones.porResponsiva.length;
-          else sinResponsivas
-        ">
-
-        <div
-          class="bar-row"
-          *ngFor="
-            let item of dashboard.distribuciones.porResponsiva
-          ">
-
-          <div class="bar-title">
-            <span>
-              {{ item.etiqueta }}
-            </span>
-
-            <strong>
-              {{ item.total }}
-            </strong>
-          </div>
-
-          <div class="bar-track yellow-bar">
-            <span
-              [style.width.%]="
-                porcentajeDistribucion(
-                  item.total,
-                  dashboard.distribuciones.porResponsiva
-                )
-              ">
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <ng-template #sinResponsivas>
-        <p class="empty-chart">
-          Sin datos disponibles.
-        </p>
-      </ng-template>
-    </article>
-  </section>
-
-
-  <!-- ACTIVIDAD MENSUAL -->
-
-  <section class="trend-card">
-    <div class="section-heading trend-heading">
-      <div>
-        <h2>Actividad mensual</h2>
-
-        <p>
-          Asignaciones y devoluciones registradas por periodo.
-        </p>
-      </div>
-
-      <div class="legend">
-        <span>
-          <i class="assignment-dot"></i>
-          Asignaciones
-        </span>
-
-        <span>
-          <i class="return-dot"></i>
-          Devoluciones
-        </span>
-      </div>
-    </div>
-
-    <div
-      class="vertical-chart"
-      *ngIf="
-        periodosTendencia.length;
-        else sinTendencia
-      ">
-
-      <div
-        class="period-group"
-        *ngFor="let periodo of periodosTendencia">
-
-        <div class="columns">
-          <div class="column-wrap">
-            <span>
-              {{
-                valorPeriodo(
-                  dashboard.tendencias.asignacionesPorMes,
-                  periodo
-                )
-              }}
-            </span>
-
-            <div
-              class="column assignment-column"
-              [style.height.%]="
-                alturaTendencia(
-                  valorPeriodo(
-                    dashboard.tendencias.asignacionesPorMes,
-                    periodo
-                  )
-                )
-              ">
-            </div>
-          </div>
-
-          <div class="column-wrap">
-            <span>
-              {{
-                valorPeriodo(
-                  dashboard.tendencias.devolucionesPorMes,
-                  periodo
-                )
-              }}
-            </span>
-
-            <div
-              class="column return-column"
-              [style.height.%]="
-                alturaTendencia(
-                  valorPeriodo(
-                    dashboard.tendencias.devolucionesPorMes,
-                    periodo
-                  )
-                )
-              ">
-            </div>
-          </div>
-        </div>
-
-        <small>
-          {{ formatearPeriodo(periodo) }}
-        </small>
-      </div>
-    </div>
-
-    <ng-template #sinTendencia>
-      <p class="empty-chart">
-        Todavía no hay movimientos suficientes para mostrar
-        una tendencia.
-      </p>
-    </ng-template>
-  </section>
+  </details>
 
 
   <!-- MOVIMIENTOS RECIENTES -->
 
-  <section class="movements-card">
-    <div class="section-heading">
+  <div class="section-label">
+    <span>▥</span>
+    ACTIVIDAD RECIENTE
+  </div>
+
+  <article class="panel movements-panel">
+    <header class="panel-header">
       <div>
         <h2>Movimientos recientes</h2>
 
         <p>
-          Últimas acciones registradas en Inventario IT.
+          Últimas acciones registradas en el inventario.
         </p>
       </div>
 
-      <button
-        type="button"
+      <a
+        class="panel-link"
         routerLink="/inventario-it/historial">
-        Ver historial completo
-      </button>
+        Ver historial →
+      </a>
+    </header>
+
+    <div class="movements-table-wrapper">
+      <table class="movements-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Inventario</th>
+            <th>Equipo</th>
+            <th>Movimiento</th>
+            <th>Responsable</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr
+            *ngFor="
+              let movimiento of
+                dashboard.movimientosRecientes | slice: 0 : 5;
+              trackBy: trackByMovimiento
+            ">
+
+            <td>
+              {{ formatearFecha(movimiento.fecha) }}
+            </td>
+
+            <td class="inventory-code">
+              {{
+                movimiento.numero_inventario ||
+                'Sin inventario'
+              }}
+            </td>
+
+            <td>
+              {{
+                movimiento.equipo ||
+                'Equipo sin descripción'
+              }}
+            </td>
+
+            <td>
+              <span
+                class="movement-badge"
+                [ngClass]="
+                  claseMovimiento(
+                    movimiento.tipo_movimiento
+                  )
+                ">
+
+                {{
+                  movimiento.tipo_movimiento ||
+                  'Movimiento'
+                }}
+              </span>
+            </td>
+
+            <td>
+              {{ responsableMovimiento(movimiento) }}
+            </td>
+          </tr>
+
+          <tr
+            *ngIf="
+              dashboard.movimientosRecientes.length === 0
+            ">
+
+            <td
+              colspan="5"
+              class="empty-table">
+              No hay movimientos recientes registrados.
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+  </article>
 
-    <div class="movements-list">
-      <article
-        class="movement-item"
-        *ngFor="
-          let movimiento of
-          dashboard.movimientosRecientes;
-          trackBy: trackByMovimiento
-        ">
 
-        <div
-          class="movement-icon"
-          [ngClass]="
-            claseMovimiento(
-              movimiento.tipo_movimiento
-            )
-          ">
-        </div>
+  <!-- MODAL DE DETALLE -->
 
-        <div class="movement-content">
-          <div class="movement-top">
-            <strong>
-              {{
-                movimiento.tipo_movimiento ||
-                'Movimiento'
-              }}
-            </strong>
+  <div
+    class="modal-backdrop"
+    *ngIf="mostrarDetalle"
+    (click)="cerrarDetalle()">
 
-            <span>
-              {{
-                formatearFecha(
-                  movimiento.fecha
-                )
-              }}
-            </span>
-          </div>
+    <section
+      class="detail-modal"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="tituloDetalle"
+      (click)="detenerCierre($event)">
 
-          <p>
-            {{
-              movimiento.numero_inventario ||
-              'Sin inventario'
-            }}
-            ·
-            {{
-              movimiento.equipo ||
-              'Equipo sin descripción'
-            }}
+      <header class="detail-modal-header">
+        <div>
+          <p class="detail-kicker">
+            DETALLE DEL INDICADOR
           </p>
 
-          <small>
-            {{
-              movimiento.descripcion ||
-              'Sin descripción'
-            }}
-            · Registró:
-            {{
-              movimiento.usuario_registro ||
-              'Sistema'
-            }}
-          </small>
+          <h2>{{ tituloDetalle }}</h2>
+
+          <span>{{ descripcionDetalle }}</span>
         </div>
-      </article>
+
+        <button
+          type="button"
+          class="modal-close"
+          aria-label="Cerrar detalle"
+          (click)="cerrarDetalle()">
+          ×
+        </button>
+      </header>
+
+      <div class="detail-summary-bar">
+        <strong>{{ textoConteoDetalle }}</strong>
+
+        <span *ngIf="filtroEmpresa !== 'Todas'">
+          Empresa: {{ filtroEmpresa }}
+        </span>
+
+        <span *ngIf="filtroDepartamento !== 'Todos'">
+          Departamento: {{ filtroDepartamento }}
+        </span>
+      </div>
 
       <div
-        class="empty-state"
-        *ngIf="
-          dashboard.movimientosRecientes.length === 0
-        ">
-        No hay movimientos recientes.
+        class="modal-loading"
+        *ngIf="cargandoDetalle">
+
+        <span class="loader"></span>
+        Cargando registros...
       </div>
-    </div>
-  </section>
+
+      <div
+        class="modal-error"
+        *ngIf="errorDetalle">
+        {{ errorDetalle }}
+      </div>
+
+      <div
+        class="detail-table-wrapper"
+        *ngIf="
+          !cargandoDetalle &&
+          !errorDetalle &&
+          filasDetalle.length
+        ">
+
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th *ngFor="let columna of columnasDetalle">
+                {{ columna.titulo }}
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr
+              *ngFor="
+                let fila of filasDetalle;
+                trackBy: trackByDetalle
+              ">
+
+              <td *ngFor="let columna of columnasDetalle">
+                <span
+                  *ngIf="
+                    columna.tipo === 'estado';
+                    else valorNormal
+                  "
+                  class="detail-status"
+                  [ngClass]="
+                    claseEstadoDetalle(
+                      fila[columna.clave]
+                    )
+                  ">
+
+                  {{
+                    formatearValorDetalle(
+                      fila,
+                      columna
+                    )
+                  }}
+                </span>
+
+                <ng-template #valorNormal>
+                  {{
+                    formatearValorDetalle(
+                      fila,
+                      columna
+                    )
+                  }}
+                </ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div
+        class="modal-empty"
+        *ngIf="
+          !cargandoDetalle &&
+          !errorDetalle &&
+          filasDetalle.length === 0
+        ">
+
+        <span>✓</span>
+
+        <strong>
+          No hay registros para mostrar
+        </strong>
+
+        <p>
+          No se encontraron elementos con el estado y los
+          filtros seleccionados.
+        </p>
+      </div>
+
+      <footer class="detail-modal-footer">
+        <button
+          type="button"
+          class="modal-secondary-btn"
+          (click)="cerrarDetalle()">
+          Cerrar
+        </button>
+
+        <a
+          class="modal-primary-btn"
+          [routerLink]="rutaDetalle"
+          [queryParams]="parametrosDetalle"
+          (click)="cerrarDetalle()">
+          Ver módulo completo →
+        </a>
+      </footer>
+    </section>
+  </div>
 </section>
