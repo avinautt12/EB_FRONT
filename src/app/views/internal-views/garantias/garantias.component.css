@@ -556,18 +556,11 @@
 .lista-controls {
   display: flex; align-items: center; gap: 14px; margin-bottom: 20px; flex-wrap: wrap;
 }
-.orden-btns { display: flex; gap: 8px; }
-.orden-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 16px; border-radius: 8px; font-size: 0.84rem; font-weight: 600;
-  border: 1px solid var(--border2); background: transparent; color: var(--t3);
-  cursor: pointer;
-  transition: border-color 180ms var(--ease-out), color 180ms var(--ease-out),
-              background 180ms var(--ease-out), transform 140ms var(--ease-out);
+.lista-hint {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 0.8rem; color: var(--t3);
 }
-.orden-btn:hover    { border-color: var(--orange); color: var(--orange); background: var(--orange-g); }
-.orden-btn:active   { transform: scale(0.97); }
-.orden-btn.active   { border-color: var(--orange); color: var(--orange); background: var(--orange-g); }
+.lista-hint i { color: var(--orange); opacity: 0.8; }
 
 .mes-select {
   padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border2);
@@ -594,12 +587,25 @@
   font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
   color: var(--t3); background: #1a1a1a; border-bottom: 1px solid var(--border);
 }
+.lt-th-sort {
+  cursor: pointer; user-select: none; white-space: nowrap;
+  transition: color 150ms var(--ease-out), background 150ms var(--ease-out);
+}
+.lt-th-sort:hover { color: var(--orange); }
+.lt-th-active { color: var(--orange); background: var(--orange-g); }
+.lt-th-active .sort-icon { opacity: 1; }
 .lista-table td {
   padding: 11px 16px; font-size: 0.86rem; color: var(--t2);
   border-bottom: 1px solid var(--border);
 }
 .lista-table tbody tr:last-child td { border-bottom: none; }
 .lista-table tbody tr:hover td { background: rgba(255,255,255,0.03); }
+.lt-row-click {
+  cursor: pointer;
+  transition: background 140ms var(--ease-out);
+}
+.lt-row-click:hover td { background: var(--orange-g); }
+.lt-row-click:active td { background: rgba(255,255,255,0.05); }
 
 .lt-folio { font-weight: 700; color: var(--orange); font-size: 0.84rem; white-space: nowrap; }
 .lt-fecha  { color: var(--t3); white-space: nowrap; font-size: 0.82rem; }

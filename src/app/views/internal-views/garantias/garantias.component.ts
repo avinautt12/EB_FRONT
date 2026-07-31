@@ -9,7 +9,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { interval, Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -45,6 +45,14 @@ const COLORES_ESTATUS: Record<string, string> = {
   'rechazado':    '#e53935',
   'cerrado':      '#9b59b6',
 };
+
+// Orden de flujo natural: abiertas primero, cerradas al final -- usado al
+// ordenar la tabla "Todas las Garantías" por la columna Estatus.
+const PRIORIDAD_ESTATUS: Record<string, number> = {
+  'Enviado': 0, 'En revisión': 1, 'Aprobado': 2, 'Rechazado': 3, 'Cerrado': 4,
+};
+
+type ColLista = 'folio' | 'distribuidor' | 'contacto' | 'marca' | 'estatus' | 'estatus_pieza' | 'fecha_creacion';
 
 export interface RankItem { key: string; value: number; pct: number; color: string; }
 export type ModalKey = 'garantias_cliente' | 'latencia_cliente' | 'piezas_reemplazo' | 'ubicacion_dano';
@@ -86,8 +94,9 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   vista: 'dashboard' | 'lista' = 'dashboard';
   todos: GarantiaFormulario[] = [];
-  ordenDesc     = true;
   filtroMes     = '';
+  sortColLista: ColLista = 'fecha_creacion';
+  sortDirLista: 'asc' | 'desc' = 'desc';
   filtroKpi:    'total' | 'cerradas' | 'en_proceso' | 'enviado' | 'en_revision' | 'aprobado' | 'rechazado' | null = null;
   cargandoLista = false;
   readonly kpiPanels: { key: string; label: string; kpi: 'total' | 'cerradas' | 'en_proceso' | 'enviado' | 'en_revision' | 'aprobado' | 'rechazado' }[] = [
@@ -158,9 +167,15 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
   private modalChart?: Chart;
   private autoRefreshSub?: Subscription;
 
-  constructor(private svc: GarantiasService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private svc: GarantiasService,
+    private cdr: ChangeDetectorRef,
+    private router: Router,
+    private route: ActivatedRoute,
+  ) {}
 
   ngOnInit(): void {
+    this.restaurarEstadoDesdeUrl();
     this.cargarTemporadas();
     this.autoRefreshSub = interval(300_000)
       .pipe(switchMap(() => this.svc.getDashboard(this.rangoDesde, this.rangoHasta)))
@@ -271,6 +286,7 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.filtroMes = '';
     this.vista = 'lista';
     this.cargarTodos();
+    this.sincronizarUrlLista();
     this.cdr.markForCheck();
   }
 
@@ -285,9 +301,65 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  /** Restaura vista='lista' + filtros/orden si venimos de un "regresar" del detalle de un ticket. */
+  private restaurarEstadoDesdeUrl(): void {
+    const qp = this.route.snapshot.queryParamMap;
+    if (qp.get('vista') !== 'lista') return;
+    this.filtroKpi = (qp.get('kpi') as typeof this.filtroKpi) ?? null;
+    this.filtroMes = qp.get('mes') ?? '';
+    const col = qp.get('sortCol') as ColLista | null;
+    const dir = qp.get('sortDir');
+    if (col) this.sortColLista = col;
+    if (dir === 'asc' || dir === 'desc') this.sortDirLista = dir;
+    this.vista = 'lista';
+    this.cargarTodos();
+  }
+
+  /** Refleja el estado actual de la vista lista en la URL (sin apilar historial) para poder volver a ella. */
+  private sincronizarUrlLista(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        vista: 'lista',
+        kpi: this.filtroKpi,
+        mes: this.filtroMes || null,
+        sortCol: this.sortColLista,
+        sortDir: this.sortDirLista,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  onFiltroMesChange(): void {
+    this.sincronizarUrlLista();
+  }
+
+  toggleSortLista(col: ColLista): void {
+    if (this.sortColLista === col) {
+      this.sortDirLista = this.sortDirLista === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColLista = col;
+      this.sortDirLista = col === 'fecha_creacion' ? 'desc' : 'asc';
+    }
+    this.sincronizarUrlLista();
+    this.cdr.markForCheck();
+  }
+
+  sortIconLista(col: ColLista): string {
+    if (this.sortColLista !== col) return 'fa-sort';
+    return this.sortDirLista === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
+  }
+
+  irATicket(id: number): void {
+    this.sincronizarUrlLista();
+    this.router.navigate(['/garantias/tickets'], { queryParams: { id } });
+  }
+
   volverAlDashboard(): void {
     this.filtroKpi = null;
     this.vista = 'dashboard';
+    this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
     this.cdr.detectChanges();
     setTimeout(() => this.renderMainCharts(), 150);
   }
@@ -352,10 +424,22 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
     let list = this.filtroMes
       ? this.todosKpiFiltrados.filter(t => (this.parseFechaISO(t.fecha_creacion ?? '') ?? '').startsWith(this.filtroMes))
       : [...this.todosKpiFiltrados];
+    const col = this.sortColLista;
+    const dir = this.sortDirLista === 'asc' ? 1 : -1;
     list.sort((a, b) => {
-      const da = this.parseFechaISO(a.fecha_creacion ?? '') ?? '';
-      const db = this.parseFechaISO(b.fecha_creacion ?? '') ?? '';
-      return this.ordenDesc ? db.localeCompare(da) : da.localeCompare(db);
+      if (col === 'estatus') {
+        const pa = PRIORIDAD_ESTATUS[a.estatus] ?? 99;
+        const pb = PRIORIDAD_ESTATUS[b.estatus] ?? 99;
+        return (pa - pb) * dir;
+      }
+      if (col === 'fecha_creacion') {
+        const da = this.parseFechaISO(a.fecha_creacion ?? '') ?? '';
+        const db = this.parseFechaISO(b.fecha_creacion ?? '') ?? '';
+        return da.localeCompare(db) * dir;
+      }
+      const av = (a[col] ?? '') as string;
+      const bv = (b[col] ?? '') as string;
+      return String(av).localeCompare(String(bv)) * dir;
     });
     return list;
   }
@@ -476,10 +560,6 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
       case 'alfa_desc': return arr.sort((a, b) => b.key.localeCompare(a.key));
       default:          return arr.sort((a, b) => b.value - a.value); // valor_desc
     }
-  }
-
-  verTicketEnAdmin(id: number): void {
-    window.open(`/garantias/tickets`, '_blank');
   }
 
   formatMes(ym: string): string {

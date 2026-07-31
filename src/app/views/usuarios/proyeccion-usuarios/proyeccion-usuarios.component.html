@@ -30,7 +30,8 @@
   <div *ngIf="!cargando && !error && clienteClave" class="pu-tab-wrap">
     <app-proyecciones-tab
       [clienteClave]="clienteClave"
-      [idCliente]="idCliente">
+      [idCliente]="idCliente"
+      [ocultarBotonesImport]="true">
     </app-proyecciones-tab>
   </div>
 

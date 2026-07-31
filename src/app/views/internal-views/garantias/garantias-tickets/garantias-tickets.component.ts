@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy, ViewChild, ElementRef, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HomeBarComponent } from '../../../../components/home-bar/home-bar.component';
 import {
   GarantiasService,
@@ -195,9 +195,29 @@ export class GarantiasTicketsComponent implements OnInit {
   validacionDocs: Record<string, string> = {};
   validandoDoc: Record<string, boolean>  = {};
 
-  constructor(private svc: GarantiasService, private cdr: ChangeDetectorRef, private auth: AuthService) {}
+  /** true solo si llegamos aquí desde un enlace con ?id= (deep-link a un ticket puntual) */
+  vieneDeDeepLink = false;
+
+  constructor(
+    private svc: GarantiasService,
+    private cdr: ChangeDetectorRef,
+    private auth: AuthService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private location: Location,
+  ) {
+    this.vieneDeDeepLink = !!this.route.snapshot.queryParamMap.get('id');
+  }
 
   get esAdmin(): boolean { return this.auth.isAdmin(); }
+
+  volver(): void {
+    if (this.vieneDeDeepLink) {
+      this.location.back();
+    } else {
+      this.router.navigateByUrl('/garantias/dashboard');
+    }
+  }
 
   ngOnInit(): void {
     this.cargar();
@@ -212,6 +232,7 @@ export class GarantiasTicketsComponent implements OnInit {
       next: (t) => {
         this.tickets  = t;
         this.cargando = false;
+        this.seleccionarDesdeQueryParam();
         this.cdr.markForCheck();
       },
       error: () => {
@@ -220,6 +241,13 @@ export class GarantiasTicketsComponent implements OnInit {
         this.cdr.markForCheck();
       },
     });
+  }
+
+  private seleccionarDesdeQueryParam(): void {
+    const id = Number(this.route.snapshot.queryParamMap.get('id'));
+    if (!id) return;
+    const t = this.tickets.find(x => x.id === id);
+    if (t) this.seleccionarTicket(t);
   }
 
   get marcas(): string[] {

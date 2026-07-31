@@ -104,6 +104,7 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   @Input() clienteClave: string | null = null;
   @Input() idCliente: number | null = null;
   @Input() idGrupoOdoo: number | null = null;
+  @Input() ocultarBotonesImport = false;
   @Output() rowCountChange = new EventEmitter<number>();
 
   @ViewChild('tableScroll',  { read: ElementRef }) tableScroll!:  ElementRef<HTMLElement>;
@@ -680,6 +681,17 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
       next: ({ forecast, avance }) => {
         this.avanceRows   = avance;
         this.rows         = forecast.map(r => ({ ...r, _editado: false, _nuevo: false, _eliminar: false }));
+        // Propagar precio_publico dentro del mismo grupo marca+modelo
+        // (Odoo pricelist puede tener entrada solo para algunas tallas)
+        const ppByModel = new Map<string, number>();
+        for (const r of this.rows) {
+          if (r.modelo && r.precio_publico) ppByModel.set(`${r.marca}|${r.modelo}`, r.precio_publico);
+        }
+        for (const r of this.rows) {
+          if (!r.precio_publico && r.modelo) {
+            r.precio_publico = ppByModel.get(`${r.marca}|${r.modelo}`) ?? undefined;
+          }
+        }
         this.rowsOriginal = JSON.parse(JSON.stringify(this.rows));
         this.cargando     = false;
         this.rowCountChange.emit(

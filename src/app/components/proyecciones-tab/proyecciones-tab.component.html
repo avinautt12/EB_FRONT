@@ -14,26 +14,28 @@
     </div>
 
     <div class="proy-toolbar-right" *ngIf="!modoEdicion">
-      <button class="proy-btn proy-btn-outline"
-              [disabled]="!periodoSeleccionado"
-              (click)="exportarPlantilla()"
-              title="Exportar plantilla Excel prellenada con productos autorizados">
-        <i class="fas fa-file-excel"></i> Exportar plantilla
-      </button>
-      <button class="proy-btn proy-btn-outline"
-              [disabled]="!periodoSeleccionado || importando"
-              (click)="abrirSelector()"
-              title="Importar plantilla Excel con cantidades de forecast">
-        <i class="fas fa-file-import"></i>
-        {{ importando ? 'Importando...' : 'Importar plantilla' }}
-      </button>
-      <button class="proy-btn proy-btn-outline proy-btn-global"
-              [disabled]="importando"
-              (click)="abrirSelectorGlobal()"
-              title="Importar plantilla global enviada por cualquier distribuidor (la clave se lee del archivo)">
-        <i class="fas fa-globe"></i>
-        {{ importando ? 'Importando...' : 'Importar global' }}
-      </button>
+      <ng-container *ngIf="!ocultarBotonesImport">
+        <button class="proy-btn proy-btn-outline"
+                [disabled]="!periodoSeleccionado"
+                (click)="exportarPlantilla()"
+                title="Exportar plantilla Excel prellenada con productos autorizados">
+          <i class="fas fa-file-excel"></i> Exportar plantilla
+        </button>
+        <button class="proy-btn proy-btn-outline"
+                [disabled]="!periodoSeleccionado || importando"
+                (click)="abrirSelector()"
+                title="Importar plantilla Excel con cantidades de forecast">
+          <i class="fas fa-file-import"></i>
+          {{ importando ? 'Importando...' : 'Importar plantilla' }}
+        </button>
+        <button class="proy-btn proy-btn-outline proy-btn-global"
+                [disabled]="importando"
+                (click)="abrirSelectorGlobal()"
+                title="Importar plantilla global enviada por cualquier distribuidor (la clave se lee del archivo)">
+          <i class="fas fa-globe"></i>
+          {{ importando ? 'Importando...' : 'Importar global' }}
+        </button>
+      </ng-container>
       <button class="proy-btn proy-btn-primary"
               *ngIf="rows.length > 0"
               (click)="activarEdicion()">
@@ -114,12 +116,15 @@
   <!-- ── Estado vacío sin datos y sin loading ── -->
   <div *ngIf="!cargando && rows.length === 0 && !error && periodoSeleccionado" class="proy-empty">
     <i class="fas fa-chart-line proy-empty-icon"></i>
-    <p>Aún no tienes proyecciones registradas para el periodo <strong>{{ periodoSeleccionado }}</strong>.</p>
-    <p class="proy-empty-sub">
+    <p>Aún no hay proyecciones registradas para el periodo <strong>{{ periodoSeleccionado }}</strong>.</p>
+    <p class="proy-empty-sub" *ngIf="!ocultarBotonesImport">
       Descarga la plantilla Excel con tus productos, llena las cantidades que planeas pedir
       mes a mes y luego cárgala de vuelta aquí con <strong>Importar plantilla</strong>.
     </p>
-    <button class="proy-btn proy-btn-primary" (click)="exportarPlantilla()">
+    <p class="proy-empty-sub" *ngIf="ocultarBotonesImport">
+      Tu ejecutivo de cuenta estará cargando la proyección en breve. Contacta a Elite Bike si tienes dudas.
+    </p>
+    <button *ngIf="!ocultarBotonesImport" class="proy-btn proy-btn-primary" (click)="exportarPlantilla()">
       <i class="fas fa-file-excel"></i> Exportar plantilla ahora
     </button>
   </div>

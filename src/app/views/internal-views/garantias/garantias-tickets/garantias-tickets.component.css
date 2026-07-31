@@ -33,7 +33,7 @@
 .back-link {
   color: var(--t3); text-decoration: none; font-size: 0.82rem;
   display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
-  transition: color .2s;
+  transition: color .2s; cursor: pointer;
 }
 .back-link:hover { color: var(--orange); }
 .page-title {

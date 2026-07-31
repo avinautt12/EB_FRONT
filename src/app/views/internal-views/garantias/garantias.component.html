@@ -418,17 +418,10 @@
       </div>
     </div>
 
-    <!-- Controles de filtro/orden -->
+    <!-- Controles de filtro -->
     <div class="lista-controls">
-      <div class="orden-btns">
-        <button class="orden-btn" [class.active]="ordenDesc" (click)="ordenDesc = true">
-          <i class="fas fa-sort-amount-down"></i> Más reciente
-        </button>
-        <button class="orden-btn" [class.active]="!ordenDesc" (click)="ordenDesc = false">
-          <i class="fas fa-sort-amount-up"></i> Más antigua
-        </button>
-      </div>
-      <select class="mes-select" [(ngModel)]="filtroMes">
+      <span class="lista-hint"><i class="fas fa-hand-pointer"></i> Ordena dando clic en cualquier columna</span>
+      <select class="mes-select" [(ngModel)]="filtroMes" (ngModelChange)="onFiltroMesChange()">
         <option value="">Todos los meses</option>
         <option *ngFor="let m of mesesDisponibles" [value]="m">{{ formatMes(m) }}</option>
       </select>
@@ -449,17 +442,31 @@
       <table class="lista-table" *ngIf="ticketsFiltradosList.length > 0">
         <thead>
           <tr>
-            <th>Folio</th>
-            <th>Distribuidor</th>
-            <th>Contacto</th>
-            <th>Marca</th>
-            <th>Estatus</th>
-            <th>Estado pieza</th>
-            <th>Fecha</th>
+            <th class="lt-th-sort" [class.lt-th-active]="sortColLista === 'folio'" (click)="toggleSortLista('folio')">
+              Folio <i class="fas {{ sortIconLista('folio') }} sort-icon"></i>
+            </th>
+            <th class="lt-th-sort" [class.lt-th-active]="sortColLista === 'distribuidor'" (click)="toggleSortLista('distribuidor')">
+              Distribuidor <i class="fas {{ sortIconLista('distribuidor') }} sort-icon"></i>
+            </th>
+            <th class="lt-th-sort" [class.lt-th-active]="sortColLista === 'contacto'" (click)="toggleSortLista('contacto')">
+              Contacto <i class="fas {{ sortIconLista('contacto') }} sort-icon"></i>
+            </th>
+            <th class="lt-th-sort" [class.lt-th-active]="sortColLista === 'marca'" (click)="toggleSortLista('marca')">
+              Marca <i class="fas {{ sortIconLista('marca') }} sort-icon"></i>
+            </th>
+            <th class="lt-th-sort" [class.lt-th-active]="sortColLista === 'estatus'" (click)="toggleSortLista('estatus')" title="Ordena por flujo: Enviado → En revisión → Aprobado → Rechazado → Cerrado">
+              Estatus <i class="fas {{ sortIconLista('estatus') }} sort-icon"></i>
+            </th>
+            <th class="lt-th-sort" [class.lt-th-active]="sortColLista === 'estatus_pieza'" (click)="toggleSortLista('estatus_pieza')">
+              Estado pieza <i class="fas {{ sortIconLista('estatus_pieza') }} sort-icon"></i>
+            </th>
+            <th class="lt-th-sort" [class.lt-th-active]="sortColLista === 'fecha_creacion'" (click)="toggleSortLista('fecha_creacion')">
+              Fecha <i class="fas {{ sortIconLista('fecha_creacion') }} sort-icon"></i>
+            </th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let t of ticketsFiltradosList">
+          <tr *ngFor="let t of ticketsFiltradosList" class="lt-row-click" (click)="irATicket(t.id)" title="Abrir en Seguimiento de Tickets">
             <td class="lt-folio">{{ t.folio }}</td>
             <td>{{ t.distribuidor }}</td>
             <td>{{ t.contacto }}</td>
