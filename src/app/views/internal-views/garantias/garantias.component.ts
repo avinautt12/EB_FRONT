@@ -286,7 +286,6 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.filtroMes = '';
     this.vista = 'lista';
     this.cargarTodos();
-    this.sincronizarUrlLista();
     this.cdr.markForCheck();
   }
 
@@ -301,38 +300,57 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  /** Restaura vista='lista' + filtros/orden si venimos de un "regresar" del detalle de un ticket. */
+  /** Restaura vista='lista' y/o el modal de Latencia (con sus filtros/orden) si venimos de un "regresar" del detalle de un ticket. */
   private restaurarEstadoDesdeUrl(): void {
     const qp = this.route.snapshot.queryParamMap;
-    if (qp.get('vista') !== 'lista') return;
-    this.filtroKpi = (qp.get('kpi') as typeof this.filtroKpi) ?? null;
-    this.filtroMes = qp.get('mes') ?? '';
-    const col = qp.get('sortCol') as ColLista | null;
-    const dir = qp.get('sortDir');
-    if (col) this.sortColLista = col;
-    if (dir === 'asc' || dir === 'desc') this.sortDirLista = dir;
-    this.vista = 'lista';
-    this.cargarTodos();
+
+    if (qp.get('vista') === 'lista') {
+      this.filtroKpi = (qp.get('kpi') as typeof this.filtroKpi) ?? null;
+      this.filtroMes = qp.get('mes') ?? '';
+      const col = qp.get('sortCol') as ColLista | null;
+      const dir = qp.get('sortDir');
+      if (col) this.sortColLista = col;
+      if (dir === 'asc' || dir === 'desc') this.sortDirLista = dir;
+      this.vista = 'lista';
+      this.cargarTodos();
+    }
+
+    if (qp.get('modal') === 'latencia') {
+      this.modalLatAbierto = true;
+      this.busquedaLat = qp.get('qLat') ?? '';
+      this.filtroEstatusLat = qp.get('estLat') ?? '';
+      const colLat = qp.get('sortColLat') as typeof this.sortColLatMod | null;
+      const dirLat = qp.get('sortDirLat');
+      if (colLat) this.sortColLatMod = colLat;
+      if (dirLat === 'asc' || dirLat === 'desc') this.sortDirLatMod = dirLat;
+    }
   }
 
-  /** Refleja el estado actual de la vista lista en la URL (sin apilar historial) para poder volver a ella. */
-  private sincronizarUrlLista(): void {
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: {
-        vista: 'lista',
-        kpi: this.filtroKpi,
-        mes: this.filtroMes || null,
-        sortCol: this.sortColLista,
-        sortDir: this.sortDirLista,
-      },
-      queryParamsHandling: 'merge',
-      replaceUrl: true,
-    });
-  }
-
-  onFiltroMesChange(): void {
-    this.sincronizarUrlLista();
+  /**
+   * Refleja en la URL (sin apilar historial) el estado necesario para volver exactamente
+   * a donde estaba el usuario -- vista lista y/o modal de Latencia -- justo antes de saltar
+   * al detalle de un ticket. Se llama únicamente desde irATicket().
+   */
+  private guardarEstadoRegreso(): void {
+    const qp: Record<string, string | null> = {
+      vista: null, kpi: null, mes: null, sortCol: null, sortDir: null,
+      modal: null, qLat: null, estLat: null, sortColLat: null, sortDirLat: null,
+    };
+    if (this.vista === 'lista') {
+      qp['vista']   = 'lista';
+      qp['kpi']     = this.filtroKpi;
+      qp['mes']     = this.filtroMes || null;
+      qp['sortCol'] = this.sortColLista;
+      qp['sortDir'] = this.sortDirLista;
+    }
+    if (this.modalLatAbierto) {
+      qp['modal']      = 'latencia';
+      qp['qLat']       = this.busquedaLat || null;
+      qp['estLat']     = this.filtroEstatusLat || null;
+      qp['sortColLat'] = this.sortColLatMod;
+      qp['sortDirLat'] = this.sortDirLatMod;
+    }
+    this.router.navigate([], { relativeTo: this.route, queryParams: qp, replaceUrl: true });
   }
 
   toggleSortLista(col: ColLista): void {
@@ -342,7 +360,6 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
       this.sortColLista = col;
       this.sortDirLista = col === 'fecha_creacion' ? 'desc' : 'asc';
     }
-    this.sincronizarUrlLista();
     this.cdr.markForCheck();
   }
 
@@ -352,7 +369,7 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   irATicket(id: number): void {
-    this.sincronizarUrlLista();
+    this.guardarEstadoRegreso();
     this.router.navigate(['/garantias/tickets'], { queryParams: { id } });
   }
 
@@ -579,7 +596,9 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   buildRank(data: Record<string, number>, n = 5): RankItem[] {
     if (!data) return [];
-    const entries = Object.entries(data).slice(0, n);
+    // Ordena por valor DESC antes de recortar -- de lo contrario "top N" termina
+    // siendo simplemente "los primeros N alfabéticamente" que manda el backend.
+    const entries = Object.entries(data).sort((a, b) => b[1] - a[1]).slice(0, n);
     const max = Math.max(...entries.map(([, v]) => v), 1);
     return entries.map(([key, value], i) => ({
       key, value,
@@ -747,6 +766,27 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
     return map[this.modalKey];
   }
 
+  /** modalData reordenada según el mismo sortModeRank que ya controla la tarjeta detrás del modal. */
+  get modalDataOrdenada(): Record<string, number> {
+    if (!this.modalKey) return {};
+    const entries = Object.entries(this.modalData);
+    switch (this.sortModeRank[this.modalKey]) {
+      case 'valor_asc': entries.sort((a, b) => a[1] - b[1]); break;
+      case 'alfa_asc':  entries.sort((a, b) => a[0].localeCompare(b[0])); break;
+      case 'alfa_desc': entries.sort((a, b) => b[0].localeCompare(a[0])); break;
+      default:          entries.sort((a, b) => b[1] - a[1]); // valor_desc
+    }
+    return Object.fromEntries(entries);
+  }
+
+  /** Cambia el orden desde el propio modal (sin tener que cerrarlo) y re-dibuja la gráfica. */
+  cambiarSortModal(modo: SortMode): void {
+    if (!this.modalKey) return;
+    this.sortModeRank[this.modalKey] = modo;
+    this.renderModalChart();
+    this.cdr.markForCheck();
+  }
+
   // ── Chart lifecycle ──────────────────────────────────────────────────────
   private destroyMainCharts(): void {
     this.charts.forEach((c) => c.destroy());
@@ -763,7 +803,7 @@ export class GarantiasComponent implements OnInit, AfterViewInit, OnDestroy {
   private renderModalChart(): void {
     if (!this.chartModalRef?.nativeElement || !this.modalKey) return;
     this.modalChart?.destroy();
-    const data  = this.modalData;
+    const data  = this.modalDataOrdenada;
     const meta  = MODAL_META[this.modalKey];
     const items = Object.keys(data).length;
     const h = Math.max(380, items * 36 + 60);

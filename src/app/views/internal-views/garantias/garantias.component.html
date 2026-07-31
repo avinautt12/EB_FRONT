@@ -421,7 +421,7 @@
     <!-- Controles de filtro -->
     <div class="lista-controls">
       <span class="lista-hint"><i class="fas fa-hand-pointer"></i> Ordena dando clic en cualquier columna</span>
-      <select class="mes-select" [(ngModel)]="filtroMes" (ngModelChange)="onFiltroMesChange()">
+      <select class="mes-select" [(ngModel)]="filtroMes">
         <option value="">Todos los meses</option>
         <option *ngFor="let m of mesesDisponibles" [value]="m">{{ formatMes(m) }}</option>
       </select>
@@ -504,9 +504,15 @@
           <p class="modal-sub">{{ modalMeta[modalKey].sublabel }} &nbsp;·&nbsp; {{ modalItemCount }} registros</p>
         </div>
       </div>
-      <button class="modal-close" (click)="cerrarModal()">
-        <i class="fas fa-times"></i>
-      </button>
+      <div class="modal-hdr-right">
+        <select class="rank-sort-select" [ngModel]="sortModeRank[modalKey]"
+                (ngModelChange)="cambiarSortModal($event)">
+          <option *ngFor="let o of sortModeOpciones" [value]="o.value">{{ o.label }}</option>
+        </select>
+        <button class="modal-close" (click)="cerrarModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
     </div>
 
     <div class="modal-chart-wrap">
@@ -577,7 +583,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let l of latenciasModal">
+          <tr *ngFor="let l of latenciasModal" class="lt-row-click" (click)="irATicket(l.id)" title="Abrir en Seguimiento de Tickets">
             <td class="lat-folio">{{ l.folio }}</td>
             <td class="lat-dist">{{ l.distribuidor }}</td>
             <td>

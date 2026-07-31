@@ -347,6 +347,7 @@
   padding: 20px 24px; border-bottom: 1px solid #2a2a2a; flex-shrink: 0;
 }
 .modal-hdr-left  { display: flex; align-items: center; gap: 14px; }
+.modal-hdr-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .modal-icon-wrap {
   width: 44px; height: 44px;
   background: var(--orange-g); border: 1px solid rgba(235,94,40,0.28); border-radius: 11px;
