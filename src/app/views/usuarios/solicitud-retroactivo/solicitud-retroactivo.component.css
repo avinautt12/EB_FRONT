@@ -1,0 +1,279 @@
+/* --- CONFIGURACIÓN GENERAL / MODO OSCURO --- */
+.container {
+  background-color: #121211;
+  color: #CCC5B9;
+  font-size: 0.88rem;
+  padding: 1rem;
+}
+
+h2 {
+  color: #EB5E28;
+  font-weight: 700;
+  font-size: 1.5rem;
+  text-align: center;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* --- CONTENEDOR DE INFORMACIÓN / RESTRICCIONES --- */
+.info-box {
+  background: linear-gradient(145deg, rgba(35, 35, 35, 0.9), rgba(20, 20, 20, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 4px solid #EB5E28;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  max-width: 850px;
+  margin: 0 auto 1.5rem auto;
+  line-height: 1.5;
+}
+
+.info-box p {
+  font-weight: 700;
+  margin-top: 0;
+}
+
+.info-box ul {
+  margin: 10px 0 0 0;
+  padding-left: 20px;
+}
+
+.info-box li {
+  margin-bottom: 6px;
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: #484848;
+  margin: 1.5rem auto;
+  width: 100%;
+  max-width: 850px;
+}
+
+/* --- CONTENEDOR DEL FORMULARIO --- */
+.form-container {
+  max-width: 850px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* --- SECCIONES (FIELDSETS) MODO OSCURO --- */
+.section {
+  background-color: #1E1E1C;
+  border: 1px solid #484848;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+legend {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #EB5E28;
+  padding: 0 10px;
+  background-color: #2A2A28;
+  border: 1px solid #484848;
+  border-radius: 6px;
+  letter-spacing: .03rem;
+}
+
+/* --- CONTROLES / GRUPOS DE FORMULARIO (SISTEMA NEÓN) --- */
+.form-group select, ::picker(select) {
+  appearance: base-select;
+  background-color: #484848;
+  color: #161616;
+  border: none;
+  border-radius: 4px;
+  scrollbar-color: #EB5E28 #343333;
+}
+
+.form-group select:hover, .form-group select option:hover {
+    cursor: pointer;
+}
+
+.form-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 14px;
+  gap: 4px;
+  border-radius: 12px;
+  
+  /* Fondo oscuro con degradado y borde translúcido */
+  background: linear-gradient(145deg, rgba(35, 35, 35, 0.9), rgba(20, 20, 20, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Indicador luminoso lateral neón */
+.form-group::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #EB5E28;
+  opacity: 0.4;
+  transition: all 0.3s ease;
+}
+
+/* Hover: Animación al pasar el ratón */
+.form-group:hover {
+  transform: translateY(-2px);
+  border-color: rgba(235, 94, 40, 0.4);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.6), 0 0 15px rgba(235, 94, 40, 0.15);
+}
+
+.form-group:hover::before {
+  opacity: 1;
+  box-shadow: 0 0 8px #EB5E28;
+}
+
+/* Focus: Activación Neón Glow */
+.form-group:focus-within {
+  border-color: #EB5E28;
+  box-shadow: 0 0 20px rgba(235, 94, 40, 0.35), 0 10px 20px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(145deg, rgba(40, 40, 40, 0.95), rgba(25, 25, 25, 1));
+}
+
+.form-group:focus-within::before {
+  opacity: 1;
+  box-shadow: 0 0 12px #EB5E28;
+}
+
+/* Etiquetas */
+.form-group label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #888;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: color 0.3s ease;
+}
+
+.form-group:focus-within label {
+  color: #EB5E28;
+}
+
+/* Inputs de texto, email, fecha y Selects */
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="date"],
+.form-group select {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  width: 100%;
+  padding: 4px 0;
+  box-sizing: border-box;
+}
+
+.form-group input::placeholder {
+  color: #666666;
+  font-weight: 500;
+}
+
+/* Estilo para las opciones del desplegable */
+.form-group select option {
+  background-color: #181818;
+  color: #ffffff;
+  padding: 12px;
+  font-weight: 500;
+}
+
+/* Input File Personalizado */
+.form-group input[type="file"] {
+  color: #CCC5B9;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.form-group input[type="file"]::-webkit-file-upload-button {
+  background-color: #484848;
+  color: #ffffff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: background 0.2s;
+}
+
+.form-group input[type="file"]::-webkit-file-upload-button:hover {
+  background-color: #EB5E28;
+}
+
+.file-name {
+  color: #22c55e;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+/* --- MENSAJES DE ERROR Y ÉXITO --- */
+.alert {
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.alert.error {
+  background-color: #5b1553;
+  color: #ffffff;
+  border: 1px solid #e11d48;
+}
+
+.alert.success {
+  background-color: #14532d;
+  color: #ffffff;
+  border: 1px solid #22c55e;
+}
+
+/* --- BOTÓN PRINCIPAL DE ENVÍO --- */
+button[type="submit"] {
+  background-color: #2A2A28;
+  color: #EB5E28;
+  border: 1px solid #484848;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: .03rem;
+  width: 100%;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+  background-color: #EB5E28;
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(235, 94, 40, 0.4);
+  transform: translateY(-2px);
+}
+
+button[type="submit"]:disabled {
+  background-color: #222;
+  color: #555;
+  border-color: #333;
+  cursor: not-allowed;
+}
