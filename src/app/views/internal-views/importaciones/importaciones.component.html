@@ -71,6 +71,33 @@
         (rangeChange)="onRangoFecha($event)">
       </app-date-picker>
     </div>
+    <div class="filtro-temporada-wrap">
+      <span class="filtro-temporada-lbl"><i class="fas fa-calendar-week"></i> Temporada:</span>
+      <app-temporada-selector
+        [temporadas]="temporadasCerradas"
+        [seleccionada]="temporadaSelValor"
+        [incluirHistorico]="true"
+        labelActual="MY27 · actual"
+        (cambio)="onTemporadaCambio($event)">
+      </app-temporada-selector>
+    </div>
+  </div>
+
+  <!-- ── Filtro por etapa ── -->
+  <div class="etapa-filter-bar" *ngIf="!cargando">
+    <button class="etapa-pill etapa-all"
+            [class.active]="!filtroEtapa"
+            (click)="toggleEtapa('')">
+      Todas <span class="etapa-count">{{ embarquesTemporada.length }}</span>
+    </button>
+    <button *ngFor="let et of ETAPAS"
+            class="etapa-pill"
+            [class.active]="filtroEtapa === et.key"
+            [style.--ec]="et.color"
+            [style.--eb]="et.bg"
+            (click)="toggleEtapa(et.key)">
+      {{ et.key }} <span class="etapa-count">{{ countEtapa(et.key) }}</span>
+    </button>
   </div>
 
   <!-- ── Spinner ── -->
@@ -116,13 +143,14 @@
                   <i class="fas" [ngClass]="e.via_transporte === 'AEREO' ? 'fa-plane' : 'fa-ship'"></i>
                   {{ e.via_transporte === 'AEREO' ? 'Aéreo' : 'Marítimo' }}
                 </span>
+                <span class="estado-badge" [ngStyle]="estadoStyle(e)">{{ estadoActual(e) }}</span>
               </div>
               <span class="ref-nombre">{{ e.nombre }}</span>
             </td>
 
             <!-- Origen -->
             <td class="col-orig">
-              <span class="origen-tag" *ngIf="e.log_origen">{{ e.log_origen }}</span>
+              <span class="origen-tag" *ngIf="e.log_origen">{{ origenBonito(e.log_origen) }}</span>
               <span class="sin-dato" *ngIf="!e.log_origen">—</span>
             </td>
 

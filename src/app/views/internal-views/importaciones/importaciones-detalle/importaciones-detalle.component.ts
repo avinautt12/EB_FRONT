@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subscription, interval } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { HomeBarComponent } from '../../../../components/home-bar/home-bar.component';
 import { DatePickerComponent } from '../../../../components/date-picker/date-picker.component';
 import { ImportacionesService, Importacion } from '../../../../services/importaciones.service';
@@ -29,6 +31,16 @@ export class ImportacionesDetalleComponent implements OnInit, OnDestroy {
   validacionError: string[] = [];
   camposConError = new Set<string>();
   camposNA = new Set<string>();
+
+  // Polling de actualizaciones concurrentes
+  hayActualizacionExterna = false;
+  private _pollSub?: Subscription;
+  private _embarqueId = 0;
+  private readonly POLL_INTERVAL_MS = 10_000;
+
+  // Auto-guardado silencioso
+  autoguardandoOk = false;
+  private _autoguardadoTimer?: ReturnType<typeof setTimeout>;
 
   readonly tabs: { key: Seccion; label: string; icon: string }[] = [
     { key: 'logistica',   label: 'Logística',   icon: 'fa-ship' },
@@ -214,6 +226,7 @@ export class ImportacionesDetalleComponent implements OnInit, OnDestroy {
       this.returnUrl = '/importaciones/dashboard' + (tab ? `?tab=${tab}` : '');
     }
     const id = Number(this.route.snapshot.paramMap.get('id'));
+    this._embarqueId = id;
     this.svc.obtener(id).subscribe({
       next: (data) => {
         this.embarque = data;
@@ -223,12 +236,15 @@ export class ImportacionesDetalleComponent implements OnInit, OnDestroy {
         this._aplicarBorradores();
         this._cargarDraftLocal(id);
         this.cargando = false;
+        this._iniciarPolling(id);
       },
       error: () => { this.error = 'Embarque no encontrado'; this.cargando = false; },
     });
   }
 
   ngOnDestroy(): void {
+    this._pollSub?.unsubscribe();
+    if (this._autoguardadoTimer) clearTimeout(this._autoguardadoTimer);
     if (!this.embarque) return;
     const tieneCambios = Object.keys(this.cambiosPendientes).length > 0;
     if (!tieneCambios) return;
@@ -238,6 +254,44 @@ export class ImportacionesDetalleComponent implements OnInit, OnDestroy {
       na:       Array.from(this.camposNA),
     };
     localStorage.setItem(`imp_draft_${this.embarque.id}`, JSON.stringify(draft));
+  }
+
+  private _iniciarPolling(id: number): void {
+    this._pollSub = interval(this.POLL_INTERVAL_MS).pipe(
+      switchMap(() => this.svc.obtener(id))
+    ).subscribe({
+      next: (data) => {
+        if (!this.embarque) return;
+        // Merge inteligente: actualiza campos del servidor EXCEPTO los que el
+        // usuario está editando en este momento (que están en cambiosPendientes).
+        const camposEnEdicion = new Set(Object.keys(this.cambiosPendientes));
+        const merged: any = { ...data };
+        for (const campo of camposEnEdicion) {
+          merged[campo] = (this.embarque as any)[campo]; // preservar versión local
+        }
+        this.embarque = merged;
+        this._recalcularCamposLocales();
+        this.hayActualizacionExterna = false;
+      },
+      error: () => { /* silencioso — no interrumpir al usuario */ }
+    });
+  }
+
+  recargarDesdeServidor(): void {
+    this.svc.obtener(this._embarqueId).subscribe({
+      next: (data) => {
+        this.embarque = data;
+        this.cambiosPendientes = {};
+        this.camposNA.clear();
+        for (const campo of (this.embarque.campos_na || [])) {
+          this.camposNA.add(campo);
+        }
+        this._aplicarBorradores();
+        this._recalcularCamposLocales();
+        localStorage.removeItem(`imp_draft_${this._embarqueId}`);
+        this.hayActualizacionExterna = false;
+      }
+    });
   }
 
   private _cargarDraftLocal(id: number): void {
@@ -269,7 +323,12 @@ export class ImportacionesDetalleComponent implements OnInit, OnDestroy {
         }
       }
       if (applied && draft.seccion) this.seccionActiva = draft.seccion;
-      if (applied) this._recalcularCamposLocales();
+      if (applied) {
+        this._recalcularCamposLocales();
+        // Persistir el borrador recuperado a columnas reales para que sea
+        // visible a otros usuarios en vivo (no depender del clic de guardar).
+        this._programarAutoguardado();
+      }
     } catch {}
   }
 
@@ -341,6 +400,27 @@ export class ImportacionesDetalleComponent implements OnInit, OnDestroy {
       if (this.camposConError.size === 0) this.validacionError = [];
     }
     this._recalcularCamposLocales();
+    this._programarAutoguardado();
+  }
+
+  private _programarAutoguardado(): void {
+    if (this._autoguardadoTimer) clearTimeout(this._autoguardadoTimer);
+    this._autoguardadoTimer = setTimeout(() => {
+      if (!this.embarque || !this.hayCambios() || this.guardando) return;
+      // Guardar directo a columnas reales (sin _borrador_seccion) para que
+      // otros usuarios vean los datos al instante vía polling.
+      const payload: any = { ...this.cambiosPendientes };
+      for (const campo of this.camposNA) { payload[campo] = '__NA__'; }
+      this.svc.actualizar(this.embarque.id, payload).subscribe({
+        next: () => {
+          this.autoguardandoOk = true;
+          // Actualizar updated_at local para que el polling no genere falsa alerta
+          if (this.embarque) this.embarque.updated_at = new Date().toISOString();
+          setTimeout(() => { this.autoguardandoOk = false; }, 2000);
+        },
+        error: () => {}
+      });
+    }, 1_000);
   }
 
   private _diffDias(a: string | null, b: string | null): number | null {
@@ -456,6 +536,7 @@ export class ImportacionesDetalleComponent implements OnInit, OnDestroy {
         this.error = '';
         this.cambiosPendientes = {};
         localStorage.removeItem(`imp_draft_${this.embarque!.id}`);
+        this.hayActualizacionExterna = false;
         this.svc.obtener(this.embarque!.id).subscribe((d) => {
           this.embarque = d;
           this.camposNA.clear();

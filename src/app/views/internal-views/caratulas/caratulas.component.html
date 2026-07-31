@@ -19,7 +19,18 @@
         <button class="btn btn-secondary" (click)="abrirModalEmail()" [disabled]="!datosCliente">
             <i class="fas fa-envelope"></i> Enviar por Email
         </button>
+
+        <app-temporada-selector *ngIf="temporadasDisponibles.length"
+            [temporadas]="temporadasDisponibles"
+            [seleccionada]="temporadaHistoricaSeleccionada"
+            [disabled]="!datosClienteEnVivo"
+            (cambio)="verTemporadaPasada($event)">
+        </app-temporada-selector>
     </div>
+
+    <app-aviso-historico [temporada]="temporadaHistoricaSeleccionada"
+        [detalle]="'para ' + datosCliente?.clave"
+        (volver)="volverATemporadaActual()"></app-aviso-historico>
 
     <app-fecha-actualizacion></app-fecha-actualizacion>
 
@@ -78,7 +89,23 @@
 
             <div class="titulo" style="display: flex; align-items: center; gap: 12px;">
                 <img src="assets/logo_elite_2.png" alt="Elite Logo" style="height: 60px;">
-                <h1>Avance MY26</h1>
+                <h1>Avance {{ etiquetaAMY(modoHistorico ? temporadaHistoricaSeleccionada : etiquetaTemporadaActual) }}</h1>
+            </div>
+
+            <ng-container *ngIf="temporadaCerrada && fechaCierreApparel">
+                <div class="banner-temporada-cerrada banner-split-scott">
+                    <i class="fas fa-lock"></i>
+                    SCOTT / BICICLETAS cerradas el {{ fechaCierreFormateada }}
+                </div>
+                <div class="banner-temporada-cerrada banner-split-apparel">
+                    <i class="fas fa-lock"></i>
+                    APPAREL / SYNCROS / VITTORIA cerradas el {{ fechaCierreApparel }}
+                </div>
+            </ng-container>
+
+            <div class="banner-temporada-cerrada" *ngIf="temporadaCerrada && !fechaCierreApparel">
+                <i class="fas fa-lock"></i>
+                TEMPORADA CERRADA EL {{ fechaCierreFormateada }}
             </div>
 
             <div class="client-info">

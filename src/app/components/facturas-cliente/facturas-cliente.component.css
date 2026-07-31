@@ -48,12 +48,26 @@
   flex-shrink: 0;
 }
 
+.modal-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .modal-header h2 {
   color: #EB5E28;
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: 0.3px;
+}
+
+.modal-cliente-nombre {
+  color: #FFFCF2;
+  font-size: 0.85rem;
+  font-weight: 500;
+  opacity: 0.8;
+  letter-spacing: 0.2px;
 }
 
 .close-button {
@@ -513,6 +527,22 @@
   font-weight: 700;
   border-radius: 3px;
   letter-spacing: 0.03em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Etiqueta de temporada/mes de entrega (MY27 SEP, etc.) */
+.badge-etiqueta {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 5px;
+  background: #2c4a3e;
+  color: #52b788;
+  border: 1px solid #3a6b57;
+  font-size: 0.62rem;
+  font-weight: 700;
+  border-radius: 3px;
+  letter-spacing: 0.04em;
   vertical-align: middle;
   white-space: nowrap;
 }

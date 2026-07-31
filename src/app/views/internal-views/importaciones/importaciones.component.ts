@@ -4,12 +4,13 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
 import { DatePickerComponent } from '../../../components/date-picker/date-picker.component';
+import { TemporadaSelectorComponent, TEMPORADA_HISTORICO } from '../../../components/temporada-selector/temporada-selector.component';
 import { ImportacionesService, Importacion } from '../../../services/importaciones.service';
 
 @Component({
   selector: 'app-importaciones',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, HomeBarComponent, DatePickerComponent],
+  imports: [CommonModule, RouterModule, FormsModule, HomeBarComponent, DatePickerComponent, TemporadaSelectorComponent],
   templateUrl: './importaciones.component.html',
   styleUrl: './importaciones.component.css',
 })
@@ -22,8 +23,41 @@ export class ImportacionesComponent implements OnInit, AfterViewInit, OnDestroy 
   filtroOrigen = '';
   filtroVia = '';
   filtroEstado = '';
+  filtroEtapa = '';
   filtroFechaDesde = '';
   filtroFechaHasta = '';
+
+  // ── Temporadas (MY27 desde R26-1414; anteriores = MY26) ──────────────────
+  temporadaSel: 'MY27' | 'MY26' | 'todas' = 'MY27';
+  private static readonly _CORTE_MY27 = 1414;
+  readonly temporadasCerradas = ['MY26'];
+
+  temporadaDe(e: Importacion): 'MY27' | 'MY26' {
+    const ref = (e?.referencia || '').toUpperCase();
+    const m = /R\d+-(\d+)/.exec(ref) || /(\d{3,})/.exec(ref);
+    const num = m ? parseInt(m[1], 10) : 0;
+    return num >= ImportacionesComponent._CORTE_MY27 ? 'MY27' : 'MY26';
+  }
+  get temporadaSelValor(): string {
+    if (this.temporadaSel === 'MY26')  return 'MY26';
+    if (this.temporadaSel === 'todas') return TEMPORADA_HISTORICO;
+    return '';
+  }
+  onTemporadaCambio(v: string): void {
+    this.temporadaSel = v === TEMPORADA_HISTORICO ? 'todas' : (v === 'MY26' ? 'MY26' : 'MY27');
+    this.filtrar();
+  }
+
+  readonly ETAPAS = [
+    { key: 'Booking',           bg: 'rgba(59,130,246,.18)',  color: '#60a5fa' },
+    { key: 'Tránsito Mar/Aér',  bg: 'rgba(6,182,212,.18)',   color: '#22d3ee' },
+    { key: 'En Aduana',         bg: 'rgba(245,158,11,.18)',  color: '#fbbf24' },
+    { key: 'Tránsito Destino',  bg: 'rgba(139,92,246,.18)',  color: '#a78bfa' },
+    { key: 'En Almacén',        bg: 'rgba(20,184,166,.18)',  color: '#2dd4bf' },
+    { key: 'Verificación',      bg: 'rgba(99,102,241,.18)',  color: '#818cf8' },
+    { key: 'Liberado',          bg: 'rgba(34,197,94,.18)',   color: '#22c55e' },
+    { key: 'Pendiente',         bg: 'rgba(71,85,105,.18)',   color: '#94a3b8' },
+  ];
   mostrarNuevo = false;
   guardandoNuevo = false;
 
@@ -74,6 +108,7 @@ export class ImportacionesComponent implements OnInit, AfterViewInit, OnDestroy 
     const o     = this.filtroOrigen.toLowerCase();
     const v     = this.filtroVia;
     const est   = this.filtroEstado;
+    const etapa = this.filtroEtapa;
     const desde = this.filtroFechaDesde;
     const hasta = this.filtroFechaHasta;
     this.embarquesFiltrados = [...this.embarques].filter((e) => {
@@ -84,9 +119,11 @@ export class ImportacionesComponent implements OnInit, AfterViewInit, OnDestroy 
         || (est === 'cerrado'   && (e as any).estado === 'cerrado')
         || (est === 'activo'    && (e as any).estado !== 'cerrado')
         || (est === 'pendiente' && this.progresoPct(e) === 0);
+      const matchEtapa = !etapa || this.estadoActual(e) === etapa;
+      const matchTemp  = this.temporadaSel === 'todas' || this.temporadaDe(e) === this.temporadaSel;
       const eta    = e.log_eta_puerto || '';
       const matchF = (!desde && !hasta) || ((!desde || eta >= desde) && (!hasta || eta <= hasta));
-      return matchQ && matchO && matchV && matchE && matchF;
+      return matchQ && matchO && matchV && matchE && matchEtapa && matchTemp && matchF;
     });
     // Dar un tick para que Angular renderice los nuevos <tr> antes de observar
     setTimeout(() => this.observeRows(), 0);
@@ -94,8 +131,22 @@ export class ImportacionesComponent implements OnInit, AfterViewInit, OnDestroy 
 
   toggleFiltroEstado(val: string): void {
     this.filtroEstado = this.filtroEstado === val ? '' : val;
-    this.filtroVia    = '';   // limpiar filtro de vía al activar filtro de estado
+    this.filtroVia    = '';
     this.filtrar();
+  }
+
+  toggleEtapa(key: string): void {
+    this.filtroEtapa = this.filtroEtapa === key ? '' : key;
+    this.filtrar();
+  }
+
+  get embarquesTemporada(): Importacion[] {
+    if (this.temporadaSel === 'todas') return this.embarques;
+    return this.embarques.filter(e => this.temporadaDe(e) === this.temporadaSel);
+  }
+
+  countEtapa(key: string): number {
+    return this.embarquesTemporada.filter(e => this.estadoActual(e) === key).length;
   }
 
   toggleFiltroVia(val: string): void {
@@ -120,8 +171,8 @@ export class ImportacionesComponent implements OnInit, AfterViewInit, OnDestroy 
 
   colorPct(pct: number): string {
     if (pct === 100) return '#22c55e';
-    if (pct >= 60) return '#f59e0b';
-    if (pct > 0)   return '#3b82f6';
+    if (pct >= 60)   return '#f59e0b';
+    if (pct > 0)     return '#ef4444';
     return '#374151';
   }
 
@@ -129,11 +180,50 @@ export class ImportacionesComponent implements OnInit, AfterViewInit, OnDestroy 
     this.router.navigate(['/importaciones', id]);
   }
 
+  estadoActual(e: Importacion): string {
+    if (e.rec_liberacion_final)  return 'Liberado';
+    if (e.alm_envio_info_uva)    return 'Verificación';
+    if (e.des_llegada_almacen)   return 'En Almacén';
+    if (e.des_fecha_cruce_real)  return 'Tránsito Destino';
+    if (e.log_eta_puerto)        return 'En Aduana';
+    if (e.log_fecha_booking)     return 'Tránsito Mar/Aér';
+    if (e.log_fecha_entrega)     return 'Booking';
+    return 'Pendiente';
+  }
+
+  private static readonly _ESTADO_CFG: Record<string, { bg: string; color: string }> = {
+    'Liberado':          { bg: 'rgba(34,197,94,.18)',  color: '#22c55e' },
+    'Verificación':      { bg: 'rgba(99,102,241,.18)', color: '#818cf8' },
+    'En Almacén':        { bg: 'rgba(20,184,166,.18)', color: '#2dd4bf' },
+    'Tránsito Destino':  { bg: 'rgba(139,92,246,.18)', color: '#a78bfa' },
+    'En Aduana':         { bg: 'rgba(245,158,11,.18)', color: '#fbbf24' },
+    'Tránsito Mar/Aér':  { bg: 'rgba(6,182,212,.18)',  color: '#22d3ee' },
+    'Booking':           { bg: 'rgba(59,130,246,.18)', color: '#60a5fa' },
+    'Pendiente':         { bg: 'rgba(71,85,105,.18)',  color: '#94a3b8' },
+  };
+
+  estadoStyle(e: Importacion): { background: string; color: string } {
+    const cfg = ImportacionesComponent._ESTADO_CFG[this.estadoActual(e)]
+              ?? { bg: 'rgba(71,85,105,.18)', color: '#94a3b8' };
+    return { background: cfg.bg, color: cfg.color };
+  }
+
   private _normOrigen(s: string): string {
     if (!s) return '';
-    const key = s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toUpperCase();
-    const canon: Record<string, string> = { 'ESPANA': 'ESPAÑA', 'BELGICA': 'BÉLGICA' };
+    const key = s.normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')   // acentos
+      .replace(/[�?]/g, '')         // � y ? (corrupción de ñ/é en la BD)
+      .trim().toUpperCase();
+    const canon: Record<string, string> = {
+      'ESPANA': 'ESPAÑA', 'ESPAA': 'ESPAÑA',
+      'BELGICA': 'BÉLGICA', 'BLGICA': 'BÉLGICA',
+    };
     return canon[key] ?? key;
+  }
+
+  /** Origen normalizado para mostrar en plantilla (arregla ñ/é dañadas). */
+  origenBonito(s: string | null | undefined): string {
+    return this._normOrigen(s || '');
   }
 
   get origenes(): string[] {

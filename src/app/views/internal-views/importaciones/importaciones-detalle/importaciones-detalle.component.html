@@ -14,6 +14,16 @@
     <button (click)="volver()">Regresar</button>
   </div>
 
+  <!-- ── Banner: actualización de otro usuario ── -->
+  <div class="banner-actualizacion" *ngIf="hayActualizacionExterna && !cargando">
+    <i class="fas fa-users"></i>
+    <span>Otro usuario guardó cambios en este embarque.</span>
+    <button class="btn-recargar" (click)="recargarDesdeServidor()">
+      <i class="fas fa-sync-alt"></i> Ver cambios (se perderán tus cambios actuales)
+    </button>
+    <button class="btn-ignorar" (click)="hayActualizacionExterna = false">Ignorar</button>
+  </div>
+
   <ng-container *ngIf="!cargando && embarque">
 
     <!-- ── Encabezado ── -->
@@ -36,6 +46,10 @@
           </div>
           <span class="prog-lbl">Completado</span>
         </div>
+        <!-- Indicador auto-guardado -->
+        <span class="autoguardado-ok" *ngIf="autoguardandoOk">
+          <i class="fas fa-check-circle"></i> Auto-guardado
+        </span>
         <!-- Borrador -->
         <button class="btn-borrador" (click)="guardarBorrador()"
           [disabled]="!hayCambios() || guardando"
@@ -129,8 +143,16 @@
               (dateChange)="marcarCambio('log_fecha_notificacion', $event || null)">
             </app-date-picker>
         </div>
+        <div class="field-row">
+          <label>3. Fecha de entrega (Proyectado)</label>
+          <app-date-picker
+              mode="single"
+              [value]="embarque.log_fecha_entrega_prog || ''"
+              (dateChange)="marcarCambio('log_fecha_entrega_prog', $event || null)">
+            </app-date-picker>
+        </div>
         <div class="field-row" [class.campo-error]="esCampoError('log_fecha_entrega')" [class.campo-faltante]="esCampoFaltante('log_fecha_entrega')">
-          <label>3. Fecha de entrega</label>
+          <label>3. Fecha de entrega (Real)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.log_fecha_entrega || ''"
@@ -196,8 +218,16 @@
               (dateChange)="marcarCambio('log_confirmacion_booking', $event || null)">
             </app-date-picker>
         </div>
+        <div class="field-row">
+          <label>13. Booking Proyectado</label>
+          <app-date-picker
+              mode="single"
+              [value]="embarque.log_fecha_booking_prog || ''"
+              (dateChange)="marcarCambio('log_fecha_booking_prog', $event || null)">
+            </app-date-picker>
+        </div>
         <div class="field-row" [class.campo-error]="esCampoError('log_fecha_booking')" [class.campo-faltante]="esCampoFaltante('log_fecha_booking')">
-          <label>13. Booking (fecha salida contenedor)</label>
+          <label>13b. Booking Real (fecha salida contenedor)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.log_fecha_booking || ''"
@@ -208,8 +238,16 @@
           <label>· Días en salir tras entrega Scott</label>
           <span class="calc-val">{{ embarque.log_dias_salida_tras_entrega ?? '—' }} días</span>
         </div>
+        <div class="field-row">
+          <label>14. ETA Puerto (Proyectado)</label>
+          <app-date-picker
+              mode="single"
+              [value]="embarque.log_eta_puerto_prog || ''"
+              (dateChange)="marcarCambio('log_eta_puerto_prog', $event || null)">
+            </app-date-picker>
+        </div>
         <div class="field-row" [class.campo-error]="esCampoError('log_eta_puerto')" [class.campo-faltante]="esCampoFaltante('log_eta_puerto')">
-          <label>14. ETA Puerto</label>
+          <label>14. ETA Puerto (Real)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.log_eta_puerto || ''"
@@ -343,8 +381,16 @@
               (dateChange)="marcarCambio('imp_solicitud_pago_forwarder', $event || null)">
             </app-date-picker>
         </div>
+        <div class="field-row">
+          <label>8. Llegada de contenedor a puerto (Proyectado)</label>
+          <app-date-picker
+              mode="single"
+              [value]="embarque.imp_llegada_contenedor_prog || ''"
+              (dateChange)="marcarCambio('imp_llegada_contenedor_prog', $event || null)">
+            </app-date-picker>
+        </div>
         <div class="field-row" [class.campo-faltante]="esCampoFaltante('imp_llegada_contenedor_puerto')">
-          <label>8. Llegada de contenedor a puerto</label>
+          <label>8. Llegada de contenedor a puerto (Real)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.imp_llegada_contenedor_puerto || ''"
@@ -542,7 +588,13 @@
               [value]="embarque.des_cita_cruce || ''"
               (dateChange)="marcarCambio('des_cita_cruce', $event || null)">
             </app-date-picker></div>
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('des_fecha_cruce_real')"><label>3. Fecha de cruce real</label>
+        <div class="field-row"><label>3. Fecha de cruce (Proyectado)</label>
+          <app-date-picker
+              mode="single"
+              [value]="embarque.des_fecha_cruce_prog || ''"
+              (dateChange)="marcarCambio('des_fecha_cruce_prog', $event || null)">
+            </app-date-picker></div>
+        <div class="field-row" [class.campo-faltante]="esCampoFaltante('des_fecha_cruce_real')"><label>3. Fecha de cruce (Real)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.des_fecha_cruce_real || ''"
@@ -729,8 +781,12 @@
           </div>
         </div>
 
+        <div class="field-row">
+          <label>6. Envío de información a la UVA (Proyectado)</label>
+          <app-date-picker mode="single" [value]="embarque.alm_envio_info_uva_prog || ''" (dateChange)="marcarCambio('alm_envio_info_uva_prog', $event || null)"></app-date-picker>
+        </div>
         <div class="field-row" [class.campo-faltante]="esCampoFaltante('alm_envio_info_uva')">
-          <label>6. Envío de información a la UVA</label>
+          <label>6. Envío de información a la UVA (Real)</label>
           <div class="na-wrap">
             <ng-container *ngIf="!esNA('alm_envio_info_uva')">
               <app-date-picker mode="single" [value]="embarque.alm_envio_info_uva || ''" (dateChange)="marcarCambio('alm_envio_info_uva', $event || null)"></app-date-picker>
@@ -784,7 +840,13 @@
           <select [value]="embarque.rec_cedula_costeo || ''" (change)="marcarCambio('rec_cedula_costeo', $any($event.target).value || null)">
             <option value="">—</option><option>SI</option><option>NO</option><option>N/A</option>
           </select></div>
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('rec_recepcion_odoo')"><label>2. Recepción en Odoo</label>
+        <div class="field-row"><label>2. Recepción en Odoo (Proyectado)</label>
+          <app-date-picker
+              mode="single"
+              [value]="embarque.rec_recepcion_odoo_prog || ''"
+              (dateChange)="marcarCambio('rec_recepcion_odoo_prog', $event || null)">
+            </app-date-picker></div>
+        <div class="field-row" [class.campo-faltante]="esCampoFaltante('rec_recepcion_odoo')"><label>2. Recepción en Odoo (Real)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.rec_recepcion_odoo || ''"
@@ -792,13 +854,25 @@
             </app-date-picker></div>
         <div class="field-row" [class.campo-faltante]="esCampoFaltante('rec_folio_compra')"><label>3. Folio de Compra en Odoo</label>
           <input type="text" [value]="embarque.rec_folio_compra || ''" (change)="marcarCambio('rec_folio_compra', $any($event.target).value || null)" /></div>
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('rec_liberacion_verificacion')"><label>4. Liberación de productos a verificación</label>
+        <div class="field-row"><label>4. Liberación de productos a verificación (Proyectado)</label>
+          <app-date-picker
+              mode="single"
+              [value]="embarque.rec_liberacion_verificacion_prog || ''"
+              (dateChange)="marcarCambio('rec_liberacion_verificacion_prog', $event || null)">
+            </app-date-picker></div>
+        <div class="field-row" [class.campo-faltante]="esCampoFaltante('rec_liberacion_verificacion')"><label>4. Liberación de productos a verificación (Real)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.rec_liberacion_verificacion || ''"
               (dateChange)="marcarCambio('rec_liberacion_verificacion', $event || null)">
             </app-date-picker></div>
-        <div class="field-row highlight-final" [class.campo-faltante]="esCampoFaltante('rec_liberacion_final')"><label><i class="fas fa-flag-checkered"></i> LIBERACIÓN FINAL DEL PRODUCTO</label>
+        <div class="field-row"><label><i class="fas fa-flag-checkered"></i> LIBERACIÓN FINAL (Proyectado)</label>
+          <app-date-picker
+              mode="single"
+              [value]="embarque.rec_liberacion_final_prog || ''"
+              (dateChange)="marcarCambio('rec_liberacion_final_prog', $event || null)">
+            </app-date-picker></div>
+        <div class="field-row highlight-final" [class.campo-faltante]="esCampoFaltante('rec_liberacion_final')"><label><i class="fas fa-flag-checkered"></i> LIBERACIÓN FINAL DEL PRODUCTO (Real)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.rec_liberacion_final || ''"

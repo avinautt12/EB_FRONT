@@ -55,6 +55,20 @@ th, td {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
 }
 
+.nota-simulador-apparel {
+  margin: 8px 0 12px;
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.nota-simulador-apparel span:first-child {
+  color: #F07D22;
+}
+.nota-simulador-apparel span:last-child {
+  color: #4caf80;
+}
+
 .simulador {
   table-layout: fixed;
   width: 100%;

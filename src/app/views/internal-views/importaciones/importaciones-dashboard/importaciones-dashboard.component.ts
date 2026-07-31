@@ -6,6 +6,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HomeBarComponent } from '../../../../components/home-bar/home-bar.component';
+import { TemporadaSelectorComponent, TEMPORADA_HISTORICO } from '../../../../components/temporada-selector/temporada-selector.component';
 import { ImportacionesService } from '../../../../services/importaciones.service';
 import { Chart, registerables } from 'chart.js';
 
@@ -14,7 +15,8 @@ Chart.register(...registerables);
 interface Kpis {
   total: number; activos: number; cerrados: number; cancelados: number;
   flete_total_usd: number; flete_promedio_usd: number;
-  transito_maritimo_promedio_dias: number; pct_avance_promedio: number;
+  transito_maritimo_promedio_dias: number | null; transito_maritimo_n: number;
+  pct_avance_promedio: number;
   transito_aereo_promedio_dias: number | null; transito_aereo_n: number;
 }
 interface LatEmbarqDet { id: number; referencia: string; nombre: string; log_origen: string; fecha_ini: string; fecha_fin: string; dias: number; }
@@ -58,7 +60,7 @@ interface DashData {
 @Component({
   selector: 'app-importaciones-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, HomeBarComponent, DatePipe],
+  imports: [CommonModule, RouterModule, FormsModule, HomeBarComponent, DatePipe, TemporadaSelectorComponent],
   templateUrl: './importaciones-dashboard.component.html',
   styleUrl: './importaciones-dashboard.component.css',
 })
@@ -80,10 +82,99 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
   error     = '';
   ordenTabla:    'llegada' | 'costo' | 'bici' = 'llegada';
   textoBuscador = '';
+  filtroEtapa   = '';
   desgloseOrigen = false;
   activeTab: 'resumen' | 'latencias' | 'costos' | 'embarques' = 'resumen';
 
   filtros = { via: '', estado: '', origen: '', anio: '' };
+
+  readonly ETAPAS = [
+    { key: 'Booking',           bg: 'rgba(59,130,246,.18)',  color: '#60a5fa' },
+    { key: 'Tránsito Mar/Aér',  bg: 'rgba(6,182,212,.18)',   color: '#22d3ee' },
+    { key: 'En Aduana',         bg: 'rgba(245,158,11,.18)',  color: '#fbbf24' },
+    { key: 'Tránsito Destino',  bg: 'rgba(139,92,246,.18)',  color: '#a78bfa' },
+    { key: 'En Almacén',        bg: 'rgba(20,184,166,.18)',  color: '#2dd4bf' },
+    { key: 'Verificación',      bg: 'rgba(99,102,241,.18)',  color: '#818cf8' },
+    { key: 'Liberado',          bg: 'rgba(34,197,94,.18)',   color: '#22c55e' },
+    { key: 'Pendiente',         bg: 'rgba(71,85,105,.18)',   color: '#94a3b8' },
+  ];
+
+  // ── Temporadas (MY27 desde R26-1414; anteriores = MY26) ──────────────────
+  temporadaSel: 'MY27' | 'MY26' | 'todas' = 'MY27';
+  private static readonly _CORTE_MY27 = 1414;
+  readonly temporadasCerradas = ['MY26'];   // para <app-temporada-selector>
+
+  /** Valor que espera el selector compartido: '' actual (MY27), 'MY26', o HISTÓRICO. */
+  get temporadaSelValor(): string {
+    if (this.temporadaSel === 'MY26')  return 'MY26';
+    if (this.temporadaSel === 'todas') return TEMPORADA_HISTORICO;
+    return '';
+  }
+  onTemporadaCambio(v: string): void {
+    this.temporadaSel = v === TEMPORADA_HISTORICO ? 'todas' : (v === 'MY26' ? 'MY26' : 'MY27');
+  }
+
+  temporadaDe(e: any): 'MY27' | 'MY26' {
+    const ref = (e?.referencia || '').toUpperCase();
+    const m = /R\d+-(\d+)/.exec(ref) || /(\d{3,})/.exec(ref);
+    const num = m ? parseInt(m[1], 10) : 0;
+    return num >= ImportacionesDashboardComponent._CORTE_MY27 ? 'MY27' : 'MY26';
+  }
+
+  /** Embarques del periodo seleccionado (antes de búsqueda / filtro de etapa). */
+  get embarquesTemporada(): any[] {
+    if (!this.data?.embarques) return [];
+    if (this.temporadaSel === 'todas') return this.data.embarques;
+    return this.data.embarques.filter((e: any) => this.temporadaDe(e) === this.temporadaSel);
+  }
+
+  countEtapa(key: string): number {
+    return this.embarquesTemporada.filter((e: any) => e.estado_actual === key).length;
+  }
+
+  /** Oculta los embarques ya liberados (todo lo que sigue en proceso). */
+  soloPendientes = false;
+
+  get countPendientes(): number {
+    return this.embarquesTemporada.filter((e: any) => e.estado_actual !== 'Liberado').length;
+  }
+
+  /** Selección mutuamente excluyente: "Todas", una etapa, o "Sin liberar". */
+  seleccionarTodas(): void {
+    this.filtroEtapa = '';
+    this.soloPendientes = false;
+  }
+  seleccionarEtapa(key: string): void {
+    this.filtroEtapa = this.filtroEtapa === key ? '' : key;
+    this.soloPendientes = false;
+  }
+  toggleSinLiberar(): void {
+    this.soloPendientes = !this.soloPendientes;
+    this.filtroEtapa = '';
+  }
+
+  // Etapas del pipeline para la vista de tarjetas (tira horizontal)
+  // Cada key coincide 1:1 con el campo que usa el badge de estado (backend
+  // _estado_actual) para avanzar de etapa — así el pipeline y el badge
+  // siempre muestran lo mismo.
+  readonly PIPELINE_STAGES = [
+    { key: 'entrega',          label: 'Entrega'   },
+    { key: 'booking',          label: 'Booking'   },
+    { key: 'transito',         label: 'Lleg. Puerto' },
+    { key: 'aduana',           label: 'Aduana'    },
+    { key: 'trans_dest',       label: 'Destino'   },
+    { key: 'en_almacen',       label: 'Almacén'   },
+    { key: 'recepcion_odoo',   label: 'Rec. Odoo' },
+    { key: 'verif',            label: 'Verif.'    },
+    { key: 'liberacion_verif', label: 'Lib. Verif.' },
+    { key: 'etiquetado',       label: 'Etiq.'     },
+    { key: 'liberado',         label: 'Liberado'  },
+  ];
+
+  stage(e: any, key: string): { proy: string | null; real: string | null; delta: number | null } | undefined {
+    return e?.pipeline?.[key] ?? undefined;
+  }
+
   notasEditId: number | null = null;
   notasEditVal = '';
 
@@ -550,9 +641,10 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
 
   get embarquesOrdenados(): any[] {
     if (!this.data) return [];
+    const base = this.embarquesTemporada;
     const q = this.textoBuscador.trim().toLowerCase();
-    const filtrados = q
-      ? this.data.embarques.filter((e: any) =>
+    let filtrados: any[] = q
+      ? base.filter((e: any) =>
           (e.referencia || '').toLowerCase().includes(q) ||
           (e.nombre || '').toLowerCase().includes(q) ||
           (e.log_origen || '').toLowerCase().includes(q) ||
@@ -560,7 +652,13 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
           (e.estado || '').toLowerCase().includes(q) ||
           (e.notas || '').toLowerCase().includes(q)
         )
-      : this.data.embarques;
+      : base;
+    if (this.filtroEtapa) {
+      filtrados = filtrados.filter((e: any) => e.estado_actual === this.filtroEtapa);
+    }
+    if (this.soloPendientes) {
+      filtrados = filtrados.filter((e: any) => e.estado_actual !== 'Liberado');
+    }
     return [...filtrados].sort((a, b) => {
       if (this.ordenTabla === 'llegada') {
         const da = a.des_llegada_almacen ? new Date(a.des_llegada_almacen).getTime() : 0;
@@ -576,6 +674,20 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
     if (!s) return '—';
     const first = s.split('/')[0].split(',')[0].trim();
     return first.length > 18 ? first.slice(0, 18) + '…' : first;
+  }
+
+  /** Origen normalizado para mostrar (arregla ñ/é dañadas en la BD). */
+  origenBonito(s: string | null | undefined): string {
+    if (!s) return '—';
+    const key = s.normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[�?]/g, '')
+      .trim().toUpperCase();
+    const canon: Record<string, string> = {
+      'ESPANA': 'ESPAÑA', 'ESPAA': 'ESPAÑA',
+      'BELGICA': 'BÉLGICA', 'BLGICA': 'BÉLGICA',
+    };
+    return canon[key] ?? key;
   }
 
   llegadaRelativa(fecha: string): string {
@@ -608,6 +720,13 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
 
   cancelarNotas(): void { this.notasEditId = null; }
 
+  /** Divide una nota tipo bitácora ("Al 25.07 ... // Al 20.07 ...") en líneas
+   *  separadas para lectura clara — el dato guardado no cambia, solo la vista. */
+  notasLineas(notas: string | null | undefined): string[] {
+    if (!notas) return [];
+    return notas.split(/\s*\/\/\s*/).map(s => s.trim()).filter(Boolean);
+  }
+
   abrirModalLat(tipo: 'almacen' | 'contabilidad' | 'transito' | 'total'): void {
     if (!this.data) return;
     const lat = this.data.latencias;
@@ -629,16 +748,35 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
   cerrarModalLat():  void { this.modalLat  = null; }
   cerrarModalEtiq(): void { this.modalEtiq = false; }
 
+  /** Mismo criterio que usa el backend para el promedio "Tránsito" del
+   *  Resumen: proceso completo, entrega del proveedor → liberación final
+   *  (mismo tramo que "lat_total" por embarque). Si un embarque aún no
+   *  está liberado, no cuenta en el promedio y tampoco debe listarse aquí. */
+  private _transitoValido(e: any, via: 'MARITIMO' | 'AEREO'): boolean {
+    const viaEmb = e.via_transporte || 'MARITIMO';
+    return viaEmb === via && e.lat_total != null && e.lat_total >= 0;
+  }
+
   abrirModalResumen(tipo: 'total' | 'activos' | 'cerrados' | 'transito' | 'transito_aereo' | 'avance'): void {
     if (!this.data) return;
     const emb = this.data.embarques;
+    const sortPorLlegada = (a: any, b: any) => {
+      const da = a.des_llegada_almacen ? +new Date(a.des_llegada_almacen) : 0;
+      const db = b.des_llegada_almacen ? +new Date(b.des_llegada_almacen) : 0;
+      return db - da;
+    };
+    const sortPorLiberacion = (a: any, b: any) => {
+      const da = a.pipeline?.liberado?.real ? +new Date(a.pipeline.liberado.real) : 0;
+      const db = b.pipeline?.liberado?.real ? +new Date(b.pipeline.liberado.real) : 0;
+      return db - da;
+    };
     type Cfg = { titulo: string; subtitulo: string; filter: (e: any) => boolean; sort: (a: any, b: any) => number };
     const cfgBase: Record<string, Cfg> = {
       total:    { titulo: 'Todos los Embarques',   subtitulo: `${emb.length} embarques registrados`,          filter: () => true,                           sort: (a, b) => (b.pct_avance ?? 0) - (a.pct_avance ?? 0) },
       activos:  { titulo: 'Embarques en Proceso',  subtitulo: 'Estado activo · ordenado por avance',          filter: e => e.estado === 'activo',           sort: (a, b) => (b.pct_avance ?? 0) - (a.pct_avance ?? 0) },
-      cerrados: { titulo: 'Embarques Cerrados',    subtitulo: 'Estado cerrado · más recientes primero',       filter: e => e.estado === 'cerrado',          sort: (a, b) => { const da = a.des_llegada_almacen ? +new Date(a.des_llegada_almacen) : 0; const db = b.des_llegada_almacen ? +new Date(b.des_llegada_almacen) : 0; return db - da; } },
-      transito:       { titulo: 'Embarques Marítimos', subtitulo: 'Vía marítima · ordenado por avance',           filter: e => e.via_transporte === 'MARITIMO', sort: (a, b) => (b.pct_avance ?? 0) - (a.pct_avance ?? 0) },
-      transito_aereo: { titulo: 'Embarques Aéreos',    subtitulo: 'Vía aérea · booking → llegada almacén',       filter: e => e.via_transporte === 'AEREO',    sort: (a, b) => { const da = a.des_llegada_almacen ? +new Date(a.des_llegada_almacen) : 0; const db = b.des_llegada_almacen ? +new Date(b.des_llegada_almacen) : 0; return db - da; } },
+      cerrados: { titulo: 'Embarques Cerrados',    subtitulo: 'Estado cerrado · más recientes primero',       filter: e => e.estado === 'cerrado',          sort: sortPorLlegada },
+      transito:       { titulo: 'Embarques Marítimos', subtitulo: 'Vía marítima · entrega → liberación final', filter: e => this._transitoValido(e, 'MARITIMO'), sort: sortPorLiberacion },
+      transito_aereo: { titulo: 'Embarques Aéreos',    subtitulo: 'Vía aérea · entrega → liberación final',    filter: e => this._transitoValido(e, 'AEREO'),    sort: sortPorLiberacion },
       avance:   { titulo: 'Avance por Embarque',   subtitulo: 'Menor avance primero · todos los embarques',  filter: () => true,                           sort: (a, b) => (a.pct_avance ?? 101) - (b.pct_avance ?? 101) },
     };
     const { titulo, subtitulo, filter, sort } = cfgBase[tipo];
@@ -707,5 +845,51 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
 
   pctVia(count: number): number {
     return this.data ? Math.round((count / this.data.kpis.total) * 100) : 0;
+  }
+
+  // ── Pipeline helpers ─────────────────────────────────────────────────────────
+
+  fmtD(s: string | null | undefined): string {
+    if (!s) return '—';
+    try {
+      const d = new Date(s + 'T12:00:00');
+      return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+    } catch { return s.slice(5); }
+  }
+
+  deltaClass(delta: number | null | undefined): string {
+    if (delta == null) return '';
+    return delta <= 0 ? 'delta-ok' : 'delta-late';
+  }
+
+  absDelta(delta: number): number { return Math.abs(delta); }
+
+  private static readonly _ESTADO_CFG: Record<string, { bg: string; color: string }> = {
+    'Liberado':          { bg: 'rgba(34,197,94,.18)',   color: '#22c55e' },
+    'Verificación':      { bg: 'rgba(99,102,241,.18)',  color: '#818cf8' },
+    'En Almacén':        { bg: 'rgba(20,184,166,.18)',  color: '#2dd4bf' },
+    'Tránsito Destino':  { bg: 'rgba(139,92,246,.18)',  color: '#a78bfa' },
+    'En Aduana':         { bg: 'rgba(245,158,11,.18)',  color: '#fbbf24' },
+    'Tránsito Mar/Aér':  { bg: 'rgba(6,182,212,.18)',   color: '#22d3ee' },
+    'Booking':           { bg: 'rgba(59,130,246,.18)',  color: '#60a5fa' },
+    'Pendiente':         { bg: 'rgba(71,85,105,.18)',   color: '#94a3b8' },
+  };
+
+  estadoStyle(estado: string): { background: string; color: string } {
+    const cfg = ImportacionesDashboardComponent._ESTADO_CFG[estado]
+              ?? { bg: 'rgba(71,85,105,.18)', color: '#94a3b8' };
+    return { background: cfg.bg, color: cfg.color };
+  }
+
+  stageCls(stage: { proy?: string | null; real?: string | null; delta?: number | null } | undefined): string {
+    // Solo se resalta (verde) cuando la etapa tiene fecha REAL registrada.
+    return stage?.real ? 'stage-real' : '';
+  }
+
+  latTotalColor(dias: number | null | undefined): string {
+    if (dias == null) return '#64748b';
+    if (dias > 120) return '#ef4444';
+    if (dias > 75)  return '#f59e0b';
+    return '#22c55e';
   }
 }

@@ -1,44 +1,38 @@
 <app-top-bar-usuarios></app-top-bar-usuarios>
 
-<div class="monitor-container">
-  <h2>Proyecciones de Compras</h2>
+<div class="pu-container">
 
-  <div class="acciones-monitor">
-    <button class="btn-volver" [routerLink]="['/usuarios/dashboard']">
-      <i class="fas fa-arrow-left"></i> Volver
-    </button>
-    <button class="btn-crear" (click)="manejarClickCrear()">
-      <i class="fas fa-plus"></i> Crear Proyección
-    </button>
-    <button class="btn-historial" [routerLink]="['/usuarios/proyeccion-historial']">
-      <i class="fas fa-history"></i> Ver Historial de Proyección
-    </button>
+  <div class="pu-header">
+    <a routerLink="/usuarios/dashboard" class="pu-back">
+      <i class="fas fa-arrow-left"></i> Regresar
+    </a>
+    <h1>Proyección de Compra</h1>
   </div>
 
-  <div class="info-proyecciones">
-    <h3>Bienvenido estimado Distribuidor</h3>
-    <p>
-      A través de esta plataforma podrás registrar de forma anticipada tu proyección de compra de Bicicletas para la temporada 2026.
-    </p>
-
-    <p>
-      Esta información contribuirá a una planificación más eficiente y garantizará el abastecimiento oportuno del producto en tu punto de venta.
-    </p>
-
-    <p>
-      Adicionalmente, podrás en el momento que requieras, consultar el historial de proyecciones enviadas, lo que te permitirá llevar un mejor control y seguimiento de tus pedidos.
-    </p>
-
-    <p>
-      Da clic en <strong>“Crear Proyección”</strong> para iniciar, o en <strong>“Ver Historial de Proyección”</strong> si deseas revisar tu registro.
-    </p>
-
-    <p>
-      <strong>Importante:</strong> Solo se permite el envío de una proyección. Revisa cuidadosamente la información antes de confirmar.
-    </p>
-
-    <p>
-      Ten en cuenta que los precios son referenciales y pueden estar sujetos a cambios.
-    </p>
+  <!-- Cargando -->
+  <div *ngIf="cargando" class="pu-spinner">
+    <div class="spinner"></div>
+    <p>Cargando proyecciones...</p>
   </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !cargando" class="pu-error">
+    <i class="fas fa-exclamation-circle"></i> {{ error }}
+  </div>
+
+  <!-- Sin clave asignada -->
+  <div *ngIf="!cargando && !error && !clienteClave" class="pu-sin-datos">
+    <i class="fas fa-inbox"></i>
+    <p>Tu cuenta no tiene una clave de cliente asignada aún.</p>
+  </div>
+
+  <!-- Proyecciones -->
+  <div *ngIf="!cargando && !error && clienteClave" class="pu-tab-wrap">
+    <app-proyecciones-tab
+      [clienteClave]="clienteClave"
+      [idCliente]="idCliente"
+      [ocultarBotonesImport]="true">
+    </app-proyecciones-tab>
+  </div>
+
 </div>

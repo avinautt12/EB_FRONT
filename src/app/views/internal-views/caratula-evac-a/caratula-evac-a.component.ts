@@ -6,6 +6,8 @@ import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
 import { FiltroComponent } from '../../../components/filtro/filtro.component';
 import { FiltroOrdenComponent, OrdenDirection } from '../../../components/filtro-orden/filtro-orden.component';
+import { TemporadaSelectorComponent } from '../../../components/temporada-selector/temporada-selector.component';
+import { AvisoHistoricoComponent } from '../../../components/aviso-historico/aviso-historico.component';
 
 interface Cliente {
   nombre_cliente: string;
@@ -50,7 +52,7 @@ interface CaratulaData {
 @Component({
   selector: 'app-caratula-evac-a',
   standalone: true,
-  imports: [CommonModule, RouterModule, HomeBarComponent, FiltroComponent, FiltroOrdenComponent],
+  imports: [CommonModule, RouterModule, HomeBarComponent, FiltroComponent, FiltroOrdenComponent, TemporadaSelectorComponent, AvisoHistoricoComponent],
   templateUrl: './caratula-evac-a.component.html',
   styleUrl: './caratula-evac-a.component.css'
 })
@@ -90,12 +92,79 @@ export class CaratulaEvacAComponent implements OnInit {
     nivel: [] as string[]
   };
 
+  temporadasDisponibles: string[] = [];
+  modoHistorico = false;
+  temporadaHistoricaSeleccionada: string | null = null;
+  private clientesEnVivo: any[] = [];
+
+  /** Inicio real de la temporada actualmente abierta -- se sobreescribe en
+   * ngOnInit con el valor real de /temporadas (estado='abierta'). El valor
+   * aqui es solo un fallback por si esa consulta falla. */
+  private fechaInicioTemporadaActual: Date = new Date(2025, 6, 1);
+
   constructor(private caratulasService: CaratulasService, private router: Router) { }
 
   ngOnInit(): void {
-    this.cargarClientes();
+    this.caratulasService.getTemporadas().subscribe({
+      next: (temporadas) => {
+        const abierta = temporadas.find(t => t.estado === 'abierta');
+        if (abierta) {
+          const [y, m, d] = abierta.fecha_inicio.split('-').map(Number);
+          this.fechaInicioTemporadaActual = new Date(y, m - 1, d);
+        }
+        this.cargarClientes();
+        this.calcularMontos();
+        this.cargarTemporadasDisponibles();
+        this.onInit.emit();
+      },
+      error: (err) => {
+        console.error('Error cargando temporada actual, usando fallback:', err);
+        this.cargarClientes();
+        this.calcularMontos();
+        this.cargarTemporadasDisponibles();
+        this.onInit.emit();
+      }
+    });
+  }
+
+  cargarTemporadasDisponibles(): void {
+    this.caratulasService.getTemporadasDisponibles().subscribe({
+      next: (temporadas) => this.temporadasDisponibles = temporadas,
+      error: (err) => console.error('Error cargando temporadas disponibles:', err)
+    });
+  }
+
+  verTemporadaPasada(temporada: string): void {
+    if (!temporada) {
+      this.volverATemporadaActual();
+      return;
+    }
+    this.loading = true;
+    this.caratulasService.getDatosPrevioHistorico(temporada).subscribe({
+      next: (datos: any[]) => {
+        this.modoHistorico = true;
+        this.temporadaHistoricaSeleccionada = temporada;
+        this.clientes = datos.filter(d => d.evac === 'A');
+        this.prepararOpcionesFiltros();
+        this.filtrarClientes();
+        this.calcularMontos();
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error cargando temporada historica:', err);
+        this.error = 'Error al cargar la temporada histórica';
+        this.loading = false;
+      }
+    });
+  }
+
+  volverATemporadaActual(): void {
+    this.modoHistorico = false;
+    this.temporadaHistoricaSeleccionada = null;
+    this.clientes = this.clientesEnVivo;
+    this.prepararOpcionesFiltros();
+    this.filtrarClientes();
     this.calcularMontos();
-    this.onInit.emit();
   }
 
   // Función para abrir/cerrar el acordeón
@@ -235,6 +304,7 @@ export class CaratulaEvacAComponent implements OnInit {
         });
 
         this.clientes = data;
+        this.clientesEnVivo = data;
         this.loading = false;
 
         this.prepararOpcionesFiltros();
@@ -375,25 +445,32 @@ export class CaratulaEvacAComponent implements OnInit {
     return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
   }
 
+  /** Semanas transcurridas desde el inicio REAL de la temporada (1 jul 2025),
+   * no desde "la semana ISO 26 mas reciente" -- ese calculo por modulo de
+   * calendario se reiniciaba cada año en la semana 26 (~fin de junio),
+   * dando semanas absurdamente bajas apenas pasaba esa semana en 2026
+   * aunque la temporada llevara +50 semanas corriendo. Acotado a [0, 52]
+   * para que el proyectado nunca exceda la meta tras la duracion normal. */
   obtenerSemanasTranscurridas(): number {
-    const semanaActual = this.obtenerSemanaISO();
-    const semanaInicioTemporada = 26;
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const dias = Math.floor((hoy.getTime() - this.fechaInicioTemporadaActual.getTime()) / 86400000);
+    if (dias < 0) return 0;
+    // Numero de semana ACTUAL (1-indexado), no semanas completas transcurridas.
+    return Math.min(52, Math.floor(dias / 7) + 1);
+  }
 
-    if (semanaActual < semanaInicioTemporada) {
-      return (52 - semanaInicioTemporada) + semanaActual;
-    }
-
-    return semanaActual - semanaInicioTemporada;
+  /** Fracción de la temporada usada para "avance proyectado". Una temporada
+   * cerrada ya no tiene proyección semanal en curso -- el proyectado es
+   * simplemente el 100% de la meta, igual que en Carátula Global. */
+  private factorProyeccion(): number {
+    return this.modoHistorico ? 1 : this.obtenerSemanasTranscurridas() / 52;
   }
 
   calcularAvanceProyectadoMonto1(): void {
-    const semanaActual = this.obtenerSemanaISO();
     if (this.my25_monto1 === 0) return;
 
-    const semanasTranscurridas = this.obtenerSemanasTranscurridas();
-    const semanasEnTemporada = 52;
-
-    this.avance_proyectado_monto1 = (semanasTranscurridas / semanasEnTemporada) * this.my25_monto1;
+    this.avance_proyectado_monto1 = this.factorProyeccion() * this.my25_monto1;
 
     this.avance_proyectado_monto1 = Math.round(this.avance_proyectado_monto1 * 100) / 100;
   }
@@ -401,10 +478,7 @@ export class CaratulaEvacAComponent implements OnInit {
   calcularAvanceProyectadoMonto2(): void {
     if (this.my25_monto2 === 0) return;
 
-    const semanasTranscurridas = this.obtenerSemanasTranscurridas();
-    const semanasEnTemporada = 52;
-
-    this.avance_proyectado_monto2 = (semanasTranscurridas / semanasEnTemporada) * this.my25_monto2;
+    this.avance_proyectado_monto2 = this.factorProyeccion() * this.my25_monto2;
 
     this.avance_proyectado_monto2 = Math.round(this.avance_proyectado_monto2 * 100) / 100;
   }
@@ -412,22 +486,16 @@ export class CaratulaEvacAComponent implements OnInit {
   calcularAvanceProyectadoScott(): void {
     if (!this.montoCompromisoScott) return;
 
-    const semanasTranscurridas = this.obtenerSemanasTranscurridas();
-    const semanasEnTemporada = 52;
-
     // Avance proyectado BASADO ÚNICAMENTE EN EL COMPROMISO SCOTT
-    this.avance_proyectado_scott = (semanasTranscurridas / semanasEnTemporada) * this.montoCompromisoScott;
+    this.avance_proyectado_scott = this.factorProyeccion() * this.montoCompromisoScott;
     this.avance_proyectado_scott = Math.round(this.avance_proyectado_scott * 100) / 100;
   }
 
   calcularAvanceProyectadoApparel(): void {
     if (!this.montoCompromisoApparel) return;
 
-    const semanasTranscurridas = this.obtenerSemanasTranscurridas();
-    const semanasEnTemporada = 52;
-
     // Cálculo basado en el compromiso Apparel (igual que con Scott)
-    this.avance_proyectado_apparel = (semanasTranscurridas / semanasEnTemporada) * this.montoCompromisoApparel;
+    this.avance_proyectado_apparel = this.factorProyeccion() * this.montoCompromisoApparel;
     this.avance_proyectado_apparel = Math.round(this.avance_proyectado_apparel * 100) / 100;
   }
 
@@ -453,10 +521,7 @@ export class CaratulaEvacAComponent implements OnInit {
   calcularAvanceProyectadoCliente(compraMinimaAnual: number): number {
     if (!compraMinimaAnual) return 0;
 
-    const semanasTranscurridas = this.obtenerSemanasTranscurridas();
-    const semanasEnTemporada = 52;
-
-    const avanceProyectado = (semanasTranscurridas / semanasEnTemporada) * compraMinimaAnual;
+    const avanceProyectado = this.factorProyeccion() * compraMinimaAnual;
     return Math.round(avanceProyectado * 100) / 100;
   }
 
@@ -615,11 +680,8 @@ export class CaratulaEvacAComponent implements OnInit {
 
     if (metaTotal === 0) return;
 
-    const semanasTranscurridas = this.obtenerSemanasTranscurridas();
-    const semanasEnTemporada = 52;
-
     // Calcular el avance proyectado total
-    const avanceProyectadoTotal = (semanasTranscurridas / semanasEnTemporada) * metaTotal;
+    const avanceProyectadoTotal = this.factorProyeccion() * metaTotal;
 
     // Redondear a 2 decimales
     const avanceProyectadoTotalRedondeado = Math.round(avanceProyectadoTotal * 100) / 100;
@@ -639,10 +701,7 @@ export class CaratulaEvacAComponent implements OnInit {
 
     if (metaTotal === 0) return this.formatearMoneda(0);
 
-    const semanasTranscurridas = this.obtenerSemanasTranscurridas();
-    const semanasEnTemporada = 52;
-
-    const avanceProyectadoTotal = (semanasTranscurridas / semanasEnTemporada) * metaTotal;
+    const avanceProyectadoTotal = this.factorProyeccion() * metaTotal;
     const avanceProyectadoTotalRedondeado = Math.round(avanceProyectadoTotal * 100) / 100;
 
     return this.formatearMoneda(avanceProyectadoTotalRedondeado);
@@ -715,10 +774,7 @@ export class CaratulaEvacAComponent implements OnInit {
   calcularYFormatearAvanceProyectado(metaValor: number): string {
     if (metaValor === 0) return this.formatearMoneda(0);
 
-    const semanasTranscurridas = this.obtenerSemanasTranscurridas();
-    const semanasEnTemporada = 52;
-
-    const avanceProyectado = (semanasTranscurridas / semanasEnTemporada) * metaValor;
+    const avanceProyectado = this.factorProyeccion() * metaValor;
     const avanceProyectadoRedondeado = Math.round(avanceProyectado * 100) / 100;
 
     return this.formatearMoneda(avanceProyectadoRedondeado);
@@ -744,5 +800,12 @@ export class CaratulaEvacAComponent implements OnInit {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(valor);
+  }
+
+  fechaCierreClienteFormateada(cliente: any): string {
+    const f = cliente?.fecha_cierre_temporada;
+    if (!f) return '';
+    const [year, month, day] = String(f).split('-');
+    return `${day}/${month}/${year}`;
   }
 }
