@@ -1,0 +1,110 @@
+<app-top-bar-usuarios></app-top-bar-usuarios>
+
+<div class="container">
+    <h2>Registro de ventas | Retroactivos Scott Sale 2026</h2>
+    <div class="info-box">
+        <p>Completa el formulario para registrar tus compras a MSI para SCOTT, MEGAMO y BOLD (campaña a partir del 11 de mayo de 2026).</p>
+        <ul>
+            <li><strong>Aplica para:</strong> Ventas a 6, 12 y 18 MSI sobre modelos participantes.</li>
+            <li><strong>Documentación:</strong> Factura timbrada (PDF/XML) y Voucher/Ticket deben tener la misma fecha.</li>
+            <li><strong>Fecha límite:</strong> 08 de julio de 2026.</li>
+        </ul>
+    </div>
+    <hr>
+    <div class="form-container">
+        <form [formGroup]="ventaForm" (ngSubmit)="onSubmit()">
+            
+            <!-- INFORMACIÓN DE LA VENTA -->
+            <fieldset class="section">
+                <legend>Información de la Venta</legend>
+
+                <div class="form-group">
+                    <label for="formulario">Tipo de Venta:</label>
+                    <select id="formulario" formControlName="formulario">
+                        <option value="" disabled selected>-- Selecciona --</option>
+                        <option *ngFor="let item of listaFormulario" [value]="item.id">{{ item.nombre }}</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="razon_social">Razón Social:</label>
+                    <select id="razon_social" formControlName="razon_social">
+                        <option value="" disabled selected>-- Selecciona --</option>
+                        <option *ngFor="let item of listaCliente" [value]="item.nombre">{{ item.nombre }}</option>
+                    </select>
+                </div>
+
+                <!-- MARCA (Condicionado a Tipo de Venta == 1) -->
+                <div class="form-group" *ngIf="ventaForm.get('formulario')?.value == 1">
+                    <label for="marca_bicicleta">Marca:</label>
+                    <select id="marca_bicicleta" formControlName="marca_bicicleta">
+                        <option value="" disabled selected>-- Selecciona --</option>
+                        <option *ngFor="let item of listaMarca" [value]="item.nombre_marca">{{ item.nombre_marca }}</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="venta_msi">Venta a MSI:</label>
+                    <select id="venta_msi" formControlName="msi">
+                        <option value="" disabled selected>-- Selecciona --</option>
+                        <option *ngFor="let item of listaMsi" [value]="item.plazo_meses">{{ item.plazo_meses }} Meses</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Nombre Completo:</label>
+                    <input type="text" formControlName="nombre_completo" placeholder="Nombre del cliente">
+                </div>
+
+                <div class="form-group">
+                    <label>Correo Electrónico:</label>
+                    <input type="email" formControlName="correo_electronico" placeholder="cliente@correo.com">
+                </div>
+
+                <div class="form-group">
+                    <label>Sucursal:</label>
+                    <input type="text" formControlName="nombre_sucursal" placeholder="Nombre de sucursal">
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha de Venta:</label>
+                    <input type="date" formControlName="fecha_venta">
+                </div>
+            </fieldset>
+
+            <!-- DETALLES BICICLETA -->
+            <fieldset class="section">
+                <legend>Detalles de la Bicicleta</legend>
+
+                <div class="form-group">
+                    <label>Modelo:</label>
+                    <input type="text" formControlName="modelo_bicicleta" placeholder="Ej. Marlin 7">
+                </div>
+
+                <div class="form-group">
+                    <label>Número de Serie:</label>
+                    <input type="text" formControlName="numero_serie" placeholder="WTU123456789">
+                </div>
+                </fieldset>
+
+                <!-- ARCHIVOS ADJUNTOS -->
+                <fieldset class="section">
+                <legend>Archivos Adjuntos</legend>
+
+                <div class="form-group" *ngFor="let campo of camposArchivos">
+                    <label>{{ campo.label }}:</label>
+                    <input type="file" [accept]="campo.accept" (change)="onFileSelect($event, campo.key)">
+                    <span class="file-name" *ngIf="archivos[campo.key]">✓ {{ archivos[campo.key].name }}</span>
+                </div>
+            </fieldset>
+
+            <!-- ALERTAS Y BOTÓN -->
+            <div class="alert error" *ngIf="mensajeError">{{ mensajeError }}</div>
+            <div class="alert success" *ngIf="mensajeExito">{{ mensajeExito }}</div>
+
+            <button type="submit" [disabled]="enviando">
+            {{ enviando ? 'Enviando...' : 'Registrar Venta' }}
+            </button>
+        </form>
+    </div>
+</div>

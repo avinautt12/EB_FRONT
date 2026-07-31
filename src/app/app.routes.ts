@@ -65,6 +65,7 @@ import { loggedInGuard } from './guards/logged-in.guard';
 import { importacionesGuard } from './guards/importaciones.guard';
 
 import { CalculadoraRetroactivosComponent } from './views/internal-views/calculadora-retroactivos/calculadora-retroactivos.component';
+import { SolicitudRetroactivoComponent } from './views/usuarios/solicitud-retroactivo/solicitud-retroactivo.component';
 
 export const routes: Routes = [
   { path: '', component: InicioComponent, canActivate: [authGuard] },
@@ -99,6 +100,7 @@ export const routes: Routes = [
   { path: 'usuarios/caratula-retroactivos', component: CaratulaRetroactivosUsuarioComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/caratula', component: CaratulaUsuariosComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/garantias', component: GarantiasUsuarioComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/solicitud-retroactivo', component: SolicitudRetroactivoComponent, canActivate: [usuarioGuard] },
   { path: 'flujo-dashboard', component: FlujoDashboardComponent, canActivate: [adminGuard] },
   { path: 'ordenes-compra', component: OrdenesCompraComponent, canActivate: [adminGuard] },
   { path: 'logistica', component: LogisticaComponent, canActivate: [adminGuard] },
