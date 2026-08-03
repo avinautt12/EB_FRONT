@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
 
@@ -19,7 +19,9 @@ export class SolicitudRetroactivoLandingComponent implements OnInit {
   esAdmin = false;
   esCliente = false;
 
-  constructor(private router: Router) {}
+  constructor(private location: Location) {}
+
+  goBack() { this.location.back(); }
 
   ngOnInit(): void {
     const token = localStorage.getItem('token');

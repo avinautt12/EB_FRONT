@@ -19,6 +19,33 @@
   --t3: #8a8077;
 }
 
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+
+.btn-volver {
+  background-color: transparent;
+  border-color: #666;
+  color: #bbb;
+  margin-bottom: 1rem;
+}
+
+.btn-volver:hover {
+  background-color: #333;
+  color: #fff;
+  border-color: #fff;
+}
+
 /* ── HUB DE CLIENTE (mismo patrón que garantias-usuario, vista='hub') ── */
 .hub-page {
   flex: 1;
