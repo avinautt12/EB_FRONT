@@ -1,0 +1,351 @@
+<div class="dash-page">
+
+  <div class="page-header">
+    <button class="btn-volver" [routerLink]="['/usuarios/solicitud-retroactivo']">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+    <h1>Dashboard <span>Solicitud de Retroactivos</span></h1>
+  </div>
+
+  <div *ngIf="cargando" class="cargando-spinner">
+    <div class="spinner"></div>
+    <p>Cargando dashboard...</p>
+  </div>
+
+  <div *ngIf="error" class="alert-error">{{ error }}</div>
+
+  <ng-container *ngIf="datos && !cargando && vista === 'dashboard'">
+
+    <!-- ── KPI GRID (mismo patrón que garantias.component: 5 tarjetas,
+         barra superior de color, ícono, valor grande, pie descriptivo).
+         Clic cambia la vista DENTRO de este mismo componente (verLista),
+         no navega a otra página -- igual que verPorKpi en garantías. ── -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-total kpi-clickable" (click)="verLista('todos')" title="Ver todas">
+        <div class="kpi-header">
+          <span class="kpi-label">Total Solicitudes</span>
+          <div class="kpi-icon-wrap kpi-icon-orange"><i class="fas fa-file-invoice"></i></div>
+        </div>
+        <div class="kpi-value">{{ datos.totales_generales.total_solicitudes }}</div>
+        <div class="kpi-foot">
+          registradas en el sistema
+          <span class="kpi-ver-hint"><i class="fas fa-arrow-right"></i> Ver todas</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-monto">
+        <div class="kpi-header">
+          <span class="kpi-label">Monto a Pagar</span>
+          <div class="kpi-icon-wrap kpi-icon-orange"><i class="fas fa-coins"></i></div>
+        </div>
+        <div class="kpi-value">{{ datos.totales_generales.monto_total_pagar | currency:'USD':'$':'1.0-0' }}</div>
+        <div class="kpi-foot">suma de retroactivo estimado</div>
+      </div>
+
+      <div class="kpi-card kpi-pendientes kpi-clickable" (click)="verLista('pendiente')" title="Ver pendientes">
+        <div class="kpi-header">
+          <span class="kpi-label">Pendientes</span>
+          <div class="kpi-icon-wrap kpi-icon-amber"><i class="fas fa-hourglass-half"></i></div>
+        </div>
+        <div class="kpi-value kpi-val-amber">{{ datos.totales_generales.pendientes }}</div>
+        <div class="kpi-foot">
+          <span class="kpi-pct kpi-pct-amber">{{ datos.totales_generales.total_solicitudes ? ((datos.totales_generales.pendientes / datos.totales_generales.total_solicitudes) * 100).toFixed(0) : 0 }}%</span>
+          del total
+          <span class="kpi-ver-hint"><i class="fas fa-arrow-right"></i> Ver</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-validadas kpi-clickable" (click)="verLista('validado')" title="Ver validadas">
+        <div class="kpi-header">
+          <span class="kpi-label">Validadas</span>
+          <div class="kpi-icon-wrap kpi-icon-green"><i class="fas fa-check-circle"></i></div>
+        </div>
+        <div class="kpi-value kpi-val-green">{{ datos.totales_generales.validados }}</div>
+        <div class="kpi-foot">
+          <span class="kpi-pct kpi-pct-green">{{ datos.totales_generales.total_solicitudes ? ((datos.totales_generales.validados / datos.totales_generales.total_solicitudes) * 100).toFixed(0) : 0 }}%</span>
+          del total
+          <span class="kpi-ver-hint"><i class="fas fa-arrow-right"></i> Ver</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-rechazadas kpi-clickable" (click)="verLista('rechazado')" title="Ver rechazadas">
+        <div class="kpi-header">
+          <span class="kpi-label">Rechazadas</span>
+          <div class="kpi-icon-wrap kpi-icon-red"><i class="fas fa-times-circle"></i></div>
+        </div>
+        <div class="kpi-value kpi-val-red">{{ datos.totales_generales.rechazados }}</div>
+        <div class="kpi-foot">
+          <span class="kpi-pct kpi-pct-red">{{ datos.totales_generales.total_solicitudes ? ((datos.totales_generales.rechazados / datos.totales_generales.total_solicitudes) * 100).toFixed(0) : 0 }}%</span>
+          del total
+          <span class="kpi-ver-hint"><i class="fas fa-arrow-right"></i> Ver</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECCIÓN: Desglose (2x2 -- Conteo por Estado va integrado como una
+         tarjeta más del mismo grid, en vez de vivir sola arriba). ── -->
+    <div class="section-header">
+      <i class="fas fa-chart-bar"></i>
+      <span>Desglose por Estado, Campaña, Cliente y Año Modelo</span>
+    </div>
+
+    <div class="ranking-grid">
+
+      <!-- Conteo por Estado (donut) -->
+      <div class="rank-card">
+        <div class="rank-card-header">
+          <div class="rank-title">
+            <div class="rank-icon"><i class="fas fa-circle-notch"></i></div>
+            <div>
+              <div class="rank-title-text">Conteo por Estado</div>
+              <div class="rank-subtitle">Distribución de solicitudes</div>
+            </div>
+          </div>
+        </div>
+        <div class="donut-panel-body">
+          <div class="donut-wrap">
+            <canvas #chartEstatus></canvas>
+            <div class="donut-center">
+              <span class="donut-center-value">{{ datos.totales_generales.total_solicitudes }}</span>
+              <span class="donut-center-label">Solicitudes</span>
+            </div>
+          </div>
+          <div class="estado-stats">
+            <div class="estado-stat-row" *ngFor="let e of estadoStats; trackBy: trackEstado">
+              <span class="es-dot" [style.background]="e.color"></span>
+              <span class="es-label">{{ e.estatus }}</span>
+              <div class="es-bar-track">
+                <div class="es-bar-fill" [style.width.%]="e.barPct" [style.background]="e.color"></div>
+              </div>
+              <span class="es-value">
+                <span class="es-count">{{ e.count }}</span>
+                <span class="es-pct">{{ e.pct.toFixed(0) }}%</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Por Campaña -->
+      <div class="rank-card">
+        <div class="rank-card-header">
+          <div class="rank-title">
+            <div class="rank-icon"><i class="fas fa-bullhorn"></i></div>
+            <div>
+              <div class="rank-title-text">Por Campaña</div>
+              <div class="rank-subtitle">Monto retroactivo por campaña</div>
+            </div>
+          </div>
+          <div class="rank-actions">
+            <select class="rank-sort-select" [ngModel]="ordenPorPanel.campana" (ngModelChange)="setOrden('campana', $event)">
+              <option *ngFor="let o of sortOpciones" [value]="o.value">{{ o.label }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="rank-total">
+          Total general: <strong>{{ totalGrupo(porCampanaFiltrado).monto | currency:'USD':'$':'1.0-0' }}</strong>
+          · {{ totalGrupo(porCampanaFiltrado).solicitudes }} solicitud{{ totalGrupo(porCampanaFiltrado).solicitudes !== 1 ? 'es' : '' }}
+        </div>
+        <div class="rank-list rank-list-scroll">
+          <div class="rank-row rank-row-click" *ngFor="let fila of porCampanaFiltrado; let i = index" (click)="abrirDetalleCampana(fila)" title="Ver solicitudes de esta campaña">
+            <span class="rank-num">{{ i + 1 }}</span>
+            <span class="rank-label" [title]="fila['nombre_formulario']">{{ fila['nombre_formulario'] }}</span>
+            <div class="rank-bar-track">
+              <div class="rank-bar-fill" [style.width.%]="barPct(fila.monto_total, porCampanaFiltrado)"></div>
+            </div>
+            <span class="rank-value">
+              {{ fila.monto_total | currency:'USD':'$':'1.0-0' }}
+              <span class="rank-value-meta">{{ fila.total_solicitudes }} sol.</span>
+            </span>
+          </div>
+          <div class="rank-empty" *ngIf="!porCampanaFiltrado.length"><i class="fas fa-inbox"></i> Sin resultados</div>
+        </div>
+      </div>
+
+      <!-- Por Año Modelo -->
+      <div class="rank-card">
+        <div class="rank-card-header">
+          <div class="rank-title">
+            <div class="rank-icon rank-icon-blue"><i class="fas fa-calendar-alt"></i></div>
+            <div>
+              <div class="rank-title-text">Por Año Modelo</div>
+              <div class="rank-subtitle">Monto retroactivo por año modelo</div>
+            </div>
+          </div>
+          <div class="rank-actions">
+            <select class="rank-sort-select" [ngModel]="ordenPorPanel.anioModelo" (ngModelChange)="setOrden('anioModelo', $event)">
+              <option *ngFor="let o of sortOpciones" [value]="o.value">{{ o.label }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="rank-total">
+          Total general: <strong>{{ totalGrupo(porAnioModeloOrdenado).monto | currency:'USD':'$':'1.0-0' }}</strong>
+          · {{ totalGrupo(porAnioModeloOrdenado).solicitudes }} solicitud{{ totalGrupo(porAnioModeloOrdenado).solicitudes !== 1 ? 'es' : '' }}
+        </div>
+        <div class="rank-list rank-list-scroll">
+          <div class="rank-row rank-row-click" *ngFor="let fila of porAnioModeloOrdenado; let i = index" (click)="abrirDetalleAnioModelo(fila)" title="Ver solicitudes de este año modelo">
+            <span class="rank-num">{{ i + 1 }}</span>
+            <span class="rank-label" [title]="fila['anio_modelo']">{{ fila['anio_modelo'] }}</span>
+            <div class="rank-bar-track">
+              <div class="rank-bar-fill" [style.width.%]="barPct(fila.monto_total, porAnioModeloOrdenado)"></div>
+            </div>
+            <span class="rank-value">
+              {{ fila.monto_total | currency:'USD':'$':'1.0-0' }}
+              <span class="rank-value-meta">{{ fila.total_solicitudes }} sol.</span>
+            </span>
+          </div>
+          <div class="rank-empty" *ngIf="!porAnioModeloOrdenado.length"><i class="fas fa-inbox"></i> Sin resultados</div>
+        </div>
+      </div>
+
+      <!-- Por Cliente (lista con scroll interno) -->
+      <div class="rank-card">
+        <div class="rank-card-header">
+          <div class="rank-title">
+            <div class="rank-icon rank-icon-yellow"><i class="fas fa-user"></i></div>
+            <div>
+              <div class="rank-title-text">Por Cliente</div>
+              <div class="rank-subtitle">{{ porClienteFiltrado.length }} cliente{{ porClienteFiltrado.length !== 1 ? 's' : '' }}</div>
+            </div>
+          </div>
+          <div class="rank-actions">
+            <input type="text" class="rank-filter-input" placeholder="Buscar cliente o correo..." [(ngModel)]="filtroCliente">
+            <select class="rank-sort-select" [ngModel]="ordenPorPanel.cliente" (ngModelChange)="setOrden('cliente', $event)">
+              <option *ngFor="let o of sortOpciones" [value]="o.value">{{ o.label }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="rank-total">
+          Total general: <strong>{{ totalGrupo(porClienteFiltrado).monto | currency:'USD':'$':'1.0-0' }}</strong>
+          · {{ totalGrupo(porClienteFiltrado).solicitudes }} solicitud{{ totalGrupo(porClienteFiltrado).solicitudes !== 1 ? 'es' : '' }}
+        </div>
+        <div class="rank-list rank-list-scroll">
+          <div class="rank-row rank-row-click" *ngFor="let fila of porClienteFiltrado; let i = index" (click)="abrirDetalleCliente(fila)" title="Ver solicitudes de este cliente">
+            <span class="rank-num">{{ i + 1 }}</span>
+            <span class="rank-label" [title]="fila['correo_electronico']">{{ fila['nombre_completo'] }}</span>
+            <div class="rank-bar-track">
+              <div class="rank-bar-fill" [style.width.%]="barPct(fila.monto_total, porClienteFiltrado)"></div>
+            </div>
+            <span class="rank-value">
+              {{ fila.monto_total | currency:'USD':'$':'1.0-0' }}
+              <span class="rank-value-meta">{{ fila.total_solicitudes }} sol.</span>
+            </span>
+          </div>
+          <div class="rank-empty" *ngIf="!porClienteFiltrado.length"><i class="fas fa-inbox"></i> Sin resultados</div>
+        </div>
+      </div>
+
+    </div>
+
+  </ng-container>
+
+  <!-- ── VISTA DE LISTA (mismo patrón que garantias.component: vista='lista'
+       reemplaza el dashboard EN LA MISMA PÁGINA, sin navegar a otra ruta --
+       "Volver al Dashboard" solo cambia la vista de vuelta) ── -->
+  <ng-container *ngIf="vista === 'lista'">
+    <div class="lista-header">
+      <button class="btn-volver" (click)="volverADashboard()">
+        <i class="fas fa-arrow-left"></i> Volver al Dashboard
+      </button>
+      <div class="lista-titulo-wrap">
+        <h2 class="lista-titulo">{{ etiquetaVista }}</h2>
+        <span class="lista-total" *ngIf="!cargandoLista">
+          {{ listaFiltradaOrdenada.length }} resultado{{ listaFiltradaOrdenada.length !== 1 ? 's' : '' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="lista-hint"><i class="fas fa-hand-pointer"></i> Ordena dando clic en cualquier columna · clic en una fila para abrirla en el Gestor</div>
+
+    <div class="cargando-spinner" *ngIf="cargandoLista">
+      <div class="spinner"></div>
+      <p>Cargando solicitudes...</p>
+    </div>
+
+    <div class="lista-wrap" *ngIf="!cargandoLista">
+      <div class="lista-empty" *ngIf="!listaFiltradaOrdenada.length">
+        <i class="fas fa-inbox fa-2x"></i>
+        <p>No hay solicitudes en este filtro.</p>
+      </div>
+
+      <table class="lista-table" *ngIf="listaFiltradaOrdenada.length">
+        <thead>
+          <tr>
+            <th class="lt-th-sort" [class.lt-th-active]="sortColLista === 'nombre_completo'" (click)="toggleSortLista('nombre_completo')">
+              Cliente <i class="fas {{ sortIconLista('nombre_completo') }} sort-icon"></i>
+            </th>
+            <th class="lt-th-sort" [class.lt-th-active]="sortColLista === 'modelo_bicicleta'" (click)="toggleSortLista('modelo_bicicleta')">
+              Modelo / Serie <i class="fas {{ sortIconLista('modelo_bicicleta') }} sort-icon"></i>
+            </th>
+            <th class="lt-th-sort" [class.lt-th-active]="sortColLista === 'nombre_formulario'" (click)="toggleSortLista('nombre_formulario')">
+              Campaña <i class="fas {{ sortIconLista('nombre_formulario') }} sort-icon"></i>
+            </th>
+            <th class="lt-th-sort" [class.lt-th-active]="sortColLista === 'estatus'" (click)="toggleSortLista('estatus')">
+              Estatus <i class="fas {{ sortIconLista('estatus') }} sort-icon"></i>
+            </th>
+            <th class="lt-th-sort" [class.lt-th-active]="sortColLista === 'monto_pagar'" (click)="toggleSortLista('monto_pagar')">
+              Monto <i class="fas {{ sortIconLista('monto_pagar') }} sort-icon"></i>
+            </th>
+            <th class="lt-th-sort" [class.lt-th-active]="sortColLista === 'fecha_venta'" (click)="toggleSortLista('fecha_venta')">
+              Fecha <i class="fas {{ sortIconLista('fecha_venta') }} sort-icon"></i>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of listaFiltradaOrdenada" class="lt-row-click" (click)="irAGestor(s.id)" title="Abrir en el Gestor">
+            <td>
+              <div class="lt-cliente">{{ s.nombre_completo }}</div>
+              <div class="lt-correo">{{ s.correo_electronico }}</div>
+            </td>
+            <td>{{ s.modelo_bicicleta }} · {{ s.numero_serie }}</td>
+            <td>{{ s.nombre_formulario }}</td>
+            <td><span class="lt-badge" [ngClass]="'badge-' + s.estatus">{{ s.estatus }}</span></td>
+            <td class="lt-monto">{{ s.monto_pagar | currency:'USD':'$':'1.2-2' }}</td>
+            <td class="lt-fecha">{{ s.fecha_venta | date:'dd/MM/yyyy' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+
+  <!-- ── MODAL DE DETALLE (mismo patrón que el Kardex de garantias.component:
+       clic en una fila del ranking abre el detalle real, no solo el agregado) ── -->
+  <div class="modal-overlay" *ngIf="modalAbierto" (click)="cerrarModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ modalTitulo }}</h3>
+        <button class="btn-cerrar-modal" (click)="cerrarModal()"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <div *ngIf="modalCargando" class="cargando-spinner">
+          <div class="spinner"></div>
+          <p>Cargando...</p>
+        </div>
+
+        <div class="modal-empty" *ngIf="!modalCargando && !modalItems.length">
+          <i class="fas fa-inbox fa-2x"></i>
+          <p>No se encontraron solicitudes.</p>
+        </div>
+
+        <div class="modal-item" *ngFor="let item of modalItems">
+          <div class="modal-item-top">
+            <span class="badge-estatus" [ngClass]="'badge-' + item.estatus">{{ item.estatus }}</span>
+            <a class="modal-item-link" [routerLink]="['/usuarios/solicitud-retroactivo/gestor']" [queryParams]="{id: item.id}" (click)="cerrarModal()">
+              Ver en Gestor <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+          <div class="modal-item-grid">
+            <div><span class="mi-label">Modelo</span><span class="mi-value">{{ item.modelo_bicicleta }}</span></div>
+            <div><span class="mi-label">Serie</span><span class="mi-value">{{ item.numero_serie }}</span></div>
+            <div><span class="mi-label">Campaña</span><span class="mi-value">{{ item.nombre_formulario }}</span></div>
+            <div><span class="mi-label">Año Modelo</span><span class="mi-value">{{ item.anio_modelo }}</span></div>
+            <div><span class="mi-label">Fecha</span><span class="mi-value">{{ item.fecha_venta | date:'dd/MM/yyyy' }}</span></div>
+            <div><span class="mi-label">Precio</span><span class="mi-value">{{ item.precio_publico | currency:'USD':'$':'1.0-0' }}</span></div>
+            <div><span class="mi-label">Monto</span><span class="mi-value mi-value-accent">{{ item.monto_pagar | currency:'USD':'$':'1.2-2' }}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

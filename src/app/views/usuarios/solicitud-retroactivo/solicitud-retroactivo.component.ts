@@ -1,11 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { jwtDecode } from 'jwt-decode';
 
 import { TopBarUsuariosComponent } from '../../../components/top-bar-usuarios/top-bar-usuarios.component';
 import { environment } from '../../../../environments/environment';
+import {
+  SolicitudRetroactivoService,
+  SolicitudRetroactivo
+} from '../../../services/solicitud-retroactivo.service';
 
 interface Marca {
   id: number;
@@ -37,6 +42,22 @@ const tipoFormularioVacio = (): Formulario => ({
   nombre: ""
 });
 
+// GUÍA: etiquetas en español de cada campo, usadas para armar el mensaje de
+// "faltan estos campos" (tanto en la validación local como en el rechazo 400
+// del backend, que regresa las claves crudas en `campos`).
+const ETIQUETAS_CAMPOS: Record<string, string> = {
+  id_formulario: 'Tipo de Venta',
+  id_marca_bicicleta: 'Marca',
+  id_msi: 'Meses Sin Intereses',
+  nombre_sucursal: 'Sucursal',
+  correo_electronico: 'Correo Electrónico',
+  nombre_completo: 'Nombre Completo',
+  fecha_venta: 'Fecha de Venta',
+  modelo_bicicleta: 'Modelo de Bicicleta',
+  numero_serie: 'Número de Serie',
+  precio_publico: 'Precio'
+};
+
 @Component({
   selector: 'app-solicitud-retroactivo',
   imports: [CommonModule, RouterModule, ReactiveFormsModule, TopBarUsuariosComponent],
@@ -53,13 +74,34 @@ export class SolicitudRetroactivoComponent implements OnInit {
   enviando = false;
   mensajeExito = '';
   mensajeError = '';
-  
+
+  // GUÍA: claves de campos a resaltar en rojo, ya sea porque la validación
+  // local los detectó vacíos (incluye los que Angular ignora por estar
+  // disabled, como id_msi) o porque el backend los regresó en `campos`.
+  camposFaltantes = new Set<string>();
+
+  // GUÍA: "Tus solicitudes" ahora vive en su propia página
+  // (solicitud-retroactivo-seguimiento). Este formulario solo necesita saber
+  // si hay que precargar una reedición, vía ?editar=<id> en la URL.
+  esCliente = false;
+  editandoId: number | null = null;
+  cargandoEdicion = false;
+  // GUÍA: solo los archivos marcados 'rechazado' en esa solicitud -- el
+  // cliente no tiene que resubir los que ya quedaron validos. Ver
+  // camposArchivosVisibles más abajo.
+  docsRechazadosEnEdicion: string[] = [];
+
   camposArchivos = [
     { key: 'ticket_compra', label: 'Ticket de compra', accept: 'image/*,.pdf' },
     { key: 'voucher', label: 'Voucher de pago', accept: 'image/*,.pdf' },
     { key: 'factura_pdf', label: 'Factura (PDF)', accept: '.pdf' },
     { key: 'factura_xml', label: 'Factura (XML)', accept: '.xml' }
   ];
+
+  get camposArchivosVisibles() {
+    if (this.editandoId === null) return this.camposArchivos;
+    return this.camposArchivos.filter(c => this.docsRechazadosEnEdicion.includes(c.key));
+  }
 
   validarCantidad(e: Event): void {
     const input = e.target as HTMLInputElement;
@@ -81,7 +123,12 @@ export class SolicitudRetroactivoComponent implements OnInit {
     this.ventaForm.get('precio_publico')?.setValue(formateado, { emitEvent: false });
   }
 
-  constructor(private fb: FormBuilder, private http: HttpClient) {
+  constructor(
+    private fb: FormBuilder,
+    private http: HttpClient,
+    private solicitudService: SolicitudRetroactivoService,
+    private route: ActivatedRoute
+  ) {
     this.ventaForm = this.fb.group({
       id_formulario: ['', Validators.required],
       id_marca_bicicleta: [{ value: '', disabled: true }],
@@ -103,17 +150,128 @@ export class SolicitudRetroactivoComponent implements OnInit {
     }
   }
 
+  // GUÍA: el backend regresa fecha_venta como string RFC ("Sat, 01 Aug 2026
+  // 00:00:00 GMT", así serializa Flask un DATE de MySQL), no como ISO. Un
+  // slice(0,10) directo daba basura ("Sat, 01 Au") que <input type="date">
+  // rechaza -- pero el FormControl se queda con el string inválido completo,
+  // que luego tronaba el UPDATE en MySQL. Pasar por Date normaliza esto.
+  private formatFechaParaInput(fecha: string | undefined): string {
+    if (!fecha) return '';
+    const d = new Date(fecha);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().slice(0, 10);
+  }
+
+  // GUÍA: llega por ?editar=<id> desde solicitud-retroactivo-seguimiento
+  // (botón "Editar y reenviar"). No hay endpoint para traer una sola
+  // solicitud, así que reusamos mis-solicitudes y filtramos por id.
+  private cargarYPrecargarEdicion(id: number): void {
+    this.cargandoEdicion = true;
+    this.solicitudService.misSolicitudes().subscribe({
+      next: (res) => {
+        this.cargandoEdicion = false;
+        const solicitud = res.find(s => s.id === id);
+        if (solicitud) {
+          this.iniciarEdicion(solicitud);
+        } else {
+          this.mensajeError = 'No se encontró la solicitud a reeditar.';
+        }
+      },
+      error: () => {
+        this.cargandoEdicion = false;
+        this.mensajeError = 'No se pudo cargar la solicitud a reeditar.';
+      }
+    });
+  }
+
+  // Precarga el formulario con una solicitud rechazada para reenviarla.
+  // onSubmit hace PUT en vez de POST mientras editandoId no sea null.
+  iniciarEdicion(s: SolicitudRetroactivo): void {
+    this.editandoId = s.id;
+    this.mensajeExito = '';
+    this.mensajeError = '';
+    this.archivos = {};
+    this.docsRechazadosEnEdicion = Object.entries(s.validacion_docs ?? {})
+      .filter(([, estatus]) => estatus === 'rechazado')
+      .map(([doc]) => doc);
+
+    this.ventaForm.patchValue({
+      id_formulario: s.id_formulario,
+      nombre_sucursal: s.nombre_sucursal,
+      correo_electronico: s.correo_electronico,
+      nombre_completo: s.nombre_completo,
+      fecha_venta: this.formatFechaParaInput(s.fecha_venta),
+      modelo_bicicleta: s.modelo_bicicleta,
+      numero_serie: s.numero_serie,
+      precio_publico: s.precio_publico
+    });
+
+    // El valueChanges de id_formulario habilita id_marca_bicicleta/id_msi y
+    // recarga sus catálogos; una vez listos, fijamos los valores guardados.
+    setTimeout(() => {
+      this.ventaForm.patchValue({
+        id_marca_bicicleta: s.id_marca_bicicleta ?? '',
+        id_msi: s.id_msi
+      });
+    }, 400);
+
+    document.querySelector('.form-container')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  cancelarEdicion(): void {
+    this.editandoId = null;
+    this.docsRechazadosEnEdicion = [];
+    this.ventaForm.reset();
+    this.archivos = {};
+  }
+
+  // Bordea en rojo el form-group del campo, ya sea por invalidez local o
+  // porque el backend lo marcó como faltante.
+  esCampoInvalido(campo: string): boolean {
+    const control = this.ventaForm.get(campo);
+    return this.camposFaltantes.has(campo) || !!(control?.invalid && control?.touched);
+  }
+
+  // GUÍA: revisa a mano los campos requeridos que pueden estar disabled
+  // (id_msi siempre, id_marca_bicicleta solo si id_formulario == 1). Angular
+  // excluye los controles disabled de ventaForm.invalid, así que sin este
+  // chequeo el formulario "pasa" localmente aunque vayan vacíos al backend.
+  private camposCondicionalesFaltantes(): string[] {
+    const valores = this.ventaForm.getRawValue();
+    const faltantes: string[] = [];
+
+    if (!valores.id_msi) {
+      faltantes.push('id_msi');
+    }
+    if (valores.id_formulario == 1 && !valores.id_marca_bicicleta) {
+      faltantes.push('id_marca_bicicleta');
+    }
+    return faltantes;
+  }
+
   onSubmit(): void {
     this.mensajeExito = '';
     this.mensajeError = '';
+    this.camposFaltantes.clear();
 
-    if (this.ventaForm.invalid) {
+    const condicionalesFaltantes = this.camposCondicionalesFaltantes();
+
+    if (this.ventaForm.invalid || condicionalesFaltantes.length > 0) {
       this.ventaForm.markAllAsTouched();
-      this.mensajeError = 'Por favor completa todos los campos de texto requeridos.';
+      condicionalesFaltantes.forEach(campo => this.camposFaltantes.add(campo));
+
+      Object.keys(this.ventaForm.controls).forEach(campo => {
+        if (this.ventaForm.get(campo)?.invalid) {
+          this.camposFaltantes.add(campo);
+        }
+      });
+
+      const etiquetas = [...this.camposFaltantes].map(c => ETIQUETAS_CAMPOS[c] || c);
+      this.mensajeError = `Faltan estos campos: ${etiquetas.join(', ')}.`;
       return;
     }
 
-    const archivosFaltantes = this.camposArchivos.filter(item => !this.archivos[item.key]);
+    const archivosFaltantes = this.camposArchivosVisibles.filter(item => !this.archivos[item.key]);
     if (archivosFaltantes.length > 0) {
       this.mensajeError = `Falta adjuntar los siguientes archivos: ${archivosFaltantes.map(f => f.label).join(', ')}`;
       return;
@@ -137,44 +295,76 @@ export class SolicitudRetroactivoComponent implements OnInit {
     });
 
     const token = localStorage.getItem('token');
+    if (!token) return;
 
-    if (token){
-      // GUÍA: usuarioGuard permite entrar aquí también con rol 1 (admin), desde
-      // el botón del monitor "Retroactivos". Si quien llena el formulario es un
-      // admin, este id sale de SU token, no del cliente real -> la venta queda
-      // registrada a nombre del admin. Ver usuario.guard.ts (rutasUsuarioYAdmin).
-      formData.set('id_usuario', JSON.parse(atob(token.split('.')[1])).id);
+    const manejarExito = (mensaje: string) => {
+      this.enviando = false;
+      this.mensajeExito = mensaje;
+      this.editandoId = null;
+      this.docsRechazadosEnEdicion = [];
 
-      this.http.post(`${environment.apiUrl}/api/solicitud-retroactivo/registrar/venta`, formData)
-        .subscribe({
-          next: (res: any) => {
-            this.enviando = false;
-            this.mensajeExito = '¡Venta y archivos cargados con éxito!';
-            
-            // Reset del formulario
-            this.ventaForm.reset();
-            
-            // Vaciar archivos locales
-            this.archivos = {};
-  
-            // Limpiar visualmente los inputs tipo file en el DOM
-            const inputsArchivos = document.querySelectorAll('input[type="file"]') as NodeListOf<HTMLInputElement>;
-            inputsArchivos.forEach(input => input.value = '');
-  
-            // Deshabilitar controles dependientes tras el reseteo
-            this.ventaForm.get('id_marca_bicicleta')?.disable();
-            this.ventaForm.get('id_msi')?.disable();
-          },
-          error: (err) => {
-            this.enviando = false;
-            this.mensajeError = err.error?.error || 'Ocurrió un error al enviar la información.';
-          }
-        });
+      this.ventaForm.reset();
+      this.archivos = {};
+
+      const inputsArchivos = document.querySelectorAll('input[type="file"]') as NodeListOf<HTMLInputElement>;
+      inputsArchivos.forEach(input => input.value = '');
+
+      this.ventaForm.get('id_marca_bicicleta')?.disable();
+      this.ventaForm.get('id_msi')?.disable();
+    };
+
+    const manejarError = (err: any) => {
+      this.enviando = false;
+
+      // GUÍA: si el backend rechaza por "Campos de texto faltantes",
+      // regresa las claves crudas en `campos` (ver solicitud_retroactivo.py).
+      // Las usamos para resaltar los mismos campos en rojo aquí, en vez
+      // de solo mostrar el mensaje genérico.
+      const camposBackend: string[] = err.error?.campos ?? [];
+      if (camposBackend.length > 0) {
+        camposBackend.forEach(campo => this.camposFaltantes.add(campo));
+        const etiquetas = camposBackend.map(c => ETIQUETAS_CAMPOS[c] || c);
+        this.mensajeError = `Faltan estos campos: ${etiquetas.join(', ')}.`;
+      } else {
+        this.mensajeError = err.error?.error || 'Ocurrió un error al enviar la información.';
+      }
+    };
+
+    if (this.editandoId !== null) {
+      // Reenvío de una solicitud rechazada -> PUT, sin id_usuario (el
+      // backend valida dueño contra el token, no contra el body).
+      this.solicitudService.actualizarVenta(this.editandoId, formData).subscribe({
+        next: () => manejarExito('¡Solicitud actualizada y enviada de nuevo a revisión!'),
+        error: manejarError
+      });
+      return;
     }
 
+    // GUÍA: usuarioGuard permite entrar aquí también con rol 1 (admin), desde
+    // el botón del monitor "Retroactivos". Si quien llena el formulario es un
+    // admin, este id sale de SU token, no del cliente real -> la venta queda
+    // registrada a nombre del admin. Ver usuario.guard.ts (rutasUsuarioYAdmin).
+    formData.set('id_usuario', JSON.parse(atob(token.split('.')[1])).id);
+
+    this.http.post(`${environment.apiUrl}/api/solicitud-retroactivo/registrar/venta`, formData)
+      .subscribe({
+        next: () => manejarExito('¡Venta y archivos cargados con éxito!'),
+        error: manejarError
+      });
   }
 
   async ngOnInit() {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        this.esCliente = jwtDecode<any>(token).rol === 2;
+      } catch { /* token inválido: el guard de la ruta ya redirige */ }
+    }
+    const idEditar = Number(this.route.snapshot.queryParamMap.get('editar'));
+    if (this.esCliente && idEditar) {
+      this.cargarYPrecargarEdicion(idEditar);
+    }
+
     try {
         this.listaFormulario = await this.buscarTipoFormulario();
 
