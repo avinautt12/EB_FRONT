@@ -133,6 +133,33 @@
           </div>
         </div>
 
+        <!-- INFORMACIÓN DE LA NOTA DE CREDITO -->
+        <div class="dp-section">
+          <div class="dp-section-title">Nota de credito</div>
+          <div class="dp-monto-row" *ngIf="!editandoNotaCredito">
+            <div class="dp-field">
+              <span class="dp-value">{{ s.nota_credito }}</span>
+            </div>
+            <button class="btn-editar-precio" (click)="iniciarEdicionNotaCredito()">
+              <i class="fas fa-pen"></i> Corregir nota de credito
+            </button>
+          </div>
+
+          <div class="dp-precio-edit" *ngIf="editandoNotaCredito">
+            <label class="dp-label">Nota de credito correcta</label>
+            <div class="dp-precio-input-row">
+              <input type="text" [(ngModel)]="notaCreditoEditada" [disabled]="guardandoNotaCredito">
+              <button class="btn-guardar" [disabled]="guardandoNotaCredito" (click)="guardarNotaCredito()">
+                <i class="fas fa-check"></i> Guardar
+              </button>
+              <button class="btn-cancelar" [disabled]="guardandoNotaCredito" (click)="cancelarEdicionNotaCredito()">
+                Cancelar
+              </button>
+            </div>
+            <p class="alert-error-inline" *ngIf="errorNotaCredito">{{ errorNotaCredito }}</p>
+          </div>
+        </div>
+
         <!-- DOCUMENTOS -->
         <div class="dp-section">
           <div class="dp-section-title">Documentos</div>
