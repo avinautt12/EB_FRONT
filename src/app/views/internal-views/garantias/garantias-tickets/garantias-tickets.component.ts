@@ -103,11 +103,41 @@ export class GarantiasTicketsComponent implements OnInit {
 
   // Filtros
   busqueda      = '';
-  filtroEstatus = 'Todos';
+  filtrosEstatus: string[] = []; // vacío = todos los estatus
   filtroMarca   = 'Todas';
   fechaDesde    = '';
   fechaHasta    = '';
   ordenFecha: 'desc' | 'asc' = 'desc';
+
+  // Popover de selección múltiple de estatus
+  mostrarEstatusPopover = false;
+  @ViewChild('estatusWrap') estatusWrapEl!: ElementRef<HTMLElement>;
+
+  toggleEstatusPopover(e: MouseEvent): void {
+    e.stopPropagation();
+    this.mostrarEstatusPopover = !this.mostrarEstatusPopover;
+    this.cdr.markForCheck();
+  }
+
+  toggleEstatusSeleccionado(estatus: string): void {
+    const i = this.filtrosEstatus.indexOf(estatus);
+    if (i === -1) this.filtrosEstatus = [...this.filtrosEstatus, estatus];
+    else this.filtrosEstatus = this.filtrosEstatus.filter(e => e !== estatus);
+    this.cdr.markForCheck();
+  }
+
+  limpiarFiltroEstatus(e: MouseEvent): void {
+    e.stopPropagation();
+    this.filtrosEstatus = [];
+    this.cdr.markForCheck();
+  }
+
+  get estatusFiltroLabel(): string {
+    const n = this.filtrosEstatus.length;
+    if (n === 0) return 'Todos los estatus';
+    if (n === 1) return this.filtrosEstatus[0];
+    return `${n} estatus seleccionados`;
+  }
 
   toggleOrdenFecha(): void {
     this.ordenFecha = this.ordenFecha === 'desc' ? 'asc' : 'desc';
@@ -263,6 +293,10 @@ export class GarantiasTicketsComponent implements OnInit {
       this.mostrarCalendario = false;
       this.cdr.markForCheck();
     }
+    if (this.mostrarEstatusPopover && !this.estatusWrapEl?.nativeElement.contains(e.target as Node)) {
+      this.mostrarEstatusPopover = false;
+      this.cdr.markForCheck();
+    }
   }
 
   toggleCalendario(e: MouseEvent): void {
@@ -401,13 +435,13 @@ export class GarantiasTicketsComponent implements OnInit {
 
   get ticketsFiltrados(): GarantiaFormulario[] {
     const q     = this.busqueda.toLowerCase().trim();
-    const es    = this.filtroEstatus;
+    const es    = this.filtrosEstatus;
     const ma    = this.filtroMarca;
     const desde = this.fechaDesde ? new Date(this.fechaDesde + 'T00:00:00') : null;
     const hasta = this.fechaHasta ? new Date(this.fechaHasta + 'T23:59:59') : null;
 
     const resultado = this.tickets.filter(t => {
-      if (es !== 'Todos' && t.estatus !== es) return false;
+      if (es.length > 0 && !es.includes(t.estatus)) return false;
       if (ma !== 'Todas' && t.marca    !== ma) return false;
       if (desde || hasta) {
         const fecha = this.parseFechaTicket(t.fecha_creacion ?? '');
@@ -425,6 +459,17 @@ export class GarantiasTicketsComponent implements OnInit {
       const fb = this.parseFechaTicket(b.fecha_creacion ?? '')?.getTime() ?? 0;
       return (fa - fb) * signo;
     });
+  }
+
+  /** Conteo por estatus de los tickets actualmente filtrados/buscados (no del total sin filtrar). */
+  get conteoPorEstatus(): { estatus: string; count: number }[] {
+    const conteo = new Map<string, number>();
+    for (const t of this.ticketsFiltrados) {
+      conteo.set(t.estatus, (conteo.get(t.estatus) ?? 0) + 1);
+    }
+    return ESTATUSES.slice(1)
+      .map(estatus => ({ estatus, count: conteo.get(estatus) ?? 0 }))
+      .filter(e => e.count > 0);
   }
 
   colorEstatus(estatus: string): string {

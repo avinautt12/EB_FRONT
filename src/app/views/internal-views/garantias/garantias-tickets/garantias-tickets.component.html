@@ -101,10 +101,23 @@
                  [(ngModel)]="busqueda">
         </div>
         <div class="filter-row">
-          <select class="filter-select" [(ngModel)]="filtroEstatus">
-            <option value="Todos">Todos los estatus</option>
-            <option *ngFor="let e of estatuses.slice(1)" [value]="e">{{ e }}</option>
-          </select>
+          <div class="estatus-ms-wrap" #estatusWrap>
+            <button type="button" class="filter-select estatus-ms-trigger"
+                    [class.estatus-ms-active]="filtrosEstatus.length > 0"
+                    (click)="toggleEstatusPopover($event)">
+              <span>{{ estatusFiltroLabel }}</span>
+              <i class="fas fa-times estatus-ms-clear" *ngIf="filtrosEstatus.length > 0"
+                 (click)="limpiarFiltroEstatus($event)" title="Quitar filtro de estatus"></i>
+              <i class="fas fa-chevron-down estatus-ms-chevron" [class.estatus-ms-chevron-open]="mostrarEstatusPopover"></i>
+            </button>
+            <div class="estatus-ms-popover" *ngIf="mostrarEstatusPopover" (click)="$event.stopPropagation()">
+              <label class="estatus-ms-item" *ngFor="let e of estatuses.slice(1)">
+                <input type="checkbox" [checked]="filtrosEstatus.includes(e)" (change)="toggleEstatusSeleccionado(e)">
+                <span class="estatus-ms-dot" [style.background]="colorEstatus(e)"></span>
+                {{ e }}
+              </label>
+            </div>
+          </div>
           <select class="filter-select" [(ngModel)]="filtroMarca">
             <option value="Todas">Todas las marcas</option>
             <option *ngFor="let m of marcas.slice(1)" [value]="m">{{ m }}</option>
@@ -219,6 +232,14 @@
             <i class="fas" [class.fa-sort-amount-down]="ordenFecha === 'desc'" [class.fa-sort-amount-up]="ordenFecha === 'asc'"></i>
             {{ ordenFecha === 'desc' ? 'Más recientes' : 'Más antiguas' }}
           </button>
+        </div>
+        <div class="estatus-conteo-row" *ngIf="conteoPorEstatus.length > 0">
+          <span class="estatus-conteo-chip" *ngFor="let e of conteoPorEstatus"
+                [style.background]="colorEstatus(e.estatus) + '22'"
+                [style.color]="colorEstatus(e.estatus)"
+                [style.border-color]="colorEstatus(e.estatus) + '55'">
+            {{ e.estatus }}: {{ e.count }}
+          </span>
         </div>
       </div>
 
