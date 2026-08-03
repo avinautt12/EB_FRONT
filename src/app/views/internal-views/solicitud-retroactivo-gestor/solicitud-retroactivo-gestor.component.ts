@@ -53,7 +53,7 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
   errorPrecio = '';
 
   editandoNotaCredito = false;
-  notaCreditoEditada = ''
+  notaCreditoEditada = '';
   guardandoNotaCredito = false;
   errorNotaCredito = '';
 
