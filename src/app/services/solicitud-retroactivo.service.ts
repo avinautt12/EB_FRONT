@@ -45,6 +45,7 @@ export interface SolicitudRetroactivo {
   anio_modelo?: string;
   archivos?: Record<string, ArchivoSolicitud>;
   historial?: ItemHistorial[];
+  nota_credito: string
   fecha_registro: string;
 }
 
@@ -92,6 +93,10 @@ export class SolicitudRetroactivoService {
 
   corregirPrecio(id: number, precioPublico: number): Observable<any> {
     return this.http.post(`${this.base}/precio/${id}`, { precio_publico: precioPublico });
+  }
+
+  corregirNotaCredito(id: number, notaCredito: string): Observable<any> {
+    return this.http.post(`${this.base}/nota-credito/${id}`, { nota_credito: notaCredito });
   }
 
   misSolicitudes(): Observable<SolicitudRetroactivo[]> {

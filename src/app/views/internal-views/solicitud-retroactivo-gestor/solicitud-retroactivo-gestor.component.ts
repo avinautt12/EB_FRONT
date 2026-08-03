@@ -52,6 +52,11 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
   guardandoPrecio = false;
   errorPrecio = '';
 
+  editandoNotaCredito = false;
+  notaCreditoEditada = '';
+  guardandoNotaCredito = false;
+  errorNotaCredito = '';
+
   etiquetasDoc: Record<string, string> = {
     ticket_compra: 'Ticket de compra',
     voucher: 'Voucher de pago',
@@ -177,6 +182,13 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
   // GUÍA: el precio lo corrige el admin directo (comparándolo contra la
   // factura/ticket adjuntos) en vez de rechazar toda la solicitud por un
   // typo del cliente. El backend recalcula monto_pagar con el % ya guardado.
+   iniciarEdicionNotaCredito(): void {
+    if (!this.seleccionada) return;
+    this.notaCreditoEditada = this.seleccionada.nota_credito;
+    this.errorNotaCredito = '';
+    this.editandoNotaCredito = true;
+  }
+
   iniciarEdicionPrecio(): void {
     if (!this.seleccionada) return;
     this.precioEditado = this.seleccionada.precio_publico;
@@ -184,9 +196,37 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
     this.editandoPrecio = true;
   }
 
+  cancelarEdicionNotaCredito(): void {
+    this.editandoNotaCredito = false;
+    this.errorNotaCredito = '';
+  }
+
   cancelarEdicionPrecio(): void {
     this.editandoPrecio = false;
     this.errorPrecio = '';
+  }
+
+  guardarNotaCredito(): void {
+    if (!this.seleccionada) return;
+    const valor = this.notaCreditoEditada.trim();
+    if (!valor) {
+      this.errorNotaCredito = 'Nota de crédito inválida.';
+      return;
+    }
+
+    const solicitud = this.seleccionada;
+    this.guardandoNotaCredito = true;
+    this.service.corregirNotaCredito(solicitud.id, valor).subscribe({
+      next: (res) => {
+        solicitud.nota_credito = res.nota_credito;
+        this.guardandoNotaCredito = false;
+        this.editandoNotaCredito = false;
+      },
+      error: () => {
+        this.guardandoNotaCredito = false;
+        this.errorNotaCredito = 'No se pudo guardar la nota de crédito.';
+      }
+    });
   }
 
   guardarPrecio(): void {
