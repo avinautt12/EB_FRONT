@@ -66,6 +66,10 @@ import { importacionesGuard } from './guards/importaciones.guard';
 
 import { CalculadoraRetroactivosComponent } from './views/internal-views/calculadora-retroactivos/calculadora-retroactivos.component';
 import { SolicitudRetroactivoComponent } from './views/usuarios/solicitud-retroactivo/solicitud-retroactivo.component';
+import { SolicitudRetroactivoLandingComponent } from './views/usuarios/solicitud-retroactivo-landing/solicitud-retroactivo-landing.component';
+import { SolicitudRetroactivoDashboardComponent } from './views/internal-views/solicitud-retroactivo-dashboard/solicitud-retroactivo-dashboard.component';
+import { SolicitudRetroactivoGestorComponent } from './views/internal-views/solicitud-retroactivo-gestor/solicitud-retroactivo-gestor.component';
+import { SolicitudRetroactivoSeguimientoComponent } from './views/usuarios/solicitud-retroactivo-seguimiento/solicitud-retroactivo-seguimiento.component';
 
 export const routes: Routes = [
   { path: '', component: InicioComponent, canActivate: [authGuard] },
@@ -100,7 +104,11 @@ export const routes: Routes = [
   { path: 'usuarios/caratula-retroactivos', component: CaratulaRetroactivosUsuarioComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/caratula', component: CaratulaUsuariosComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/garantias', component: GarantiasUsuarioComponent, canActivate: [usuarioGuard] },
-  { path: 'usuarios/solicitud-retroactivo', component: SolicitudRetroactivoComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/solicitud-retroactivo', component: SolicitudRetroactivoLandingComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/solicitud-retroactivo/formulario', component: SolicitudRetroactivoComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/solicitud-retroactivo/seguimiento', component: SolicitudRetroactivoSeguimientoComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/solicitud-retroactivo/gestor', component: SolicitudRetroactivoGestorComponent, canActivate: [adminGuard] },
+  { path: 'usuarios/solicitud-retroactivo/dashboard', component: SolicitudRetroactivoDashboardComponent, canActivate: [adminGuard] },
   { path: 'usuarios/calculadora-retroactivos', component: CalculadoraRetroactivosComponent, canActivate: [usuarioGuard] },
   { path: 'flujo-dashboard', component: FlujoDashboardComponent, canActivate: [adminGuard] },
   { path: 'ordenes-compra', component: OrdenesCompraComponent, canActivate: [adminGuard] },

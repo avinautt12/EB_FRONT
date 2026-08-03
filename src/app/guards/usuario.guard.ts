@@ -18,7 +18,11 @@ export const usuarioGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   // y el equipo quiere poder abrir el formulario desde ahí. Ojo: el formulario
   // toma el id_usuario del token logueado, así que si un admin lo llena, la
   // venta queda registrada a nombre del admin, no del cliente real.
-  const rutasUsuarioYAdmin = ['usuarios/solicitud-retroactivo'];
+  const rutasUsuarioYAdmin = [
+    'usuarios/solicitud-retroactivo',
+    'usuarios/solicitud-retroactivo/formulario',
+    'usuarios/solicitud-retroactivo/seguimiento'
+  ];
 
   if (!token) {
     // No está logueado
