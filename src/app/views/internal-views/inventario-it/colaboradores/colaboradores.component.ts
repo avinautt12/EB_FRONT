@@ -1,5 +1,7 @@
 import {
   Component,
+  HostListener,
+  OnDestroy,
   OnInit
 } from '@angular/core';
 
@@ -23,30 +25,44 @@ import {
   EstadisticasColaboradores
 } from '../../../../services/inventario/colaboradores.service';
 
+
 interface PuestoCatalogo {
   sigla: string;
   nombre: string;
 }
 
+
+type FiltroKpi =
+  | 'Todos'
+  | 'Activos'
+  | 'Con equipos'
+  | 'Sin equipos';
+
+
 @Component({
   selector: 'app-colaboradores',
   standalone: true,
+
   imports: [
     CommonModule,
     RouterModule,
     FormsModule
   ],
+
   templateUrl: './colaboradores.component.html',
   styleUrl: './colaboradores.component.css'
 })
 export class ColaboradoresComponent
-implements OnInit {
+implements OnInit, OnDestroy {
+
   colaboradores: Colaborador[] = [];
+
 
   empresas: string[] = [
     'ELITE BIKE',
     'GARNIER SPORTS'
   ];
+
 
   departamentos: string[] = [
     'OPERACIONES',
@@ -54,10 +70,12 @@ implements OnInit {
     'TIENDA'
   ];
 
+
   estados: EstadoColaborador[] = [
     'Activo',
     'Inactivo'
   ];
+
 
   puestos: PuestoCatalogo[] = [
     {
@@ -153,28 +171,34 @@ implements OnInit {
       nombre: 'Ejecutivo de Eventos y Atención al Cliente B'
     },
     {
-  sigla: 'CS',
-  nombre: 'Coordinador de Sucursal'
-},
-{
-  sigla: 'MEC-A',
-  nombre: 'Mecánico A'
-},
-{
-  sigla: 'MEC-B',
-  nombre: 'Mecánico B'
-}
-    
+      sigla: 'CS',
+      nombre: 'Coordinador de Sucursal'
+    },
+    {
+      sigla: 'MEC-A',
+      nombre: 'Mecánico A'
+    },
+    {
+      sigla: 'MEC-B',
+      nombre: 'Mecánico B'
+    }
   ];
 
+
   terminoBusqueda = '';
+
   filtroEstado = 'Todos';
   filtroDepartamento = 'Todos';
   filtroEmpresa = 'Todas';
   filtroAsignacion = 'Todos';
 
+  filtroKpiSeleccionado: FiltroKpi | null =
+    'Todos';
+
+
   cargando = false;
   errorCarga = '';
+
 
   mostrarFormulario = false;
   modoEdicion = false;
@@ -184,12 +208,17 @@ implements OnInit {
   errorFormulario = '';
   mensajeExito = '';
 
+
   mostrarDetalle = false;
   cargandoDetalle = false;
   errorDetalle = '';
-  colaboradorSeleccionado: Colaborador | null = null;
+
+  colaboradorSeleccionado:
+    Colaborador | null = null;
+
 
   cambiandoEstadoId: number | null = null;
+
 
   estadisticas: EstadisticasColaboradores = {
     total: 0,
@@ -199,21 +228,59 @@ implements OnInit {
     sinEquipos: 0
   };
 
+
   nuevoColaborador: NuevoColaborador =
     this.crearColaboradorVacio();
+
+
+  private temporizadorBusqueda:
+    number | null = null;
+
 
   constructor(
     private colaboradoresService:
       ColaboradoresService
   ) {}
 
+
   ngOnInit(): void {
     this.cargarModulo();
   }
 
+
+  ngOnDestroy(): void {
+    if (
+      this.temporizadorBusqueda !== null
+    ) {
+      window.clearTimeout(
+        this.temporizadorBusqueda
+      );
+    }
+  }
+
+
+  /*
+   * Permite cerrar el formulario o el modal
+   * presionando la tecla Escape.
+   */
+  @HostListener(
+    'document:keydown.escape'
+  )
+  cerrarConEscape(): void {
+    if (this.mostrarDetalle) {
+      this.cerrarDetalle();
+      return;
+    }
+
+    if (this.mostrarFormulario) {
+      this.cerrarFormulario();
+    }
+  }
+
+
   get hayFiltrosActivos(): boolean {
     return Boolean(
-      this.terminoBusqueda ||
+      this.terminoBusqueda.trim() ||
       this.filtroEstado !== 'Todos' ||
       this.filtroDepartamento !== 'Todos' ||
       this.filtroEmpresa !== 'Todas' ||
@@ -221,10 +288,48 @@ implements OnInit {
     );
   }
 
+
+  /*
+   * Texto que se mostrará debajo de los filtros.
+   */
+  get textoFiltroActivo(): string {
+    if (
+      this.filtroKpiSeleccionado ===
+      'Activos'
+    ) {
+      return 'Mostrando colaboradores activos';
+    }
+
+    if (
+      this.filtroKpiSeleccionado ===
+      'Con equipos'
+    ) {
+      return 'Mostrando colaboradores con equipos';
+    }
+
+    if (
+      this.filtroKpiSeleccionado ===
+      'Sin equipos'
+    ) {
+      return 'Mostrando colaboradores sin equipos';
+    }
+
+    if (
+      this.filtroKpiSeleccionado ===
+      'Todos'
+    ) {
+      return 'Mostrando todos los colaboradores';
+    }
+
+    return 'Mostrando filtros personalizados';
+  }
+
+
   cargarModulo(): void {
     this.cargarColaboradores();
     this.cargarEstadisticas();
   }
+
 
   cargarColaboradores(): void {
     this.cargando = true;
@@ -249,7 +354,11 @@ implements OnInit {
       })
       .subscribe({
         next: data => {
-          this.colaboradores = data;
+          this.colaboradores =
+            Array.isArray(data)
+              ? data
+              : [];
+
           this.cargando = false;
         },
 
@@ -264,10 +373,12 @@ implements OnInit {
             error?.error?.error ||
             'No se pudieron cargar los colaboradores.';
 
+          this.colaboradores = [];
           this.cargando = false;
         }
       });
   }
+
 
   cargarEstadisticas(): void {
     this.colaboradoresService
@@ -286,9 +397,82 @@ implements OnInit {
       });
   }
 
-  aplicarFiltros(): void {
+
+  /*
+   * Ejecuta la búsqueda 350 milisegundos
+   * después de dejar de escribir.
+   */
+  programarBusqueda(): void {
+    if (
+      this.temporizadorBusqueda !== null
+    ) {
+      window.clearTimeout(
+        this.temporizadorBusqueda
+      );
+    }
+
+    this.temporizadorBusqueda =
+      window.setTimeout(() => {
+        this.cargarColaboradores();
+
+        this.temporizadorBusqueda = null;
+      }, 350);
+  }
+
+
+  limpiarBusqueda(): void {
+    if (!this.terminoBusqueda) {
+      return;
+    }
+
+    this.terminoBusqueda = '';
     this.cargarColaboradores();
   }
+
+
+  /*
+   * Convierte las tarjetas KPI en filtros directos.
+   */
+  seleccionarFiltroKpi(
+    filtro: FiltroKpi
+  ): void {
+    this.filtroKpiSeleccionado = filtro;
+
+    this.filtroEstado = 'Todos';
+    this.filtroAsignacion = 'Todos';
+
+    switch (filtro) {
+      case 'Activos':
+        this.filtroEstado = 'Activo';
+        break;
+
+      case 'Con equipos':
+        this.filtroAsignacion =
+          'Con equipo';
+        break;
+
+      case 'Sin equipos':
+        this.filtroAsignacion =
+          'Sin equipo';
+        break;
+
+      case 'Todos':
+      default:
+        break;
+    }
+
+    this.cargarColaboradores();
+  }
+
+
+  /*
+   * Se ejecuta cuando cambia un filtro secundario.
+   */
+  aplicarFiltros(): void {
+    this.sincronizarFiltroKpi();
+    this.cargarColaboradores();
+  }
+
 
   limpiarFiltros(): void {
     this.terminoBusqueda = '';
@@ -297,8 +481,71 @@ implements OnInit {
     this.filtroEmpresa = 'Todas';
     this.filtroAsignacion = 'Todos';
 
+    this.filtroKpiSeleccionado =
+      'Todos';
+
     this.cargarColaboradores();
   }
+
+
+  /*
+   * Mantiene resaltada la tarjeta KPI correcta
+   * cuando los filtros se modifican manualmente.
+   */
+  private sincronizarFiltroKpi(): void {
+    const sinFiltrosSecundarios =
+      this.filtroDepartamento === 'Todos' &&
+      this.filtroEmpresa === 'Todas';
+
+    if (
+      this.filtroEstado === 'Todos' &&
+      this.filtroAsignacion === 'Todos' &&
+      sinFiltrosSecundarios
+    ) {
+      this.filtroKpiSeleccionado =
+        'Todos';
+
+      return;
+    }
+
+    if (
+      this.filtroEstado === 'Activo' &&
+      this.filtroAsignacion === 'Todos' &&
+      sinFiltrosSecundarios
+    ) {
+      this.filtroKpiSeleccionado =
+        'Activos';
+
+      return;
+    }
+
+    if (
+      this.filtroEstado === 'Todos' &&
+      this.filtroAsignacion ===
+        'Con equipo' &&
+      sinFiltrosSecundarios
+    ) {
+      this.filtroKpiSeleccionado =
+        'Con equipos';
+
+      return;
+    }
+
+    if (
+      this.filtroEstado === 'Todos' &&
+      this.filtroAsignacion ===
+        'Sin equipo' &&
+      sinFiltrosSecundarios
+    ) {
+      this.filtroKpiSeleccionado =
+        'Sin equipos';
+
+      return;
+    }
+
+    this.filtroKpiSeleccionado = null;
+  }
+
 
   abrirFormulario(): void {
     this.modoEdicion = false;
@@ -314,10 +561,12 @@ implements OnInit {
     this.desplazarAlFormulario();
   }
 
+
   editarColaborador(
     colaborador: Colaborador
   ): void {
     this.modoEdicion = true;
+
     this.colaboradorEditandoId =
       colaborador.id;
 
@@ -335,7 +584,8 @@ implements OnInit {
         colaborador.apellidoMaterno ?? '',
 
       empresa:
-        colaborador.empresa ?? 'ELITE BIKE',
+        colaborador.empresa ??
+        'ELITE BIKE',
 
       departamento:
         colaborador.departamento ?? '',
@@ -350,7 +600,8 @@ implements OnInit {
         colaborador.fechaIngreso ?? '',
 
       estado:
-        colaborador.estado ?? 'Activo',
+        colaborador.estado ??
+        'Activo',
 
       comentarios:
         colaborador.comentarios ?? ''
@@ -361,15 +612,19 @@ implements OnInit {
 
     this.mostrarDetalle = false;
     this.colaboradorSeleccionado = null;
+
     this.mostrarFormulario = true;
 
     this.desplazarAlFormulario();
   }
 
+
   cerrarFormulario(): void {
     this.mostrarFormulario = false;
     this.modoEdicion = false;
+
     this.colaboradorEditandoId = null;
+
     this.guardando = false;
     this.errorFormulario = '';
     this.mensajeExito = '';
@@ -377,6 +632,7 @@ implements OnInit {
     this.nuevoColaborador =
       this.crearColaboradorVacio();
   }
+
 
   guardarColaborador(): void {
     this.errorFormulario = '';
@@ -407,6 +663,7 @@ implements OnInit {
         .puesto
         ?.trim();
 
+
     if (
       !numeroEmpleado ||
       !nombre ||
@@ -419,6 +676,7 @@ implements OnInit {
 
       return;
     }
+
 
     const colaboradorGuardar:
       NuevoColaborador = {
@@ -451,14 +709,18 @@ implements OnInit {
 
         empresa:
           this.nuevoColaborador
-            .empresa || 'ELITE BIKE',
+            .empresa ||
+          'ELITE BIKE',
 
         estado:
           this.nuevoColaborador
-            .estado || 'Activo'
+            .estado ||
+          'Activo'
       };
 
+
     this.guardando = true;
+
 
     const solicitud =
       this.modoEdicion &&
@@ -475,9 +737,11 @@ implements OnInit {
               colaboradorGuardar
             );
 
+
     solicitud.subscribe({
       next: respuesta => {
         this.guardando = false;
+
         this.mensajeExito =
           respuesta.message;
 
@@ -507,12 +771,14 @@ implements OnInit {
     });
   }
 
+
   verColaborador(
     colaborador: Colaborador
   ): void {
     this.mostrarDetalle = true;
     this.cargandoDetalle = true;
     this.errorDetalle = '';
+
     this.colaboradorSeleccionado = null;
 
     this.colaboradoresService
@@ -543,12 +809,15 @@ implements OnInit {
       });
   }
 
+
   cerrarDetalle(): void {
     this.mostrarDetalle = false;
     this.cargandoDetalle = false;
     this.errorDetalle = '';
+
     this.colaboradorSeleccionado = null;
   }
+
 
   cambiarEstado(
     colaborador: Colaborador
@@ -564,16 +833,20 @@ implements OnInit {
         ? 'desactivar'
         : 'activar';
 
+
     const confirmado = window.confirm(
       `¿Deseas ${accion} a ${colaborador.nombreCompleto}?`
     );
+
 
     if (!confirmado) {
       return;
     }
 
+
     this.cambiandoEstadoId =
       colaborador.id;
+
 
     this.colaboradoresService
       .cambiarEstado(
@@ -603,6 +876,7 @@ implements OnInit {
       });
   }
 
+
   obtenerIniciales(
     colaborador: Colaborador
   ): string {
@@ -619,16 +893,26 @@ implements OnInit {
     return (
       inicialNombre +
       inicialApellido
-    );
+    ) || '--';
   }
+
 
   estadoClase(
     estado: string
   ): string {
-    return estado
+    return String(
+      estado || 'sin-estado'
+    )
+      .normalize('NFD')
+      .replace(
+        /[\u0300-\u036f]/g,
+        ''
+      )
       .toLowerCase()
+      .trim()
       .replace(/\s+/g, '-');
   }
+
 
   claseAvatar(
     colaborador: Colaborador
@@ -640,11 +924,15 @@ implements OnInit {
       'avatar-blue'
     ];
 
+    const identificador =
+      Number(colaborador.id) || 0;
+
     return variantes[
-      colaborador.id %
+      identificador %
       variantes.length
     ];
   }
+
 
   obtenerSiglaPuesto(
     nombrePuesto: string
@@ -652,11 +940,21 @@ implements OnInit {
     const puestoEncontrado =
       this.puestos.find(
         puesto =>
-          puesto.nombre === nombrePuesto
+          puesto.nombre ===
+          nombrePuesto
       );
 
     return puestoEncontrado?.sigla || '';
   }
+
+
+  trackByColaborador(
+    indice: number,
+    colaborador: Colaborador
+  ): number {
+    return colaborador.id || indice;
+  }
+
 
   private crearColaboradorVacio():
     NuevoColaborador {
@@ -674,6 +972,7 @@ implements OnInit {
       comentarios: ''
     };
   }
+
 
   private desplazarAlFormulario(): void {
     window.setTimeout(() => {

@@ -8,6 +8,7 @@ import {
   DashboardInventarioService
 } from '../../../services/inventario/dashboard-inventario.service';
 
+
 interface ModuloInicio {
   numero: string;
   titulo: string;
@@ -17,155 +18,333 @@ interface ModuloInicio {
   clase: string;
 }
 
+
 @Component({
   selector: 'app-inventario-it',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+
+  imports: [
+    CommonModule,
+    RouterLink
+  ],
+
   templateUrl: './inventario-it.component.html',
   styleUrl: './inventario-it.component.css'
 })
 export class InventarioItComponent implements OnInit {
-  dashboard: DashboardInventarioData = this.crearDashboardVacio();
+
+  dashboard: DashboardInventarioData =
+    this.crearDashboardVacio();
+
 
   cargando = false;
+
   errorCarga = '';
 
+
+  /*
+   * =========================================================
+   * MÓDULOS DESTACADOS
+   *
+   * El Dashboard General corresponde al número 01.
+   * =========================================================
+   */
+
   readonly modulosDestacados: ModuloInicio[] = [
+
     {
       numero: '02',
       titulo: 'Equipos',
-      descripcion: 'Consulta, registra y administra los activos tecnológicos.',
-      ruta: '/inventario-it/equipos',
-      icono: '▣',
-      clase: 'azul'
+
+      descripcion:
+        'Consulta, registra y administra los activos tecnológicos.',
+
+      ruta:
+        '/inventario-it/equipos',
+
+      icono:
+        '▣',
+
+      clase:
+        'azul'
     },
+
+
     {
       numero: '03',
       titulo: 'Asignaciones',
-      descripcion: 'Gestiona entregas, responsables y devoluciones de equipos.',
-      ruta: '/inventario-it/asignaciones',
-      icono: '⇄',
-      clase: 'verde'
-    },
-    {
-      numero: '08',
-      titulo: 'Reportes',
-      descripcion: 'Filtra, consulta, imprime y exporta información consolidada.',
-      ruta: '/inventario-it/reportes',
-      icono: '▤',
-      clase: 'morado'
-    }
-  ];
 
-  readonly modulosSecundarios: ModuloInicio[] = [
+      descripcion:
+        'Gestiona entregas, responsables y devoluciones de equipos.',
+
+      ruta:
+        '/inventario-it/asignaciones',
+
+      icono:
+        '⇄',
+
+      clase:
+        'verde'
+    },
+
+
     {
       numero: '04',
-      titulo: 'Colaboradores',
-      descripcion: 'Administra a las personas responsables de los activos.',
-      ruta: '/inventario-it/colaboradores',
-      icono: '◉',
-      clase: 'morado'
-    },
-    {
-      numero: '05',
-      titulo: 'Responsivas',
-      descripcion: 'Consulta documentos, firmas y seguimiento de resguardos.',
-      ruta: '/inventario-it/responsivas',
-      icono: '▥',
-      clase: 'amarillo'
-    },
-    {
-      numero: '06',
-      titulo: 'Historial',
-      descripcion: 'Revisa la trazabilidad y los movimientos de cada equipo.',
-      ruta: '/inventario-it/historial',
-      icono: '↻',
-      clase: 'celeste'
-    },
-    {
-      numero: '07',
-      titulo: 'Auditorías',
-      descripcion: 'Realiza revisiones físicas y controla los hallazgos.',
-      ruta: '/inventario-it/auditorias',
-      icono: '◎',
-      clase: 'rojo'
+      titulo: 'Reportes',
+
+      descripcion:
+        'Filtra, consulta, imprime y exporta información consolidada.',
+
+      ruta:
+        '/inventario-it/reportes',
+
+      icono:
+        '▤',
+
+      clase:
+        'morado'
     }
+
   ];
 
+
+  /*
+   * =========================================================
+   * MÓDULOS DE ADMINISTRACIÓN Y CONTROL
+   * =========================================================
+   */
+
+  readonly modulosSecundarios: ModuloInicio[] = [
+
+    {
+      numero: '05',
+      titulo: 'Colaboradores',
+
+      descripcion:
+        'Administra a las personas responsables de los activos.',
+
+      ruta:
+        '/inventario-it/colaboradores',
+
+      icono:
+        '◉',
+
+      clase:
+        'morado'
+    },
+
+
+    {
+      numero: '06',
+      titulo: 'Responsivas',
+
+      descripcion:
+        'Consulta documentos, firmas y seguimiento de resguardos.',
+
+      ruta:
+        '/inventario-it/responsivas',
+
+      icono:
+        '▥',
+
+      clase:
+        'amarillo'
+    },
+
+
+    {
+      numero: '07',
+      titulo: 'Historial',
+
+      descripcion:
+        'Revisa la trazabilidad y los movimientos de cada equipo.',
+
+      ruta:
+        '/inventario-it/historial',
+
+      icono:
+        '↻',
+
+      clase:
+        'celeste'
+    },
+
+
+    {
+      numero: '08',
+      titulo: 'Auditorías',
+
+      descripcion:
+        'Realiza revisiones físicas y controla los hallazgos.',
+
+      ruta:
+        '/inventario-it/auditorias',
+
+      icono:
+        '◎',
+
+      clase:
+        'rojo'
+    }
+
+  ];
+
+
   constructor(
-    private dashboardService: DashboardInventarioService
+    private dashboardService:
+      DashboardInventarioService
   ) {}
+
 
   ngOnInit(): void {
     this.cargarResumen();
   }
 
+
+  /*
+   * =========================================================
+   * CARGAR INFORMACIÓN DEL DASHBOARD
+   * =========================================================
+   */
+
   cargarResumen(): void {
     this.cargando = true;
+
     this.errorCarga = '';
 
-    this.dashboardService.obtenerDashboard().subscribe({
-      next: (datos: DashboardInventarioData) => {
-        this.dashboard = datos;
-        this.cargando = false;
-      },
-      error: (error: HttpErrorResponse) => {
-        console.error(
-          'Error al cargar el resumen de Inventario IT:',
-          error
-        );
 
-        this.errorCarga =
-          error.error?.detalle ||
-          error.error?.error ||
-          'No fue posible cargar los indicadores. Los módulos siguen disponibles.';
+    this.dashboardService
+      .obtenerDashboard()
+      .subscribe({
 
-        this.cargando = false;
-      }
-    });
+        next: (
+          datos: DashboardInventarioData
+        ) => {
+          this.dashboard = datos;
+
+          this.cargando = false;
+        },
+
+
+        error: (
+          error: HttpErrorResponse
+        ) => {
+          console.error(
+            'Error al cargar el resumen de Inventario IT:',
+            error
+          );
+
+
+          this.errorCarga =
+            error.error?.detalle ||
+            error.error?.error ||
+            'No fue posible cargar los indicadores. Los módulos siguen disponibles.';
+
+
+          this.cargando = false;
+        }
+
+      });
   }
+
+
+  /*
+   * =========================================================
+   * INDICADORES
+   * =========================================================
+   */
 
   get totalEquipos(): number {
-    return Number(this.dashboard.resumen.equipos.total || 0);
+    return Number(
+      this.dashboard
+        .resumen
+        .equipos
+        .total || 0
+    );
   }
+
 
   get equiposAsignados(): number {
-    return Number(this.dashboard.resumen.equipos.asignados || 0);
+    return Number(
+      this.dashboard
+        .resumen
+        .equipos
+        .asignados || 0
+    );
   }
+
 
   get equiposDisponibles(): number {
-    return Number(this.dashboard.resumen.equipos.disponibles || 0);
+    return Number(
+      this.dashboard
+        .resumen
+        .equipos
+        .disponibles || 0
+    );
   }
+
 
   get pendientesTotales(): number {
+
     const responsivas = Number(
-      this.dashboard.resumen.responsivas.pendientes || 0
+      this.dashboard
+        .resumen
+        .responsivas
+        .pendientes || 0
     );
+
 
     const auditorias = Number(
-      this.dashboard.resumen.auditorias.enProceso || 0
+      this.dashboard
+        .resumen
+        .auditorias
+        .enProceso || 0
     );
+
 
     const correcciones = Number(
-      this.dashboard.resumen.hallazgos.correccionesPendientes || 0
+      this.dashboard
+        .resumen
+        .hallazgos
+        .correccionesPendientes || 0
     );
 
-    return responsivas + auditorias + correcciones;
+
+    return (
+      responsivas +
+      auditorias +
+      correcciones
+    );
   }
 
+
   get etiquetaPendientes(): string {
+
     if (this.cargando) {
-      return 'Actualizando';
+      return 'Cargando';
     }
+
 
     if (this.pendientesTotales === 0) {
       return 'Sin pendientes';
     }
 
-    return `${this.pendientesTotales} pendiente${
-      this.pendientesTotales === 1 ? '' : 's'
-    }`;
+
+    return (
+      `${this.pendientesTotales} pendiente${
+        this.pendientesTotales === 1
+          ? ''
+          : 's'
+      }`
+    );
   }
+
+
+  /*
+   * =========================================================
+   * IDENTIFICACIÓN PARA LOS NGFOR
+   * =========================================================
+   */
 
   trackByModulo(
     _indice: number,
@@ -174,9 +353,20 @@ export class InventarioItComponent implements OnInit {
     return modulo.ruta;
   }
 
-  private crearDashboardVacio(): DashboardInventarioData {
+
+  /*
+   * =========================================================
+   * ESTRUCTURA VACÍA DEL DASHBOARD
+   * =========================================================
+   */
+
+  private crearDashboardVacio():
+    DashboardInventarioData {
+
     return {
+
       resumen: {
+
         equipos: {
           total: 0,
           asignados: 0,
@@ -185,18 +375,24 @@ export class InventarioItComponent implements OnInit {
           responsivasPendientes: 0,
           responsivasFirmadas: 0
         },
+
+
         asignaciones: {
           total: 0,
           activas: 0,
           finalizadas: 0,
           canceladas: 0
         },
+
+
         responsivas: {
           total: 0,
           pendientes: 0,
           firmadas: 0,
           anuladas: 0
         },
+
+
         auditorias: {
           total: 0,
           planeadas: 0,
@@ -204,13 +400,18 @@ export class InventarioItComponent implements OnInit {
           finalizadas: 0,
           canceladas: 0
         },
+
+
         hallazgos: {
           totalRevisiones: 0,
           diferencias: 0,
           noLocalizados: 0,
           correccionesPendientes: 0
         }
+
       },
+
+
       distribuciones: {
         porEstado: [],
         porCategoria: [],
@@ -219,11 +420,17 @@ export class InventarioItComponent implements OnInit {
         porFuncionamiento: [],
         porResponsiva: []
       },
+
+
       tendencias: {
         asignacionesPorMes: [],
         devolucionesPorMes: []
       },
+
+
       movimientosRecientes: []
+
     };
   }
+
 }

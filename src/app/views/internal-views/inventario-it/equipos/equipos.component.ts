@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 
 import {
   EquiposService,
@@ -25,6 +25,7 @@ export class EquiposComponent implements OnInit {
   terminoBusqueda = '';
   filtroEstado = 'Todos';
   filtroResponsiva = 'Todas';
+  filtroEmpresa = 'Todas';
 
   cargando = false;
   errorCarga = '';
@@ -86,10 +87,12 @@ export class EquiposComponent implements OnInit {
   nuevoEquipo: NuevoEquipo = this.crearEquipoVacio();
 
   constructor(
-    private equiposService: EquiposService
+    private equiposService: EquiposService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
+    this.aplicarFiltrosDeRuta();
     this.cargarEquipos();
   }
 
@@ -97,29 +100,14 @@ export class EquiposComponent implements OnInit {
     return this.equipoEditandoId !== null;
   }
 
-  get totalEquipos(): number {
-    return this.equipos.length;
-  }
-
-  get asignados(): number {
-    return this.equipos.filter(
-      equipo => equipo.estado === 'Asignado'
-    ).length;
-  }
-
-  get disponibles(): number {
-    return this.equipos.filter(
-      equipo => equipo.estado === 'Disponible'
-    ).length;
-  }
-
-  get bajas(): number {
-    return this.equipos.filter(
-      equipo => equipo.estado === 'Baja'
-    ).length;
-  }
-
-  get equiposFiltrados(): Equipo[] {
+  /*
+   * Las tarjetas se calculan con los filtros de búsqueda,
+   * empresa y responsiva, pero sin aplicar el estado.
+   *
+   * Así cada tarjeta conserva el total correcto de su estado
+   * y funciona como filtro principal.
+   */
+  get equiposBaseParaTarjetas(): Equipo[] {
     const busqueda = this.terminoBusqueda
       .trim()
       .toLowerCase();
@@ -170,9 +158,9 @@ export class EquiposComponent implements OnInit {
           ?.toLowerCase()
           .includes(busqueda);
 
-      const coincideEstado =
-        this.filtroEstado === 'Todos' ||
-        equipo.estado === this.filtroEstado;
+      const coincideEmpresa =
+        this.filtroEmpresa === 'Todas' ||
+        equipo.empresa === this.filtroEmpresa;
 
       const coincideResponsiva =
         this.filtroResponsiva === 'Todas' ||
@@ -180,10 +168,40 @@ export class EquiposComponent implements OnInit {
 
       return (
         coincideBusqueda &&
-        coincideEstado &&
+        coincideEmpresa &&
         coincideResponsiva
       );
     });
+  }
+
+  get totalEquipos(): number {
+    return this.equiposBaseParaTarjetas.length;
+  }
+
+  get asignados(): number {
+    return this.equiposBaseParaTarjetas.filter(
+      equipo => equipo.estado === 'Asignado'
+    ).length;
+  }
+
+  get disponibles(): number {
+    return this.equiposBaseParaTarjetas.filter(
+      equipo => equipo.estado === 'Disponible'
+    ).length;
+  }
+
+  get bajas(): number {
+    return this.equiposBaseParaTarjetas.filter(
+      equipo => equipo.estado === 'Baja'
+    ).length;
+  }
+
+  get equiposFiltrados(): Equipo[] {
+    return this.equiposBaseParaTarjetas.filter(
+      equipo =>
+        this.filtroEstado === 'Todos' ||
+        equipo.estado === this.filtroEstado
+    );
   }
 
   cargarEquipos(): void {
@@ -210,28 +228,42 @@ export class EquiposComponent implements OnInit {
     });
   }
 
+  seleccionarEstado(estado: string): void {
+    if (!this.estadosFiltro.includes(estado)) {
+      return;
+    }
+
+    this.filtroEstado = estado;
+  }
+
   limpiarFiltros(): void {
     this.terminoBusqueda = '';
     this.filtroEstado = 'Todos';
     this.filtroResponsiva = 'Todas';
+    this.filtroEmpresa = 'Todas';
   }
 
   estadoClase(estado: string): string {
-    return estado
+    return (estado || 'sin-estado')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
+      .trim()
       .replace(/\s+/g, '-');
   }
 
   responsivaClase(responsiva: string): string {
-    return responsiva
+    return (responsiva || 'no-aplica')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
+      .trim()
       .replace(/\s+/g, '-');
   }
 
   abrirFormulario(): void {
     this.equipoEditandoId = null;
     this.estadoOriginalEdicion = null;
-
     this.nuevoEquipo = this.crearEquipoVacio();
 
     this.errorFormulario = '';
@@ -247,7 +279,8 @@ export class EquiposComponent implements OnInit {
 
     this.nuevoEquipo = {
       inventario: equipo.inventario ?? '',
-      fechaRegistro: equipo.fechaRegistro ?? '',
+      fechaRegistro:
+        equipo.fechaRegistro || this.obtenerFechaActual(),
       empresa: equipo.empresa ?? 'ELITE BIKE',
       departamento: equipo.departamento ?? '',
 
@@ -294,7 +327,6 @@ export class EquiposComponent implements OnInit {
     this.guardando = false;
     this.errorFormulario = '';
     this.mensajeExito = '';
-
     this.nuevoEquipo = this.crearEquipoVacio();
   }
 
@@ -366,7 +398,8 @@ export class EquiposComponent implements OnInit {
       categoria,
       nombre,
       fechaRegistro:
-        this.nuevoEquipo.fechaRegistro || ''
+        this.nuevoEquipo.fechaRegistro ||
+        this.obtenerFechaActual()
     };
 
     /*
@@ -428,10 +461,47 @@ export class EquiposComponent implements OnInit {
     });
   }
 
+  trackByEquipo(
+    indice: number,
+    equipo: Equipo
+  ): number {
+    return equipo.id ?? indice;
+  }
+
+  private aplicarFiltrosDeRuta(): void {
+    const parametros =
+      this.route.snapshot.queryParamMap;
+
+    const estado = parametros.get('estado');
+    const responsiva = parametros.get('responsiva');
+    const empresa = parametros.get('empresa');
+
+    if (
+      estado &&
+      this.estadosFiltro.includes(estado)
+    ) {
+      this.filtroEstado = estado;
+    }
+
+    if (
+      responsiva &&
+      this.responsivasFiltro.includes(responsiva)
+    ) {
+      this.filtroResponsiva = responsiva;
+    }
+
+    if (
+      empresa &&
+      this.empresas.includes(empresa)
+    ) {
+      this.filtroEmpresa = empresa;
+    }
+  }
+
   private crearEquipoVacio(): NuevoEquipo {
     return {
       inventario: '',
-      fechaRegistro: '',
+      fechaRegistro: this.obtenerFechaActual(),
       empresa: 'ELITE BIKE',
       departamento: '',
       responsable: '',
@@ -449,6 +519,17 @@ export class EquiposComponent implements OnInit {
       extras: '',
       responsiva: 'No aplica'
     };
+  }
+
+  private obtenerFechaActual(): string {
+    const fecha = new Date();
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1)
+      .padStart(2, '0');
+    const dia = String(fecha.getDate())
+      .padStart(2, '0');
+
+    return `${anio}-${mes}-${dia}`;
   }
 
   private desplazarAlFormulario(): void {

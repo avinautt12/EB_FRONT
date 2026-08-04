@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
@@ -35,7 +35,7 @@ interface OpcionReporte {
   templateUrl: './reportes.component.html',
   styleUrl: './reportes.component.css'
 })
-export class ReportesComponent implements OnInit {
+export class ReportesComponent implements OnInit, OnDestroy {
   empresas: string[] = [];
   departamentos: string[] = [];
 
@@ -60,6 +60,8 @@ export class ReportesComponent implements OnInit {
 
   columnaOrden = '';
   direccionOrden: DireccionOrden = 'asc';
+
+  private temporizadorBusqueda: number | null = null;
 
   readonly opcionesReporte: OpcionReporte[] = [
     {
@@ -187,6 +189,12 @@ export class ReportesComponent implements OnInit {
     this.cargarReporte();
   }
 
+  ngOnDestroy(): void {
+    if (this.temporizadorBusqueda !== null) {
+      window.clearTimeout(this.temporizadorBusqueda);
+    }
+  }
+
   get opcionActual(): OpcionReporte {
     return this.opcionesReporte.find(
       opcion => opcion.tipo === this.tipoReporteSeleccionado
@@ -207,6 +215,23 @@ export class ReportesComponent implements OnInit {
 
   get mostrarFiltrosFecha(): boolean {
     return this.tipoReporteSeleccionado !== 'equipos';
+  }
+
+  get placeholderBusqueda(): string {
+    const placeholders: Record<TipoReporte, string> = {
+      equipos:
+        'Buscar por inventario, equipo, marca, modelo, serie, responsable o ubicación...',
+      asignaciones:
+        'Buscar por colaborador, número de empleado, inventario, equipo, marca o modelo...',
+      responsivas:
+        'Buscar por folio, inventario, equipo, responsable, empresa o departamento...',
+      auditorias:
+        'Buscar por folio, auditoría, tipo, auditor, ubicación o departamento...',
+      movimientos:
+        'Buscar por inventario, equipo, movimiento, descripción, responsable o usuario...'
+    };
+
+    return placeholders[this.tipoReporteSeleccionado];
   }
 
   get totalPaginas(): number {
@@ -285,11 +310,19 @@ export class ReportesComponent implements OnInit {
     }
 
     this.tipoReporteSeleccionado = tipo;
+
+    this.filtroEmpresa = 'Todas';
+    this.filtroDepartamento = 'Todos';
     this.filtroEstado = 'Todos';
+    this.fechaInicio = '';
+    this.fechaFin = '';
+    this.terminoBusqueda = '';
+
     this.paginaActual = 1;
     this.columnaOrden = '';
     this.direccionOrden = 'asc';
     this.filasReporte = [];
+
     this.cargarReporte();
   }
 
@@ -328,7 +361,23 @@ export class ReportesComponent implements OnInit {
     this.cargarReporte();
   }
 
-  buscar(): void {
+  programarBusqueda(): void {
+    if (this.temporizadorBusqueda !== null) {
+      window.clearTimeout(this.temporizadorBusqueda);
+    }
+
+    this.temporizadorBusqueda = window.setTimeout(() => {
+      this.cargarReporte();
+      this.temporizadorBusqueda = null;
+    }, 350);
+  }
+
+  limpiarBusqueda(): void {
+    if (!this.terminoBusqueda) {
+      return;
+    }
+
+    this.terminoBusqueda = '';
     this.cargarReporte();
   }
 
@@ -374,7 +423,12 @@ export class ReportesComponent implements OnInit {
   }
 
   exportarReporte(): void {
-    if (this.exportando || !this.validarFechas()) {
+    if (
+      this.exportando ||
+      this.cargando ||
+      this.filasReporte.length === 0 ||
+      !this.validarFechas()
+    ) {
       return;
     }
 

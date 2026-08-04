@@ -1,13 +1,25 @@
-import { CommonModule } from '@angular/common';
+import {
+  CommonModule
+} from '@angular/common';
+
 import {
   HttpErrorResponse
 } from '@angular/common/http';
+
 import {
   Component,
+  HostListener,
+  OnDestroy,
   OnInit
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+
+import {
+  FormsModule
+} from '@angular/forms';
+
+import {
+  RouterLink
+} from '@angular/router';
 
 import {
   Responsiva,
@@ -15,19 +27,37 @@ import {
   ResponsivasService
 } from '../../../../services/inventario/responsivas.service';
 
+
+interface FormularioFirma {
+  archivoPdf: string;
+  observaciones: string;
+}
+
+
 @Component({
   selector: 'app-responsivas',
   standalone: true,
+
   imports: [
     CommonModule,
     FormsModule,
     RouterLink
   ],
+
   templateUrl: './responsivas.component.html',
   styleUrl: './responsivas.component.css'
 })
-export class ResponsivasComponent implements OnInit {
+export class ResponsivasComponent
+implements OnInit, OnDestroy {
+
+  /*
+   * =========================================================
+   * LISTADO Y ESTADÍSTICAS
+   * =========================================================
+   */
+
   responsivas: Responsiva[] = [];
+
 
   estadisticas: ResponsivasEstadisticas = {
     total: 0,
@@ -36,6 +66,7 @@ export class ResponsivasComponent implements OnInit {
     anuladas: 0
   };
 
+
   estadosFiltro: string[] = [
     'Todos',
     'Pendiente',
@@ -43,59 +74,178 @@ export class ResponsivasComponent implements OnInit {
     'Anulada'
   ];
 
+
+  /*
+   * =========================================================
+   * FILTROS
+   * =========================================================
+   */
+
   terminoBusqueda = '';
+
   filtroEstado = 'Todos';
 
+
+  /*
+   * =========================================================
+   * ESTADOS DE CARGA
+   * =========================================================
+   */
+
   cargando = false;
+
   procesando = false;
+
   descargandoId: number | null = null;
 
+
+  /*
+   * =========================================================
+   * MENSAJES
+   * =========================================================
+   */
+
   errorCarga = '';
+
   mensajeExito = '';
+
   errorAccion = '';
 
+
+  /*
+   * =========================================================
+   * MODALES
+   * =========================================================
+   */
+
   mostrarDetalle = false;
+
   mostrarFirma = false;
+
   mostrarAnulacion = false;
+
 
   responsivaSeleccionada:
     Responsiva | null = null;
 
-  formularioFirma = {
+
+  /*
+   * =========================================================
+   * FORMULARIO DE FIRMA
+   * =========================================================
+   */
+
+  formularioFirma: FormularioFirma = {
     archivoPdf: '',
     observaciones: ''
   };
 
+
   motivoAnulacion = '';
+
+
+  /*
+   * Temporizador utilizado para búsqueda automática.
+   * Puede usarse desde el HTML con:
+   * (input)="programarBusqueda()"
+   */
+
+  private temporizadorBusqueda:
+    number | null = null;
+
 
   constructor(
     private responsivasService:
       ResponsivasService
   ) {}
 
+
+  /*
+   * =========================================================
+   * CICLO DE VIDA
+   * =========================================================
+   */
+
   ngOnInit(): void {
     this.cargarInformacion();
   }
+
+
+  ngOnDestroy(): void {
+    if (
+      this.temporizadorBusqueda !== null
+    ) {
+      window.clearTimeout(
+        this.temporizadorBusqueda
+      );
+    }
+  }
+
+
+  /*
+   * Cierra el modal visible al presionar Escape.
+   */
+
+  @HostListener(
+    'document:keydown.escape'
+  )
+  cerrarModalConEscape(): void {
+    if (
+      this.procesando ||
+      this.descargandoId !== null
+    ) {
+      return;
+    }
+
+    if (this.mostrarDetalle) {
+      this.cerrarDetalle();
+      return;
+    }
+
+    if (this.mostrarFirma) {
+      this.cerrarFirma();
+      return;
+    }
+
+    if (this.mostrarAnulacion) {
+      this.cerrarAnulacion();
+    }
+  }
+
+
+  /*
+   * =========================================================
+   * CARGA GENERAL
+   * =========================================================
+   */
 
   cargarInformacion(): void {
     this.cargarResponsivas();
     this.cargarEstadisticas();
   }
 
+
   cargarResponsivas(): void {
     this.cargando = true;
     this.errorCarga = '';
 
+    const busqueda =
+      this.terminoBusqueda.trim();
+
     this.responsivasService
       .obtenerResponsivas(
-        this.terminoBusqueda,
+        busqueda,
         this.filtroEstado
       )
       .subscribe({
         next: (
           datos: Responsiva[]
         ) => {
-          this.responsivas = datos;
+          this.responsivas =
+            Array.isArray(datos)
+              ? datos
+              : [];
+
           this.cargando = false;
         },
 
@@ -107,15 +257,19 @@ export class ResponsivasComponent implements OnInit {
             error
           );
 
+          this.responsivas = [];
+
           this.errorCarga =
-            error.error?.detalle ||
-            error.error?.error ||
-            'No se pudieron cargar las responsivas.';
+            this.obtenerMensajeError(
+              error,
+              'No se pudieron cargar las responsivas.'
+            );
 
           this.cargando = false;
         }
       });
   }
+
 
   cargarEstadisticas(): void {
     this.responsivasService
@@ -124,7 +278,19 @@ export class ResponsivasComponent implements OnInit {
         next: (
           datos: ResponsivasEstadisticas
         ) => {
-          this.estadisticas = datos;
+          this.estadisticas = {
+            total:
+              Number(datos?.total) || 0,
+
+            pendientes:
+              Number(datos?.pendientes) || 0,
+
+            firmadas:
+              Number(datos?.firmadas) || 0,
+
+            anuladas:
+              Number(datos?.anuladas) || 0
+          };
         },
 
         error: (
@@ -138,42 +304,155 @@ export class ResponsivasComponent implements OnInit {
       });
   }
 
+
+  /*
+   * =========================================================
+   * BÚSQUEDA Y FILTROS
+   * =========================================================
+   */
+
   buscar(): void {
+    if (
+      this.temporizadorBusqueda !== null
+    ) {
+      window.clearTimeout(
+        this.temporizadorBusqueda
+      );
+
+      this.temporizadorBusqueda = null;
+    }
+
     this.cargarResponsivas();
   }
 
+
+  /*
+   * Permite cambiar el buscador a actualización automática.
+   * Ejecuta la consulta 350 ms después de dejar de escribir.
+   */
+
+  programarBusqueda(): void {
+    if (
+      this.temporizadorBusqueda !== null
+    ) {
+      window.clearTimeout(
+        this.temporizadorBusqueda
+      );
+    }
+
+    this.temporizadorBusqueda =
+      window.setTimeout(() => {
+        this.cargarResponsivas();
+
+        this.temporizadorBusqueda = null;
+      }, 350);
+  }
+
+
+  limpiarBusqueda(): void {
+    if (!this.terminoBusqueda) {
+      return;
+    }
+
+    this.terminoBusqueda = '';
+    this.cargarResponsivas();
+  }
+
+
   seleccionarEstado(
+    estado: string
+  ): void {
+    if (
+      !estado ||
+      this.filtroEstado === estado
+    ) {
+      return;
+    }
+
+    this.filtroEstado = estado;
+    this.cargarResponsivas();
+  }
+
+
+  /*
+   * Permite usar las tarjetas estadísticas como filtros.
+   *
+   * Ejemplo en HTML:
+   * (click)="seleccionarEstadoDesdeKpi('Pendiente')"
+   */
+
+  seleccionarEstadoDesdeKpi(
     estado: string
   ): void {
     this.filtroEstado = estado;
     this.cargarResponsivas();
   }
 
+
   limpiarFiltros(): void {
+    if (
+      this.temporizadorBusqueda !== null
+    ) {
+      window.clearTimeout(
+        this.temporizadorBusqueda
+      );
+
+      this.temporizadorBusqueda = null;
+    }
+
     this.terminoBusqueda = '';
     this.filtroEstado = 'Todos';
+
     this.cargarResponsivas();
   }
+
+
+  /*
+   * =========================================================
+   * MODAL DE DETALLE
+   * =========================================================
+   */
 
   verDetalle(
     responsiva: Responsiva
   ): void {
+    this.cerrarTodosLosModales();
+
     this.responsivaSeleccionada =
       responsiva;
 
     this.mostrarDetalle = true;
+
     this.limpiarMensajes();
   }
 
+
   cerrarDetalle(): void {
+    if (
+      this.descargandoId !== null
+    ) {
+      return;
+    }
+
     this.mostrarDetalle = false;
+
     this.responsivaSeleccionada = null;
+
     this.errorAccion = '';
   }
+
+
+  /*
+   * =========================================================
+   * MODAL DE FIRMA
+   * =========================================================
+   */
 
   abrirFirma(
     responsiva: Responsiva
   ): void {
+    this.cerrarTodosLosModales();
+
     this.responsivaSeleccionada =
       responsiva;
 
@@ -186,21 +465,28 @@ export class ResponsivasComponent implements OnInit {
     };
 
     this.mostrarFirma = true;
+
     this.limpiarMensajes();
   }
 
+
   cerrarFirma(): void {
+    if (this.procesando) {
+      return;
+    }
+
     this.mostrarFirma = false;
 
-    this.formularioFirma = {
-      archivoPdf: '',
-      observaciones: ''
-    };
+    this.formularioFirma =
+      this.crearFormularioFirmaVacio();
 
     this.responsivaSeleccionada = null;
+
     this.errorAccion = '';
+
     this.procesando = false;
   }
+
 
   guardarFirma(): void {
     const responsiva =
@@ -209,28 +495,47 @@ export class ResponsivasComponent implements OnInit {
     if (!responsiva) {
       this.errorAccion =
         'No se seleccionó una responsiva.';
+
       return;
     }
+
 
     const archivoPdf =
       this.formularioFirma
         .archivoPdf
         .trim();
 
+
     const observaciones =
       this.formularioFirma
         .observaciones
         .trim();
 
+
     if (!archivoPdf) {
       this.errorAccion =
         'Ingresa la URL de la responsiva firmada.';
+
       return;
     }
 
+
+    if (
+      !this.esUrlValida(archivoPdf)
+    ) {
+      this.errorAccion =
+        'Ingresa una URL válida para la responsiva firmada.';
+
+      return;
+    }
+
+
     this.procesando = true;
+
     this.errorAccion = '';
+
     this.mensajeExito = '';
+
 
     this.responsivasService
       .firmarResponsiva(
@@ -243,13 +548,14 @@ export class ResponsivasComponent implements OnInit {
       .subscribe({
         next: () => {
           this.procesando = false;
-          this.mostrarFirma = false;
-          this.responsivaSeleccionada = null;
 
-          this.formularioFirma = {
-            archivoPdf: '',
-            observaciones: ''
-          };
+          this.mostrarFirma = false;
+
+          this.responsivaSeleccionada =
+            null;
+
+          this.formularioFirma =
+            this.crearFormularioFirmaVacio();
 
           this.mensajeExito =
             'La responsiva fue marcada como firmada.';
@@ -266,33 +572,55 @@ export class ResponsivasComponent implements OnInit {
           );
 
           this.errorAccion =
-            error.error?.detalle ||
-            error.error?.error ||
-            'No se pudo firmar la responsiva.';
+            this.obtenerMensajeError(
+              error,
+              'No se pudo firmar la responsiva.'
+            );
 
           this.procesando = false;
         }
       });
   }
 
+
+  /*
+   * =========================================================
+   * MODAL DE ANULACIÓN
+   * =========================================================
+   */
+
   abrirAnulacion(
     responsiva: Responsiva
   ): void {
+    this.cerrarTodosLosModales();
+
     this.responsivaSeleccionada =
       responsiva;
 
     this.motivoAnulacion = '';
+
     this.mostrarAnulacion = true;
+
     this.limpiarMensajes();
   }
 
+
   cerrarAnulacion(): void {
+    if (this.procesando) {
+      return;
+    }
+
     this.mostrarAnulacion = false;
+
     this.motivoAnulacion = '';
+
     this.responsivaSeleccionada = null;
+
     this.errorAccion = '';
+
     this.procesando = false;
   }
+
 
   confirmarAnulacion(): void {
     const responsiva =
@@ -301,21 +629,37 @@ export class ResponsivasComponent implements OnInit {
     if (!responsiva) {
       this.errorAccion =
         'No se seleccionó una responsiva.';
+
       return;
     }
+
 
     const motivo =
       this.motivoAnulacion.trim();
 
+
     if (!motivo) {
       this.errorAccion =
         'Debes indicar el motivo de anulación.';
+
       return;
     }
 
+
+    if (motivo.length < 5) {
+      this.errorAccion =
+        'El motivo de anulación debe contener al menos 5 caracteres.';
+
+      return;
+    }
+
+
     this.procesando = true;
+
     this.errorAccion = '';
+
     this.mensajeExito = '';
+
 
     this.responsivasService
       .anularResponsiva(
@@ -325,9 +669,13 @@ export class ResponsivasComponent implements OnInit {
       .subscribe({
         next: () => {
           this.procesando = false;
+
           this.mostrarAnulacion = false;
+
           this.motivoAnulacion = '';
-          this.responsivaSeleccionada = null;
+
+          this.responsivaSeleccionada =
+            null;
 
           this.mensajeExito =
             'La responsiva fue anulada correctamente.';
@@ -344,14 +692,22 @@ export class ResponsivasComponent implements OnInit {
           );
 
           this.errorAccion =
-            error.error?.detalle ||
-            error.error?.error ||
-            'No se pudo anular la responsiva.';
+            this.obtenerMensajeError(
+              error,
+              'No se pudo anular la responsiva.'
+            );
 
           this.procesando = false;
         }
       });
   }
+
+
+  /*
+   * =========================================================
+   * DESCARGA DEL PDF
+   * =========================================================
+   */
 
   descargarResponsiva(
     id: number,
@@ -364,9 +720,13 @@ export class ResponsivasComponent implements OnInit {
       return;
     }
 
+
     this.descargandoId = id;
+
     this.errorAccion = '';
+
     this.mensajeExito = '';
+
 
     this.responsivasService
       .descargarPdf(id)
@@ -382,33 +742,56 @@ export class ResponsivasComponent implements OnInit {
               'El backend devolvió un PDF vacío.';
 
             this.descargandoId = null;
+
             return;
           }
+
 
           const urlTemporal =
             window.URL.createObjectURL(
               archivo
             );
 
+
           const enlace =
             document.createElement('a');
 
+
+          const folioSeguro =
+            this.limpiarNombreArchivo(
+              folio ||
+              `responsiva-${id}`
+            );
+
+
           const nombreArchivo =
-            `${folio || `responsiva-${id}`}.pdf`;
+            `${folioSeguro}.pdf`;
+
 
           enlace.href = urlTemporal;
-          enlace.download = nombreArchivo;
-          enlace.style.display = 'none';
 
-          document.body.appendChild(enlace);
+          enlace.download =
+            nombreArchivo;
+
+          enlace.style.display =
+            'none';
+
+
+          document.body.appendChild(
+            enlace
+          );
+
           enlace.click();
+
           enlace.remove();
+
 
           window.setTimeout(() => {
             window.URL.revokeObjectURL(
               urlTemporal
             );
           }, 1000);
+
 
           this.descargandoId = null;
 
@@ -424,9 +807,6 @@ export class ResponsivasComponent implements OnInit {
             error
           );
 
-          this.errorAccion =
-            'No se pudo descargar la responsiva.';
-
           this.descargandoId = null;
 
           if (
@@ -435,15 +815,25 @@ export class ResponsivasComponent implements OnInit {
             this.leerErrorBlob(
               error.error
             );
-          } else {
-            this.errorAccion =
-              error.error?.detalle ||
-              error.error?.error ||
-              'No se pudo descargar la responsiva.';
+
+            return;
           }
+
+          this.errorAccion =
+            this.obtenerMensajeError(
+              error,
+              'No se pudo descargar la responsiva.'
+            );
         }
       });
   }
+
+
+  /*
+   * =========================================================
+   * APERTURA DEL DOCUMENTO FIRMADO
+   * =========================================================
+   */
 
   abrirDocumento(
     url: string
@@ -454,34 +844,70 @@ export class ResponsivasComponent implements OnInit {
     if (!documento) {
       this.errorAccion =
         'La responsiva no tiene un documento firmado registrado.';
+
       return;
     }
 
-    window.open(
-      documento,
-      '_blank',
-      'noopener,noreferrer'
-    );
+
+    if (
+      !this.esUrlValida(documento)
+    ) {
+      this.errorAccion =
+        'El enlace del documento firmado no es válido.';
+
+      return;
+    }
+
+
+    const ventana =
+      window.open(
+        documento,
+        '_blank',
+        'noopener,noreferrer'
+      );
+
+
+    if (!ventana) {
+      this.errorAccion =
+        'El navegador bloqueó la apertura del documento. Permite las ventanas emergentes e inténtalo nuevamente.';
+    }
   }
+
+
+  /*
+   * =========================================================
+   * FUNCIONES PARA LA VISTA
+   * =========================================================
+   */
 
   estadoClase(
     estado: string
   ): string {
-    return (estado || '')
+    return String(
+      estado || 'sin-estado'
+    )
+      .normalize('NFD')
+      .replace(
+        /[\u0300-\u036f]/g,
+        ''
+      )
       .toLowerCase()
       .trim()
       .replace(/\s+/g, '-');
   }
 
+
   formatearFecha(
-    fecha: string
+    fecha?: string | null
   ): string {
     if (!fecha) {
       return 'Sin fecha';
     }
 
+
     const valor =
       new Date(fecha);
+
 
     if (
       Number.isNaN(
@@ -490,6 +916,7 @@ export class ResponsivasComponent implements OnInit {
     ) {
       return fecha;
     }
+
 
     return valor.toLocaleString(
       'es-MX',
@@ -503,19 +930,125 @@ export class ResponsivasComponent implements OnInit {
     );
   }
 
+
+  trackByResponsiva(
+    indice: number,
+    responsiva: Responsiva
+  ): number {
+    return responsiva.id || indice;
+  }
+
+
+  /*
+   * =========================================================
+   * FUNCIONES PRIVADAS
+   * =========================================================
+   */
+
+  private crearFormularioFirmaVacio():
+    FormularioFirma {
+    return {
+      archivoPdf: '',
+      observaciones: ''
+    };
+  }
+
+
+  private cerrarTodosLosModales(): void {
+    this.mostrarDetalle = false;
+
+    this.mostrarFirma = false;
+
+    this.mostrarAnulacion = false;
+
+    this.responsivaSeleccionada =
+      null;
+
+    this.formularioFirma =
+      this.crearFormularioFirmaVacio();
+
+    this.motivoAnulacion = '';
+
+    this.errorAccion = '';
+
+    this.procesando = false;
+  }
+
+
+  private limpiarMensajes(): void {
+    this.errorAccion = '';
+
+    this.mensajeExito = '';
+  }
+
+
+  private esUrlValida(
+    valor: string
+  ): boolean {
+    try {
+      const url =
+        new URL(valor);
+
+      return (
+        url.protocol === 'http:' ||
+        url.protocol === 'https:'
+      );
+    } catch {
+      return false;
+    }
+  }
+
+
+  private limpiarNombreArchivo(
+    nombre: string
+  ): string {
+    const nombreLimpio =
+      String(nombre || 'responsiva')
+        .trim()
+        .replace(
+          /[<>:"/\\|?*\u0000-\u001F]/g,
+          '-'
+        )
+        .replace(/\s+/g, '_');
+
+    return (
+      nombreLimpio ||
+      'responsiva'
+    );
+  }
+
+
+  private obtenerMensajeError(
+    error: HttpErrorResponse,
+    mensajePredeterminado: string
+  ): string {
+    return (
+      error.error?.detalle ||
+      error.error?.error ||
+      error.message ||
+      mensajePredeterminado
+    );
+  }
+
+
   private leerErrorBlob(
     blob: Blob
   ): void {
     const lector =
       new FileReader();
 
+
     lector.onload = () => {
       try {
         const contenido =
-          String(lector.result || '');
+          String(
+            lector.result || ''
+          );
+
 
         const respuesta =
           JSON.parse(contenido);
+
 
         this.errorAccion =
           respuesta.detalle ||
@@ -527,11 +1060,13 @@ export class ResponsivasComponent implements OnInit {
       }
     };
 
-    lector.readAsText(blob);
-  }
 
-  private limpiarMensajes(): void {
-    this.errorAccion = '';
-    this.mensajeExito = '';
+    lector.onerror = () => {
+      this.errorAccion =
+        'No se pudo interpretar la respuesta del servidor.';
+    };
+
+
+    lector.readAsText(blob);
   }
 }

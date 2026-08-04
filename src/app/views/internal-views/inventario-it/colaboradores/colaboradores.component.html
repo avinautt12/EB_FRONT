@@ -1,272 +1,622 @@
 <section class="colaboradores-page">
+
+  <!-- ======================================================
+       ENCABEZADO PRINCIPAL
+       ====================================================== -->
+
   <header class="colaboradores-header">
-    <button
-      class="back-btn"
-      type="button"
-      routerLink="/inventario-it">
-      ← Volver
-    </button>
 
-    <div class="title-block">
-      <p class="eyebrow">
-        INVENTARIO IT · ELITE BIKE
-      </p>
+    <div class="header-left">
 
-      <h1>Gestión de Colaboradores</h1>
+      <button
+        type="button"
+        class="back-btn"
+        routerLink="/inventario-it"
+        aria-label="Volver a Inventario IT">
 
-      <p>
-        Administra las personas responsables de los activos
-        tecnológicos registrados en el sistema.
-      </p>
+        ←
+
+      </button>
+
+
+      <div class="title-line">
+
+        <span
+          class="title-icon"
+          aria-hidden="true">
+
+          👥
+
+        </span>
+
+
+        <div class="title-block">
+
+          <h1>
+            Gestión de colaboradores
+          </h1>
+
+          <p>
+            Administra las personas responsables de los activos
+            tecnológicos registrados en el sistema.
+          </p>
+
+        </div>
+
+      </div>
+
     </div>
 
+
     <button
-      class="primary-btn"
       type="button"
+      class="primary-btn"
       (click)="abrirFormulario()">
-      + Nuevo colaborador
+
+      <span aria-hidden="true">
+        ＋
+      </span>
+
+      Nuevo colaborador
+
     </button>
+
   </header>
 
-  <!-- FORMULARIO -->
+
+
+  <!-- ======================================================
+       FORMULARIO DE COLABORADOR
+       ====================================================== -->
 
   <section
     id="formulario-colaborador"
     class="form-panel"
     *ngIf="mostrarFormulario">
 
+
+    <!-- ENCABEZADO DEL FORMULARIO -->
+
     <div class="form-header">
+
       <div>
+
+        <p class="form-eyebrow">
+
+          {{
+            modoEdicion
+              ? 'ACTUALIZACIÓN DE REGISTRO'
+              : 'NUEVO REGISTRO'
+          }}
+
+        </p>
+
+
         <h2>
+
           {{
             modoEdicion
               ? 'Editar colaborador'
               : 'Registrar colaborador'
           }}
+
         </h2>
 
+
         <p>
+
           {{
             modoEdicion
-              ? 'Actualiza la información laboral y de contacto del colaborador.'
-              : 'Captura la información laboral y de contacto del nuevo colaborador.'
+              ? 'Actualiza la información personal, laboral y de contacto del colaborador.'
+              : 'Captura la información necesaria para integrar al colaborador al inventario IT.'
           }}
+
         </p>
+
       </div>
 
+
       <button
-        class="close-btn"
         type="button"
+        class="close-btn"
+        aria-label="Cerrar formulario"
         (click)="cerrarFormulario()">
+
         ×
+
       </button>
+
     </div>
+
+
+
+    <!-- FORMULARIO -->
 
     <form
       class="collaborator-form"
+      autocomplete="off"
       (ngSubmit)="guardarColaborador()">
 
-      <div class="form-grid">
-        <label>
-          Número de empleado *
 
-          <input
-            type="text"
-            name="numeroEmpleado"
-            [(ngModel)]="
-              nuevoColaborador.numeroEmpleado
-            "
-            placeholder="Ej. EB-0001"
-          />
-        </label>
 
-        <label>
-          Empresa *
+      <!-- ==================================================
+           SECCIÓN 01: IDENTIFICACIÓN
+           ================================================== -->
 
-          <select
-            name="empresa"
-            [(ngModel)]="
-              nuevoColaborador.empresa
-            ">
+      <fieldset class="form-section">
 
-            <option
-              *ngFor="let empresa of empresas"
-              [value]="empresa">
-              {{ empresa }}
-            </option>
-          </select>
-        </label>
+        <legend>
 
-        <label>
-          Nombre *
+          <span>
+            01
+          </span>
 
-          <input
-            type="text"
-            name="nombre"
-            [(ngModel)]="
-              nuevoColaborador.nombre
-            "
-            placeholder="Nombre"
-          />
-        </label>
+          <div>
 
-        <label>
-          Apellido paterno *
+            <strong>
+              Identificación
+            </strong>
 
-          <input
-            type="text"
-            name="apellidoPaterno"
-            [(ngModel)]="
-              nuevoColaborador.apellidoPaterno
-            "
-            placeholder="Apellido paterno"
-          />
-        </label>
+            <small>
+              Datos principales para identificar al colaborador.
+            </small>
 
-        <label>
-          Apellido materno
+          </div>
 
-          <input
-            type="text"
-            name="apellidoMaterno"
-            [(ngModel)]="
-              nuevoColaborador.apellidoMaterno
-            "
-            placeholder="Apellido materno"
-          />
-        </label>
+        </legend>
 
-        <label>
-          Departamento *
 
-          <select
-            name="departamento"
-            [(ngModel)]="
-              nuevoColaborador.departamento
-            ">
+        <div class="form-grid">
 
-            <option value="">
-              Selecciona un departamento
-            </option>
 
-            <option
-              *ngFor="
-                let departamento of departamentos
-              "
-              [value]="departamento">
-              {{ departamento }}
-            </option>
-          </select>
-        </label>
+          <!-- NÚMERO DE EMPLEADO -->
 
-        <label>
-          Puesto *
+          <label>
 
-          <select
-            name="puesto"
-            [(ngModel)]="
-              nuevoColaborador.puesto
-            ">
+            <span class="field-label">
 
-            <option value="">
-              Selecciona un puesto
-            </option>
+              Número de empleado
 
-            <option
-              *ngFor="let puesto of puestos"
-              [value]="puesto.nombre">
-              {{ puesto.sigla }} — {{ puesto.nombre }}
-            </option>
-          </select>
-        </label>
+              <b class="required">
+                *
+              </b>
 
-        <label>
-          Estado
+            </span>
 
-          <select
-            name="estado"
-            [(ngModel)]="
-              nuevoColaborador.estado
-            ">
+            <input
+              type="text"
+              name="numeroEmpleado"
+              [(ngModel)]="nuevoColaborador.numeroEmpleado"
+              placeholder="Ej. EB-0001"
+              maxlength="50"
+              required
+            />
 
-            <option
-              *ngFor="let estado of estados"
-              [value]="estado">
-              {{ estado }}
-            </option>
-          </select>
-        </label>
+            <small class="field-help">
+              Utiliza el identificador interno del colaborador.
+            </small>
 
-        <label class="wide">
-          Correo electrónico
+          </label>
 
-          <input
-            type="email"
-            name="correo"
-            [(ngModel)]="
-              nuevoColaborador.correo
-            "
-            placeholder="nombre@elitebike.mx"
-          />
-        </label>
 
-        <label>
-          Fecha de ingreso
 
-          <input
-            type="date"
-            name="fechaIngreso"
-            [(ngModel)]="
-              nuevoColaborador.fechaIngreso
-            "
-          />
-        </label>
+          <!-- EMPRESA -->
 
-        <label class="wide">
-          Comentarios
+          <label>
 
-          <textarea
-            name="comentarios"
-            [(ngModel)]="
-              nuevoColaborador.comentarios
-            "
-            placeholder="Observaciones adicionales">
-          </textarea>
-        </label>
-      </div>
+            <span class="field-label">
+
+              Empresa
+
+              <b class="required">
+                *
+              </b>
+
+            </span>
+
+            <select
+              name="empresa"
+              [(ngModel)]="nuevoColaborador.empresa"
+              required>
+
+              <option
+                *ngFor="let empresa of empresas"
+                [value]="empresa">
+
+                {{ empresa }}
+
+              </option>
+
+            </select>
+
+          </label>
+
+
+
+          <!-- NOMBRE -->
+
+          <label>
+
+            <span class="field-label">
+
+              Nombre
+
+              <b class="required">
+                *
+              </b>
+
+            </span>
+
+            <input
+              type="text"
+              name="nombre"
+              [(ngModel)]="nuevoColaborador.nombre"
+              placeholder="Nombre del colaborador"
+              maxlength="100"
+              required
+            />
+
+          </label>
+
+
+
+          <!-- APELLIDO PATERNO -->
+
+          <label>
+
+            <span class="field-label">
+
+              Apellido paterno
+
+              <b class="required">
+                *
+              </b>
+
+            </span>
+
+            <input
+              type="text"
+              name="apellidoPaterno"
+              [(ngModel)]="nuevoColaborador.apellidoPaterno"
+              placeholder="Apellido paterno"
+              maxlength="100"
+              required
+            />
+
+          </label>
+
+
+
+          <!-- APELLIDO MATERNO -->
+
+          <label>
+
+            <span class="field-label">
+              Apellido materno
+            </span>
+
+            <input
+              type="text"
+              name="apellidoMaterno"
+              [(ngModel)]="nuevoColaborador.apellidoMaterno"
+              placeholder="Apellido materno"
+              maxlength="100"
+            />
+
+            <small class="field-help">
+              Campo opcional.
+            </small>
+
+          </label>
+
+        </div>
+
+      </fieldset>
+
+
+
+      <!-- ==================================================
+           SECCIÓN 02: INFORMACIÓN LABORAL
+           ================================================== -->
+
+      <fieldset class="form-section">
+
+        <legend>
+
+          <span>
+            02
+          </span>
+
+          <div>
+
+            <strong>
+              Información laboral
+            </strong>
+
+            <small>
+              Área, puesto y situación actual del colaborador.
+            </small>
+
+          </div>
+
+        </legend>
+
+
+        <div class="form-grid">
+
+
+          <!-- DEPARTAMENTO -->
+
+          <label>
+
+            <span class="field-label">
+
+              Departamento
+
+              <b class="required">
+                *
+              </b>
+
+            </span>
+
+            <select
+              name="departamento"
+              [(ngModel)]="nuevoColaborador.departamento"
+              required>
+
+              <option value="">
+                Selecciona un departamento
+              </option>
+
+              <option
+                *ngFor="let departamento of departamentos"
+                [value]="departamento">
+
+                {{ departamento }}
+
+              </option>
+
+            </select>
+
+          </label>
+
+
+
+          <!-- PUESTO -->
+
+          <label class="span-2">
+
+            <span class="field-label">
+
+              Puesto
+
+              <b class="required">
+                *
+              </b>
+
+            </span>
+
+            <select
+              name="puesto"
+              [(ngModel)]="nuevoColaborador.puesto"
+              required>
+
+              <option value="">
+                Selecciona un puesto
+              </option>
+
+              <option
+                *ngFor="let puesto of puestos"
+                [value]="puesto.nombre">
+
+                {{ puesto.sigla }}
+                —
+                {{ puesto.nombre }}
+
+              </option>
+
+            </select>
+
+          </label>
+
+
+
+          <!-- FECHA DE INGRESO -->
+
+          <label>
+
+            <span class="field-label">
+              Fecha de ingreso
+            </span>
+
+            <input
+              type="date"
+              name="fechaIngreso"
+              [(ngModel)]="nuevoColaborador.fechaIngreso"
+            />
+
+          </label>
+
+
+
+          <!-- ESTADO -->
+
+          <label>
+
+            <span class="field-label">
+              Estado
+            </span>
+
+            <select
+              name="estado"
+              [(ngModel)]="nuevoColaborador.estado">
+
+              <option
+                *ngFor="let estado of estados"
+                [value]="estado">
+
+                {{ estado }}
+
+              </option>
+
+            </select>
+
+            <small class="field-help">
+              Los colaboradores inactivos no aparecen en nuevas asignaciones.
+            </small>
+
+          </label>
+
+        </div>
+
+      </fieldset>
+
+
+
+      <!-- ==================================================
+           SECCIÓN 03: CONTACTO Y NOTAS
+           ================================================== -->
+
+      <fieldset class="form-section">
+
+        <legend>
+
+          <span>
+            03
+          </span>
+
+          <div>
+
+            <strong>
+              Contacto y notas
+            </strong>
+
+            <small>
+              Información complementaria y observaciones.
+            </small>
+
+          </div>
+
+        </legend>
+
+
+        <div class="form-grid">
+
+
+          <!-- CORREO ELECTRÓNICO -->
+
+          <label class="span-2">
+
+            <span class="field-label">
+              Correo electrónico
+            </span>
+
+            <input
+              type="email"
+              name="correo"
+              [(ngModel)]="nuevoColaborador.correo"
+              placeholder="nombre@elitebike-mx.com"
+              maxlength="150"
+            />
+
+            <small class="field-help">
+              Campo opcional para contacto interno.
+            </small>
+
+          </label>
+
+
+
+          <!-- COMENTARIOS -->
+
+          <label class="span-2">
+
+            <span class="field-label">
+              Comentarios
+            </span>
+
+            <textarea
+              name="comentarios"
+              [(ngModel)]="nuevoColaborador.comentarios"
+              placeholder="Observaciones, cambios de área o información adicional..."
+              rows="4">
+            </textarea>
+
+          </label>
+
+        </div>
+
+      </fieldset>
+
+
+
+      <!-- ==================================================
+           MENSAJES DEL FORMULARIO
+           ================================================== -->
 
       <div
         class="form-alert error"
+        role="alert"
         *ngIf="errorFormulario">
+
+        <span aria-hidden="true">
+          !
+        </span>
+
         {{ errorFormulario }}
+
       </div>
+
 
       <div
         class="form-alert success"
+        role="status"
         *ngIf="mensajeExito">
+
+        <span aria-hidden="true">
+          ✓
+        </span>
+
         {{ mensajeExito }}
+
       </div>
 
+
+
+      <!-- ==================================================
+           ACCIONES DEL FORMULARIO
+           ================================================== -->
+
       <div class="form-actions">
+
         <button
           type="button"
           class="secondary-btn"
           [disabled]="guardando"
           (click)="cerrarFormulario()">
+
           Cancelar
+
         </button>
+
 
         <button
           type="submit"
           class="save-btn"
           [disabled]="guardando">
 
+          <span
+            class="button-loader"
+            *ngIf="guardando">
+          </span>
+
+
           {{
             guardando
               ? (
                   modoEdicion
-                    ? 'Actualizando...'
-                    : 'Guardando...'
+                    ? 'Actualizando colaborador...'
+                    : 'Registrando colaborador...'
                 )
               : (
                   modoEdicion
@@ -274,80 +624,234 @@
                     : 'Registrar colaborador'
                 )
           }}
+
         </button>
+
       </div>
+
     </form>
+
   </section>
 
-  <!-- ESTADÍSTICAS -->
 
-  <section class="stats-grid">
-    <article class="stat-card">
-      <span>Total colaboradores</span>
+
+  <!-- ======================================================
+       TARJETAS KPI COMO FILTROS
+       ====================================================== -->
+
+  <section
+    class="stats-grid"
+    aria-label="Filtrar colaboradores">
+
+
+    <!-- TODOS -->
+
+    <button
+      type="button"
+      class="stat-card total"
+      [class.active]="
+        filtroKpiSeleccionado === 'Todos'
+      "
+      [attr.aria-pressed]="
+        filtroKpiSeleccionado === 'Todos'
+      "
+      (click)="seleccionarFiltroKpi('Todos')">
+
+      <span>
+        Total de colaboradores
+      </span>
 
       <strong>
         {{ estadisticas.total }}
       </strong>
-    </article>
 
-    <article class="stat-card">
-      <span>Colaboradores activos</span>
+      <small>
+        Todos los registros
+      </small>
+
+    </button>
+
+
+
+    <!-- ACTIVOS -->
+
+    <button
+      type="button"
+      class="stat-card activos"
+      [class.active]="
+        filtroKpiSeleccionado === 'Activos'
+      "
+      [attr.aria-pressed]="
+        filtroKpiSeleccionado === 'Activos'
+      "
+      (click)="seleccionarFiltroKpi('Activos')">
+
+      <span>
+        Colaboradores activos
+      </span>
 
       <strong>
         {{ estadisticas.activos }}
       </strong>
-    </article>
 
-    <article class="stat-card">
-      <span>Con equipos asignados</span>
+      <small>
+        Disponibles para asignaciones
+      </small>
+
+    </button>
+
+
+
+    <!-- CON EQUIPOS -->
+
+    <button
+      type="button"
+      class="stat-card con-equipos"
+      [class.active]="
+        filtroKpiSeleccionado === 'Con equipos'
+      "
+      [attr.aria-pressed]="
+        filtroKpiSeleccionado === 'Con equipos'
+      "
+      (click)="seleccionarFiltroKpi('Con equipos')">
+
+      <span>
+        Con equipos asignados
+      </span>
 
       <strong>
         {{ estadisticas.conEquipos }}
       </strong>
-    </article>
 
-    <article class="stat-card">
-      <span>Sin equipos asignados</span>
+      <small>
+        Responsables de activos
+      </small>
+
+    </button>
+
+
+
+    <!-- SIN EQUIPOS -->
+
+    <button
+      type="button"
+      class="stat-card sin-equipos"
+      [class.active]="
+        filtroKpiSeleccionado === 'Sin equipos'
+      "
+      [attr.aria-pressed]="
+        filtroKpiSeleccionado === 'Sin equipos'
+      "
+      (click)="seleccionarFiltroKpi('Sin equipos')">
+
+      <span>
+        Sin equipos asignados
+      </span>
 
       <strong>
         {{ estadisticas.sinEquipos }}
       </strong>
-    </article>
+
+      <small>
+        Sin activos relacionados
+      </small>
+
+    </button>
+
   </section>
 
-  <!-- FILTROS -->
+
+  <p class="stats-help">
+    Las tarjetas funcionan como filtros directos y actualizan
+    automáticamente el directorio.
+  </p>
+
+
+
+  <!-- ======================================================
+       BÚSQUEDA Y FILTROS
+       ====================================================== -->
 
   <section class="filters-panel">
+
+
+    <!-- BUSCADOR AUTOMÁTICO -->
+
     <div class="search-box">
-      <span class="search-icon">
+
+      <span
+        class="search-icon"
+        aria-hidden="true">
+
         ⌕
+
       </span>
 
+
       <input
-        type="text"
+        type="search"
         [(ngModel)]="terminoBusqueda"
-        (keyup.enter)="aplicarFiltros()"
-        placeholder="Buscar por nombre, empleado, departamento, puesto o correo..."
+        (input)="programarBusqueda()"
+        placeholder="Buscar por nombre, número de empleado, departamento, puesto o correo..."
+        aria-label="Buscar colaboradores"
       />
+
+
+      <span
+        class="search-status"
+        *ngIf="!terminoBusqueda && !cargando">
+
+        Filtra mientras escribes
+
+      </span>
+
+
+      <span
+        class="search-status loading"
+        *ngIf="cargando">
+
+        Consultando...
+
+      </span>
+
 
       <button
         type="button"
-        class="search-btn"
-        (click)="aplicarFiltros()">
-        Buscar
+        class="clear-search-btn"
+        aria-label="Limpiar búsqueda"
+        title="Limpiar búsqueda"
+        *ngIf="terminoBusqueda"
+        [disabled]="cargando"
+        (click)="limpiarBusqueda()">
+
+        ×
+
       </button>
+
     </div>
 
-    <div class="filters-grid">
-      <label>
-        Estado
+
+
+    <!-- FILTROS SECUNDARIOS -->
+
+    <div class="filters-toolbar">
+
+
+      <!-- ESTADO -->
+
+      <label class="select-filter">
+
+        <span>
+          Estado
+        </span>
 
         <select
           [(ngModel)]="filtroEstado"
+          [disabled]="cargando"
           (change)="aplicarFiltros()">
 
           <option value="Todos">
-            Todos
+            Todos los estados
           </option>
 
           <option value="Activo">
@@ -357,58 +861,90 @@
           <option value="Inactivo">
             Inactivos
           </option>
+
         </select>
+
       </label>
 
-      <label>
-        Departamento
+
+
+      <!-- DEPARTAMENTO -->
+
+      <label class="select-filter">
+
+        <span>
+          Departamento
+        </span>
 
         <select
           [(ngModel)]="filtroDepartamento"
+          [disabled]="cargando"
           (change)="aplicarFiltros()">
 
           <option value="Todos">
-            Todos
+            Todos los departamentos
           </option>
 
           <option
-            *ngFor="
-              let departamento of departamentos
-            "
+            *ngFor="let departamento of departamentos"
             [value]="departamento">
+
             {{ departamento }}
+
           </option>
+
         </select>
+
       </label>
 
-      <label>
-        Empresa
+
+
+      <!-- EMPRESA -->
+
+      <label class="select-filter">
+
+        <span>
+          Empresa
+        </span>
 
         <select
           [(ngModel)]="filtroEmpresa"
+          [disabled]="cargando"
           (change)="aplicarFiltros()">
 
           <option value="Todas">
-            Todas
+            Todas las empresas
           </option>
 
           <option
             *ngFor="let empresa of empresas"
             [value]="empresa">
+
             {{ empresa }}
+
           </option>
+
         </select>
+
       </label>
 
-      <label>
-        Asignación
+
+
+      <!-- ASIGNACIÓN -->
+
+      <label class="select-filter">
+
+        <span>
+          Asignación
+        </span>
 
         <select
           [(ngModel)]="filtroAsignacion"
+          [disabled]="cargando"
           (change)="aplicarFiltros()">
 
           <option value="Todos">
-            Todos
+            Todas las asignaciones
           </option>
 
           <option value="Con equipo">
@@ -418,117 +954,253 @@
           <option value="Sin equipo">
             Sin equipo
           </option>
+
         </select>
+
       </label>
+
+
+
+      <!-- LIMPIAR FILTROS -->
 
       <button
         type="button"
         class="clear-btn"
         *ngIf="hayFiltrosActivos"
+        [disabled]="cargando"
         (click)="limpiarFiltros()">
+
         Limpiar filtros
+
       </button>
+
     </div>
 
-    <p class="results-text">
-      Mostrando
-      <strong>
-        {{ colaboradores.length }}
-      </strong>
-      colaboradores.
-    </p>
+
+
+    <!-- RESUMEN DE RESULTADOS -->
+
+    <div class="results-row">
+
+      <p>
+
+        Mostrando
+
+        <strong>
+          {{ colaboradores.length }}
+        </strong>
+
+        colaborador{{
+          colaboradores.length === 1
+            ? ''
+            : 'es'
+        }}.
+
+      </p>
+
+
+      <span class="active-filter">
+
+        {{ textoFiltroActivo }}
+
+      </span>
+
+    </div>
+
   </section>
 
-  <!-- MENSAJES -->
+
+
+  <!-- ======================================================
+       MENSAJES DE CARGA
+       ====================================================== -->
 
   <div
     class="loading-message"
     *ngIf="cargando">
+
     Cargando colaboradores...
+
   </div>
+
 
   <div
     class="error-message"
     *ngIf="errorCarga">
+
     {{ errorCarga }}
+
   </div>
 
-  <!-- TABLA -->
+
+
+  <!-- ======================================================
+       DIRECTORIO DE COLABORADORES
+       ====================================================== -->
 
   <section class="table-card">
+
+
+    <!-- ENCABEZADO DEL LISTADO -->
+
     <div class="table-header">
+
       <div>
+
+        <p class="table-eyebrow">
+          DIRECTORIO INTERNO
+        </p>
+
         <h2>
-          Directorio de colaboradores
+          Listado de colaboradores
         </h2>
 
         <p>
-          Información laboral y activos asignados
-          a cada colaborador.
+          Consulta información laboral, estado y equipos asignados.
         </p>
+
       </div>
+
+
+      <span class="table-count">
+
+        {{ colaboradores.length }}
+
+        resultado{{
+          colaboradores.length === 1
+            ? ''
+            : 's'
+        }}
+
+      </span>
+
     </div>
 
+
+
+    <!-- TABLA -->
+
     <div class="table-wrapper">
+
       <table>
+
         <thead>
+
           <tr>
-            <th>Colaborador</th>
-            <th>No. empleado</th>
-            <th>Departamento / Puesto</th>
-            <th>Correo</th>
-            <th>Equipos</th>
-            <th>Estado</th>
-            <th>Acciones</th>
+
+            <th>
+              Colaborador
+            </th>
+
+            <th>
+              No. empleado
+            </th>
+
+            <th>
+              Departamento / puesto
+            </th>
+
+            <th>
+              Equipos
+            </th>
+
+            <th>
+              Estado
+            </th>
+
+            <th class="actions-heading">
+              Acciones
+            </th>
+
           </tr>
+
         </thead>
 
+
         <tbody>
+
+
+          <!-- FILAS -->
+
           <tr
             *ngFor="
-              let colaborador of colaboradores
+              let colaborador of colaboradores;
+              trackBy: trackByColaborador
             ">
 
+
+            <!-- COLABORADOR -->
+
             <td class="collaborator-cell">
+
               <span
                 class="avatar"
-                [ngClass]="
-                  claseAvatar(colaborador)
-                ">
-                {{
-                  obtenerIniciales(colaborador)
-                }}
+                [ngClass]="claseAvatar(colaborador)">
+
+                {{ obtenerIniciales(colaborador) }}
+
               </span>
 
-              <div>
+
+              <div class="collaborator-info">
+
                 <strong>
-                  {{
-                    colaborador.nombreCompleto
-                  }}
+                  {{ colaborador.nombreCompleto }}
                 </strong>
 
                 <small>
-                  {{
-                    colaborador.empresa
-                  }}
+                  {{ colaborador.empresa }}
                 </small>
+
+
+                <a
+                  *ngIf="colaborador.correo"
+                  class="email-link"
+                  [href]="'mailto:' + colaborador.correo">
+
+                  {{ colaborador.correo }}
+
+                </a>
+
+
+                <span
+                  class="email-empty"
+                  *ngIf="!colaborador.correo">
+
+                  Sin correo registrado
+
+                </span>
+
               </div>
+
             </td>
 
-            <td class="employee-code">
-              {{
-                colaborador.numeroEmpleado
-              }}
+
+
+            <!-- NÚMERO DE EMPLEADO -->
+
+            <td>
+
+              <span class="employee-code">
+
+                {{ colaborador.numeroEmpleado }}
+
+              </span>
+
             </td>
+
+
+
+            <!-- DEPARTAMENTO Y PUESTO -->
 
             <td class="department-cell">
+
               <strong>
-                {{
-                  colaborador.departamento
-                }}
+                {{ colaborador.departamento }}
               </strong>
 
               <small>
+
                 <ng-container
                   *ngIf="
                     obtenerSiglaPuesto(
@@ -541,44 +1213,41 @@
                       colaborador.puesto
                     )
                   }}
+
                   —
+
                 </ng-container>
 
                 {{ colaborador.puesto }}
+
               </small>
+
             </td>
 
-            <td>
-              <a
-                *ngIf="colaborador.correo"
-                class="email-link"
-                [href]="
-                  'mailto:' +
-                  colaborador.correo
-                ">
-                {{
-                  colaborador.correo
-                }}
-              </a>
 
-              <span *ngIf="!colaborador.correo">
-                Sin correo
-              </span>
-            </td>
+
+            <!-- EQUIPOS ASIGNADOS -->
 
             <td>
+
               <span
                 class="equipment-count"
                 [class.has-equipment]="
                   colaborador.equiposAsignados > 0
                 ">
-                {{
-                  colaborador.equiposAsignados
-                }}
+
+                {{ colaborador.equiposAsignados }}
+
               </span>
+
             </td>
 
+
+
+            <!-- ESTADO -->
+
             <td>
+
               <span
                 class="status"
                 [ngClass]="
@@ -586,66 +1255,108 @@
                     colaborador.estado
                   )
                 ">
+
                 {{ colaborador.estado }}
+
               </span>
+
             </td>
 
+
+
+            <!-- ACCIONES -->
+
             <td class="actions-cell">
+
               <div class="actions-wrapper">
+
+
+                <!-- VER -->
+
                 <button
                   type="button"
                   class="action-btn view-btn"
-                  (click)="
-                    verColaborador(
-                      colaborador
-                    )
-                  ">
-                  Ver
+                  title="Ver detalle"
+                  aria-label="Ver detalle del colaborador"
+                  (click)="verColaborador(colaborador)">
+
+                  ◉
+
                 </button>
+
+
+
+                <!-- EDITAR -->
 
                 <button
                   type="button"
                   class="action-btn edit-btn"
-                  (click)="
-                    editarColaborador(
-                      colaborador
-                    )
-                  ">
-                  Editar
+                  title="Editar colaborador"
+                  aria-label="Editar colaborador"
+                  (click)="editarColaborador(colaborador)">
+
+                  ✎
+
                 </button>
+
+
+
+                <!-- ACTIVAR O DESACTIVAR -->
 
                 <button
                   type="button"
                   class="action-btn state-btn"
                   [class.activate-btn]="
-                    colaborador.estado ===
-                    'Inactivo'
+                    colaborador.estado === 'Inactivo'
+                  "
+                  [title]="
+                    colaborador.estado === 'Activo'
+                      ? 'Desactivar colaborador'
+                      : 'Activar colaborador'
+                  "
+                  [attr.aria-label]="
+                    colaborador.estado === 'Activo'
+                      ? 'Desactivar colaborador'
+                      : 'Activar colaborador'
                   "
                   [disabled]="
-                    cambiandoEstadoId ===
-                    colaborador.id
+                    cambiandoEstadoId === colaborador.id
                   "
-                  (click)="
-                    cambiarEstado(
-                      colaborador
-                    )
-                  ">
+                  (click)="cambiarEstado(colaborador)">
 
-                  {{
-                    cambiandoEstadoId ===
-                    colaborador.id
-                      ? 'Procesando...'
-                      : (
-                          colaborador.estado ===
-                          'Activo'
-                            ? 'Desactivar'
-                            : 'Activar'
-                        )
-                  }}
+
+                  <span
+                    class="button-loader small"
+                    *ngIf="
+                      cambiandoEstadoId === colaborador.id
+                    ">
+                  </span>
+
+
+                  <ng-container
+                    *ngIf="
+                      cambiandoEstadoId !== colaborador.id
+                    ">
+
+                    {{
+                      colaborador.estado === 'Activo'
+                        ? '⊘'
+                        : '✓'
+                    }}
+
+                  </ng-container>
+
                 </button>
+
               </div>
+
             </td>
+
           </tr>
+
+
+
+          <!-- SIN RESULTADOS -->
 
           <tr
             *ngIf="
@@ -654,58 +1365,116 @@
             ">
 
             <td
-              colspan="7"
+              colspan="6"
               class="empty-state">
-              No se encontraron colaboradores con los
-              filtros seleccionados.
+
+              <span class="empty-icon">
+                👥
+              </span>
+
+              <strong>
+                No se encontraron colaboradores
+              </strong>
+
+              <span>
+                Modifica la búsqueda o limpia los filtros seleccionados.
+              </span>
+
             </td>
+
           </tr>
+
         </tbody>
+
       </table>
+
     </div>
+
   </section>
 
-  <!-- MODAL DETALLE -->
+
+
+  <!-- ======================================================
+       MODAL DE DETALLE
+       ====================================================== -->
 
   <div
     class="modal-overlay"
-    *ngIf="mostrarDetalle">
+    *ngIf="mostrarDetalle"
+    (click)="cerrarDetalle()">
 
-    <section class="detail-modal">
+
+    <section
+      class="detail-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Detalle del colaborador"
+      (click)="$event.stopPropagation()">
+
+
+
+      <!-- ENCABEZADO DEL MODAL -->
+
       <header class="detail-header">
+
         <div>
+
           <p class="detail-eyebrow">
             INFORMACIÓN DEL COLABORADOR
           </p>
 
           <h2>
+
             {{
               colaboradorSeleccionado
                 ?.nombreCompleto ||
               'Detalle del colaborador'
             }}
+
           </h2>
+
         </div>
+
 
         <button
           type="button"
           class="close-btn"
+          aria-label="Cerrar detalle"
           (click)="cerrarDetalle()">
+
           ×
+
         </button>
+
       </header>
+
+
+
+      <!-- CARGANDO -->
 
       <div
         class="detail-loading"
         *ngIf="cargandoDetalle">
+
         Cargando detalle...
+
       </div>
+
+
+
+      <!-- ERROR -->
 
       <div
         class="error-message detail-error"
         *ngIf="errorDetalle">
+
         {{ errorDetalle }}
+
       </div>
+
+
+
+      <!-- CONTENIDO DEL DETALLE -->
 
       <div
         class="detail-body"
@@ -714,7 +1483,12 @@
           !cargandoDetalle
         ">
 
+
+
+        <!-- PERFIL PRINCIPAL -->
+
         <section class="profile-summary">
+
           <span
             class="profile-avatar"
             [ngClass]="
@@ -722,191 +1496,265 @@
                 colaboradorSeleccionado
               )
             ">
+
             {{
               obtenerIniciales(
                 colaboradorSeleccionado
               )
             }}
+
           </span>
 
-          <div>
+
+          <div class="profile-copy">
+
             <h3>
-              {{
-                colaboradorSeleccionado
-                  .nombreCompleto
-              }}
+              {{ colaboradorSeleccionado.nombreCompleto }}
             </h3>
 
             <p>
-              {{
-                obtenerSiglaPuesto(
-                  colaboradorSeleccionado.puesto
-                )
-              }}
+
+              <ng-container
+                *ngIf="
+                  obtenerSiglaPuesto(
+                    colaboradorSeleccionado.puesto
+                  )
+                ">
+
+                {{
+                  obtenerSiglaPuesto(
+                    colaboradorSeleccionado.puesto
+                  )
+                }}
+
+                ·
+
+              </ng-container>
+
+              {{ colaboradorSeleccionado.puesto }}
+
               ·
-              {{
-                colaboradorSeleccionado
-                  .puesto
-              }}
-              ·
-              {{
-                colaboradorSeleccionado
-                  .departamento
-              }}
+
+              {{ colaboradorSeleccionado.departamento }}
+
             </p>
+
           </div>
+
 
           <span
             class="status profile-status"
             [ngClass]="
               estadoClase(
-                colaboradorSeleccionado
-                  .estado
+                colaboradorSeleccionado.estado
               )
             ">
-            {{
-              colaboradorSeleccionado
-                .estado
-            }}
+
+            {{ colaboradorSeleccionado.estado }}
+
           </span>
+
         </section>
+
+
+
+        <!-- INFORMACIÓN GENERAL -->
 
         <section class="detail-grid">
+
           <article>
-            <span>No. empleado</span>
+
+            <span>
+              No. empleado
+            </span>
 
             <strong>
-              {{
-                colaboradorSeleccionado
-                  .numeroEmpleado
-              }}
+              {{ colaboradorSeleccionado.numeroEmpleado }}
             </strong>
+
           </article>
 
+
           <article>
-            <span>Empresa</span>
+
+            <span>
+              Empresa
+            </span>
 
             <strong>
-              {{
-                colaboradorSeleccionado
-                  .empresa
-              }}
+              {{ colaboradorSeleccionado.empresa }}
             </strong>
+
           </article>
 
+
           <article>
-            <span>Departamento</span>
+
+            <span>
+              Departamento
+            </span>
 
             <strong>
-              {{
-                colaboradorSeleccionado
-                  .departamento
-              }}
+              {{ colaboradorSeleccionado.departamento }}
             </strong>
+
           </article>
 
+
           <article>
-            <span>Puesto</span>
+
+            <span>
+              Puesto
+            </span>
 
             <strong>
-              {{
-                obtenerSiglaPuesto(
-                  colaboradorSeleccionado.puesto
-                )
-              }}
-              —
-              {{
-                colaboradorSeleccionado
-                  .puesto
-              }}
+
+              <ng-container
+                *ngIf="
+                  obtenerSiglaPuesto(
+                    colaboradorSeleccionado.puesto
+                  )
+                ">
+
+                {{
+                  obtenerSiglaPuesto(
+                    colaboradorSeleccionado.puesto
+                  )
+                }}
+
+                —
+
+              </ng-container>
+
+              {{ colaboradorSeleccionado.puesto }}
+
             </strong>
+
           </article>
 
+
           <article>
-            <span>Correo</span>
+
+            <span>
+              Correo
+            </span>
 
             <strong>
+
               {{
-                colaboradorSeleccionado
-                  .correo ||
+                colaboradorSeleccionado.correo ||
                 'Sin correo'
               }}
+
             </strong>
+
           </article>
 
+
           <article>
-            <span>Fecha de ingreso</span>
+
+            <span>
+              Fecha de ingreso
+            </span>
 
             <strong>
+
               {{
-                colaboradorSeleccionado
-                  .fechaIngreso ||
+                colaboradorSeleccionado.fechaIngreso ||
                 'Sin fecha'
               }}
+
             </strong>
+
           </article>
+
 
           <article>
-            <span>Equipos asignados</span>
+
+            <span>
+              Equipos asignados
+            </span>
 
             <strong>
-              {{
-                colaboradorSeleccionado
-                  .equiposAsignados
-              }}
+              {{ colaboradorSeleccionado.equiposAsignados }}
             </strong>
+
           </article>
+
         </section>
+
+
+
+        <!-- COMENTARIOS -->
 
         <section class="comments-section">
-          <h3>Comentarios</h3>
+
+          <h3>
+            Comentarios
+          </h3>
 
           <p>
+
             {{
-              colaboradorSeleccionado
-                .comentarios ||
+              colaboradorSeleccionado.comentarios ||
               'Sin comentarios registrados.'
             }}
+
           </p>
+
         </section>
 
+
+
+        <!-- EQUIPOS ASIGNADOS -->
+
         <section class="assigned-section">
+
           <div class="section-title">
+
             <div>
+
               <h3>
                 Equipos asignados
               </h3>
 
               <p>
-                Activos tecnológicos actualmente
-                relacionados con este colaborador.
+                Activos tecnológicos relacionados actualmente
+                con este colaborador.
               </p>
+
             </div>
 
+
             <span class="assigned-total">
+
               {{
-                colaboradorSeleccionado
-                  .equipos?.length || 0
+                colaboradorSeleccionado.equipos?.length ||
+                0
               }}
+
             </span>
+
           </div>
+
+
+
+          <!-- LISTADO DE EQUIPOS -->
 
           <div
             class="assigned-list"
             *ngIf="
-              colaboradorSeleccionado
-                .equipos?.length
+              colaboradorSeleccionado.equipos?.length
             ">
 
             <article
               class="assigned-card"
               *ngFor="
-                let equipo of
-                colaboradorSeleccionado
-                  .equipos
+                let equipo of colaboradorSeleccionado.equipos
               ">
 
               <div>
+
                 <span class="assigned-code">
                   {{ equipo.inventario }}
                 </span>
@@ -916,50 +1764,70 @@
                 </h4>
 
                 <p>
-                  {{
-                    equipo.marca ||
-                    'Sin marca'
-                  }}
+
+                  {{ equipo.marca || 'Sin marca' }}
+
                   ·
-                  {{
-                    equipo.modelo ||
-                    'Sin modelo'
-                  }}
+
+                  {{ equipo.modelo || 'Sin modelo' }}
+
                 </p>
+
               </div>
 
+
               <div class="assigned-meta">
+
                 <span>
                   {{ equipo.categoria }}
                 </span>
 
                 <span>
+
                   {{
                     equipo.fechaAsignacion ||
                     'Sin fecha'
                   }}
+
                 </span>
+
               </div>
+
             </article>
+
           </div>
+
+
+
+          <!-- SIN EQUIPOS -->
 
           <div
             class="no-assigned"
             *ngIf="
-              !colaboradorSeleccionado
-                .equipos?.length
+              !colaboradorSeleccionado.equipos?.length
             ">
+
             Este colaborador no tiene equipos asignados.
+
           </div>
+
         </section>
 
+
+
+        <!-- ACCIONES DEL MODAL -->
+
         <div class="detail-actions">
+
           <button
             type="button"
             class="secondary-btn"
             (click)="cerrarDetalle()">
+
             Cerrar
+
           </button>
+
 
           <button
             type="button"
@@ -969,10 +1837,17 @@
                 colaboradorSeleccionado
               )
             ">
+
             Editar colaborador
+
           </button>
+
         </div>
+
       </div>
+
     </section>
+
   </div>
+
 </section>

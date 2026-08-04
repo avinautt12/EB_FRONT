@@ -1,5 +1,6 @@
 import {
   Component,
+  HostListener,
   OnInit
 } from '@angular/core';
 
@@ -36,8 +37,7 @@ import {
   templateUrl: './asignaciones.component.html',
   styleUrl: './asignaciones.component.css'
 })
-export class AsignacionesComponent
-implements OnInit {
+export class AsignacionesComponent implements OnInit {
   asignaciones: Asignacion[] = [];
 
   colaboradores: ColaboradorCatalogo[] = [];
@@ -52,13 +52,6 @@ implements OnInit {
   empresas: string[] = [
     'ELITE BIKE',
     'GARNIER SPORTS'
-  ];
-
-  estadosFiltro: string[] = [
-    'Todas',
-    'Activa',
-    'Finalizada',
-    'Cancelada'
   ];
 
   terminoBusqueda = '';
@@ -106,6 +99,8 @@ implements OnInit {
   datosDevolucion: FinalizarAsignacion =
     this.crearDevolucionVacia();
 
+  private temporizadorBusqueda: number | null = null;
+
   constructor(
     private asignacionesService:
       AsignacionesService
@@ -113,6 +108,23 @@ implements OnInit {
 
   ngOnInit(): void {
     this.cargarModulo();
+  }
+
+  @HostListener('document:keydown.escape')
+  cerrarVentanaConEscape(): void {
+    if (this.mostrarDevolucion) {
+      this.cerrarDevolucion();
+      return;
+    }
+
+    if (this.mostrarDetalle) {
+      this.cerrarDetalle();
+      return;
+    }
+
+    if (this.mostrarFormulario) {
+      this.cerrarFormulario();
+    }
   }
 
   get hayFiltrosActivos(): boolean {
@@ -136,21 +148,14 @@ implements OnInit {
 
     this.asignacionesService
       .obtenerAsignaciones({
-        busqueda:
-          this.terminoBusqueda.trim(),
-
-        estado:
-          this.filtroEstado,
-
-        departamento:
-          this.filtroDepartamento,
-
-        empresa:
-          this.filtroEmpresa
+        busqueda: this.terminoBusqueda.trim(),
+        estado: this.filtroEstado,
+        departamento: this.filtroDepartamento,
+        empresa: this.filtroEmpresa
       })
       .subscribe({
         next: data => {
-          this.asignaciones = data;
+          this.asignaciones = data || [];
           this.cargando = false;
         },
 
@@ -193,10 +198,10 @@ implements OnInit {
       .subscribe({
         next: data => {
           this.colaboradores =
-            data.colaboradores;
+            data.colaboradores || [];
 
           this.equipos =
-            data.equipos;
+            data.equipos || [];
         },
 
         error: error => {
@@ -206,6 +211,24 @@ implements OnInit {
           );
         }
       });
+  }
+
+  seleccionarEstado(
+    estado: 'Todas' | 'Activa' | 'Finalizada' | 'Cancelada'
+  ): void {
+    this.filtroEstado = estado;
+    this.cargarAsignaciones();
+  }
+
+  programarBusqueda(): void {
+    if (this.temporizadorBusqueda !== null) {
+      window.clearTimeout(this.temporizadorBusqueda);
+    }
+
+    this.temporizadorBusqueda = window.setTimeout(() => {
+      this.cargarAsignaciones();
+      this.temporizadorBusqueda = null;
+    }, 350);
   }
 
   aplicarFiltros(): void {
@@ -234,9 +257,7 @@ implements OnInit {
 
     window.setTimeout(() => {
       document
-        .getElementById(
-          'formulario-asignacion'
-        )
+        .getElementById('formulario-asignacion')
         ?.scrollIntoView({
           behavior: 'smooth',
           block: 'start'
@@ -262,10 +283,7 @@ implements OnInit {
       this.colaboradores.find(
         colaborador =>
           colaborador.id ===
-          Number(
-            this.nuevaAsignacion
-              .colaboradorId
-          )
+          Number(this.nuevaAsignacion.colaboradorId)
       ) || null;
   }
 
@@ -274,10 +292,7 @@ implements OnInit {
       this.equipos.find(
         equipo =>
           equipo.id ===
-          Number(
-            this.nuevaAsignacion
-              .equipoId
-          )
+          Number(this.nuevaAsignacion.equipoId)
       ) || null;
   }
 
@@ -298,15 +313,11 @@ implements OnInit {
     this.guardando = true;
 
     this.asignacionesService
-      .crearAsignacion(
-        this.nuevaAsignacion
-      )
+      .crearAsignacion(this.nuevaAsignacion)
       .subscribe({
         next: respuesta => {
           this.guardando = false;
-
-          this.mensajeExito =
-            respuesta.message;
+          this.mensajeExito = respuesta.message;
 
           window.setTimeout(() => {
             this.cerrarFormulario();
@@ -339,14 +350,10 @@ implements OnInit {
     this.asignacionSeleccionada = null;
 
     this.asignacionesService
-      .obtenerAsignacion(
-        asignacion.id
-      )
+      .obtenerAsignacion(asignacion.id)
       .subscribe({
         next: data => {
-          this.asignacionSeleccionada =
-            data;
-
+          this.asignacionSeleccionada = data;
           this.cargandoDetalle = false;
         },
 
@@ -376,9 +383,7 @@ implements OnInit {
   abrirDevolucion(
     asignacion: Asignacion
   ): void {
-    this.asignacionFinalizar =
-      asignacion;
-
+    this.asignacionFinalizar = asignacion;
     this.datosDevolucion =
       this.crearDevolucionVacia();
 
@@ -415,9 +420,7 @@ implements OnInit {
       .subscribe({
         next: respuesta => {
           this.finalizando = false;
-
-          this.mensajeDevolucion =
-            respuesta.message;
+          this.mensajeDevolucion = respuesta.message;
 
           window.setTimeout(() => {
             this.cerrarDevolucion();
@@ -444,36 +447,73 @@ implements OnInit {
   estadoClase(
     estado: string
   ): string {
-    return estado
+    return (estado || 'sin-estado')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
+      .trim()
       .replace(/\s+/g, '-');
+  }
+
+  textoDiasAsignado(
+    asignacion: Asignacion
+  ): string {
+    const fechaInicio = new Date(
+      asignacion.fechaAsignacion
+    );
+
+    if (Number.isNaN(fechaInicio.getTime())) {
+      return 'Sin fecha';
+    }
+
+    const asignacionExtendida =
+      asignacion as unknown as {
+        fechaDevolucion?: string | null;
+      };
+
+    const fechaFin =
+      asignacionExtendida.fechaDevolucion
+        ? new Date(asignacionExtendida.fechaDevolucion)
+        : new Date();
+
+    const diferencia =
+      fechaFin.getTime() - fechaInicio.getTime();
+
+    const dias = Math.max(
+      Math.floor(diferencia / 86400000),
+      0
+    );
+
+    return `${dias} día${dias === 1 ? '' : 's'}`;
+  }
+
+  trackByAsignacion(
+    _indice: number,
+    asignacion: Asignacion
+  ): number {
+    return asignacion.id;
   }
 
   obtenerFechaActual(): string {
     const ahora = new Date();
 
-    const año =
-      ahora.getFullYear();
+    const año = ahora.getFullYear();
 
-    const mes =
-      String(
-        ahora.getMonth() + 1
-      ).padStart(2, '0');
+    const mes = String(
+      ahora.getMonth() + 1
+    ).padStart(2, '0');
 
-    const dia =
-      String(
-        ahora.getDate()
-      ).padStart(2, '0');
+    const dia = String(
+      ahora.getDate()
+    ).padStart(2, '0');
 
-    const horas =
-      String(
-        ahora.getHours()
-      ).padStart(2, '0');
+    const horas = String(
+      ahora.getHours()
+    ).padStart(2, '0');
 
-    const minutos =
-      String(
-        ahora.getMinutes()
-      ).padStart(2, '0');
+    const minutos = String(
+      ahora.getMinutes()
+    ).padStart(2, '0');
 
     return `${año}-${mes}-${dia}T${horas}:${minutos}`;
   }

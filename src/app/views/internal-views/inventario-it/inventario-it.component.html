@@ -12,18 +12,6 @@
       Regresar al Inicio
     </a>
 
-    <button
-      type="button"
-      class="refresh-button"
-      [disabled]="cargando"
-      (click)="cargarResumen()">
-
-      <span [class.rotating]="cargando">
-        ↻
-      </span>
-
-      {{ cargando ? 'Actualizando' : 'Actualizar' }}
-    </button>
   </header>
 
   <main class="content">
