@@ -71,7 +71,23 @@
         <div *ngIf="datosCliente && !isLoading">
             <div class="titulo" style="display: flex; align-items: center; gap: 12px;">
                 <img src="assets/logo_elite_2.png" alt="Elite Logo" style="height: 60px;">
-                <h1>Avance MY27</h1>
+                <h1>Avance {{ etiquetaAMY(temporadaHistoricaSeleccionada || temporadaActualEtiqueta) }}</h1>
+            </div>
+
+            <ng-container *ngIf="temporadaCerrada && fechaCierreApparel">
+                <div class="banner-temporada-cerrada banner-split-scott">
+                    <i class="fas fa-lock"></i>
+                    SCOTT / BICICLETAS cerradas el {{ fechaCierreFormateada }}
+                </div>
+                <div class="banner-temporada-cerrada banner-split-apparel">
+                    <i class="fas fa-lock"></i>
+                    APPAREL / SYNCROS / VITTORIA cerradas el {{ fechaCierreApparel }}
+                </div>
+            </ng-container>
+
+            <div class="banner-temporada-cerrada" *ngIf="temporadaCerrada && !fechaCierreApparel">
+                <i class="fas fa-lock"></i>
+                TEMPORADA CERRADA EL {{ fechaCierreFormateada }}
             </div>
 
             <div class="client-info">

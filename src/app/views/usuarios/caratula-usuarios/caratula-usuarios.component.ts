@@ -71,6 +71,9 @@ interface DatosCliente {
   estatus: string;
   estado: string;
   fecha_inicio_calculo?: string;
+  temporada_cerrada?: boolean;
+  fecha_cierre_temporada?: string | null;
+  fecha_cierre_apparel?: string | null;
 }
 
 @Component({
@@ -204,6 +207,32 @@ export class CaratulaUsuariosComponent implements OnInit {
   volverATemporadaActual(): void {
     this.temporadaHistoricaSeleccionada = null;
     this.buscarAutomaticamente();
+  }
+
+  /** Convierte una etiqueta de temporada ("2026-2027") a su nombre corto ("MY27"). */
+  etiquetaAMY(etiqueta: string | null): string {
+    if (!etiqueta) return '';
+    const partes = etiqueta.split('-');
+    if (partes.length === 2) return 'MY' + partes[1].slice(-2);
+    return etiqueta;
+  }
+
+  get temporadaCerrada(): boolean {
+    return !!this.datosCliente?.temporada_cerrada;
+  }
+
+  get fechaCierreFormateada(): string {
+    const f = this.datosCliente?.fecha_cierre_temporada;
+    if (!f) return '';
+    const [year, month, day] = f.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  get fechaCierreApparel(): string | null {
+    const f = this.datosCliente?.fecha_cierre_apparel;
+    if (!f) return null;
+    const [year, month, day] = f.split('-');
+    return `${day}/${month}/${year}`;
   }
 
   private obtenerDatosToken() {
@@ -403,7 +432,10 @@ export class CaratulaUsuariosComponent implements OnInit {
       periodoSepOct: datos.periodoSepOct || 'Septiembre - Octubre',
       periodoNovDic: datos.periodoNovDic || 'Noviembre - Diciembre',
       estatus: datos.estatus || '',
-      estado: datos.estado || ''
+      estado: datos.estado || '',
+      temporada_cerrada: !!datos.temporada_cerrada,
+      fecha_cierre_temporada: datos.fecha_cierre_temporada || null,
+      fecha_cierre_apparel: datos.fecha_cierre_apparel || null
     };
   }
 
