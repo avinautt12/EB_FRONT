@@ -64,7 +64,7 @@
                 <img src="assets/logo_elite_2.png" alt="Logo Elite" class="logo-img">
             </div>
             <div class="header-text">
-                <h1>Retroactivos MY27</h1>
+                <h1>Retroactivos {{ etiquetaAMY(temporadaHistoricaSeleccionada || temporadaActualEtiqueta) }}</h1>
                 <p class="subtitle text-orange">ESTADO DE CUENTA DEL DISTRIBUIDOR</p>
             </div>
         </div>
@@ -105,7 +105,7 @@
                 <tr>
                     <td class="fw-bold text-dark text-left ps-4">
                         GENERAL - CATEGORÍA
-                        <span class="formula-text-dark">* Meta anual pactada según contrato MY27.</span>
+                        <span class="formula-text-dark">* Meta anual pactada según contrato {{ etiquetaAMY(temporadaHistoricaSeleccionada || temporadaActualEtiqueta) }}.</span>
                     </td>
                     <td class="text-center">
                         {{ datosCliente.COMPRA_MINIMA_ANUAL | currency:'USD':'$':'1.2-2' }}
@@ -295,7 +295,7 @@
 
         <div class="nota-footer">
             <strong>Nota de transparencia:</strong> Los datos presentados son sincronizados directamente desde Odoo ERP.
-            Las deducciones corresponden a documentos registrados en el periodo fiscal MY27.
+            Las deducciones corresponden a documentos registrados en el periodo fiscal {{ etiquetaAMY(temporadaHistoricaSeleccionada || temporadaActualEtiqueta) }}.
             El <strong>Importe Final Base</strong> es el monto neto tras descontar artículos que ya cuentan con
             promociones de liquidación o apoyos especiales.
         </div>
