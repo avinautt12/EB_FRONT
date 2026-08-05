@@ -22,6 +22,8 @@ interface SugerenciaCliente {
   nombre_cliente?: string;
   evac?: string;
   nivel_firmado?: string;
+  grupo_integral?: number | null;
+  es_integral?: number;
 }
 
 interface DatosCliente {
