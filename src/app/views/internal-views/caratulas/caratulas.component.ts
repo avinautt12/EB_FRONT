@@ -585,6 +585,7 @@ export class CaratulasComponent implements OnInit {
           this.modoHistorico = false;
           this.temporadaHistoricaSeleccionada = null;
           this.caratulaSeleccionada = true;
+          this.periodoAbierto = this.getPeriodoActual();
           this.error = null;
         } else {
           this.datosCliente = null;
@@ -1031,31 +1032,11 @@ export class CaratulasComponent implements OnInit {
     return 'Cerrado';
   }
 
-  debeMostrarPeriodo(periodo: string): boolean {
-    const mesActual = this.getMesActual();
-
-    const periodos = {
-      'Jul-Ago': { inicio: 7 },
-      'Sep-Oct': { inicio: 9 },
-      'Nov-Dic': { inicio: 11 },
-      'Ene-Feb': { inicio: 1 },  // Nuevo
-      'Mar-Abr': { inicio: 3 },  // Nuevo
-      'May-Jun': { inicio: 5 }   // Nuevo
-    };
-
-    const data = periodos[periodo as keyof typeof periodos];
-    if (!data) return false;
-
-    // Lógica especial: Si el mes es 1-6 (2026), los periodos de 2025 siempre son true
-    if (mesActual <= 6 && ['Jul-Ago', 'Sep-Oct', 'Nov-Dic'].includes(periodo)) return true;
-
-    return mesActual >= data.inicio;
+  debeMostrarPeriodo(_periodo: string): boolean {
+    return true; // Siempre mostrar los 6 bimestres de la temporada completa
   }
 
   getEstadoPeriodo(periodo: string): string {
-    // Si la temporada está cerrada, todos sus periodos están cerrados
-    if (this.temporadaCerrada) return 'Cerrado';
-
     const mesActual = this.getMesActual();
 
     const periodos = {
@@ -1070,7 +1051,9 @@ export class CaratulasComponent implements OnInit {
     const data = periodos[periodo as keyof typeof periodos];
     if (!data) return 'Sin definir';
 
-    // Si estamos en mes 1-6 (segunda mitad del año fiscal), los bimestres Jul-Dic ya cerraron
+    // Primer semestre de la temporada (Jul-Dic): los periodos del 2do semestre (Ene-Jun) aún no inician
+    if (mesActual >= 7 && data.inicio <= 6) return 'Sin iniciar';
+    // Segundo semestre de la temporada (Ene-Jun): los periodos del 1er semestre (Jul-Dic) ya cerraron
     if (mesActual <= 6 && data.inicio >= 7) return 'Cerrado';
 
     if (mesActual < data.inicio) return 'Sin iniciar';
@@ -1173,5 +1156,43 @@ export class CaratulasComponent implements OnInit {
   getSobranteAcumuladoApparel(): number {
     const diferencia = this.getCompromisoAcumuladoApparel() - this.getAvanceAcumuladoApparel();
     return diferencia < 0 ? Math.abs(diferencia) : 0;
+  }
+
+  periodoAbierto: string | null = null;
+
+  getPeriodoActual(): string | null {
+    const todos = ['Jul-Ago', 'Sep-Oct', 'Nov-Dic', 'Ene-Feb', 'Mar-Abr', 'May-Jun'];
+    return todos.find(p => this.getEstadoPeriodo(p) === 'En curso') ?? null;
+  }
+
+  togglePeriodo(periodo: string): void {
+    this.periodoAbierto = this.periodoAbierto === periodo ? null : periodo;
+  }
+
+  getPeriodoData(periodo: string) {
+    if (!this.datosCliente) return null;
+    const d = this.datosCliente as any;
+    const map: Record<string, { compBici: string; avBici: string; compApp: string; avApp: string }> = {
+      'Jul-Ago': { compBici: 'compromiso_jul_ago',  avBici: 'avance_jul_ago',  compApp: 'compromiso_jul_ago_app',  avApp: 'avance_jul_ago_app' },
+      'Sep-Oct': { compBici: 'compromiso_sep_oct',  avBici: 'avance_sep_oct',  compApp: 'compromiso_sep_oct_app',  avApp: 'avance_sep_oct_app' },
+      'Nov-Dic': { compBici: 'compromiso_nov_dic',  avBici: 'avance_nov_dic',  compApp: 'compromiso_nov_dic_app',  avApp: 'avance_nov_dic_app' },
+      'Ene-Feb': { compBici: 'compromiso_ene_feb',  avBici: 'avance_ene_feb',  compApp: 'compromiso_ene_feb_app',  avApp: 'avance_ene_feb_app' },
+      'Mar-Abr': { compBici: 'compromiso_mar_abr',  avBici: 'avance_mar_abr',  compApp: 'compromiso_mar_abr_app',  avApp: 'avance_mar_abr_app' },
+      'May-Jun': { compBici: 'compromiso_may_jun',  avBici: 'avance_may_jun',  compApp: 'compromiso_may_jun_app',  avApp: 'avance_may_jun_app' },
+    };
+    const fields = map[periodo];
+    if (!fields) return null;
+    const compBici = d[fields.compBici] || 0;
+    const avBici   = d[fields.avBici]   || 0;
+    const compApp  = d[fields.compApp]  || 0;
+    const avApp    = d[fields.avApp]    || 0;
+    return {
+      compBici, avBici,
+      pctBici:  compBici > 0 ? Math.round((avBici / compBici) * 100) : 0,
+      faltBici: Math.max(0, compBici - avBici),
+      compApp,  avApp,
+      pctApp:   compApp > 0 ? Math.round((avApp / compApp) * 100) : 0,
+      faltApp:  Math.max(0, compApp - avApp),
+    };
   }
 }

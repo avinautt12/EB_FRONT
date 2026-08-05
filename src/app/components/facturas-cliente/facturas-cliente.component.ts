@@ -131,8 +131,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
   /** Fecha de inicio de temporada devuelta por el backend (dynamic per client). */
   fechaInicioTemporada: string | null = null;
 
-  // ── Avance previo (total entregado según carátula) ────────────────────────
-  /** Suma de avance_global de la tabla previo para este cliente/grupo. Fuente de verdad del importe Entregado. */
+  /** acumulado_anticipado de previo (cargado del backend, reservado para usos futuros). */
   avancePrevio: number | null = null;
 
   // ── Buscador ───────────────────────────────────────────────────────────────
@@ -271,6 +270,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
           }));
           if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
           this.error = null;
+          this.refrescando = false;
           if (this.facturas.length > 0) {
             this.filtrarFacturas();
           }
@@ -284,6 +284,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
             this.error = error.error?.error || 'Error al conectar con el servidor';
           }
           if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
+          this.refrescando = false;
           this.cargando = false;
         }
       });
@@ -960,37 +961,31 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     return this.facturasFiltradas.reduce((acc, f) => acc + (f.cantidad_entregada || 0), 0);
   }
 
-  /** Suma total del importe en la vista filtrada activa.
-   * Para la pestaña "Entregado" usa avancePrevio (fuente de verdad de carátula) si está disponible.
-   * Para las demás tabs usa el total del pedido completo sumado de las filas. */
+  /** Suma total del importe en la vista filtrada activa, siempre basado en las filas visibles. */
   get totalMonto(): number {
-    const sinBusqueda = this.textoBusqueda === '';
-
-    // Pestaña Entregado: muestra el valor exacto de la carátula (acumulado_anticipado)
-    // Solo si avancePrevio > 0; si es 0 la carátula no tiene datos y calculamos de las líneas
-    if (this.tabActiva === 'Entregado' && this.avancePrevio != null && this.avancePrevio > 0 && sinBusqueda) {
-      return this.avancePrevio;
-    }
-
-    // Pestaña Todas: solo suma los mismos estados de las pestañas individuales visibles
-    // Cancelado no entra. Entregado usa avancePrevio si está disponible y es > 0.
+    // Pestaña Todas: suma todos los estados contables excepto Cancelado
     if (this.tabActiva === 'Total') {
       const ESTADOS_CONTABLES = new Set(['Almacén EB', 'En tránsito', 'Falta de confirmación']);
       const sumaResto = this.facturas
         .filter(f => ESTADOS_CONTABLES.has(f.estado_factura))
         .reduce((acc, f) => acc + (f.venta_total || 0), 0);
-
-      if (this.avancePrevio != null && this.avancePrevio > 0 && sinBusqueda) {
-        return sumaResto + this.avancePrevio;
-      }
-      // Sin avancePrevio: suma Entregado con total_entregado
-      const sumaEntregado = this.facturas
-        .filter(f => f.estado_factura === 'Entregado' || f.estado_factura === 'Entregado Parcial')
-        .reduce((acc, f) => acc + ((f.total_entregado ?? f.venta_total) || 0), 0);
+      const sumaEntregado = this.avancePrevio !== null
+        ? this.avancePrevio
+        : this.facturas
+            .filter(f => f.estado_factura === 'Entregado' || f.estado_factura === 'Entregado Parcial')
+            .reduce((acc, f) => acc + ((f.total_entregado ?? f.venta_total) || 0), 0);
       return sumaResto + sumaEntregado;
     }
 
-    // Resto de pestañas individuales
+    // Pestaña Entregado sin filtros activos: usa avancePrevio (mismo origen que carátula)
+    // para que el total coincida exactamente con el avance mostrado en la carátula.
+    const sinFiltros = !this.textoBusqueda && !this.filtroMarca && !this.filtroProyeccion
+      && Object.keys(this.columnFilters).length === 0;
+    if (this.tabActiva === 'Entregado' && this.avancePrevio !== null && sinFiltros) {
+      return this.avancePrevio;
+    }
+
+    // Resto de pestañas o Entregado con filtros activos: suma las filas filtradas de esa pestaña
     const useEntregado = this.tabActiva === 'Entregado' || this.tabActiva === 'Entregado Parcial';
     return this.facturasFiltradas.reduce((acc, f) =>
       acc + ((useEntregado ? (f.total_entregado ?? f.venta_total) : f.venta_total) || 0), 0);

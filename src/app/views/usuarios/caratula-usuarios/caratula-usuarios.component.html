@@ -116,31 +116,215 @@
             <div class="section">
                 <h3>a) Compromiso BIMESTRAL</h3>
 
-                <div *ngIf="debeMostrarPeriodo('Jul-Ago')" class="periodo-header">
-                    <div class="periodo-title">Periodo - Julio-Agosto</div>
-                    <span class="status-value" [class.cerrado]="getEstadoPeriodo('Jul-Ago') === 'Cerrado'">{{ getEstadoPeriodo('Jul-Ago') }}</span>
-                </div>
-                <div *ngIf="debeMostrarPeriodo('Sep-Oct')" class="periodo-header">
-                    <div class="periodo-title">Periodo - Septiembre-Octubre</div>
-                    <span class="status-value" [class.cerrado]="getEstadoPeriodo('Sep-Oct') === 'Cerrado'">{{ getEstadoPeriodo('Sep-Oct') }}</span>
-                </div>
-                <div *ngIf="debeMostrarPeriodo('Nov-Dic')" class="periodo-header">
-                    <div class="periodo-title">Periodo - Noviembre-Diciembre</div>
-                    <span class="status-value" [class.cerrado]="getEstadoPeriodo('Nov-Dic') === 'Cerrado'">{{ getEstadoPeriodo('Nov-Dic') }}</span>
-                </div>
+                <!-- ── PERIODO Jul-Ago ── -->
+                <ng-container *ngIf="debeMostrarPeriodo('Jul-Ago')">
+                  <div class="periodo-card">
+                    <div class="periodo-header" (click)="togglePeriodo('Jul-Ago')">
+                      <div class="periodo-title">
+                        <i class="fas fa-chevron-right periodo-icon" [class.rotated]="periodoAbierto === 'Jul-Ago'"></i>
+                        Periodo - Julio-Agosto
+                      </div>
+                      <span class="status-value"
+                            [class.cerrado]="getEstadoPeriodo('Jul-Ago') === 'Cerrado'"
+                            [class.en-curso]="getEstadoPeriodo('Jul-Ago') === 'En curso'">
+                        {{ getEstadoPeriodo('Jul-Ago') }}
+                      </span>
+                    </div>
+                    <div class="periodo-detalle" *ngIf="periodoAbierto === 'Jul-Ago'">
+                      <ng-container *ngIf="getPeriodoData('Jul-Ago') as p">
+                        <table class="table-periodo">
+                          <thead><tr><th></th><th>SCOTT / BICICLETAS</th><th>APPAREL / SYNCROS</th></tr></thead>
+                          <tbody>
+                            <tr><td>Meta bimestral</td><td>{{ p.compBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.compApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>Avance real</td><td>{{ p.avBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.avApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>% Cumplimiento</td>
+                                <td [style.color]="p.pctBici >= 100 ? '#28a745' : '#dc3545'">{{ p.pctBici }}%</td>
+                                <td [style.color]="p.pctApp >= 100 ? '#28a745' : '#dc3545'">{{ p.pctApp }}%</td></tr>
+                            <tr><td>Faltante</td><td>{{ p.faltBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.faltApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>Estatus</td>
+                                <td><span [class.estado-cumplido]="p.faltBici<=0" [class.estado-faltante]="p.faltBici>0">{{ p.faltBici<=0?'Cumplido':'Faltante' }}</span></td>
+                                <td><span [class.estado-cumplido]="p.faltApp<=0" [class.estado-faltante]="p.faltApp>0">{{ p.faltApp<=0?'Cumplido':'Faltante' }}</span></td></tr>
+                          </tbody>
+                        </table>
+                      </ng-container>
+                    </div>
+                  </div>
+                </ng-container>
 
-                <div *ngIf="debeMostrarPeriodo('Ene-Feb')" class="periodo-header">
-                    <div class="periodo-title">Periodo - Enero-Febrero</div>
-                    <span class="status-value" [class.en-curso]="getEstadoPeriodo('Ene-Feb') === 'En curso'">{{ getEstadoPeriodo('Ene-Feb') }}</span>
-                </div>
-                <div *ngIf="debeMostrarPeriodo('Mar-Abr')" class="periodo-header">
-                    <div class="periodo-title">Periodo - Marzo-Abril</div>
-                    <span class="status-value">{{ getEstadoPeriodo('Mar-Abr') }}</span>
-                </div>
-                <div *ngIf="debeMostrarPeriodo('May-Jun')" class="periodo-header">
-                    <div class="periodo-title">Periodo - Mayo-Junio</div>
-                    <span class="status-value">{{ getEstadoPeriodo('May-Jun') }}</span>
-                </div>
+                <!-- ── PERIODO Sep-Oct ── -->
+                <ng-container *ngIf="debeMostrarPeriodo('Sep-Oct')">
+                  <div class="periodo-card">
+                    <div class="periodo-header" (click)="togglePeriodo('Sep-Oct')">
+                      <div class="periodo-title">
+                        <i class="fas fa-chevron-right periodo-icon" [class.rotated]="periodoAbierto === 'Sep-Oct'"></i>
+                        Periodo - Septiembre-Octubre
+                      </div>
+                      <span class="status-value"
+                            [class.cerrado]="getEstadoPeriodo('Sep-Oct') === 'Cerrado'"
+                            [class.en-curso]="getEstadoPeriodo('Sep-Oct') === 'En curso'">
+                        {{ getEstadoPeriodo('Sep-Oct') }}
+                      </span>
+                    </div>
+                    <div class="periodo-detalle" *ngIf="periodoAbierto === 'Sep-Oct'">
+                      <ng-container *ngIf="getPeriodoData('Sep-Oct') as p">
+                        <table class="table-periodo">
+                          <thead><tr><th></th><th>SCOTT / BICICLETAS</th><th>APPAREL / SYNCROS</th></tr></thead>
+                          <tbody>
+                            <tr><td>Meta bimestral</td><td>{{ p.compBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.compApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>Avance real</td><td>{{ p.avBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.avApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>% Cumplimiento</td>
+                                <td [style.color]="p.pctBici >= 100 ? '#28a745' : '#dc3545'">{{ p.pctBici }}%</td>
+                                <td [style.color]="p.pctApp >= 100 ? '#28a745' : '#dc3545'">{{ p.pctApp }}%</td></tr>
+                            <tr><td>Faltante</td><td>{{ p.faltBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.faltApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>Estatus</td>
+                                <td><span [class.estado-cumplido]="p.faltBici<=0" [class.estado-faltante]="p.faltBici>0">{{ p.faltBici<=0?'Cumplido':'Faltante' }}</span></td>
+                                <td><span [class.estado-cumplido]="p.faltApp<=0" [class.estado-faltante]="p.faltApp>0">{{ p.faltApp<=0?'Cumplido':'Faltante' }}</span></td></tr>
+                          </tbody>
+                        </table>
+                      </ng-container>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- ── PERIODO Nov-Dic ── -->
+                <ng-container *ngIf="debeMostrarPeriodo('Nov-Dic')">
+                  <div class="periodo-card">
+                    <div class="periodo-header" (click)="togglePeriodo('Nov-Dic')">
+                      <div class="periodo-title">
+                        <i class="fas fa-chevron-right periodo-icon" [class.rotated]="periodoAbierto === 'Nov-Dic'"></i>
+                        Periodo - Noviembre-Diciembre
+                      </div>
+                      <span class="status-value"
+                            [class.cerrado]="getEstadoPeriodo('Nov-Dic') === 'Cerrado'"
+                            [class.en-curso]="getEstadoPeriodo('Nov-Dic') === 'En curso'">
+                        {{ getEstadoPeriodo('Nov-Dic') }}
+                      </span>
+                    </div>
+                    <div class="periodo-detalle" *ngIf="periodoAbierto === 'Nov-Dic'">
+                      <ng-container *ngIf="getPeriodoData('Nov-Dic') as p">
+                        <table class="table-periodo">
+                          <thead><tr><th></th><th>SCOTT / BICICLETAS</th><th>APPAREL / SYNCROS</th></tr></thead>
+                          <tbody>
+                            <tr><td>Meta bimestral</td><td>{{ p.compBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.compApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>Avance real</td><td>{{ p.avBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.avApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>% Cumplimiento</td>
+                                <td [style.color]="p.pctBici >= 100 ? '#28a745' : '#dc3545'">{{ p.pctBici }}%</td>
+                                <td [style.color]="p.pctApp >= 100 ? '#28a745' : '#dc3545'">{{ p.pctApp }}%</td></tr>
+                            <tr><td>Faltante</td><td>{{ p.faltBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.faltApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>Estatus</td>
+                                <td><span [class.estado-cumplido]="p.faltBici<=0" [class.estado-faltante]="p.faltBici>0">{{ p.faltBici<=0?'Cumplido':'Faltante' }}</span></td>
+                                <td><span [class.estado-cumplido]="p.faltApp<=0" [class.estado-faltante]="p.faltApp>0">{{ p.faltApp<=0?'Cumplido':'Faltante' }}</span></td></tr>
+                          </tbody>
+                        </table>
+                      </ng-container>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- ── PERIODO Ene-Feb ── -->
+                <ng-container *ngIf="debeMostrarPeriodo('Ene-Feb')">
+                  <div class="periodo-card">
+                    <div class="periodo-header" (click)="togglePeriodo('Ene-Feb')">
+                      <div class="periodo-title">
+                        <i class="fas fa-chevron-right periodo-icon" [class.rotated]="periodoAbierto === 'Ene-Feb'"></i>
+                        Periodo - Enero-Febrero
+                      </div>
+                      <span class="status-value"
+                            [class.cerrado]="getEstadoPeriodo('Ene-Feb') === 'Cerrado'"
+                            [class.en-curso]="getEstadoPeriodo('Ene-Feb') === 'En curso'">
+                        {{ getEstadoPeriodo('Ene-Feb') }}
+                      </span>
+                    </div>
+                    <div class="periodo-detalle" *ngIf="periodoAbierto === 'Ene-Feb'">
+                      <ng-container *ngIf="getPeriodoData('Ene-Feb') as p">
+                        <table class="table-periodo">
+                          <thead><tr><th></th><th>SCOTT / BICICLETAS</th><th>APPAREL / SYNCROS</th></tr></thead>
+                          <tbody>
+                            <tr><td>Meta bimestral</td><td>{{ p.compBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.compApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>Avance real</td><td>{{ p.avBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.avApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>% Cumplimiento</td>
+                                <td [style.color]="p.pctBici >= 100 ? '#28a745' : '#dc3545'">{{ p.pctBici }}%</td>
+                                <td [style.color]="p.pctApp >= 100 ? '#28a745' : '#dc3545'">{{ p.pctApp }}%</td></tr>
+                            <tr><td>Faltante</td><td>{{ p.faltBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.faltApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>Estatus</td>
+                                <td><span [class.estado-cumplido]="p.faltBici<=0" [class.estado-faltante]="p.faltBici>0">{{ p.faltBici<=0?'Cumplido':'Faltante' }}</span></td>
+                                <td><span [class.estado-cumplido]="p.faltApp<=0" [class.estado-faltante]="p.faltApp>0">{{ p.faltApp<=0?'Cumplido':'Faltante' }}</span></td></tr>
+                          </tbody>
+                        </table>
+                      </ng-container>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- ── PERIODO Mar-Abr ── -->
+                <ng-container *ngIf="debeMostrarPeriodo('Mar-Abr')">
+                  <div class="periodo-card">
+                    <div class="periodo-header" (click)="togglePeriodo('Mar-Abr')">
+                      <div class="periodo-title">
+                        <i class="fas fa-chevron-right periodo-icon" [class.rotated]="periodoAbierto === 'Mar-Abr'"></i>
+                        Periodo - Marzo-Abril
+                      </div>
+                      <span class="status-value"
+                            [class.cerrado]="getEstadoPeriodo('Mar-Abr') === 'Cerrado'"
+                            [class.en-curso]="getEstadoPeriodo('Mar-Abr') === 'En curso'">
+                        {{ getEstadoPeriodo('Mar-Abr') }}
+                      </span>
+                    </div>
+                    <div class="periodo-detalle" *ngIf="periodoAbierto === 'Mar-Abr'">
+                      <ng-container *ngIf="getPeriodoData('Mar-Abr') as p">
+                        <table class="table-periodo">
+                          <thead><tr><th></th><th>SCOTT / BICICLETAS</th><th>APPAREL / SYNCROS</th></tr></thead>
+                          <tbody>
+                            <tr><td>Meta bimestral</td><td>{{ p.compBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.compApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>Avance real</td><td>{{ p.avBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.avApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>% Cumplimiento</td>
+                                <td [style.color]="p.pctBici >= 100 ? '#28a745' : '#dc3545'">{{ p.pctBici }}%</td>
+                                <td [style.color]="p.pctApp >= 100 ? '#28a745' : '#dc3545'">{{ p.pctApp }}%</td></tr>
+                            <tr><td>Faltante</td><td>{{ p.faltBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.faltApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>Estatus</td>
+                                <td><span [class.estado-cumplido]="p.faltBici<=0" [class.estado-faltante]="p.faltBici>0">{{ p.faltBici<=0?'Cumplido':'Faltante' }}</span></td>
+                                <td><span [class.estado-cumplido]="p.faltApp<=0" [class.estado-faltante]="p.faltApp>0">{{ p.faltApp<=0?'Cumplido':'Faltante' }}</span></td></tr>
+                          </tbody>
+                        </table>
+                      </ng-container>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- ── PERIODO May-Jun ── -->
+                <ng-container *ngIf="debeMostrarPeriodo('May-Jun')">
+                  <div class="periodo-card">
+                    <div class="periodo-header" (click)="togglePeriodo('May-Jun')">
+                      <div class="periodo-title">
+                        <i class="fas fa-chevron-right periodo-icon" [class.rotated]="periodoAbierto === 'May-Jun'"></i>
+                        Periodo - Mayo-Junio
+                      </div>
+                      <span class="status-value"
+                            [class.cerrado]="getEstadoPeriodo('May-Jun') === 'Cerrado'"
+                            [class.en-curso]="getEstadoPeriodo('May-Jun') === 'En curso'">
+                        {{ getEstadoPeriodo('May-Jun') }}
+                      </span>
+                    </div>
+                    <div class="periodo-detalle" *ngIf="periodoAbierto === 'May-Jun'">
+                      <ng-container *ngIf="getPeriodoData('May-Jun') as p">
+                        <table class="table-periodo">
+                          <thead><tr><th></th><th>SCOTT / BICICLETAS</th><th>APPAREL / SYNCROS</th></tr></thead>
+                          <tbody>
+                            <tr><td>Meta bimestral</td><td>{{ p.compBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.compApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>Avance real</td><td>{{ p.avBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.avApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>% Cumplimiento</td>
+                                <td [style.color]="p.pctBici >= 100 ? '#28a745' : '#dc3545'">{{ p.pctBici }}%</td>
+                                <td [style.color]="p.pctApp >= 100 ? '#28a745' : '#dc3545'">{{ p.pctApp }}%</td></tr>
+                            <tr><td>Faltante</td><td>{{ p.faltBici | currency:'USD':'$':'1.2-2' }}</td><td>{{ p.faltApp | currency:'USD':'$':'1.2-2' }}</td></tr>
+                            <tr><td>Estatus</td>
+                                <td><span [class.estado-cumplido]="p.faltBici<=0" [class.estado-faltante]="p.faltBici>0">{{ p.faltBici<=0?'Cumplido':'Faltante' }}</span></td>
+                                <td><span [class.estado-cumplido]="p.faltApp<=0" [class.estado-faltante]="p.faltApp>0">{{ p.faltApp<=0?'Cumplido':'Faltante' }}</span></td></tr>
+                          </tbody>
+                        </table>
+                      </ng-container>
+                    </div>
+                  </div>
+                </ng-container>
 
                 <div class="table-container">
                     <table>
