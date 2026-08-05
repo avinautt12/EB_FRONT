@@ -550,9 +550,18 @@ export class CaratulasComponent implements OnInit {
   }
 
   seleccionarSugerencia(sugerencia: SugerenciaCliente) {
+    // Si es miembro individual de un grupo integral, mostrar la carátula del grupo
+    if (!sugerencia.es_integral && sugerencia.id_grupo != null) {
+      const integralRow = this.allClientes.find(
+        c => c.es_integral === 1 && c.id_grupo === sugerencia.id_grupo
+      );
+      if (integralRow) {
+        sugerencia = integralRow;
+      }
+    }
     this.terminoBusqueda = sugerencia.clave;
     this.mostrarSugerencias = false;
-    this.isSearchingDirectly = true; // Marcar como búsqueda directa
+    this.isSearchingDirectly = true;
     this.buscarDatosCliente(sugerencia.clave, sugerencia.nombre_cliente || sugerencia.razon_social);
   }
 
