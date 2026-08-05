@@ -18,13 +18,17 @@ export class UpdateService implements OnDestroy {
       if (v) this.buildActual = v.build;
     });
 
-    this.pollSub = interval(this.INTERVALO_MS).pipe(
-      switchMap(() => this._leerVersion())
-    ).subscribe(v => {
-      if (v && this.buildActual !== null && v.build !== this.buildActual) {
-        this.hayActualizacion$.next(true);
-      }
-    });
+    // Jitter de hasta 60s para que 20 usuarios no consulten al mismo instante
+    const jitter = Math.floor(Math.random() * 60_000);
+    setTimeout(() => {
+      this.pollSub = interval(this.INTERVALO_MS).pipe(
+        switchMap(() => this._leerVersion())
+      ).subscribe(v => {
+        if (v && this.buildActual !== null && v.build !== this.buildActual) {
+          this.hayActualizacion$.next(true);
+        }
+      });
+    }, jitter);
   }
 
   recargar(): void {
