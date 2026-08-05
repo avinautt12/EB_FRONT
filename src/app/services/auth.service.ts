@@ -60,6 +60,19 @@ export class AuthService {
     });
   }
 
+  renovarToken(): Observable<{ token: string }> {
+    return this.http.post<{ token: string }>(`${this.apiUrl}/renovar_token`, {});
+  }
+
+  getTokenExpirySeconds(): number {
+    const token = localStorage.getItem('token');
+    if (!token) return 0;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp - Math.floor(Date.now() / 1000);
+    } catch { return 0; }
+  }
+
   isTokenValid(): boolean {
     const token = localStorage.getItem('token');
     if (!token) return false;
