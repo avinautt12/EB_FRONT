@@ -24,6 +24,7 @@ interface SugerenciaCliente {
   nivel_firmado?: string;
   grupo_integral?: number | null;
   es_integral?: number;
+  id_grupo?: number | null;
 }
 
 interface DatosCliente {
@@ -431,27 +432,26 @@ export class CaratulasComponent implements OnInit {
   private filtrarClientesLocalmente(termino: string): SugerenciaCliente[] {
     const terminoLower = termino.toLowerCase();
 
-    // Coincidencias directas
-    const directos = this.allClientes.filter(cliente => {
-      const clave = (cliente.clave || '').toLowerCase();
-      const razonSocial = (cliente.razon_social || '').toLowerCase();
-      const nombreCliente = (cliente.nombre_cliente || '').toLowerCase();
-      return clave.includes(terminoLower) || razonSocial.includes(terminoLower) || nombreCliente.includes(terminoLower);
+    // Coincidencias directas por clave o nombre
+    const directos = this.allClientes.filter(c => {
+      const clave = (c.clave || '').toLowerCase();
+      const nombre = (c.razon_social || c.nombre_cliente || '').toLowerCase();
+      return clave.includes(terminoLower) || nombre.includes(terminoLower);
     });
 
-    // Grupos integrales de los resultados directos (individuales)
+    // Recolectar id_grupo (campo unificado: individuales via clientes.id_grupo, integrales via previo.grupo_integral)
     const gruposEncontrados = new Set<number>(
       directos
-        .filter(c => c.grupo_integral && !c.es_integral)
-        .map(c => c.grupo_integral as number)
+        .filter(c => c.id_grupo != null)
+        .map(c => c.id_grupo as number)
     );
 
-    // Agregar todos los miembros del mismo grupo integral
+    // Agregar todos los miembros y el row integral del mismo grupo
     let ampliados: SugerenciaCliente[] = [...directos];
     if (gruposEncontrados.size > 0) {
       const extra = this.allClientes.filter(c =>
-        c.grupo_integral != null &&
-        gruposEncontrados.has(c.grupo_integral) &&
+        c.id_grupo != null &&
+        gruposEncontrados.has(c.id_grupo) &&
         !directos.includes(c)
       );
       ampliados = [...directos, ...extra];

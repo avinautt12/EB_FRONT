@@ -17,6 +17,7 @@ export interface SugerenciaCliente {
   nivel_firmado?: string;
   grupo_integral?: number | null;
   es_integral?: number;
+  id_grupo?: number | null;
 }
 
 // Interface para la respuesta de búsqueda
@@ -58,20 +59,22 @@ export class CaratulasService {
             datos = response;
           }
 
+          const _mapItem = (item: any): SugerenciaCliente => ({
+            clave: item.clave || '',
+            razon_social: item.nombre_cliente || '',
+            nombre_cliente: item.nombre_cliente || '',
+            evac: item.clave || '',
+            nivel_firmado: item.nivel || '',
+            grupo_integral: item.grupo_integral ?? null,
+            es_integral: item.es_integral ?? 0,
+            id_grupo: item.id_grupo ?? null
+          });
+
           // Si no hay término o está vacío, devolver todos para el cache
           if (!termino || termino.trim().length === 0) {
-            return datos.map(item => ({
-              clave: item.clave || '',
-              razon_social: item.nombre_cliente || '',
-              nombre_cliente: item.nombre_cliente || '',
-              evac: item.clave || '',
-              nivel_firmado: item.nivel || '',
-              grupo_integral: item.grupo_integral ?? null,
-              es_integral: item.es_integral ?? 0
-            }));
+            return datos.map(_mapItem);
           }
 
-          // Si hay término, filtrar normalmente
           if (termino.length < 2) {
             return [];
           }
@@ -84,26 +87,26 @@ export class CaratulasService {
             item.nombre_cliente?.toLowerCase().includes(terminoLower)
           );
 
-          // Paso 2: grupos integrales de los resultados directos (individuales)
+          // Paso 2: recolectar id_grupo de los resultados directos
+          // id_grupo viene del JOIN clientes: funciona tanto para individuales como para integrales
           const gruposEncontrados = new Set<number>(
             directos
-              .filter(item => item.grupo_integral && !item.es_integral)
-              .map(item => item.grupo_integral as number)
+              .filter(item => item.id_grupo != null)
+              .map(item => item.id_grupo as number)
           );
 
-          // Paso 3: agregar todos los miembros del mismo grupo integral
-          // (otros individuales del grupo + el row summary integral)
+          // Paso 3: agregar todos los demás miembros del mismo grupo
           let ampliados: any[] = [...directos];
           if (gruposEncontrados.size > 0) {
             const miembrosExtra = datos.filter(item =>
-              item.grupo_integral &&
-              gruposEncontrados.has(item.grupo_integral) &&
+              item.id_grupo != null &&
+              gruposEncontrados.has(item.id_grupo) &&
               !directos.includes(item)
             );
             ampliados = [...directos, ...miembrosExtra];
           }
 
-          // Deduplicar por clave
+          // Deduplicar por clave y limitar
           const vistos = new Set<string>();
           const resultadosFiltrados = ampliados.filter(item => {
             if (vistos.has(item.clave)) return false;
@@ -111,15 +114,7 @@ export class CaratulasService {
             return true;
           });
 
-          return resultadosFiltrados.slice(0, 15).map(item => ({
-            clave: item.clave || '',
-            razon_social: item.nombre_cliente || '',
-            nombre_cliente: item.nombre_cliente || '',
-            evac: item.clave || '',
-            nivel_firmado: item.nivel || '',
-            grupo_integral: item.grupo_integral ?? null,
-            es_integral: item.es_integral ?? 0
-          }));
+          return resultadosFiltrados.slice(0, 15).map(_mapItem);
         }),
         catchError(this.handleError)
       );
