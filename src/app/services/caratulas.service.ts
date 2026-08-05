@@ -15,6 +15,8 @@ export interface SugerenciaCliente {
   nombre_cliente?: string;
   evac?: string;
   nivel_firmado?: string;
+  grupo_integral?: number | null;
+  es_integral?: number;
 }
 
 // Interface para la respuesta de búsqueda
@@ -63,7 +65,9 @@ export class CaratulasService {
               razon_social: item.nombre_cliente || '',
               nombre_cliente: item.nombre_cliente || '',
               evac: item.clave || '',
-              nivel_firmado: item.nivel || ''
+              nivel_firmado: item.nivel || '',
+              grupo_integral: item.grupo_integral ?? null,
+              es_integral: item.es_integral ?? 0
             }));
           }
 
@@ -73,17 +77,48 @@ export class CaratulasService {
           }
 
           const terminoLower = termino.toLowerCase().trim();
-          const resultadosFiltrados = datos.filter(item =>
+
+          // Paso 1: coincidencias directas por clave o nombre
+          const directos = datos.filter(item =>
             item.clave?.toLowerCase().includes(terminoLower) ||
             item.nombre_cliente?.toLowerCase().includes(terminoLower)
           );
 
-          return resultadosFiltrados.slice(0, 10).map(item => ({
+          // Paso 2: grupos integrales de los resultados directos (individuales)
+          const gruposEncontrados = new Set<number>(
+            directos
+              .filter(item => item.grupo_integral && !item.es_integral)
+              .map(item => item.grupo_integral as number)
+          );
+
+          // Paso 3: agregar todos los miembros del mismo grupo integral
+          // (otros individuales del grupo + el row summary integral)
+          let ampliados: any[] = [...directos];
+          if (gruposEncontrados.size > 0) {
+            const miembrosExtra = datos.filter(item =>
+              item.grupo_integral &&
+              gruposEncontrados.has(item.grupo_integral) &&
+              !directos.includes(item)
+            );
+            ampliados = [...directos, ...miembrosExtra];
+          }
+
+          // Deduplicar por clave
+          const vistos = new Set<string>();
+          const resultadosFiltrados = ampliados.filter(item => {
+            if (vistos.has(item.clave)) return false;
+            vistos.add(item.clave);
+            return true;
+          });
+
+          return resultadosFiltrados.slice(0, 15).map(item => ({
             clave: item.clave || '',
             razon_social: item.nombre_cliente || '',
             nombre_cliente: item.nombre_cliente || '',
             evac: item.clave || '',
-            nivel_firmado: item.nivel || ''
+            nivel_firmado: item.nivel || '',
+            grupo_integral: item.grupo_integral ?? null,
+            es_integral: item.es_integral ?? 0
           }));
         }),
         catchError(this.handleError)

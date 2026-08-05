@@ -429,16 +429,39 @@ export class CaratulasComponent implements OnInit {
   private filtrarClientesLocalmente(termino: string): SugerenciaCliente[] {
     const terminoLower = termino.toLowerCase();
 
-    return this.allClientes.filter(cliente => {
+    // Coincidencias directas
+    const directos = this.allClientes.filter(cliente => {
       const clave = (cliente.clave || '').toLowerCase();
       const razonSocial = (cliente.razon_social || '').toLowerCase();
       const nombreCliente = (cliente.nombre_cliente || '').toLowerCase();
+      return clave.includes(terminoLower) || razonSocial.includes(terminoLower) || nombreCliente.includes(terminoLower);
+    });
 
-      // Buscar coincidencias en clave, razón social o nombre
-      return clave.includes(terminoLower) ||
-        razonSocial.includes(terminoLower) ||
-        nombreCliente.includes(terminoLower);
-    }).slice(0, 10); // Limitar a 10 resultados para mejor performance
+    // Grupos integrales de los resultados directos (individuales)
+    const gruposEncontrados = new Set<number>(
+      directos
+        .filter(c => c.grupo_integral && !c.es_integral)
+        .map(c => c.grupo_integral as number)
+    );
+
+    // Agregar todos los miembros del mismo grupo integral
+    let ampliados: SugerenciaCliente[] = [...directos];
+    if (gruposEncontrados.size > 0) {
+      const extra = this.allClientes.filter(c =>
+        c.grupo_integral != null &&
+        gruposEncontrados.has(c.grupo_integral) &&
+        !directos.includes(c)
+      );
+      ampliados = [...directos, ...extra];
+    }
+
+    // Deduplicar y limitar
+    const vistos = new Set<string>();
+    return ampliados.filter(c => {
+      if (vistos.has(c.clave)) return false;
+      vistos.add(c.clave);
+      return true;
+    }).slice(0, 15);
   }
 
   private obtenerSugerencias(termino: string): Observable<SugerenciaCliente[]> {
