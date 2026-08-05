@@ -621,7 +621,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
   proyeccionesCount = 0;
 
   contarTab(tab: string): number {
-    if (tab === 'Total') return this.facturas.length;
+    if (tab === 'Total') return this.facturas.length + this.proyeccionesCount;
     if (tab === 'Proyecciones') return this.proyeccionesCount;
     return this.facturas.filter(f => f.estado_factura === tab).length;
   }
