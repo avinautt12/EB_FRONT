@@ -17,14 +17,20 @@
       </p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-outline" (click)="cargar(true)">
+      <button class="btn btn-outline" (click)="actualizar()">
         <i class="fas fa-sync-alt"></i> Actualizar
       </button>
-      <button class="btn btn-primary" (click)="exportar()">
-        <i class="fas fa-file-excel"></i> Exportar Excel
-      </button>
-      <button class="btn btn-megamo" (click)="exportarMegamo()">
-        <i class="fas fa-file-excel"></i> Exportar Megamo
+      <ng-container *ngIf="activeTab === 'monitor'">
+        <button class="btn btn-primary" (click)="exportar()">
+          <i class="fas fa-file-excel"></i> Exportar Excel
+        </button>
+        <button class="btn btn-megamo" (click)="exportarMegamo()">
+          <i class="fas fa-file-excel"></i> Exportar Megamo
+        </button>
+      </ng-container>
+      <button *ngIf="activeTab === 'inventario' && coberturaMegamo.length > 0"
+              class="btn btn-primary" (click)="exportarCobertura()">
+        <i class="fas fa-file-excel"></i> Exportar Inventario
       </button>
     </div>
   </div>
@@ -284,14 +290,161 @@
         <strong>Inventario cargado correctamente.</strong>
         &nbsp;{{ uploadResultado.total }} SKUs procesados
         ({{ uploadResultado.insertados }} nuevos, {{ uploadResultado.actualizados }} actualizados).
-        <span *ngIf="uploadResultado.errores?.length > 0" class="inv-result-warn">
-          &nbsp;{{ uploadResultado.errores.length }} filas ignoradas.
+        <span *ngIf="$any(uploadResultado).errores?.length > 0" class="inv-result-warn">
+          &nbsp;{{ $any(uploadResultado).errores.length }} filas ignoradas.
         </span>
       </div>
       <div *ngIf="uploadEstado === 'error' && uploadResultado" class="inv-upload-result error">
         <i class="fas fa-exclamation-circle"></i>
         <strong>No se pudo subir el archivo.</strong>
         &nbsp;{{ uploadResultado.errores[0] || 'Error desconocido.' }}
+      </div>
+    </div>
+
+    <!-- ── KPI Cards (Inventario) ─────────────────────────────── -->
+    <div class="ikpi-grid" *ngIf="kpisData && !cargandoCobertura">
+
+      <div class="ikpi-card ikpi-neutral">
+        <div class="ikpi-hdr">
+          <span class="ikpi-card-label">SKUs en inventario</span>
+          <div class="ikpi-card-ico"><i class="fas fa-boxes"></i></div>
+        </div>
+        <div class="ikpi-card-num">{{ kpisData.totalSKUs }}</div>
+        <div class="ikpi-card-sub">{{ kpisData.conProyeccion }} con demanda · {{ kpisData.sinDemanda }} sin pedidos</div>
+      </div>
+
+      <div class="ikpi-card ikpi-green" role="button" (click)="abrirModalKpi('cubiertos')">
+        <div class="ikpi-hdr">
+          <span class="ikpi-card-label">Cubiertos</span>
+          <div class="ikpi-card-ico"><i class="fas fa-check-double"></i></div>
+        </div>
+        <div class="ikpi-card-num">{{ kpisData.cubiertos.length }}</div>
+        <div class="ikpi-card-sub">demanda 100% satisfecha</div>
+      </div>
+
+      <div class="ikpi-card ikpi-red" role="button" (click)="abrirModalKpi('faltantes')">
+        <div class="ikpi-hdr">
+          <span class="ikpi-card-label">Con faltante</span>
+          <div class="ikpi-card-ico"><i class="fas fa-exclamation-triangle"></i></div>
+        </div>
+        <div class="ikpi-card-num">{{ kpisData.faltantes.length }}</div>
+        <div class="ikpi-card-sub">{{ kpisData.totalFaltante }} unidades por cubrir</div>
+      </div>
+
+      <div class="ikpi-card ikpi-blue" role="button" (click)="abrirModalKpi('sobrantes')">
+        <div class="ikpi-hdr">
+          <span class="ikpi-card-label">Sobrantes</span>
+          <div class="ikpi-card-ico"><i class="fas fa-layer-group"></i></div>
+        </div>
+        <div class="ikpi-card-num">{{ kpisData.totalSobrante }}</div>
+        <div class="ikpi-card-sub">en {{ kpisData.sobrantes.length }} SKUs</div>
+      </div>
+
+      <div class="ikpi-card ikpi-orange" role="button" (click)="abrirModalKpi('meses')">
+        <div class="ikpi-hdr">
+          <span class="ikpi-card-label">Mes pico</span>
+          <div class="ikpi-card-ico"><i class="fas fa-calendar-alt"></i></div>
+        </div>
+        <div class="ikpi-card-num">{{ kpisData.mesPico?.label || '—' }}</div>
+        <div class="ikpi-card-sub">{{ kpisData.mesPico?.total || 0 }} unidades proyectadas</div>
+      </div>
+
+    </div>
+
+    <!-- ── Modal KPI ─────────────────────────────────────────────── -->
+    <div class="ikpi-overlay" *ngIf="modalKpi && kpisData" (click)="cerrarModalKpi()">
+      <div class="ikpi-modal" (click)="$event.stopPropagation()">
+
+        <!-- CUBIERTOS -->
+        <ng-container *ngIf="modalKpi === 'cubiertos'">
+          <div class="ikpi-modal-hdr ikpi-modal-green">
+            <span><i class="fas fa-check-double"></i> SKUs completamente cubiertos</span>
+            <span class="ikpi-modal-badge">{{ kpisData.cubiertos.length }}</span>
+            <button class="ikpi-modal-close" (click)="cerrarModalKpi()"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="ikpi-modal-body">
+            <div class="ikpi-modal-item" *ngFor="let s of kpisData.cubiertos">
+              <span class="ikpi-m-sku">{{ s.sku }}</span>
+              <span class="ikpi-m-prod">{{ s.producto }}</span>
+              <div class="ikpi-m-pills">
+                <span class="ikpi-pill ikpi-pill-green">{{ s.cantidad_entrante }} entrantes</span>
+                <span class="ikpi-pill ikpi-pill-muted">{{ s.total_proyectado }} proyectados</span>
+                <span class="ikpi-pill ikpi-pill-purple" *ngIf="s.sobrante > 0">+{{ s.sobrante }} sobrante</span>
+              </div>
+            </div>
+            <div class="ikpi-modal-empty" *ngIf="kpisData.cubiertos.length === 0">Ningún SKU cubierto aún.</div>
+          </div>
+        </ng-container>
+
+        <!-- FALTANTES -->
+        <ng-container *ngIf="modalKpi === 'faltantes'">
+          <div class="ikpi-modal-hdr ikpi-modal-red">
+            <span><i class="fas fa-exclamation-triangle"></i> SKUs con faltante · mayor déficit primero</span>
+            <span class="ikpi-modal-badge">{{ kpisData.totalFaltante }} uds.</span>
+            <button class="ikpi-modal-close" (click)="cerrarModalKpi()"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="ikpi-modal-body">
+            <div class="ikpi-modal-item" *ngFor="let s of kpisData.faltantes">
+              <span class="ikpi-m-sku">{{ s.sku }}</span>
+              <span class="ikpi-m-prod">{{ s.producto }}</span>
+              <div class="ikpi-m-pills">
+                <span class="ikpi-pill ikpi-pill-red">−{{ s.total_deficit }} faltan</span>
+                <ng-container *ngFor="let mc of s.cobertura">
+                  <span class="ikpi-pill ikpi-pill-red-light"
+                        *ngIf="mc.estado === 'sin_cobertura'">
+                    {{ (mc.mes + '').slice(0,3).toUpperCase() }} −{{ mc.deficit }}
+                  </span>
+                  <span class="ikpi-pill ikpi-pill-amber"
+                        *ngIf="mc.estado === 'parcial'">
+                    {{ (mc.mes + '').slice(0,3).toUpperCase() }} {{ mc.cubierto }}/{{ mc.proyectado }}
+                  </span>
+                </ng-container>
+              </div>
+            </div>
+            <div class="ikpi-modal-empty" *ngIf="kpisData.faltantes.length === 0">¡Todo cubierto! Sin faltantes.</div>
+          </div>
+        </ng-container>
+
+        <!-- SOBRANTES -->
+        <ng-container *ngIf="modalKpi === 'sobrantes'">
+          <div class="ikpi-modal-hdr ikpi-modal-purple">
+            <span><i class="fas fa-layer-group"></i> SKUs con excedente · mayor sobrante primero</span>
+            <span class="ikpi-modal-badge">{{ kpisData.totalSobrante }} uds.</span>
+            <button class="ikpi-modal-close" (click)="cerrarModalKpi()"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="ikpi-modal-body">
+            <div class="ikpi-modal-item" *ngFor="let s of kpisData.sobrantes">
+              <span class="ikpi-m-sku">{{ s.sku }}</span>
+              <span class="ikpi-m-prod">{{ s.producto }}</span>
+              <div class="ikpi-m-pills">
+                <span class="ikpi-pill ikpi-pill-purple">+{{ s.sobrante }} sobrantes</span>
+                <span class="ikpi-pill ikpi-pill-muted">{{ s.cantidad_entrante }} entrantes</span>
+                <span class="ikpi-pill ikpi-pill-muted">{{ s.total_proyectado }} proyectados</span>
+              </div>
+            </div>
+            <div class="ikpi-modal-empty" *ngIf="kpisData.sobrantes.length === 0">Sin sobrantes.</div>
+          </div>
+        </ng-container>
+
+        <!-- MESES -->
+        <ng-container *ngIf="modalKpi === 'meses'">
+          <div class="ikpi-modal-hdr ikpi-modal-amber">
+            <span><i class="fas fa-chart-bar"></i> Demanda proyectada por mes</span>
+            <button class="ikpi-modal-close" (click)="cerrarModalKpi()"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="ikpi-modal-body">
+            <div class="ikpi-bar-row" *ngFor="let m of kpisData.mesTotales">
+              <span class="ikpi-bar-label">{{ m.label }}</span>
+              <div class="ikpi-bar-track">
+                <div class="ikpi-bar-fill"
+                     [class.ikpi-bar-pico]="m.total === kpisData.maxMes && kpisData.maxMes > 0"
+                     [style.width.%]="barWidth(m.total, kpisData.maxMes)"></div>
+              </div>
+              <span class="ikpi-bar-val" [class.ikpi-bar-pico-val]="m.total === kpisData.maxMes && kpisData.maxMes > 0">{{ m.total }}</span>
+            </div>
+          </div>
+        </ng-container>
+
       </div>
     </div>
 

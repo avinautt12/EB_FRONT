@@ -118,4 +118,8 @@ export class ProyeccionesMY27Service {
       params: { periodo }
     });
   }
+
+  getExportCoberturaUrl(periodo = '2026-2027'): string {
+    return `${this.api}/proyecciones-my27/exportar-cobertura?periodo=${periodo}`;
+  }
 }

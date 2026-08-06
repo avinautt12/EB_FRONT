@@ -46,6 +46,8 @@ export class ProyeccionesMY27Component implements OnInit {
 
   // --- Tab system ---
   activeTab: 'monitor' | 'inventario' = 'monitor';
+  modalKpi: 'cubiertos' | 'faltantes' | 'sobrantes' | 'meses' | null = null;
+  kpisData: any = null;
 
   // --- Upload state ---
   archivoInventario: File | null = null;
@@ -103,6 +105,10 @@ export class ProyeccionesMY27Component implements OnInit {
 
   exportarMegamo(): void {
     window.open(this.svc.getExportUrl(this.datos?.periodo ?? '2026-2027', 'MEGAMO'), '_blank');
+  }
+
+  exportarCobertura(): void {
+    window.open(this.svc.getExportCoberturaUrl(this.periodo), '_blank');
   }
 
   get articulosFiltrados(): ArticuloMY27[] {
@@ -186,10 +192,39 @@ export class ProyeccionesMY27Component implements OnInit {
 
   setTab(tab: 'monitor' | 'inventario'): void {
     this.activeTab = tab;
-    if (tab === 'inventario' && this.coberturaMegamo.length === 0) {
-      this.cargarCobertura();
+    if (tab === 'inventario') {
+      if (this.coberturaMegamo.length === 0) {
+        this.cargarCobertura();
+      } else if (!this.kpisData) {
+        this.kpisData = this._computeKpis();
+        this.cdr.markForCheck();
+      }
     }
     this.cdr.markForCheck();
+  }
+
+  actualizar(): void {
+    if (this.activeTab === 'inventario') {
+      // Primero regenera el caché del Monitor (con datos frescos de Odoo),
+      // luego recarga cobertura para que lea el caché actualizado
+      this.cargando = true;
+      this.cdr.markForCheck();
+      this.svc.getDatos(this.periodo, true).subscribe({
+        next: (d) => {
+          this.datos = d;
+          this.cargando = false;
+          this.cdr.markForCheck();
+          this.cargarCobertura();
+        },
+        error: () => {
+          this.cargando = false;
+          this.cdr.markForCheck();
+          this.cargarCobertura();
+        },
+      });
+    } else {
+      this.cargar(true);
+    }
   }
 
   onArchivoSeleccionado(event: Event): void {
@@ -227,14 +262,16 @@ export class ProyeccionesMY27Component implements OnInit {
   cargarCobertura(): void {
     this.cargandoCobertura = true;
     this.errorCobertura = null;
+    this.kpisData = null;
     this.cdr.markForCheck();
     this.svc.getCoberturaMegamo(this.periodo)
       .subscribe({
         next: (res) => {
           this.coberturaMegamo = res.cobertura || [];
           this.cargandoCobertura = false;
-          this.cdr.markForCheck();
           this.filtrarCobertura();
+          this.kpisData = this._computeKpis();
+          this.cdr.markForCheck();
         },
         error: () => {
           this.errorCobertura = 'No se pudo cargar el análisis de cobertura.';
@@ -279,6 +316,57 @@ export class ProyeccionesMY27Component implements OnInit {
       case 'sin_cobertura': return '#ef4444';
       default:              return '#d1d5db';
     }
+  }
+
+  abrirModalKpi(tipo: 'cubiertos' | 'faltantes' | 'sobrantes' | 'meses'): void {
+    this.modalKpi = tipo;
+    this.cdr.markForCheck();
+  }
+
+  cerrarModalKpi(): void {
+    this.modalKpi = null;
+    this.cdr.markForCheck();
+  }
+
+  barWidth(val: number, max: number): number {
+    return max > 0 ? Math.round((val / max) * 100) : 0;
+  }
+
+  private _computeKpis(): any {
+    const skus = this.coberturaMegamo;
+    if (!skus.length) return null;
+
+    const conProyeccion = skus.filter((s: any) => s.total_proyectado > 0);
+    const sinDemanda    = skus.filter((s: any) => s.total_proyectado === 0);
+    const cubiertos     = conProyeccion.filter((s: any) => s.total_deficit === 0);
+    const faltantes     = conProyeccion
+      .filter((s: any) => s.total_deficit > 0)
+      .sort((a: any, b: any) => b.total_deficit - a.total_deficit);
+    const sobrantes     = skus
+      .filter((s: any) => s.sobrante > 0)
+      .sort((a: any, b: any) => b.sobrante - a.sobrante);
+
+    const totalSobrante = skus.reduce((acc: number, s: any) => acc + (s.sobrante || 0), 0);
+    const totalFaltante = skus.reduce((acc: number, s: any) => acc + (s.total_deficit || 0), 0);
+
+    const mesTotales = this.MESES.map(m => {
+      const total = skus.reduce((acc: number, s: any) => {
+        const mc = (s.cobertura || []).find((c: any) => c.mes === m.key);
+        return acc + (mc ? (mc.proyectado || 0) : 0);
+      }, 0);
+      return { key: m.key, label: m.label, total };
+    });
+    const maxMes  = mesTotales.reduce((mx, m) => m.total > mx ? m.total : mx, 0);
+    const mesPico = mesTotales.find(m => m.total === maxMes && maxMes > 0) || null;
+
+    return {
+      totalSKUs: skus.length,
+      conProyeccion: conProyeccion.length,
+      sinDemanda: sinDemanda.length,
+      cubiertos, faltantes, sobrantes,
+      totalSobrante, totalFaltante,
+      mesTotales, mesPico, maxMes,
+    };
   }
 
 }
