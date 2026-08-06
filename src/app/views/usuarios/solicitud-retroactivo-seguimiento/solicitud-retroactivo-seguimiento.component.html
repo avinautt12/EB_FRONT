@@ -193,6 +193,7 @@
           <div class="tl-content">
             <span class="tl-desc">{{ item.descripcion }}</span>
             <span class="tl-fecha">{{ item.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+            <span class="tl-actor" *ngIf="item.usuario">por {{ item.usuario }}</span>
           </div>
         </div>
       </div>

@@ -173,6 +173,9 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
         }
         solicitud.validacion_docs = res.validacion_docs;
         solicitud.estatus = res.estatus;
+        if (res.historial) {
+          solicitud.historial = res.historial;
+        }
         this.procesandoDoc.delete(doc);
       },
       error: () => { this.procesandoDoc.delete(doc); }
@@ -219,6 +222,9 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
     this.service.corregirNotaCredito(solicitud.id, valor).subscribe({
       next: (res) => {
         solicitud.nota_credito = res.nota_credito;
+        if (res.historial) {
+          solicitud.historial = res.historial;
+        }
         this.guardandoNotaCredito = false;
         this.editandoNotaCredito = false;
       },
@@ -244,6 +250,9 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
         solicitud.precio_publico = res.precio_publico;
         solicitud.monto_pagar = res.monto_pagar;
         solicitud.monto_aplicar = res.monto_aplicar;
+        if (res.historial) {
+          solicitud.historial = res.historial;
+        }
         this.guardandoPrecio = false;
         this.editandoPrecio = false;
       },
