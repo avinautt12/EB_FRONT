@@ -29,6 +29,19 @@
     </div>
   </div>
 
+  <!-- Tabs -->
+  <div class="my27-tabs">
+    <button class="my27-tab" [class.active]="activeTab === 'monitor'" (click)="setTab('monitor')">
+      <i class="fas fa-chart-bar"></i> Monitor de Proyecciones
+    </button>
+    <button class="my27-tab" [class.active]="activeTab === 'inventario'" (click)="setTab('inventario')">
+      <i class="fas fa-boxes"></i> Inventario Entrante
+    </button>
+  </div>
+
+  <!-- Tab: Monitor (contenido existente) -->
+  <div *ngIf="activeTab === 'monitor'">
+
   <!-- ── CARGANDO ── -->
   <div class="state-box" *ngIf="cargando">
     <div class="spinner"></div>
@@ -228,6 +241,117 @@
     </div>
 
   </ng-container>
+
+  </div><!-- /tab monitor -->
+
+  <!-- Tab: Inventario Entrante (NUEVO) -->
+  <div *ngIf="activeTab === 'inventario'" class="inventario-tab">
+
+    <!-- Sección de carga de archivo -->
+    <div class="inv-upload-card">
+      <h2><i class="fas fa-file-excel"></i> Cargar inventario entrante</h2>
+      <p class="inv-upload-desc">
+        Sube un archivo Excel con las columnas <strong>SKU</strong> y <strong>CANTIDAD</strong>
+        para calcular la cobertura contra las proyecciones de todos los distribuidores.
+      </p>
+      <div class="inv-upload-row">
+        <label class="inv-file-label">
+          <i class="fas fa-upload"></i>
+          {{ archivoInventario ? archivoInventario.name : 'Seleccionar archivo (.xlsx)' }}
+          <input type="file" accept=".xlsx,.xls" (change)="onArchivoSeleccionado($event)" hidden />
+        </label>
+        <button class="inv-btn-upload"
+                [disabled]="!archivoInventario || uploadEstado === 'cargando'"
+                (click)="subirInventario()">
+          <i class="fas" [class.fa-spinner]="uploadEstado === 'cargando'"
+                         [class.fa-spin]="uploadEstado === 'cargando'"
+                         [class.fa-check]="uploadEstado === 'ok'"
+                         [class.fa-cloud-upload-alt]="uploadEstado !== 'cargando' && uploadEstado !== 'ok'"></i>
+          {{ uploadEstado === 'cargando' ? 'Cargando...' : 'Subir' }}
+        </button>
+      </div>
+      <div *ngIf="uploadResultado" class="inv-upload-result" [class.success]="uploadEstado === 'ok'" [class.error]="uploadEstado === 'error'">
+        <ng-container *ngIf="uploadEstado === 'ok'">
+          <i class="fas fa-check-circle"></i>
+          {{ uploadResultado.total }} SKUs procesados
+          ({{ uploadResultado.insertados }} nuevos, {{ uploadResultado.actualizados }} actualizados)
+        </ng-container>
+        <ng-container *ngIf="uploadEstado === 'error'">
+          <i class="fas fa-exclamation-circle"></i>
+          {{ uploadResultado.errores[0] || 'Error al subir el archivo' }}
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Buscador -->
+    <div class="inv-search-row" *ngIf="coberturaMegamo.length > 0">
+      <input type="text" class="inv-search"
+             placeholder="Buscar por SKU o producto..."
+             [(ngModel)]="filtroBusqueda"
+             (input)="filtrarCobertura()" />
+      <span class="inv-count">{{ coberturaFiltrada.length }} SKUs</span>
+    </div>
+
+    <!-- Spinner -->
+    <div *ngIf="cargandoCobertura" class="inv-spinner">
+      <div class="spinner"></div>
+      <p>Calculando cobertura...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="errorCobertura && !cargandoCobertura" class="inv-error">
+      <i class="fas fa-exclamation-triangle"></i> {{ errorCobertura }}
+    </div>
+
+    <!-- Sin inventario -->
+    <div *ngIf="!cargandoCobertura && !errorCobertura && coberturaMegamo.length === 0 && uploadEstado !== 'cargando'" class="inv-empty">
+      <i class="fas fa-inbox"></i>
+      <p>No hay inventario cargado. Sube un Excel para ver el análisis de cobertura.</p>
+    </div>
+
+    <!-- Tabla de cobertura -->
+    <div *ngIf="!cargandoCobertura && coberturaFiltrada.length > 0" class="inv-table-wrapper">
+      <table class="inv-table">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Producto</th>
+            <th class="num">Entrante</th>
+            <th class="num">Total Proyectado</th>
+            <th class="num">Cubierto</th>
+            <th class="num">Faltante</th>
+            <th class="num">Sobrante</th>
+            <th>Cobertura por mes</th>
+            <th>Resumen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of coberturaFiltrada" [class.sin-demanda]="item.total_proyectado === 0">
+            <td class="sku-cell">{{ item.sku }}</td>
+            <td>{{ item.producto }}</td>
+            <td class="num">{{ item.cantidad_entrante }}</td>
+            <td class="num">{{ item.total_proyectado }}</td>
+            <td class="num covered">{{ item.total_cubierto }}</td>
+            <td class="num deficit" [class.zero]="item.total_deficit === 0">{{ item.total_deficit }}</td>
+            <td class="num sobrante" [class.zero]="item.sobrante === 0">{{ item.sobrante }}</td>
+            <td class="meses-cell">
+              <div class="meses-grid">
+                <div *ngFor="let mc of item.cobertura" class="mes-bloque"
+                     [style.background-color]="getCoberturaColor(mc.estado)"
+                     [title]="mc.mes + ': proyectado=' + mc.proyectado + ', cubierto=' + mc.cubierto + ', faltante=' + mc.deficit">
+                  <span class="mes-label">{{ mc.mes | slice:0:3 }}</span>
+                  <span class="mes-num">{{ mc.cubierto }}/{{ mc.proyectado }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="resumen-cell">{{ resumenCobertura(item) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /tab inventario -->
+
 </div>
 
 <!-- ═══ MODAL DESGLOSE ═══ -->
