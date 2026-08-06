@@ -21,7 +21,7 @@
     </div>
 
     <div class="info-box">
-        <p>Completa el formulario para registrar tus compras a MSI para SCOTT, MEGAMO y BOLD (campaña a partir del 11 de mayo de 2026).</p>
+        <p>Completa el formulario para registrar tus compras a MSI para SCOTT, MEGAMO y BOLD</p>
         <ul>
             <li><strong>Aplica para:</strong> Ventas a 6, 12 y 18 MSI sobre modelos participantes.</li>
             <li><strong>Documentación:</strong> Factura timbrada (PDF/XML) y Voucher/Ticket deben tener la misma fecha.</li>
@@ -93,7 +93,7 @@
                     </div>
 
                     <div class="form-group" [class.campo-invalid]="esCampoInvalido('fecha_venta')">
-                        <label>Fecha de Venta:</label>
+                        <label>Fecha del Ticket:</label>
                         <input type="date" formControlName="fecha_venta">
                         <span class="campo-error-text" *ngIf="esCampoInvalido('fecha_venta')">Este campo es obligatorio</span>
                     </div>
@@ -134,8 +134,22 @@
                 </p>
 
                 <div class="campos-grid">
-                    <div class="form-group form-group-file" *ngFor="let campo of camposArchivosVisibles" [class.campo-invalid]="!archivos[campo.key] && mensajeError">
-                        <label>{{ campo.label }}:</label>
+                    <!-- AQUI ESTÁ LA CORRECCIÓN: Se agrega la validación para no pintar de rojo los archivos opcionales -->
+                    <div class="form-group form-group-file" *ngFor="let campo of camposArchivosVisibles" 
+                         [class.campo-invalid]="!archivos[campo.key] && mensajeError && campo.key !== 'factura_pdf' && campo.key !== 'factura_xml'">
+                        
+                        <label class="tooltip-informacion">
+                            {{ campo.label }}
+                            <span *ngIf="campo.key === 'factura_pdf' || campo.key === 'factura_xml'" style="font-weight: normal; font-size: 0.9em;">(Opcional)</span>:
+                            
+                            <ng-container *ngIf="campo.tooltip">
+                                <i class="fa fa-question-circle" aria-hidden="true"></i>
+                                <div class="tooltip-informacion-recuadro">
+                                    {{ campo.tooltip }}
+                                </div>
+                            </ng-container>
+                        </label>
+                        
                         <label class="upload-label">
                             <i class="fas fa-cloud-arrow-up"></i>
                             <span>{{ archivos[campo.key] ? 'Cambiar archivo' : 'Seleccionar archivo' }}</span>
