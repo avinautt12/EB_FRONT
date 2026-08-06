@@ -56,6 +56,33 @@ export interface ProyeccionesMY27Response {
   generado_en: string;
 }
 
+// --- Tipos para inventario entrante y cobertura FIFO ---
+export interface InventarioMegamoItem {
+  sku: string;
+  cantidad: number;
+  descripcion: string | null;
+  subido_en: string;
+}
+
+export interface CoberturaItem {
+  mes: string;
+  proyectado: number;
+  cubierto: number;
+  deficit: number;
+  estado: 'completo' | 'parcial' | 'sin_cobertura' | 'sin_demanda';
+}
+
+export interface CoberturaSku {
+  sku: string;
+  producto: string;
+  cantidad_entrante: number;
+  total_proyectado: number;
+  total_cubierto: number;
+  total_deficit: number;
+  sobrante: number;
+  cobertura: CoberturaItem[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProyeccionesMY27Service {
   private api = environment.apiUrl;
@@ -71,5 +98,24 @@ export class ProyeccionesMY27Service {
   getExportUrl(periodo = '2026-2027', marca = ''): string {
     const m = marca ? `&marca=${marca}` : '';
     return `${this.api}/proyecciones-my27/exportar?periodo=${periodo}${m}`;
+  }
+
+  subirInventarioMegamo(file: File, periodo: string = '2026-2027'): Observable<any> {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('periodo', periodo);
+    return this.http.post(`${this.api}/proyecciones-my27/inventario-megamo`, form);
+  }
+
+  getInventarioMegamo(periodo: string = '2026-2027'): Observable<{ periodo: string; inventario: InventarioMegamoItem[] }> {
+    return this.http.get<any>(`${this.api}/proyecciones-my27/inventario-megamo`, {
+      params: { periodo }
+    });
+  }
+
+  getCoberturaMegamo(periodo: string = '2026-2027'): Observable<{ periodo: string; cobertura: CoberturaSku[] }> {
+    return this.http.get<any>(`${this.api}/proyecciones-my27/cobertura-megamo`, {
+      params: { periodo }
+    });
   }
 }
