@@ -261,25 +261,37 @@
           <input type="file" accept=".xlsx,.xls" (change)="onArchivoSeleccionado($event)" hidden />
         </label>
         <button class="inv-btn-upload"
+                [class.success]="uploadEstado === 'ok'"
+                [class.error]="uploadEstado === 'error'"
                 [disabled]="!archivoInventario || uploadEstado === 'cargando'"
                 (click)="subirInventario()">
-          <i class="fas" [class.fa-spinner]="uploadEstado === 'cargando'"
-                         [class.fa-spin]="uploadEstado === 'cargando'"
-                         [class.fa-check]="uploadEstado === 'ok'"
-                         [class.fa-cloud-upload-alt]="uploadEstado !== 'cargando' && uploadEstado !== 'ok'"></i>
-          {{ uploadEstado === 'cargando' ? 'Cargando...' : 'Subir' }}
+          <i class="fas"
+             [class.fa-spinner]="uploadEstado === 'cargando'"
+             [class.fa-spin]="uploadEstado === 'cargando'"
+             [class.fa-check-circle]="uploadEstado === 'ok'"
+             [class.fa-exclamation-circle]="uploadEstado === 'error'"
+             [class.fa-cloud-upload-alt]="uploadEstado === 'idle'"></i>
+          {{ uploadEstado === 'cargando' ? 'Subiendo...'
+           : uploadEstado === 'ok'      ? '¡Cargado!'
+           : uploadEstado === 'error'   ? 'Error'
+           :                             'Subir' }}
         </button>
       </div>
-      <div *ngIf="uploadResultado" class="inv-upload-result" [class.success]="uploadEstado === 'ok'" [class.error]="uploadEstado === 'error'">
-        <ng-container *ngIf="uploadEstado === 'ok'">
-          <i class="fas fa-check-circle"></i>
-          {{ uploadResultado.total }} SKUs procesados
-          ({{ uploadResultado.insertados }} nuevos, {{ uploadResultado.actualizados }} actualizados)
-        </ng-container>
-        <ng-container *ngIf="uploadEstado === 'error'">
-          <i class="fas fa-exclamation-circle"></i>
-          {{ uploadResultado.errores[0] || 'Error al subir el archivo' }}
-        </ng-container>
+
+      <!-- Resultado del upload -->
+      <div *ngIf="uploadEstado === 'ok' && uploadResultado" class="inv-upload-result success">
+        <i class="fas fa-check-circle"></i>
+        <strong>Inventario cargado correctamente.</strong>
+        &nbsp;{{ uploadResultado.total }} SKUs procesados
+        ({{ uploadResultado.insertados }} nuevos, {{ uploadResultado.actualizados }} actualizados).
+        <span *ngIf="uploadResultado.errores?.length > 0" class="inv-result-warn">
+          &nbsp;{{ uploadResultado.errores.length }} filas ignoradas.
+        </span>
+      </div>
+      <div *ngIf="uploadEstado === 'error' && uploadResultado" class="inv-upload-result error">
+        <i class="fas fa-exclamation-circle"></i>
+        <strong>No se pudo subir el archivo.</strong>
+        &nbsp;{{ uploadResultado.errores[0] || 'Error desconocido.' }}
       </div>
     </div>
 
