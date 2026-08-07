@@ -235,8 +235,41 @@
         </div>
       </div>
 
+      <div class="rank-card rank-card-full">
+        <div class="rank-card-header">
+          <div class="rank-title">
+            <div class="rank-icon rank-icon-blue"><i class="fas fa-box"></i></div>
+            <div>
+              <div class="rank-title-text">Por Producto</div>
+              <div class="rank-subtitle">Monto retroactivo por producto</div>
+            </div>
+          </div>
+          <div class="rank-actions">
+            <select class="rank-sort-select" [ngModel]="ordenPorPanel.producto" (ngModelChange)="setOrden('producto', $event)">
+              <option *ngFor="let o of sortOpciones" [value]="o.value">{{ o.label }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="rank-total">
+          Total general: <strong>{{ totalGrupo(porProductoOrdenado).monto | currency:'USD':'$':'1.0-0' }}</strong>
+          · {{ totalGrupo(porProductoOrdenado).solicitudes }} solicitud{{ totalGrupo(porProductoOrdenado).solicitudes !== 1 ? 'es' : '' }}
+        </div>
+        <div class="rank-list rank-list-scroll">
+          <div class="rank-row rank-row-click" *ngFor="let fila of porProductoOrdenado; let i = index" (click)="abrirDetalleProducto(fila)" title="Ver solicitudes de este producto">
+            <span class="rank-num">{{ i + 1 }}</span>
+            <span class="rank-label" [title]="fila['producto']">{{ fila['producto'] }}</span>
+            <div class="rank-bar-track">
+              <div class="rank-bar-fill" [style.width.%]="barPct(fila.monto_total, porProductoOrdenado)"></div>
+            </div>
+            <span class="rank-value">
+              {{ fila.monto_total | currency:'USD':'$':'1.0-0' }}
+              <span class="rank-value-meta">{{ fila.total_solicitudes }} sol.</span>
+            </span>
+          </div>
+          <div class="rank-empty" *ngIf="!porProductoOrdenado.length"><i class="fas fa-inbox"></i> Sin resultados</div>
+        </div>
+      </div>
     </div>
-
   </ng-container>
 
   <!-- ── VISTA DE LISTA (mismo patrón que garantias.component: vista='lista'

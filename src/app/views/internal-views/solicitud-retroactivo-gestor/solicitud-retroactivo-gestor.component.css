@@ -10,6 +10,7 @@
   --t1: #FFFCF2;
   --t2: #CCC5B9;
   --t3: #7a7168;
+  --t4: #a0968c;
 
   display: flex;
   flex-direction: column;
@@ -261,6 +262,44 @@
   border-radius: 12px;
   padding: 18px 20px;
 }
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.timeline-item:last-child { border-bottom-color: transparent; }
+
+.tl-dot {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--t2);
+  background: var(--surface3);
+  flex-shrink: 0;
+}
+.timeline-item[data-tipo="creacion"] .tl-dot { border-color: var(--orange); color: var(--orange); }
+.timeline-item[data-tipo="validacion"] .tl-dot { border-color: #4caf50; color: #4caf50; }
+.timeline-item[data-tipo="precio"] .tl-dot { border-color: #5c9bd6; color: #5c9bd6; }
+.timeline-item[data-tipo="nota_credito"] .tl-dot { border-color: #8f5ae6; color: #8f5ae6; }
+.timeline-item[data-tipo="reenvio"] .tl-dot { border-color: #f59e0b; color: #f59e0b; }
+
+.tl-content { display: flex; flex-direction: column; gap: 2px; }
+.tl-desc { font-size: 0.85rem; color: var(--t1); font-weight: 700; }
+.tl-fecha { display: block; font-size: 0.72rem; color: var(--t3); }
+.tl-actor { display: block; font-size: 0.72rem; color: var(--t4); }
 
 .dp-section-title {
   font-size: 0.78rem;

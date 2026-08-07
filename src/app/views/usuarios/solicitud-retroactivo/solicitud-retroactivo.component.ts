@@ -92,10 +92,10 @@ export class SolicitudRetroactivoComponent implements OnInit {
   docsRechazadosEnEdicion: string[] = [];
 
   camposArchivos = [
-    { key: 'ticket_compra', label: 'Ticket de compra', accept: 'image/*,.pdf' },
-    { key: 'voucher', label: 'Voucher de pago', accept: 'image/*,.pdf' },
-    { key: 'factura_pdf', label: 'Factura (PDF)', accept: '.pdf' },
-    { key: 'factura_xml', label: 'Factura (XML)', accept: '.xml' }
+    { key: 'ticket_compra', label: 'Ticket de compra (debe tener la fecha del mismo mes)', tooltip: 'Debe contener modelo, serie y detalles de la bicicleta', accept: 'image/*,.pdf' },
+    { key: 'voucher', label: 'Voucher de pago', tooltip: '', accept: 'image/*,.pdf' },
+    { key: 'factura_pdf', label: 'Factura (PDF)', tooltip: '', accept: '.pdf' },
+    { key: 'factura_xml', label: 'Factura (XML)', tooltip: '', accept: '.xml' }
   ];
 
   get camposArchivosVisibles() {
@@ -271,7 +271,10 @@ export class SolicitudRetroactivoComponent implements OnInit {
       return;
     }
 
-    const archivosFaltantes = this.camposArchivosVisibles.filter(item => !this.archivos[item.key]);
+    // Se filtran los archivos faltantes excluyendo los opcionales (PDF y XML)
+    const archivosFaltantes = this.camposArchivosVisibles.filter(item => 
+      !this.archivos[item.key] && item.key !== 'factura_pdf' && item.key !== 'factura_xml'
+    );
     if (archivosFaltantes.length > 0) {
       this.mensajeError = `Falta adjuntar los siguientes archivos: ${archivosFaltantes.map(f => f.label).join(', ')}`;
       return;

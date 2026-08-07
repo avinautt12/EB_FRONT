@@ -27,7 +27,7 @@ const COLOR_ESTATUS: Record<string, string> = {
 };
 
 type Orden = 'monto' | 'solicitudes';
-type PanelKey = 'campana' | 'cliente' | 'anioModelo';
+type PanelKey = 'campana' | 'cliente' | 'anioModelo' | 'producto';
 type FiltroKpi = 'todos' | EstatusSolicitud;
 type ColLista = 'nombre_completo' | 'modelo_bicicleta' | 'nombre_formulario' | 'estatus' | 'monto_pagar' | 'fecha_venta';
 
@@ -76,7 +76,8 @@ export class SolicitudRetroactivoDashboardComponent implements OnInit, AfterView
   ordenPorPanel: Record<PanelKey, Orden> = {
     campana: 'monto',
     cliente: 'monto',
-    anioModelo: 'monto'
+    anioModelo: 'monto',
+    producto: 'monto'
   };
 
   // GUÍA: modal de detalle al hacer clic en una fila -- mismo patrón que el
@@ -229,6 +230,22 @@ export class SolicitudRetroactivoDashboardComponent implements OnInit, AfterView
   get porAnioModeloOrdenado(): GrupoDashboard[] {
     if (!this.datos) return [];
     return this.ordenar(this.datos.por_anio_modelo, 'anioModelo');
+  }
+
+  get porProductoOrdenado(): GrupoDashboard[] {
+    if (!this.datos) return [];
+    return this.ordenar(this.datos.por_producto, 'producto');
+  }
+
+  abrirDetalleProducto(fila: GrupoDashboard): void {
+    this.modalTitulo = `Producto: ${fila['producto']}`;
+    this.modalAbierto = true;
+    this.modalCargando = true;
+    this.conSolicitudes(todas => {
+      this.modalCargando = false;
+      const producto = String(fila['producto'] ?? '').trim();
+      this.modalItems = todas.filter(s => String(s.modelo_bicicleta ?? 'Sin producto').trim() === producto);
+    }, () => { this.modalCargando = false; });
   }
 
   // GUÍA: cachea listar() una sola vez -- tanto el modal de detalle como la
