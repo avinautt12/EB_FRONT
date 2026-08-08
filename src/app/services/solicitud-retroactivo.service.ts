@@ -16,8 +16,9 @@ export interface ArchivoSolicitud {
 // (routes/solicitud_retroactivo.py). Columna JSON, no una tabla aparte.
 export interface ItemHistorial {
   fecha: string;
-  tipo: 'creacion' | 'validacion' | 'precio' | 'reenvio';
+  tipo: 'creacion' | 'validacion' | 'precio' | 'nota_credito' | 'reenvio';
   descripcion: string;
+  usuario?: string;
 }
 
 export interface SolicitudRetroactivo {
@@ -69,6 +70,7 @@ export interface DashboardSolicitudRetroactivo {
   por_campana: GrupoDashboard[];
   por_cliente: GrupoDashboard[];
   por_anio_modelo: GrupoDashboard[];
+  por_producto: GrupoDashboard[];
 }
 
 // GUÍA: HttpClient ya manda el JWT solo (interceptors/auth.interceptor.ts),
