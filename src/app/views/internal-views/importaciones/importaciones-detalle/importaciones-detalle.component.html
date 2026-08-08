@@ -126,6 +126,13 @@
           </div>
         </div>
 
+        <div class="field-row" [class.campo-faltante]="esCampoFaltante('log_numero_contenedores')">
+          <label>Número de contenedores</label>
+          <input type="number" min="1" [value]="embarque.log_numero_contenedores || ''"
+            (change)="marcarCambio('log_numero_contenedores', +$any($event.target).value || null)"
+            placeholder="Ej: 1" />
+        </div>
+
         <div class="field-row" [class.campo-faltante]="esCampoFaltante('odoo_importador')">
           <label>1. Importador</label>
           <select [value]="embarque.odoo_importador || ''" (change)="marcarCambio('odoo_importador', $any($event.target).value || null)">
@@ -143,7 +150,7 @@
               (dateChange)="marcarCambio('log_fecha_notificacion', $event || null)">
             </app-date-picker>
         </div>
-        <div class="field-row">
+        <div class="field-row" id="campo-log_fecha_entrega_prog">
           <label>3. Fecha de entrega (Proyectado)</label>
           <app-date-picker
               mode="single"
@@ -151,7 +158,7 @@
               (dateChange)="marcarCambio('log_fecha_entrega_prog', $event || null)">
             </app-date-picker>
         </div>
-        <div class="field-row" [class.campo-error]="esCampoError('log_fecha_entrega')" [class.campo-faltante]="esCampoFaltante('log_fecha_entrega')">
+        <div class="field-row" id="campo-log_fecha_entrega" [class.campo-error]="esCampoError('log_fecha_entrega')" [class.campo-faltante]="esCampoFaltante('log_fecha_entrega')">
           <label>3. Fecha de entrega (Real)</label>
           <app-date-picker
               mode="single"
@@ -218,15 +225,15 @@
               (dateChange)="marcarCambio('log_confirmacion_booking', $event || null)">
             </app-date-picker>
         </div>
-        <div class="field-row">
-          <label>13. Booking Proyectado</label>
+        <div class="field-row" id="campo-log_fecha_booking_prog">
+          <label>13. Booking (Salida de contenedor estimado)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.log_fecha_booking_prog || ''"
               (dateChange)="marcarCambio('log_fecha_booking_prog', $event || null)">
             </app-date-picker>
         </div>
-        <div class="field-row" [class.campo-error]="esCampoError('log_fecha_booking')" [class.campo-faltante]="esCampoFaltante('log_fecha_booking')">
+        <div class="field-row" id="campo-log_fecha_booking" [class.campo-error]="esCampoError('log_fecha_booking')" [class.campo-faltante]="esCampoFaltante('log_fecha_booking')">
           <label>13b. Booking Real (fecha salida contenedor)</label>
           <app-date-picker
               mode="single"
@@ -237,22 +244,6 @@
         <div class="field-row field-calc">
           <label>· Días en salir tras entrega Scott</label>
           <span class="calc-val">{{ embarque.log_dias_salida_tras_entrega ?? '—' }} días</span>
-        </div>
-        <div class="field-row">
-          <label>14. ETA Puerto (Proyectado)</label>
-          <app-date-picker
-              mode="single"
-              [value]="embarque.log_eta_puerto_prog || ''"
-              (dateChange)="marcarCambio('log_eta_puerto_prog', $event || null)">
-            </app-date-picker>
-        </div>
-        <div class="field-row" [class.campo-error]="esCampoError('log_eta_puerto')" [class.campo-faltante]="esCampoFaltante('log_eta_puerto')">
-          <label>14. ETA Puerto (Real)</label>
-          <app-date-picker
-              mode="single"
-              [value]="embarque.log_eta_puerto || ''"
-              (dateChange)="marcarCambio('log_eta_puerto', $event || null)">
-            </app-date-picker>
         </div>
         <div class="field-row field-calc">
           <label>· Días de tránsito marítimo</label>
@@ -375,13 +366,15 @@
         </div>
         <div class="field-row" [class.campo-faltante]="esCampoFaltante('imp_solicitud_pago_forwarder')">
           <label>7. Solicitud de pago a Forwarder</label>
-          <app-date-picker
-              mode="single"
-              [value]="embarque.imp_solicitud_pago_forwarder || ''"
-              (dateChange)="marcarCambio('imp_solicitud_pago_forwarder', $event || null)">
-            </app-date-picker>
+          <div class="na-wrap">
+            <ng-container *ngIf="!esNA('imp_solicitud_pago_forwarder')">
+              <app-date-picker mode="single" [value]="embarque.imp_solicitud_pago_forwarder || ''" (dateChange)="marcarCambio('imp_solicitud_pago_forwarder', $event || null)"></app-date-picker>
+            </ng-container>
+            <span *ngIf="esNA('imp_solicitud_pago_forwarder')" class="na-badge" (click)="toggleNA('imp_solicitud_pago_forwarder')" title="Click para quitar N/A"><i class="fas fa-check"></i> N/A</span>
+            <button type="button" class="na-toggle" [class.na-activo]="esNA('imp_solicitud_pago_forwarder')" (click)="toggleNA('imp_solicitud_pago_forwarder')" title="Marcar como No Aplica">N/A</button>
+          </div>
         </div>
-        <div class="field-row">
+        <div class="field-row" id="campo-imp_llegada_contenedor_prog">
           <label>8. Llegada de contenedor a puerto (Proyectado)</label>
           <app-date-picker
               mode="single"
@@ -389,7 +382,7 @@
               (dateChange)="marcarCambio('imp_llegada_contenedor_prog', $event || null)">
             </app-date-picker>
         </div>
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('imp_llegada_contenedor_puerto')">
+        <div class="field-row" id="campo-imp_llegada_contenedor_puerto" [class.campo-faltante]="esCampoFaltante('imp_llegada_contenedor_puerto')">
           <label>8. Llegada de contenedor a puerto (Real)</label>
           <app-date-picker
               mode="single"
@@ -588,37 +581,49 @@
               [value]="embarque.des_cita_cruce || ''"
               (dateChange)="marcarCambio('des_cita_cruce', $event || null)">
             </app-date-picker></div>
-        <div class="field-row"><label>3. Fecha de cruce (Proyectado)</label>
+        <div class="field-row" id="campo-des_fecha_cruce_prog"><label>3. Fecha de cruce (Proyectado)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.des_fecha_cruce_prog || ''"
               (dateChange)="marcarCambio('des_fecha_cruce_prog', $event || null)">
             </app-date-picker></div>
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('des_fecha_cruce_real')"><label>3. Fecha de cruce (Real)</label>
+        <div class="field-row" id="campo-des_fecha_cruce_real" [class.campo-faltante]="esCampoFaltante('des_fecha_cruce_real')"><label>3. Fecha de cruce (Real)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.des_fecha_cruce_real || ''"
               (dateChange)="marcarCambio('des_fecha_cruce_real', $event || null)">
             </app-date-picker></div>
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('des_solicitud_pase_maniobras')"><label>4. Solicitud de pase para maniobras (AA)</label>
-          <app-date-picker
-              mode="single"
-              [value]="embarque.des_solicitud_pase_maniobras || ''"
-              (dateChange)="marcarCambio('des_solicitud_pase_maniobras', $event || null)">
-            </app-date-picker></div>
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('des_carta_maniobras')"><label>5. Carta de maniobras (transportista)</label>
-          <app-date-picker
-              mode="single"
-              [value]="embarque.des_carta_maniobras || ''"
-              (dateChange)="marcarCambio('des_carta_maniobras', $event || null)">
-            </app-date-picker></div>
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('des_fecha_carta_porte')"><label>6. Datos para carta porte</label>
-          <app-date-picker
-              mode="single"
-              [value]="embarque.des_fecha_carta_porte || ''"
-              (dateChange)="marcarCambio('des_fecha_carta_porte', $event || null)">
-            </app-date-picker></div>
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('des_fecha_entrega_almacen_prog')"><label>7. Fecha de entrega en almacén programada</label>
+        <div class="field-row" [class.campo-faltante]="esCampoFaltante('des_solicitud_pase_maniobras')">
+          <label>4. Solicitud de pase para maniobras (AA)</label>
+          <div class="na-wrap">
+            <ng-container *ngIf="!esNA('des_solicitud_pase_maniobras')">
+              <app-date-picker mode="single" [value]="embarque.des_solicitud_pase_maniobras || ''" (dateChange)="marcarCambio('des_solicitud_pase_maniobras', $event || null)"></app-date-picker>
+            </ng-container>
+            <span *ngIf="esNA('des_solicitud_pase_maniobras')" class="na-badge" (click)="toggleNA('des_solicitud_pase_maniobras')" title="Click para quitar N/A"><i class="fas fa-check"></i> N/A</span>
+            <button type="button" class="na-toggle" [class.na-activo]="esNA('des_solicitud_pase_maniobras')" (click)="toggleNA('des_solicitud_pase_maniobras')" title="Marcar como No Aplica">N/A</button>
+          </div>
+        </div>
+        <div class="field-row" [class.campo-faltante]="esCampoFaltante('des_carta_maniobras')">
+          <label>5. Carta de maniobras (transportista)</label>
+          <div class="na-wrap">
+            <ng-container *ngIf="!esNA('des_carta_maniobras')">
+              <app-date-picker mode="single" [value]="embarque.des_carta_maniobras || ''" (dateChange)="marcarCambio('des_carta_maniobras', $event || null)"></app-date-picker>
+            </ng-container>
+            <span *ngIf="esNA('des_carta_maniobras')" class="na-badge" (click)="toggleNA('des_carta_maniobras')" title="Click para quitar N/A"><i class="fas fa-check"></i> N/A</span>
+            <button type="button" class="na-toggle" [class.na-activo]="esNA('des_carta_maniobras')" (click)="toggleNA('des_carta_maniobras')" title="Marcar como No Aplica">N/A</button>
+          </div>
+        </div>
+        <div class="field-row" [class.campo-faltante]="esCampoFaltante('des_fecha_carta_porte')">
+          <label>6. Datos para carta porte</label>
+          <div class="na-wrap">
+            <ng-container *ngIf="!esNA('des_fecha_carta_porte')">
+              <app-date-picker mode="single" [value]="embarque.des_fecha_carta_porte || ''" (dateChange)="marcarCambio('des_fecha_carta_porte', $event || null)"></app-date-picker>
+            </ng-container>
+            <span *ngIf="esNA('des_fecha_carta_porte')" class="na-badge" (click)="toggleNA('des_fecha_carta_porte')" title="Click para quitar N/A"><i class="fas fa-check"></i> N/A</span>
+            <button type="button" class="na-toggle" [class.na-activo]="esNA('des_fecha_carta_porte')" (click)="toggleNA('des_fecha_carta_porte')" title="Marcar como No Aplica">N/A</button>
+          </div>
+        </div>
+        <div class="field-row" id="campo-des_fecha_entrega_almacen_prog" [class.campo-faltante]="esCampoFaltante('des_fecha_entrega_almacen_prog')"><label>7. Fecha de entrega en almacén programada</label>
           <app-date-picker
               mode="single"
               [value]="embarque.des_fecha_entrega_almacen_prog || ''"
@@ -626,7 +631,7 @@
             </app-date-picker></div>
         <div class="field-row" [class.campo-faltante]="esCampoFaltante('des_lugar_destino')"><label>8. Lugar de destino (Ciudad)</label>
           <input type="text" [value]="embarque.des_lugar_destino || ''" (change)="marcarCambio('des_lugar_destino', $any($event.target).value || null)" placeholder="TORREÓN" /></div>
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('des_llegada_almacen')"><label>9. Llegada de contenedor a almacén</label>
+        <div class="field-row" id="campo-des_llegada_almacen" [class.campo-faltante]="esCampoFaltante('des_llegada_almacen')"><label>9. Llegada de contenedor a almacén</label>
           <app-date-picker
               mode="single"
               [value]="embarque.des_llegada_almacen || ''"
@@ -654,12 +659,16 @@
             <button type="button" class="na-toggle" [class.na-activo]="esNA('des_fecha_lavado')" (click)="toggleNA('des_fecha_lavado')" title="Marcar como No Aplica">N/A</button>
           </div>
         </div>
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('des_entrega_contenedor_naviera')"><label>12. Fecha entrega contenedor a naviera (real)</label>
-          <app-date-picker
-              mode="single"
-              [value]="embarque.des_entrega_contenedor_naviera || ''"
-              (dateChange)="marcarCambio('des_entrega_contenedor_naviera', $event || null)">
-            </app-date-picker></div>
+        <div class="field-row" [class.campo-faltante]="esCampoFaltante('des_entrega_contenedor_naviera')">
+          <label>12. Fecha entrega contenedor a naviera (real)</label>
+          <div class="na-wrap">
+            <ng-container *ngIf="!esNA('des_entrega_contenedor_naviera')">
+              <app-date-picker mode="single" [value]="embarque.des_entrega_contenedor_naviera || ''" (dateChange)="marcarCambio('des_entrega_contenedor_naviera', $event || null)"></app-date-picker>
+            </ng-container>
+            <span *ngIf="esNA('des_entrega_contenedor_naviera')" class="na-badge" (click)="toggleNA('des_entrega_contenedor_naviera')" title="Click para quitar N/A"><i class="fas fa-check"></i> N/A</span>
+            <button type="button" class="na-toggle" [class.na-activo]="esNA('des_entrega_contenedor_naviera')" (click)="toggleNA('des_entrega_contenedor_naviera')" title="Marcar como No Aplica">N/A</button>
+          </div>
+        </div>
         <div class="field-row" [class.campo-faltante]="esCampoFaltante('des_dias_sin_demoras')"><label>13. Días sin demoras para devolver contenedor</label>
           <input type="number" [value]="embarque.des_dias_sin_demoras || ''" (change)="marcarCambio('des_dias_sin_demoras', +$any($event.target).value || null)" /></div>
         <div class="field-row"><label>14. Fecha límite entrega contenedor a naviera</label>
@@ -796,8 +805,12 @@
           </div>
         </div>
 
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('alm_liberacion_uva')">
-          <label>7. Liberación de etiquetado por la UVA</label>
+        <div class="field-row" id="campo-alm_liberacion_uva_prog">
+          <label>7. Liberación de etiquetado por la UVA (Proyectado)</label>
+          <app-date-picker mode="single" [value]="embarque.alm_liberacion_uva_prog || ''" (dateChange)="marcarCambio('alm_liberacion_uva_prog', $event || null)"></app-date-picker>
+        </div>
+        <div class="field-row" id="campo-alm_liberacion_uva" [class.campo-faltante]="esCampoFaltante('alm_liberacion_uva')">
+          <label>7. Liberación de etiquetado por la UVA (Real)</label>
           <div class="na-wrap">
             <ng-container *ngIf="!esNA('alm_liberacion_uva')">
               <app-date-picker mode="single" [value]="embarque.alm_liberacion_uva || ''" (dateChange)="marcarCambio('alm_liberacion_uva', $event || null)"></app-date-picker>
@@ -813,7 +826,10 @@
         <div class="field-row" [class.campo-faltante]="esCampoFaltante('alm_inicio_etiquetado')"><label>9. Fecha de inicio de etiquetado</label>
           <app-date-picker mode="single" [value]="embarque.alm_inicio_etiquetado || ''" (dateChange)="marcarCambio('alm_inicio_etiquetado', $event || null)"></app-date-picker></div>
 
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('alm_terminacion_etiquetado')"><label>10. Fecha de terminación de etiquetado</label>
+        <div class="field-row" id="campo-alm_terminacion_etiquetado_prog"><label>9.1 Fecha de terminación de etiquetado (PROYECTADO)</label>
+          <app-date-picker mode="single" [value]="embarque.alm_terminacion_etiquetado_prog || ''" (dateChange)="marcarCambio('alm_terminacion_etiquetado_prog', $event || null)"></app-date-picker></div>
+
+        <div class="field-row" id="campo-alm_terminacion_etiquetado" [class.campo-faltante]="esCampoFaltante('alm_terminacion_etiquetado')"><label>10. Fecha de terminación de etiquetado (REAL)</label>
           <app-date-picker mode="single" [value]="embarque.alm_terminacion_etiquetado || ''" (dateChange)="marcarCambio('alm_terminacion_etiquetado', $event || null)"></app-date-picker></div>
 
         <div class="field-row"><label>11. Real de días de etiquetado</label>
@@ -840,13 +856,13 @@
           <select [value]="embarque.rec_cedula_costeo || ''" (change)="marcarCambio('rec_cedula_costeo', $any($event.target).value || null)">
             <option value="">—</option><option>SI</option><option>NO</option><option>N/A</option>
           </select></div>
-        <div class="field-row"><label>2. Recepción en Odoo (Proyectado)</label>
+        <div class="field-row" id="campo-rec_recepcion_odoo_prog"><label>2. Recepción en Odoo (Proyectado)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.rec_recepcion_odoo_prog || ''"
               (dateChange)="marcarCambio('rec_recepcion_odoo_prog', $event || null)">
             </app-date-picker></div>
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('rec_recepcion_odoo')"><label>2. Recepción en Odoo (Real)</label>
+        <div class="field-row" id="campo-rec_recepcion_odoo" [class.campo-faltante]="esCampoFaltante('rec_recepcion_odoo')"><label>2. Recepción en Odoo (Real)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.rec_recepcion_odoo || ''"
@@ -854,25 +870,29 @@
             </app-date-picker></div>
         <div class="field-row" [class.campo-faltante]="esCampoFaltante('rec_folio_compra')"><label>3. Folio de Compra en Odoo</label>
           <input type="text" [value]="embarque.rec_folio_compra || ''" (change)="marcarCambio('rec_folio_compra', $any($event.target).value || null)" /></div>
-        <div class="field-row"><label>4. Liberación de productos a verificación (Proyectado)</label>
+        <div class="field-row" id="campo-rec_liberacion_verificacion_prog"><label>4. Liberación de productos a verificación (Proyectado)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.rec_liberacion_verificacion_prog || ''"
               (dateChange)="marcarCambio('rec_liberacion_verificacion_prog', $event || null)">
             </app-date-picker></div>
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('rec_liberacion_verificacion')"><label>4. Liberación de productos a verificación (Real)</label>
-          <app-date-picker
-              mode="single"
-              [value]="embarque.rec_liberacion_verificacion || ''"
-              (dateChange)="marcarCambio('rec_liberacion_verificacion', $event || null)">
-            </app-date-picker></div>
-        <div class="field-row"><label><i class="fas fa-flag-checkered"></i> LIBERACIÓN FINAL (Proyectado)</label>
+        <div class="field-row" id="campo-rec_liberacion_verificacion" [class.campo-faltante]="esCampoFaltante('rec_liberacion_verificacion')">
+          <label>4. Liberación de productos a verificación (Real)</label>
+          <div class="na-wrap">
+            <ng-container *ngIf="!esNA('rec_liberacion_verificacion')">
+              <app-date-picker mode="single" [value]="embarque.rec_liberacion_verificacion || ''" (dateChange)="marcarCambio('rec_liberacion_verificacion', $event || null)"></app-date-picker>
+            </ng-container>
+            <span *ngIf="esNA('rec_liberacion_verificacion')" class="na-badge" (click)="toggleNA('rec_liberacion_verificacion')" title="Click para quitar N/A"><i class="fas fa-check"></i> N/A</span>
+            <button type="button" class="na-toggle" [class.na-activo]="esNA('rec_liberacion_verificacion')" (click)="toggleNA('rec_liberacion_verificacion')" title="Marcar como No Aplica">N/A</button>
+          </div>
+        </div>
+        <div class="field-row" id="campo-rec_liberacion_final_prog"><label><i class="fas fa-flag-checkered"></i> LIBERACIÓN FINAL (Proyectado)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.rec_liberacion_final_prog || ''"
               (dateChange)="marcarCambio('rec_liberacion_final_prog', $event || null)">
             </app-date-picker></div>
-        <div class="field-row highlight-final" [class.campo-faltante]="esCampoFaltante('rec_liberacion_final')"><label><i class="fas fa-flag-checkered"></i> LIBERACIÓN FINAL DEL PRODUCTO (Real)</label>
+        <div class="field-row highlight-final" id="campo-rec_liberacion_final" [class.campo-faltante]="esCampoFaltante('rec_liberacion_final')"><label><i class="fas fa-flag-checkered"></i> LIBERACIÓN FINAL DEL PRODUCTO (Real)</label>
           <app-date-picker
               mode="single"
               [value]="embarque.rec_liberacion_final || ''"
@@ -910,12 +930,16 @@
           <select [value]="embarque.cie_liquidado_aa || ''" (change)="marcarCambio('cie_liquidado_aa', $any($event.target).value || null)">
             <option value="">—</option><option>SI</option><option>NO</option><option>N/A</option>
           </select></div>
-        <div class="field-row" [class.campo-faltante]="esCampoFaltante('cie_fecha_pago_aa')"><label>7. Fecha de pago a Agente Aduanal</label>
-          <app-date-picker
-              mode="single"
-              [value]="embarque.cie_fecha_pago_aa || ''"
-              (dateChange)="marcarCambio('cie_fecha_pago_aa', $event || null)">
-            </app-date-picker></div>
+        <div class="field-row" [class.campo-faltante]="esCampoFaltante('cie_fecha_pago_aa')">
+          <label>7. Fecha de pago a Agente Aduanal</label>
+          <div class="na-wrap">
+            <ng-container *ngIf="!esNA('cie_fecha_pago_aa')">
+              <app-date-picker mode="single" [value]="embarque.cie_fecha_pago_aa || ''" (dateChange)="marcarCambio('cie_fecha_pago_aa', $event || null)"></app-date-picker>
+            </ng-container>
+            <span *ngIf="esNA('cie_fecha_pago_aa')" class="na-badge" (click)="toggleNA('cie_fecha_pago_aa')" title="Click para quitar N/A"><i class="fas fa-check"></i> N/A</span>
+            <button type="button" class="na-toggle" [class.na-activo]="esNA('cie_fecha_pago_aa')" (click)="toggleNA('cie_fecha_pago_aa')" title="Marcar como No Aplica">N/A</button>
+          </div>
+        </div>
       </div>
     </div>
 

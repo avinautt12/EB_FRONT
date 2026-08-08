@@ -12,6 +12,36 @@ type Seccion = 'logistica' | 'importacion' | 'despacho' | 'odoo' | 'almacen' | '
 
 interface CampoValidar { campo: keyof Importacion; label: string; opcional?: boolean; }
 
+// Sección donde vive cada campo destino de un resaltado (?highlight=<campo> en la URL,
+// usado por el pipeline del dashboard para llevar al usuario directo al dato), y su
+// campo "proyectado" hermano -- ambos se resaltan juntos porque viven en la misma
+// sección y es contra lo que se compara el real.
+const SECCION_POR_CAMPO_RESALTADO: Record<string, Seccion> = {
+  log_fecha_entrega:           'logistica',
+  log_fecha_booking:           'logistica',
+  imp_llegada_contenedor_puerto: 'importacion',
+  des_fecha_cruce_real:        'despacho',
+  des_llegada_almacen:         'despacho',
+  alm_liberacion_uva:          'almacen',
+  alm_terminacion_etiquetado:  'almacen',
+  rec_recepcion_odoo:          'recepcion',
+  rec_liberacion_verificacion: 'recepcion',
+  rec_liberacion_final:        'recepcion',
+};
+
+const CAMPO_PROG_HERMANO: Record<string, string> = {
+  log_fecha_entrega:           'log_fecha_entrega_prog',
+  log_fecha_booking:           'log_fecha_booking_prog',
+  imp_llegada_contenedor_puerto: 'imp_llegada_contenedor_prog',
+  des_fecha_cruce_real:        'des_fecha_cruce_prog',
+  des_llegada_almacen:         'des_fecha_entrega_almacen_prog',
+  alm_liberacion_uva:          'alm_liberacion_uva_prog',
+  alm_terminacion_etiquetado:  'alm_terminacion_etiquetado_prog',
+  rec_recepcion_odoo:          'rec_recepcion_odoo_prog',
+  rec_liberacion_verificacion: 'rec_liberacion_verificacion_prog',
+  rec_liberacion_final:        'rec_liberacion_final_prog',
+};
+
 @Component({
   selector: 'app-importaciones-detalle',
   standalone: true,
@@ -68,7 +98,6 @@ export class ImportacionesDetalleComponent implements OnInit, OnDestroy {
       { campo: 'log_fecha_shipping_instructions',  label: 'Envío shipping instructions' },
       { campo: 'log_confirmacion_booking',         label: 'Confirmación de booking' },
       { campo: 'log_fecha_booking',                label: 'Booking (fecha salida contenedor)' },
-      { campo: 'log_eta_puerto',                   label: 'ETA Puerto' },
       { campo: 'log_buque',                        label: 'Buque' },
       { campo: 'log_no_viaje',                     label: 'No. de Viaje' },
       { campo: 'log_puerto_salida',                label: 'Puerto de salida' },
@@ -237,9 +266,33 @@ export class ImportacionesDetalleComponent implements OnInit, OnDestroy {
         this._cargarDraftLocal(id);
         this.cargando = false;
         this._iniciarPolling(id);
+        this._resaltarCampoDesdeQuery();
       },
       error: () => { this.error = 'Embarque no encontrado'; this.cargando = false; },
     });
+  }
+
+  // Si venimos de un click en una etapa del pipeline del dashboard
+  // (?highlight=<campo>), cambia a la sección correspondiente y resalta el campo
+  // real Y su proyectado hermano -- ambos viven en la misma sección y es contra
+  // lo que se está comparando, así que tiene que verse el par completo.
+  private _resaltarCampoDesdeQuery(): void {
+    const campo = this.route.snapshot.queryParamMap.get('highlight');
+    if (!campo) return;
+    const seccion = SECCION_POR_CAMPO_RESALTADO[campo];
+    if (seccion) this.seccionActiva = seccion;
+    const campoProg = CAMPO_PROG_HERMANO[campo];
+    setTimeout(() => {
+      const elReal = document.getElementById(`campo-${campo}`);
+      const elProg = campoProg ? document.getElementById(`campo-${campoProg}`) : null;
+      const elAncla = elProg ?? elReal;
+      if (!elAncla) return;
+      elAncla.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      [elReal, elProg].forEach(el => el?.classList.add('campo-resaltado'));
+      setTimeout(() => {
+        [elReal, elProg].forEach(el => el?.classList.remove('campo-resaltado'));
+      }, 4200);
+    }, 120);
   }
 
   ngOnDestroy(): void {
@@ -443,8 +496,8 @@ export class ImportacionesDetalleComponent implements OnInit, OnDestroy {
     const dias2 = this._diffDias(e.imp_llegada_contenedor_puerto, e.des_fecha_cruce_real);
     if (dias2 !== null) e.imp_dias_despacho_aduanero = dias2;
 
-    // Fecha límite naviera = ETA puerto + días sin demoras
-    const eta = e.log_eta_puerto;
+    // Fecha límite naviera = Llegada contenedor a puerto + días sin demoras
+    const eta = e.imp_llegada_contenedor_puerto;
     const dias = e.des_dias_sin_demoras;
     if (eta && dias != null && dias !== '') {
       try {

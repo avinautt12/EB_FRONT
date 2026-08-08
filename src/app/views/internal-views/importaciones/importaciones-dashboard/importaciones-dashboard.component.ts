@@ -157,11 +157,10 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
   // Cada key coincide 1:1 con el campo que usa el badge de estado (backend
   // _estado_actual) para avanzar de etapa — así el pipeline y el badge
   // siempre muestran lo mismo.
-  readonly PIPELINE_STAGES = [
+  readonly PIPELINE_STAGES: { key: string; label: string; pLabel?: string; pTitle?: string }[] = [
     { key: 'entrega',          label: 'Entrega'   },
     { key: 'booking',          label: 'Booking'   },
     { key: 'transito',         label: 'Lleg. Puerto' },
-    { key: 'aduana',           label: 'Aduana'    },
     { key: 'trans_dest',       label: 'Destino'   },
     { key: 'en_almacen',       label: 'Almacén'   },
     { key: 'recepcion_odoo',   label: 'Rec. Odoo' },
@@ -173,6 +172,28 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
 
   stage(e: any, key: string): { proy: string | null; real: string | null; delta: number | null } | undefined {
     return e?.pipeline?.[key] ?? undefined;
+  }
+
+  // Campo real (de la BD) que respalda cada etapa del pipeline -- usado para
+  // llevar al usuario al detalle con ese campo resaltado al hacer click.
+  private readonly STAGE_CAMPO: Record<string, string> = {
+    entrega:           'log_fecha_entrega',
+    booking:            'log_fecha_booking',
+    transito:            'imp_llegada_contenedor_puerto',
+    trans_dest:         'des_fecha_cruce_real',
+    en_almacen:         'des_llegada_almacen',
+    recepcion_odoo:      'rec_recepcion_odoo',
+    verif:              'alm_liberacion_uva',
+    liberacion_verif:   'rec_liberacion_verificacion',
+    etiquetado:          'alm_terminacion_etiquetado',
+    liberado:           'rec_liberacion_final',
+  };
+
+  irEtapa(e: any, key: string, event: Event): void {
+    event.stopPropagation();
+    const campo = this.STAGE_CAMPO[key];
+    if (!campo) { this.irDetalle(e.id); return; }
+    this.router.navigate(['/importaciones', e.id], { queryParams: { from: 'dashboard', tab: this.activeTab, highlight: campo } });
   }
 
   notasEditId: number | null = null;

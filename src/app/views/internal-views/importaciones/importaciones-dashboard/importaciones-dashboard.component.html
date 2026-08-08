@@ -592,10 +592,11 @@
 
             <!-- ══ Banda inferior: tira de etapas (proyectado vs real) ══ -->
             <div class="ec-pipeline">
-              <div *ngFor="let st of PIPELINE_STAGES" class="ec-stage" [ngClass]="stageCls(stage(e, st.key))">
+              <div *ngFor="let st of PIPELINE_STAGES" class="ec-stage ec-stage-click" [ngClass]="stageCls(stage(e, st.key))"
+                   (click)="irEtapa(e, st.key, $event)" title="Ver este dato en el detalle">
                 <span class="ec-stage-lbl">{{ st.label }}</span>
                 <span class="ec-stage-p">
-                  <span class="rk rk-p" title="Proyectado">P</span>{{ fmtD(stage(e, st.key)?.proy) }}
+                  <span class="rk rk-p" [title]="st.pTitle || 'Proyectado'">{{ st.pLabel || 'P' }}</span>{{ fmtD(stage(e, st.key)?.proy) }}
                 </span>
                 <span class="ec-stage-r">
                   <span class="rk rk-r" title="Real">R</span>{{ fmtD(stage(e, st.key)?.real) }}

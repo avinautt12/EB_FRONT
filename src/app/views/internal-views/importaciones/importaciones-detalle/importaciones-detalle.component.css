@@ -307,6 +307,18 @@
 .field-row.campo-faltante input,
 .field-row.campo-faltante select,
 .field-row.campo-faltante textarea { border-color: rgba(200, 149, 53, 0.6) !important; }
+/* Campo resaltado — llegada desde un click en el pipeline del dashboard.
+   Entra suave, se sostiene visible y se apaga al final (sin parpadeo). */
+.field-row.campo-resaltado {
+  border-radius: 8px;
+  animation: campo-resaltado-flash 4.2s cubic-bezier(.2,.7,.3,1) forwards;
+}
+@keyframes campo-resaltado-flash {
+  0%   { box-shadow: 0 0 0 0   rgba(56, 189, 248, 0);   background: rgba(56, 189, 248, 0); }
+  8%   { box-shadow: 0 0 0 2px rgba(56, 189, 248, .65); background: rgba(56, 189, 248, .12); }
+  75%  { box-shadow: 0 0 0 2px rgba(56, 189, 248, .65); background: rgba(56, 189, 248, .12); }
+  100% { box-shadow: 0 0 0 0   rgba(56, 189, 248, 0);   background: rgba(56, 189, 248, 0); }
+}
 /* Botón y badge N/A */
 .na-wrap { display: flex; gap: 6px; align-items: center; }
 .na-wrap app-date-picker { flex: 1; min-width: 0; }

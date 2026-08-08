@@ -1203,6 +1203,9 @@ td { padding: 10px 14px; vertical-align: middle; }
 .ec-stage:last-child { border-right: none; }
 /* Solo verde cuando la etapa tiene fecha real registrada */
 .ec-stage.stage-real { background: rgba(34,197,94,.08); }
+/* Cada etapa es clickeable: lleva al campo exacto en el detalle */
+.ec-stage-click { cursor: pointer; }
+.ec-stage-click:hover { background: rgba(56,189,248,.14); }
 .ec-stage-lbl {
   font-size: .55rem;
   font-weight: 700;
