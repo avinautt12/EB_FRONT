@@ -574,7 +574,7 @@
                [class.dist-parcial]="d.pendiente > 0 && d.asignado > 0"
                [class.dist-sin-stock]="d.asignado === 0">
             <div class="dist-cliente-hdr">
-              <span class="dist-prio-badge" [class]="getPrioridadClass(d.prioridad)">
+              <span [class]="'dist-prio-badge ' + getPrioridadClass(d.prioridad)">
                 {{ getPrioridadLabel(d.prioridad) }}
               </span>
               <span class="dist-nombre">{{ d.nombre_cliente }}</span>
