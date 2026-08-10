@@ -84,6 +84,7 @@ export class SolicitudRetroactivoComponent implements OnInit {
   // (solicitud-retroactivo-seguimiento). Este formulario solo necesita saber
   // si hay que precargar una reedición, vía ?editar=<id> en la URL.
   esCliente = false;
+  esAdmin = false;
   editandoId: number | null = null;
   cargandoEdicion = false;
   // GUÍA: solo los archivos marcados 'rechazado' en esa solicitud -- el
@@ -147,6 +148,15 @@ export class SolicitudRetroactivoComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       this.archivos[key] = input.files[0];
+    }
+  }
+
+  removeArchivo(key: string): void {
+    delete this.archivos[key];
+
+    const input = document.querySelector<HTMLInputElement>(`input[type="file"][data-file-key="${key}"]`);
+    if (input) {
+      input.value = '';
     }
   }
 
@@ -360,7 +370,9 @@ export class SolicitudRetroactivoComponent implements OnInit {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        this.esCliente = jwtDecode<any>(token).rol === 2;
+        const rol = jwtDecode<any>(token).rol;
+        this.esCliente = rol === 2;
+        this.esAdmin = rol === 1;
       } catch { /* token inválido: el guard de la ruta ya redirige */ }
     }
     const idEditar = Number(this.route.snapshot.queryParamMap.get('editar'));
