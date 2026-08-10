@@ -14,6 +14,7 @@ import {
   ProyeccionesMY27Response,
   ArticuloMY27,
   DesgloseDist,
+  DistribucionSku,
 } from '../../../services/proyecciones-my27.service';
 
 @Component({
@@ -66,7 +67,7 @@ export class ProyeccionesMY27Component implements OnInit {
   distribucion: any[] = [];
   distribucionFiltrada: any[] = [];
   cargandoDistribucion = false;
-  distribucionModal: any = null;  // DistribucionSku | null
+  distribucionModal: DistribucionSku | null = null;
 
   readonly MESES = [
     { key: 'mayo', label: 'May' }, { key: 'junio', label: 'Jun' },
