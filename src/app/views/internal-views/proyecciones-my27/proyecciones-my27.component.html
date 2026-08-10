@@ -306,7 +306,7 @@
 
       <div class="ikpi-card ikpi-neutral">
         <div class="ikpi-hdr">
-          <span class="ikpi-card-label">SKUs en inventario</span>
+          <span class="ikpi-card-label">SKUs analizados</span>
           <div class="ikpi-card-ico"><i class="fas fa-boxes"></i></div>
         </div>
         <div class="ikpi-card-num">{{ kpisData.totalSKUs }}</div>
@@ -468,10 +468,13 @@
       <i class="fas fa-exclamation-triangle"></i> {{ errorCobertura }}
     </div>
 
-    <!-- Sin inventario -->
-    <div *ngIf="!cargandoCobertura && !errorCobertura && coberturaMegamo.length === 0 && uploadEstado !== 'cargando'" class="inv-empty">
+    <!-- Sin inventario cargado (pero pueden existir SKUs con stock Odoo) -->
+    <div *ngIf="!cargandoCobertura && !errorCobertura && coberturaMegamo.length === 0 && uploadEstado !== 'cargando'"
+         class="inv-empty">
       <i class="fas fa-inbox"></i>
-      <p>No hay inventario cargado. Sube un Excel para ver el análisis de cobertura.</p>
+      <p>Cargando SKUs del catálogo con stock Odoo...
+         <span *ngIf="!cargandoDistribucion">Sube un Excel para agregar inventario entrante.</span>
+      </p>
     </div>
 
     <!-- Tabla de cobertura -->
@@ -481,20 +484,30 @@
           <tr>
             <th>SKU</th>
             <th>Producto</th>
-            <th class="num">Entrante</th>
-            <th class="num">Total Proyectado</th>
+            <th class="num" title="Stock a la mano en Odoo menos reservado">Odoo disp.</th>
+            <th class="num" title="Stock subido desde Excel">Entrante</th>
+            <th class="num inv-th-total" title="Odoo disponible + Entrante">Total</th>
+            <th class="num">Proyectado</th>
             <th class="num">Cubierto</th>
             <th class="num">Faltante</th>
             <th class="num">Sobrante</th>
             <th>Cobertura por mes</th>
-            <th>Resumen</th>
+            <th class="num">Dist.</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let item of coberturaFiltrada" [class.sin-demanda]="item.total_proyectado === 0">
             <td class="sku-cell">{{ item.sku }}</td>
             <td>{{ item.producto }}</td>
-            <td class="num">{{ item.cantidad_entrante }}</td>
+            <td class="num inv-odoo" [class.inv-has-stock]="item.odoo_disponible > 0">
+              {{ item.odoo_disponible || '—' }}
+            </td>
+            <td class="num inv-entrante" [class.inv-has-stock]="item.cantidad_entrante > 0">
+              {{ item.cantidad_entrante || '—' }}
+            </td>
+            <td class="num inv-total" [class.inv-total-cero]="item.total_disponible === 0">
+              {{ item.total_disponible }}
+            </td>
             <td class="num">{{ item.total_proyectado }}</td>
             <td class="num covered">{{ item.total_cubierto }}</td>
             <td class="num deficit" [class.zero]="item.total_deficit === 0">{{ item.total_deficit }}</td>
@@ -503,16 +516,91 @@
               <div class="meses-grid">
                 <div *ngFor="let mc of item.cobertura" class="mes-bloque"
                      [style.background-color]="getCoberturaColor(mc.estado)"
-                     [title]="mc.mes + ': proyectado=' + mc.proyectado + ', cubierto=' + mc.cubierto + ', faltante=' + mc.deficit">
+                     [title]="mc.mes + ': proyectado=' + mc.proyectado + ', cubierto=' + mc.cubierto">
                   <span class="mes-label">{{ mc.mes | slice:0:3 }}</span>
                   <span class="mes-num">{{ mc.cubierto }}/{{ mc.proyectado }}</span>
                 </div>
               </div>
             </td>
-            <td class="resumen-cell">{{ resumenCobertura(item) }}</td>
+            <td class="num">
+              <button class="btn-dist-icon" (click)="abrirDistribucion(item)"
+                      *ngIf="item.total_proyectado > 0"
+                      title="Ver distribución por cliente">
+                <i class="fas fa-users"></i>
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- ═══ MODAL: DISTRIBUCIÓN PRIORITARIA ═══ -->
+    <div class="dist-overlay" *ngIf="distribucionModal" (click)="cerrarDistribucion()">
+      <div class="dist-modal" (click)="$event.stopPropagation()">
+        <div class="dist-modal-hdr">
+          <div class="dist-modal-hdr-left">
+            <span class="dist-modal-sku">{{ distribucionModal.sku }}</span>
+            <span class="dist-modal-prod">{{ distribucionModal.producto }}</span>
+          </div>
+          <div class="dist-modal-stocks">
+            <div class="dist-stock-chip dist-stock-odoo">
+              <i class="fas fa-database"></i>
+              Odoo: <strong>{{ distribucionModal.odoo_disponible }}</strong>
+            </div>
+            <div class="dist-stock-chip dist-stock-entrante">
+              <i class="fas fa-truck"></i>
+              Entrante: <strong>{{ distribucionModal.cantidad_entrante }}</strong>
+            </div>
+            <div class="dist-stock-chip dist-stock-total">
+              <i class="fas fa-layer-group"></i>
+              Total: <strong>{{ distribucionModal.total_disponible }}</strong>
+            </div>
+            <div class="dist-stock-chip dist-stock-restante"
+                 [class.dist-stock-ok]="distribucionModal.stock_restante === 0">
+              <i class="fas fa-box-open"></i>
+              Restante: <strong>{{ distribucionModal.stock_restante }}</strong>
+            </div>
+          </div>
+          <button class="dist-modal-close" (click)="cerrarDistribucion()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="dist-modal-body">
+          <div *ngIf="distribucionModal.distribuciones.length === 0" class="dist-empty">
+            <i class="fas fa-users-slash"></i> Sin clientes con proyección para este SKU.
+          </div>
+          <div class="dist-cliente" *ngFor="let d of distribucionModal.distribuciones"
+               [class.dist-cubierto]="d.pendiente === 0"
+               [class.dist-parcial]="d.pendiente > 0 && d.asignado > 0"
+               [class.dist-sin-stock]="d.asignado === 0">
+            <div class="dist-cliente-hdr">
+              <span class="dist-prio-badge" [class]="getPrioridadClass(d.prioridad)">
+                {{ getPrioridadLabel(d.prioridad) }}
+              </span>
+              <span class="dist-nombre">{{ d.nombre_cliente }}</span>
+              <span class="dist-clave">{{ d.clave_cliente }}</span>
+              <div class="dist-resumen">
+                <span class="dist-asig" title="Asignado">{{ d.asignado }}/{{ d.total_demanda }}</span>
+                <span class="dist-pct">{{ getPorcentajeCubierto(d.asignado, d.total_demanda) }}%</span>
+              </div>
+            </div>
+            <div class="dist-bar-track">
+              <div class="dist-bar-fill"
+                   [style.width.%]="getPorcentajeCubierto(d.asignado, d.total_demanda)">
+              </div>
+            </div>
+            <div class="dist-meses" *ngIf="d.detalle_meses.length > 0">
+              <div class="dist-mes-item" *ngFor="let dm of d.detalle_meses"
+                   [class.dist-mes-ok]="dm.pendiente === 0"
+                   [class.dist-mes-parcial]="dm.pendiente > 0 && dm.asignado > 0"
+                   [class.dist-mes-sin]="dm.asignado === 0">
+                <span class="dist-mes-lbl">{{ dm.mes | slice:0:3 | uppercase }}</span>
+                <span class="dist-mes-val">{{ dm.asignado }}/{{ dm.demanda }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div><!-- /tab inventario -->
