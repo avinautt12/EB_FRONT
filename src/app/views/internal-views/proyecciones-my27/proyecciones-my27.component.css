@@ -1296,3 +1296,267 @@
 }
 .ikpi-bar-val.ikpi-bar-pico-val { color: #f59e0b; font-weight: 700; }
 
+/* ── Stock columns (inv-table) ────────────────────────── */
+.inv-th-total {
+  border-left: 2px solid #2a2a2a;
+}
+.inv-odoo {
+  color: #5c9bd6;
+  font-variant-numeric: tabular-nums;
+}
+.inv-entrante {
+  color: #8a8077;
+  font-variant-numeric: tabular-nums;
+}
+.inv-total {
+  border-left: 2px solid #2a2a2a;
+  font-weight: 700;
+  color: #FFFCF2;
+  font-variant-numeric: tabular-nums;
+}
+.inv-total-cero {
+  color: #444;
+}
+.inv-has-stock {
+  font-weight: 600;
+}
+
+/* Botón icono distribución */
+.btn-dist-icon {
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 4px 7px;
+  cursor: pointer;
+  color: #5c9bd6;
+  font-size: 0.78rem;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.btn-dist-icon:hover {
+  background: rgba(92, 155, 214, 0.1);
+  border-color: #5c9bd6;
+}
+
+/* ── Modal Distribución Prioritaria ──────────────────────────── */
+.dist-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 16px;
+  backdrop-filter: blur(3px);
+  animation: ikpi-in 200ms cubic-bezier(0.23,1,0.32,1);
+}
+.dist-modal {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 14px;
+  width: min(900px, 96vw);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: ikpi-in 250ms cubic-bezier(0.23,1,0.32,1);
+}
+.dist-modal-hdr {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #2a2a2a;
+  background: #1e1e1e;
+  flex-wrap: wrap;
+}
+.dist-modal-hdr-left {
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+}
+.dist-modal-sku {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #EB5E28;
+  font-family: 'Courier New', monospace;
+  letter-spacing: .04em;
+}
+.dist-modal-prod {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 2px;
+}
+.dist-modal-stocks {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.dist-stock-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.74rem;
+  border: 1px solid #2a2a2a;
+  background: #252525;
+  color: #888;
+}
+.dist-stock-chip i { font-size: 0.7rem; }
+.dist-stock-chip strong { color: #FFFCF2; }
+.dist-stock-odoo   { border-color: rgba(92,155,214,.3); }
+.dist-stock-odoo i { color: #5c9bd6; }
+.dist-stock-entrante { border-color: rgba(235,94,40,.2); }
+.dist-stock-entrante i { color: #EB5E28; }
+.dist-stock-total { border-color: rgba(255,252,242,.15); background: #262626; }
+.dist-stock-total strong { color: #FFFCF2; font-size: 0.85rem; }
+.dist-stock-restante { border-color: rgba(76,175,80,.2); }
+.dist-stock-restante i { color: #4caf50; }
+.dist-stock-ok { border-color: #4caf50; background: rgba(76,175,80,.08); }
+.dist-modal-close {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: #666;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  transition: background 150ms, color 150ms;
+}
+.dist-modal-close:hover { background: #2a2a2a; color: #FFFCF2; }
+
+.dist-modal-body {
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dist-empty {
+  text-align: center;
+  color: #555;
+  padding: 32px;
+  font-size: 0.9rem;
+}
+
+/* ── Cada cliente ─────────────────────────────────────── */
+.dist-cliente {
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 12px 14px;
+  border-left-width: 3px;
+  border-left-color: #333;
+  transition: border-color 150ms ease;
+}
+.dist-cubierto  { border-left-color: #4caf50; }
+.dist-parcial   { border-left-color: #EB5E28; }
+.dist-sin-stock { border-left-color: #e53935; opacity: .75; }
+
+.dist-cliente-hdr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.dist-prio-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  min-width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.prio-top   { background: rgba(235,94,40,.2);  color: #EB5E28;  border: 1px solid rgba(235,94,40,.4); }
+.prio-mid   { background: rgba(92,155,214,.15); color: #5c9bd6;  border: 1px solid rgba(92,155,214,.3); }
+.prio-low   { background: rgba(138,128,119,.15); color: #8a8077; border: 1px solid rgba(138,128,119,.3); }
+.prio-extra { background: #252525; color: #555; border: 1px solid #2a2a2a; }
+
+.dist-nombre {
+  font-size: 0.82rem;
+  color: #FFFCF2;
+  font-weight: 500;
+  flex: 1;
+}
+.dist-clave {
+  font-size: 0.72rem;
+  color: #555;
+  font-family: 'Courier New', monospace;
+}
+.dist-resumen {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.dist-asig {
+  font-size: 0.8rem;
+  color: #8a8077;
+  font-variant-numeric: tabular-nums;
+}
+.dist-pct {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #FFFCF2;
+  min-width: 36px;
+  text-align: right;
+}
+
+/* Barra de progreso */
+.dist-bar-track {
+  height: 4px;
+  background: #252525;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.dist-bar-fill {
+  height: 100%;
+  background: #4caf50;
+  border-radius: 2px;
+  transition: width 400ms cubic-bezier(0.23,1,0.32,1);
+}
+.dist-parcial   .dist-bar-fill { background: #EB5E28; }
+.dist-sin-stock .dist-bar-fill { background: #e53935; }
+
+/* Detalle por mes */
+.dist-meses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.dist-mes-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: #252525;
+  border: 1px solid #2a2a2a;
+  min-width: 40px;
+}
+.dist-mes-ok     { border-color: rgba(76,175,80,.35);  background: rgba(76,175,80,.07); }
+.dist-mes-parcial{ border-color: rgba(235,94,40,.35);  background: rgba(235,94,40,.07); }
+.dist-mes-sin    { border-color: rgba(229,57,53,.3);   background: rgba(229,57,53,.05); }
+.dist-mes-lbl {
+  font-size: 0.62rem;
+  color: #555;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.dist-mes-val {
+  font-size: 0.7rem;
+  color: #FFFCF2;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.dist-mes-ok  .dist-mes-val { color: #4caf50; }
+.dist-mes-sin .dist-mes-val { color: #e53935; }
+
