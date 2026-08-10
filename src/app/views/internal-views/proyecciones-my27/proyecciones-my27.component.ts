@@ -62,6 +62,12 @@ export class ProyeccionesMY27Component implements OnInit {
   errorCobertura: string | null = null;
   filtroBusqueda = '';
 
+  // --- Distribución prioritaria ---
+  distribucion: any[] = [];
+  distribucionFiltrada: any[] = [];
+  cargandoDistribucion = false;
+  distribucionModal: any = null;  // DistribucionSku | null
+
   readonly MESES = [
     { key: 'mayo', label: 'May' }, { key: 'junio', label: 'Jun' },
     { key: 'julio', label: 'Jul' }, { key: 'agosto', label: 'Ago' },
@@ -199,6 +205,10 @@ export class ProyeccionesMY27Component implements OnInit {
         this.kpisData = this._computeKpis();
         this.cdr.markForCheck();
       }
+      // Cargar distribución si aún no se ha cargado
+      if (this.distribucion.length === 0 && !this.cargandoDistribucion) {
+        this.cargarDistribucion();
+      }
     }
     this.cdr.markForCheck();
   }
@@ -207,6 +217,8 @@ export class ProyeccionesMY27Component implements OnInit {
     if (this.activeTab === 'inventario') {
       // Primero regenera el caché del Monitor (con datos frescos de Odoo),
       // luego recarga cobertura para que lea el caché actualizado
+      this.distribucion = [];
+      this.distribucionFiltrada = [];
       this.cargando = true;
       this.cdr.markForCheck();
       this.svc.getDatos(this.periodo, true).subscribe({
@@ -271,6 +283,7 @@ export class ProyeccionesMY27Component implements OnInit {
           this.cargandoCobertura = false;
           this.filtrarCobertura();
           this.kpisData = this._computeKpis();
+          this.cargarDistribucion();
           this.cdr.markForCheck();
         },
         error: () => {
@@ -291,6 +304,48 @@ export class ProyeccionesMY27Component implements OnInit {
       );
     }
     this.cdr.markForCheck();
+  }
+
+  cargarDistribucion(): void {
+    this.cargandoDistribucion = true;
+    this.cdr.markForCheck();
+    this.svc.getDistribucionPrioritaria(this.periodo).subscribe({
+      next: (res) => {
+        this.distribucion = res.distribuciones || [];
+        this.distribucionFiltrada = this.distribucion;
+        this.cargandoDistribucion = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.cargandoDistribucion = false;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  abrirDistribucion(item: any): void {
+    this.distribucionModal = item;
+    this.cdr.markForCheck();
+  }
+
+  cerrarDistribucion(): void {
+    this.distribucionModal = null;
+    this.cdr.markForCheck();
+  }
+
+  getPrioridadLabel(prio: number): string {
+    return prio <= 27 ? `#${prio}` : 'Extra';
+  }
+
+  getPrioridadClass(prio: number): string {
+    if (prio <= 5)  return 'prio-top';
+    if (prio <= 15) return 'prio-mid';
+    if (prio <= 27) return 'prio-low';
+    return 'prio-extra';
+  }
+
+  getPorcentajeCubierto(asignado: number, demanda: number): number {
+    return demanda > 0 ? Math.round((asignado / demanda) * 100) : 0;
   }
 
   resumenCobertura(item: any): string {
