@@ -472,8 +472,8 @@
     <div *ngIf="!cargandoCobertura && !errorCobertura && coberturaMegamo.length === 0 && uploadEstado !== 'cargando'"
          class="inv-empty">
       <i class="fas fa-inbox"></i>
-      <p>Cargando SKUs del catálogo con stock Odoo...
-         <span *ngIf="!cargandoDistribucion">Sube un Excel para agregar inventario entrante.</span>
+      <p>Sin SKUs con proyección ni stock disponible para este periodo.
+         Sube un Excel para agregar inventario entrante.
       </p>
     </div>
 
@@ -525,6 +525,7 @@
             <td class="num">
               <button class="btn-dist-icon" (click)="abrirDistribucion(item)"
                       *ngIf="item.total_proyectado > 0"
+                      [disabled]="cargandoDistribucion"
                       title="Ver distribución por cliente">
                 <i class="fas fa-users"></i>
               </button>
@@ -566,7 +567,7 @@
           </button>
         </div>
         <div class="dist-modal-body">
-          <div *ngIf="distribucionModal.distribuciones.length === 0" class="dist-empty">
+          <div *ngIf="(distribucionModal.distribuciones?.length ?? 0) === 0" class="dist-empty">
             <i class="fas fa-users-slash"></i> Sin clientes con proyección para este SKU.
           </div>
           <div class="dist-cliente" *ngFor="let d of distribucionModal.distribuciones"

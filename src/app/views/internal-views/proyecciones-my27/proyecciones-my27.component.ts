@@ -200,14 +200,15 @@ export class ProyeccionesMY27Component implements OnInit {
     this.activeTab = tab;
     if (tab === 'inventario') {
       if (this.coberturaMegamo.length === 0) {
-        this.cargarCobertura();
-      } else if (!this.kpisData) {
-        this.kpisData = this._computeKpis();
-        this.cdr.markForCheck();
-      }
-      // Cargar distribución si aún no se ha cargado
-      if (this.distribucion.length === 0 && !this.cargandoDistribucion) {
-        this.cargarDistribucion();
+        this.cargarCobertura(); // chains cargarDistribucion() in next()
+      } else {
+        if (!this.kpisData) {
+          this.kpisData = this._computeKpis();
+          this.cdr.markForCheck();
+        }
+        if (this.distribucion.length === 0 && !this.cargandoDistribucion) {
+          this.cargarDistribucion();
+        }
       }
     }
     this.cdr.markForCheck();
@@ -324,7 +325,7 @@ export class ProyeccionesMY27Component implements OnInit {
   }
 
   abrirDistribucion(item: any): void {
-    this.distribucionModal = item;
+    this.distribucionModal = this.distribucion.find(d => d.sku === item.sku) ?? null;
     this.cdr.markForCheck();
   }
 
