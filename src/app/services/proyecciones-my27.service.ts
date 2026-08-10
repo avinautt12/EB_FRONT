@@ -76,11 +76,46 @@ export interface CoberturaSku {
   sku: string;
   producto: string;
   cantidad_entrante: number;
+  odoo_disponible: number;
+  total_disponible: number;
   total_proyectado: number;
   total_cubierto: number;
   total_deficit: number;
   sobrante: number;
   cobertura: CoberturaItem[];
+}
+
+export interface DetalleDistMes {
+  mes: string;
+  demanda: number;
+  asignado: number;
+  pendiente: number;
+}
+
+export interface DistribucionCliente {
+  clave_cliente: string;
+  nombre_cliente: string;
+  prioridad: number;
+  total_demanda: number;
+  asignado: number;
+  pendiente: number;
+  detalle_meses: DetalleDistMes[];
+}
+
+export interface DistribucionSku {
+  sku: string;
+  producto: string;
+  odoo_disponible: number;
+  cantidad_entrante: number;
+  total_disponible: number;
+  total_proyectado: number;
+  stock_restante: number;
+  distribuciones: DistribucionCliente[];
+}
+
+export interface DistribucionResponse {
+  periodo: string;
+  distribuciones: DistribucionSku[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -121,5 +156,12 @@ export class ProyeccionesMY27Service {
 
   getExportCoberturaUrl(periodo = '2026-2027'): string {
     return `${this.api}/proyecciones-my27/exportar-cobertura?periodo=${periodo}`;
+  }
+
+  getDistribucionPrioritaria(periodo = '2026-2027'): Observable<DistribucionResponse> {
+    return this.http.get<DistribucionResponse>(
+      `${this.api}/proyecciones-my27/distribucion-prioritaria`,
+      { params: { periodo } }
+    );
   }
 }
