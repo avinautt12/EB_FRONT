@@ -4,7 +4,7 @@
 
     <div class="page-header">
         <div class="header-left">
-            <button class="back-link" [routerLink]="['/usuarios/solicitud-retroactivo']">
+            <button class="back-link" [routerLink]="esCliente ? ['/usuarios/caratula-retroactivos'] : ['/dashboard-retroactivos']">
                 <i class="fas fa-arrow-left"></i> Volver
             </button>
             <div class="page-title">
@@ -25,7 +25,6 @@
         <ul>
             <li><strong>Aplica para:</strong> Ventas a 6, 12 y 18 MSI sobre modelos participantes.</li>
             <li><strong>Documentación:</strong> Factura timbrada (PDF/XML) y Voucher/Ticket deben tener la misma fecha.</li>
-            <li><strong>Fecha límite:</strong> 08 de julio de 2026.</li>
         </ul>
     </div>
 
@@ -47,7 +46,7 @@
                 <div class="campos-grid">
 
                     <div class="form-group" [class.campo-invalid]="esCampoInvalido('id_formulario')">
-                        <label for="id_formulario">Tipo de Venta:</label>
+                        <label for="id_formulario">Campaña:</label>
                         <select id="id_formulario" formControlName="id_formulario">
                             <option value="" disabled selected>-- Selecciona --</option>
                             <option *ngFor="let item of listaFormulario" [value]="item.id">{{ item.nombre }}</option>
@@ -153,9 +152,14 @@
                         <label class="upload-label">
                             <i class="fas fa-cloud-arrow-up"></i>
                             <span>{{ archivos[campo.key] ? 'Cambiar archivo' : 'Seleccionar archivo' }}</span>
-                            <input type="file" [accept]="campo.accept" (change)="onFileSelect($event, campo.key)">
+                            <input type="file" [accept]="campo.accept" [attr.data-file-key]="campo.key" (change)="onFileSelect($event, campo.key)">
                         </label>
-                        <span class="file-name" *ngIf="archivos[campo.key]"><i class="fas fa-check"></i> {{ archivos[campo.key].name }}</span>
+                        <div class="file-row" *ngIf="archivos[campo.key]">
+                            <span class="file-name"><i class="fas fa-check"></i> {{ archivos[campo.key].name }}</span>
+                            <button type="button" class="btn-remove-file" (click)="removeArchivo(campo.key)" aria-label="Eliminar archivo adjunto">
+                                <i class="fas fa-trash"></i> Quitar
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

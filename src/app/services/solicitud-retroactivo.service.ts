@@ -61,7 +61,9 @@ export interface TotalesGenerales {
 
 export interface GrupoDashboard {
   total_solicitudes: number;
-  monto_total: string;
+  monto_total?: string;
+  monto_total_pagar?: string;
+  monto_total_aplicar?: string;
   [key: string]: unknown;
 }
 

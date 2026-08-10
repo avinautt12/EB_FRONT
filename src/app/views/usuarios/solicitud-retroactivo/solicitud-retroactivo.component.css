@@ -364,14 +364,50 @@
 .upload-label:hover i { color: #fff; }
 .upload-label:active { transform: scale(0.97); }
 
+.file-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+}
+
 .file-name {
   color: #22c55e;
   font-weight: 700;
   font-size: 0.82rem;
-  margin-top: 2px;
   display: flex;
   align-items: center;
   gap: 6px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-remove-file {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.7);
+  color: #fca5a5;
+  border-radius: 7px;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 160ms var(--ease-out), background-color 180ms, color 180ms;
+}
+
+.btn-remove-file:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fff;
+}
+
+.btn-remove-file:active {
+  transform: scale(0.97);
 }
 
 .form-group.campo-invalid { border-color: #e11d48; box-shadow: 0 0 12px rgba(225, 29, 72, 0.3); }

@@ -178,19 +178,65 @@ export class SolicitudRetroactivoDashboardComponent implements OnInit, AfterView
     this.ordenPorPanel[panel] = valor;
   }
 
+  private toSafeNumber(value: unknown): number {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : 0;
+  }
+
+  private montoFila(fila: GrupoDashboard): number {
+    return this.toSafeNumber(
+      fila.monto_total ?? fila.monto_total_pagar ?? fila.monto_total_aplicar ?? 0
+    );
+  }
+
   private ordenar(grupos: GrupoDashboard[], panel: PanelKey): GrupoDashboard[] {
     const orden = this.ordenPorPanel[panel];
     return [...grupos].sort((a, b) => {
-      if (orden === 'solicitudes') return b.total_solicitudes - a.total_solicitudes;
-      return Number(b.monto_total) - Number(a.monto_total);
+      if (orden === 'solicitudes') return this.toSafeNumber(b.total_solicitudes) - this.toSafeNumber(a.total_solicitudes);
+      return this.montoFila(b) - this.montoFila(a);
     });
   }
 
+  metricValue(panel: PanelKey, fila: GrupoDashboard): number {
+    return this.ordenPorPanel[panel] === 'solicitudes'
+      ? this.toSafeNumber(fila.total_solicitudes)
+      : this.montoFila(fila);
+  }
+
+  totalMetric(panel: PanelKey, grupo: GrupoDashboard[]): number {
+    return this.ordenPorPanel[panel] === 'solicitudes'
+      ? grupo.reduce((acc, fila) => acc + this.toSafeNumber(fila.total_solicitudes), 0)
+      : grupo.reduce((acc, fila) => acc + this.montoFila(fila), 0);
+  }
+
+  formatearMetric(panel: PanelKey, valor: number): string {
+    if (this.ordenPorPanel[panel] === 'solicitudes') {
+      return `${valor}`;
+    }
+
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(this.toSafeNumber(valor));
+  }
+
+  metricMeta(panel: PanelKey, fila: GrupoDashboard): string {
+    if (this.ordenPorPanel[panel] === 'solicitudes') {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0
+      }).format(this.montoFila(fila));
+    }
+    return `${this.toSafeNumber(fila.total_solicitudes)} sol.`;
+  }
+
   // GUÍA: barra de magnitud por fila (dataviz skill) -- un solo hue, largo
-  // proporcional al monto más alto del propio grupo.
-  barPct(valor: string | number, grupo: GrupoDashboard[]): number {
-    const max = Math.max(...grupo.map(g => Number(g.monto_total)), 1);
-    return Math.max((Number(valor) / max) * 100, 3);
+  // proporcional a la métrica activa del panel (monto o solicitudes).
+  barPct(valor: string | number, grupo: GrupoDashboard[], panel: PanelKey): number {
+    const max = Math.max(...grupo.map(g => this.metricValue(panel, g)), 1);
+    return Math.max((this.toSafeNumber(valor) / max) * 100, 3);
   }
 
   // GUÍA: el "total general" por panel (igual que .rank-total en
@@ -200,8 +246,8 @@ export class SolicitudRetroactivoDashboardComponent implements OnInit, AfterView
   totalGrupo(grupo: GrupoDashboard[]): { solicitudes: number; monto: number } {
     return grupo.reduce(
       (acc, g) => ({
-        solicitudes: acc.solicitudes + g.total_solicitudes,
-        monto: acc.monto + Number(g.monto_total)
+        solicitudes: acc.solicitudes + this.toSafeNumber(g.total_solicitudes),
+        monto: acc.monto + this.montoFila(g)
       }),
       { solicitudes: 0, monto: 0 }
     );

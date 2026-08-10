@@ -143,7 +143,7 @@
           </div>
         </div>
         <div class="rank-total">
-          Total general: <strong>{{ totalGrupo(porCampanaFiltrado).monto | currency:'USD':'$':'1.0-0' }}</strong>
+          Total general: <strong>{{ formatearMetric('campana', totalMetric('campana', porCampanaFiltrado)) }}</strong>
           · {{ totalGrupo(porCampanaFiltrado).solicitudes }} solicitud{{ totalGrupo(porCampanaFiltrado).solicitudes !== 1 ? 'es' : '' }}
         </div>
         <div class="rank-list rank-list-scroll">
@@ -151,11 +151,11 @@
             <span class="rank-num">{{ i + 1 }}</span>
             <span class="rank-label" [title]="fila['nombre_formulario']">{{ fila['nombre_formulario'] }}</span>
             <div class="rank-bar-track">
-              <div class="rank-bar-fill" [style.width.%]="barPct(fila.monto_total, porCampanaFiltrado)"></div>
+              <div class="rank-bar-fill" [style.width.%]="barPct(metricValue('campana', fila), porCampanaFiltrado, 'campana')"></div>
             </div>
             <span class="rank-value">
-              {{ fila.monto_total | currency:'USD':'$':'1.0-0' }}
-              <span class="rank-value-meta">{{ fila.total_solicitudes }} sol.</span>
+              {{ formatearMetric('campana', metricValue('campana', fila)) }}
+              <span class="rank-value-meta">{{ metricMeta('campana', fila) }}</span>
             </span>
           </div>
           <div class="rank-empty" *ngIf="!porCampanaFiltrado.length"><i class="fas fa-inbox"></i> Sin resultados</div>
@@ -179,7 +179,7 @@
           </div>
         </div>
         <div class="rank-total">
-          Total general: <strong>{{ totalGrupo(porAnioModeloOrdenado).monto | currency:'USD':'$':'1.0-0' }}</strong>
+          Total general: <strong>{{ formatearMetric('anioModelo', totalMetric('anioModelo', porAnioModeloOrdenado)) }}</strong>
           · {{ totalGrupo(porAnioModeloOrdenado).solicitudes }} solicitud{{ totalGrupo(porAnioModeloOrdenado).solicitudes !== 1 ? 'es' : '' }}
         </div>
         <div class="rank-list rank-list-scroll">
@@ -187,11 +187,11 @@
             <span class="rank-num">{{ i + 1 }}</span>
             <span class="rank-label" [title]="fila['anio_modelo']">{{ fila['anio_modelo'] }}</span>
             <div class="rank-bar-track">
-              <div class="rank-bar-fill" [style.width.%]="barPct(fila.monto_total, porAnioModeloOrdenado)"></div>
+              <div class="rank-bar-fill" [style.width.%]="barPct(metricValue('anioModelo', fila), porAnioModeloOrdenado, 'anioModelo')"></div>
             </div>
             <span class="rank-value">
-              {{ fila.monto_total | currency:'USD':'$':'1.0-0' }}
-              <span class="rank-value-meta">{{ fila.total_solicitudes }} sol.</span>
+              {{ formatearMetric('anioModelo', metricValue('anioModelo', fila)) }}
+              <span class="rank-value-meta">{{ metricMeta('anioModelo', fila) }}</span>
             </span>
           </div>
           <div class="rank-empty" *ngIf="!porAnioModeloOrdenado.length"><i class="fas fa-inbox"></i> Sin resultados</div>
@@ -216,7 +216,7 @@
           </div>
         </div>
         <div class="rank-total">
-          Total general: <strong>{{ totalGrupo(porClienteFiltrado).monto | currency:'USD':'$':'1.0-0' }}</strong>
+          Total general: <strong>{{ formatearMetric('cliente', totalMetric('cliente', porClienteFiltrado)) }}</strong>
           · {{ totalGrupo(porClienteFiltrado).solicitudes }} solicitud{{ totalGrupo(porClienteFiltrado).solicitudes !== 1 ? 'es' : '' }}
         </div>
         <div class="rank-list rank-list-scroll">
@@ -224,11 +224,11 @@
             <span class="rank-num">{{ i + 1 }}</span>
             <span class="rank-label" [title]="fila['correo_electronico']">{{ fila['nombre_completo'] }}</span>
             <div class="rank-bar-track">
-              <div class="rank-bar-fill" [style.width.%]="barPct(fila.monto_total, porClienteFiltrado)"></div>
+              <div class="rank-bar-fill" [style.width.%]="barPct(metricValue('cliente', fila), porClienteFiltrado, 'cliente')"></div>
             </div>
             <span class="rank-value">
-              {{ fila.monto_total | currency:'USD':'$':'1.0-0' }}
-              <span class="rank-value-meta">{{ fila.total_solicitudes }} sol.</span>
+              {{ formatearMetric('cliente', metricValue('cliente', fila)) }}
+              <span class="rank-value-meta">{{ metricMeta('cliente', fila) }}</span>
             </span>
           </div>
           <div class="rank-empty" *ngIf="!porClienteFiltrado.length"><i class="fas fa-inbox"></i> Sin resultados</div>
@@ -251,7 +251,7 @@
           </div>
         </div>
         <div class="rank-total">
-          Total general: <strong>{{ totalGrupo(porProductoOrdenado).monto | currency:'USD':'$':'1.0-0' }}</strong>
+          Total general: <strong>{{ formatearMetric('producto', totalMetric('producto', porProductoOrdenado)) }}</strong>
           · {{ totalGrupo(porProductoOrdenado).solicitudes }} solicitud{{ totalGrupo(porProductoOrdenado).solicitudes !== 1 ? 'es' : '' }}
         </div>
         <div class="rank-list rank-list-scroll">
@@ -259,11 +259,11 @@
             <span class="rank-num">{{ i + 1 }}</span>
             <span class="rank-label" [title]="fila['producto']">{{ fila['producto'] }}</span>
             <div class="rank-bar-track">
-              <div class="rank-bar-fill" [style.width.%]="barPct(fila.monto_total, porProductoOrdenado)"></div>
+              <div class="rank-bar-fill" [style.width.%]="barPct(metricValue('producto', fila), porProductoOrdenado, 'producto')"></div>
             </div>
             <span class="rank-value">
-              {{ fila.monto_total | currency:'USD':'$':'1.0-0' }}
-              <span class="rank-value-meta">{{ fila.total_solicitudes }} sol.</span>
+              {{ formatearMetric('producto', metricValue('producto', fila)) }}
+              <span class="rank-value-meta">{{ metricMeta('producto', fila) }}</span>
             </span>
           </div>
           <div class="rank-empty" *ngIf="!porProductoOrdenado.length"><i class="fas fa-inbox"></i> Sin resultados</div>
