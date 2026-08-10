@@ -20,7 +20,8 @@
             <i class="fa-solid fa-envelope"></i> Solicitud de retroactivos
         </button>
 
-        <button class="btn btn-actualizar" (click)="actualizarDatos()" [disabled]="cargando">
+        <button class="btn btn-actualizar" (click)="actualizarDatos()" [disabled]="cargando"
+            *ngIf="!modoHistorico">
             <i class="fas fa-sync-alt" [class.fa-spin]="cargando"></i>
             {{ cargando ? 'Sincronizando...' : 'Actualizar Odoo' }}
         </button>

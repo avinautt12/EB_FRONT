@@ -125,7 +125,7 @@ export class DashboardRetroactivosComponent implements OnInit {
   }
 
   actualizarDatos(): void {
-    if (this.cargando) return;
+    if (this.cargando || this.modoHistorico) return;
 
     this.cargando = true;
 
