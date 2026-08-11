@@ -32,6 +32,10 @@
               class="btn btn-primary" (click)="exportarCobertura()">
         <i class="fas fa-file-excel"></i> Exportar Inventario
       </button>
+      <button *ngIf="activeTab === 'inventario' && productosParaReserva.length > 0"
+              class="btn btn-reserva" (click)="abrirReserva()">
+        <i class="fas fa-shopping-cart"></i> Generar Reserva
+      </button>
     </div>
   </div>
 
@@ -607,6 +611,130 @@
 
   </div><!-- /tab inventario -->
 
+</div>
+
+<!-- ═══ MODAL GENERAR RESERVA ODOO ═══ -->
+<div class="reserva-overlay" *ngIf="reservaOpen" (click)="cerrarReserva()">
+  <div class="reserva-modal" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="reserva-modal-hdr">
+      <div class="reserva-modal-title">
+        <i class="fas fa-shopping-cart"></i>
+        <span>Generar Reserva en Odoo</span>
+      </div>
+      <button class="reserva-close" (click)="cerrarReserva()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Resultado / Error -->
+    <div *ngIf="reservaResultado" class="reserva-resultado-ok">
+      <i class="fas fa-check-circle"></i>
+      <div>
+        <strong>Orden creada: {{ reservaResultado.order_name }}</strong><br>
+        Cliente: {{ reservaResultado.partner_name }} &nbsp;·&nbsp;
+        {{ reservaResultado.lineas_creadas }} línea(s) en Odoo.
+        <span *ngIf="reservaResultado.skus_no_encontrados.length > 0" class="reserva-warn">
+          &nbsp;·&nbsp; {{ reservaResultado.skus_no_encontrados.length }} SKU(s) no encontrados en Odoo.
+        </span>
+      </div>
+    </div>
+    <div *ngIf="reservaError" class="reserva-resultado-err">
+      <i class="fas fa-exclamation-circle"></i> {{ reservaError }}
+    </div>
+
+    <!-- Formulario: Cliente + Mes -->
+    <div class="reserva-form-row" *ngIf="!reservaResultado">
+      <div class="reserva-field">
+        <label class="reserva-label">Cliente (prioridad)</label>
+        <select class="reserva-select" [(ngModel)]="reservaCliente">
+          <option *ngFor="let c of CLIENTES_PRIORITARIOS" [value]="c.clave">
+            #{{ c.prioridad }} — {{ c.clave }} · {{ c.nombre }}
+          </option>
+        </select>
+      </div>
+      <div class="reserva-field reserva-field-mes">
+        <label class="reserva-label">Mes de reserva</label>
+        <select class="reserva-select" [(ngModel)]="reservaMes">
+          <option *ngFor="let m of MESES_RESERVA" [value]="m.key">{{ m.label }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Tabla de productos -->
+    <div class="reserva-table-wrap" *ngIf="!reservaResultado">
+      <div class="reserva-table-hdr-row">
+        <span class="reserva-table-title">Productos disponibles</span>
+        <span class="reserva-sel-count" *ngIf="reservaSeleccion.size > 0">
+          <i class="fas fa-check"></i> {{ reservaSeleccion.size }} seleccionado(s)
+        </span>
+      </div>
+      <table class="reserva-table">
+        <thead>
+          <tr>
+            <th class="rth-check"></th>
+            <th class="rth-sku">SKU</th>
+            <th class="rth-prod">Producto</th>
+            <th class="rth-num" title="Odoo disponible">Odoo</th>
+            <th class="rth-num" title="Inventario entrante (Excel)">Entr.</th>
+            <th class="rth-num rth-total" title="Total disponible">Total</th>
+            <th class="rth-qty">Cantidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of productosParaReserva"
+              [class.reserva-row-sel]="isSkuSeleccionado(item.sku)">
+            <td class="rtd-check">
+              <input type="checkbox"
+                     class="reserva-chk"
+                     [checked]="isSkuSeleccionado(item.sku)"
+                     (change)="toggleReservaSku(item.sku, $any($event.target).checked, item.total_disponible)" />
+            </td>
+            <td class="rtd-sku">{{ item.sku }}</td>
+            <td class="rtd-prod">{{ item.producto }}</td>
+            <td class="rtd-num" [class.rtd-has]="item.odoo_disponible > 0">
+              {{ item.odoo_disponible || '—' }}
+            </td>
+            <td class="rtd-num" [class.rtd-has]="item.cantidad_entrante > 0">
+              {{ item.cantidad_entrante || '—' }}
+            </td>
+            <td class="rtd-num rtd-total">{{ item.total_disponible }}</td>
+            <td class="rtd-qty">
+              <input *ngIf="isSkuSeleccionado(item.sku)"
+                     type="number" min="1" [max]="item.total_disponible"
+                     class="reserva-qty-input"
+                     [value]="getReservaCantidad(item.sku)"
+                     (change)="setReservaCantidad(item.sku, $any($event.target).value, item.total_disponible)" />
+              <span *ngIf="!isSkuSeleccionado(item.sku)" class="rtd-qty-dash">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="reserva-footer" *ngIf="!reservaResultado">
+      <span class="reserva-footer-note" *ngIf="reservaSeleccion.size === 0">
+        <i class="fas fa-info-circle"></i> Selecciona al menos un producto.
+      </span>
+      <button class="btn btn-reserva-gen"
+              [disabled]="reservaSeleccion.size === 0 || reservaGenerando"
+              (click)="generarReservaOdoo()">
+        <i class="fas"
+           [class.fa-spinner]="reservaGenerando"
+           [class.fa-spin]="reservaGenerando"
+           [class.fa-check]="!reservaGenerando"></i>
+        {{ reservaGenerando ? 'Creando orden...' : 'Generar en Odoo' }}
+      </button>
+    </div>
+
+    <!-- Footer post-resultado -->
+    <div class="reserva-footer" *ngIf="reservaResultado">
+      <button class="btn btn-outline" (click)="cerrarReserva()">Cerrar</button>
+    </div>
+
+  </div>
 </div>
 
 <!-- ═══ MODAL DESGLOSE ═══ -->

@@ -1561,3 +1561,275 @@
 .dist-mes-ok  .dist-mes-val { color: #4caf50; }
 .dist-mes-sin .dist-mes-val { color: #e53935; }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESERVA ODOO — modal
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.btn-reserva {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: opacity .18s;
+}
+.btn-reserva:hover { opacity: .88; }
+
+.reserva-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.reserva-modal {
+  background: #181818;
+  border: 1px solid #2a2a2a;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 860px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0,0,0,.7);
+  overflow: hidden;
+}
+
+/* Header */
+.reserva-modal-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 16px;
+  border-bottom: 1px solid #2a2a2a;
+  flex-shrink: 0;
+}
+.reserva-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #FFFCF2;
+}
+.reserva-modal-title i { color: #22c55e; font-size: 1.1rem; }
+.reserva-close {
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: color .15s, background .15s;
+}
+.reserva-close:hover { color: #FFFCF2; background: #2a2a2a; }
+
+/* Resultado OK / Error */
+.reserva-resultado-ok,
+.reserva-resultado-err {
+  margin: 14px 22px 0;
+  padding: 14px 16px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.reserva-resultado-ok {
+  background: rgba(34,197,94,.1);
+  border: 1px solid rgba(34,197,94,.3);
+  color: #bbf7d0;
+}
+.reserva-resultado-ok i { color: #22c55e; font-size: 1.1rem; margin-top: 1px; }
+.reserva-resultado-err {
+  background: rgba(239,68,68,.1);
+  border: 1px solid rgba(239,68,68,.3);
+  color: #fca5a5;
+}
+.reserva-resultado-err i { color: #ef4444; font-size: 1.1rem; }
+.reserva-warn { color: #f59e0b; }
+
+/* Fila de formulario */
+.reserva-form-row {
+  display: flex;
+  gap: 16px;
+  padding: 16px 22px 0;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.reserva-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 240px;
+}
+.reserva-field-mes { flex: 0 0 180px; min-width: 160px; }
+.reserva-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.reserva-select {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 7px;
+  color: #FFFCF2;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+  appearance: auto;
+}
+.reserva-select:focus { border-color: #22c55e; }
+
+/* Tabla de productos */
+.reserva-table-wrap {
+  flex: 1;
+  overflow-y: auto;
+  margin: 14px 22px 0;
+  border: 1px solid #242424;
+  border-radius: 8px;
+}
+.reserva-table-hdr-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: #111;
+  border-bottom: 1px solid #222;
+}
+.reserva-table-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.reserva-sel-count {
+  font-size: 0.78rem;
+  color: #22c55e;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.reserva-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+.reserva-table thead th {
+  background: #111;
+  color: #555;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: .05em;
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid #222;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.rth-check { width: 36px; }
+.rth-sku   { width: 110px; }
+.rth-num   { width: 70px; text-align: right !important; }
+.rth-total { border-left: 2px solid #2a2a2a; }
+.rth-qty   { width: 110px; text-align: right !important; }
+
+.reserva-table tbody tr {
+  border-bottom: 1px solid #1e1e1e;
+  transition: background .12s;
+}
+.reserva-table tbody tr:hover { background: #1e1e1e; }
+.reserva-row-sel { background: rgba(34,197,94,.05) !important; }
+.reserva-row-sel:hover { background: rgba(34,197,94,.09) !important; }
+
+.reserva-table tbody td {
+  padding: 8px 10px;
+  color: #FFFCF2;
+  vertical-align: middle;
+}
+.rtd-check { text-align: center; }
+.rtd-sku   { font-family: 'Courier New', monospace; font-size: 0.78rem; color: #EB5E28; }
+.rtd-prod  { color: #aaa; font-size: 0.8rem; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rtd-num   { text-align: right; font-variant-numeric: tabular-nums; color: #555; }
+.rtd-has   { color: #FFFCF2; }
+.rtd-total { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; color: #22c55e; border-left: 2px solid #2a2a2a; }
+.rtd-qty   { text-align: right; }
+.rtd-qty-dash { color: #333; }
+
+.reserva-chk {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #22c55e;
+}
+
+.reserva-qty-input {
+  width: 72px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 5px;
+  color: #FFFCF2;
+  padding: 5px 8px;
+  font-size: 0.82rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+.reserva-qty-input:focus { border-color: #22c55e; }
+
+/* Footer */
+.reserva-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 22px;
+  border-top: 1px solid #2a2a2a;
+  flex-shrink: 0;
+}
+.reserva-footer-note {
+  font-size: 0.78rem;
+  color: #555;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-reserva-gen {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity .18s;
+}
+.btn-reserva-gen:hover:not(:disabled) { opacity: .88; }
+.btn-reserva-gen:disabled { opacity: .4; cursor: not-allowed; }
+

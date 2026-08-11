@@ -69,6 +69,57 @@ export class ProyeccionesMY27Component implements OnInit {
   cargandoDistribucion = false;
   distribucionModal: DistribucionSku | null = null;
 
+  // --- Generar reserva en Odoo ---
+  reservaOpen = false;
+  reservaCliente = '';
+  reservaMes = '';
+  reservaSeleccion: Map<string, number> = new Map();
+  reservaGenerando = false;
+  reservaResultado: { order_id: number; order_name: string; partner_name: string; lineas_creadas: number; skus_no_encontrados: string[] } | null = null;
+  reservaError = '';
+
+  readonly CLIENTES_PRIORITARIOS = [
+    { clave: 'LC657', nombre: 'Víctor Hugo Villanueva Guzman',             prioridad: 1  },
+    { clave: 'MC677', nombre: 'BICICLETAS SCJM',                           prioridad: 2  },
+    { clave: 'MC679', nombre: 'Adventure Bike Rider S. A. DE C. V. (GPE)', prioridad: 3  },
+    { clave: 'GC411', nombre: 'Adventure Bike Rider S. A. DE C. V.',       prioridad: 4  },
+    { clave: 'HE420', nombre: 'Xavier James Lord Santos',                   prioridad: 5  },
+    { clave: 'EC216', nombre: 'Marco Tulio (Morelia)',                      prioridad: 6  },
+    { clave: 'JC539', nombre: 'Marco Tulio Andrade Navarro (León)',         prioridad: 7  },
+    { clave: 'MD670', nombre: 'LIVING FOR BIKES',                           prioridad: 8  },
+    { clave: 'GD380', nombre: 'Cycling Riding de Mexico (Metepec)',         prioridad: 9  },
+    { clave: 'HA433', nombre: 'Lucia Salazar Lopez',                        prioridad: 10 },
+    { clave: 'ID506', nombre: 'Angelica Osorio Gasperin',                   prioridad: 11 },
+    { clave: '4E013', nombre: 'CHRISTIAN BOCCALETTI.',                      prioridad: 12 },
+    { clave: 'JE537', nombre: 'Christian Boccaletti.',                      prioridad: 13 },
+    { clave: 'LC625', nombre: 'Naruco S. A. de C. V. Arcos',               prioridad: 14 },
+    { clave: 'LC626', nombre: 'Naruco S. A. de C. V. SJR',                 prioridad: 15 },
+    { clave: 'LC627', nombre: 'Naruco S. A. de C. V. (Jurica)',            prioridad: 16 },
+    { clave: '84920', nombre: 'Naruco Corregidora',                         prioridad: 17 },
+    { clave: 'MD697', nombre: 'Fernando Pontón Rocha',                      prioridad: 18 },
+    { clave: 'EA219', nombre: 'Victor Alejandro Garnier Morga',             prioridad: 19 },
+    { clave: 'HF427', nombre: 'Opciones Creativas SA de CV',                prioridad: 20 },
+    { clave: 'FA271', nombre: 'Juan Manuel Ruacho Rangel',                  prioridad: 21 },
+    { clave: 'AG873', nombre: 'Alta Gama 87',                               prioridad: 22 },
+    { clave: 'LD664', nombre: 'Bikes 95 Cycling Club S. A. De C. V.',      prioridad: 23 },
+    { clave: '5GEG6', nombre: 'FELIPE ENRIQUEZ ROJAS',                     prioridad: 24 },
+    { clave: 'IA500', nombre: 'Jesus Manuel Medrano Velarde',               prioridad: 25 },
+    { clave: 'DC192', nombre: 'ANA CECILIA LOPEZ LOPEZ',                    prioridad: 26 },
+    { clave: 'JC554', nombre: 'ZIRANDA MADRIGAL EUGENA',                    prioridad: 27 },
+  ];
+
+  readonly MESES_RESERVA = [
+    { key: 'agosto',     label: 'Agosto'     },
+    { key: 'septiembre', label: 'Septiembre' },
+    { key: 'octubre',    label: 'Octubre'    },
+    { key: 'noviembre',  label: 'Noviembre'  },
+    { key: 'diciembre',  label: 'Diciembre'  },
+    { key: 'enero',      label: 'Enero'      },
+    { key: 'febrero',    label: 'Febrero'    },
+    { key: 'marzo',      label: 'Marzo'      },
+    { key: 'abril',      label: 'Abril'      },
+  ];
+
   readonly MESES = [
     { key: 'mayo', label: 'May' }, { key: 'junio', label: 'Jun' },
     { key: 'julio', label: 'Jul' }, { key: 'agosto', label: 'Ago' },
@@ -387,6 +438,80 @@ export class ProyeccionesMY27Component implements OnInit {
 
   barWidth(val: number, max: number): number {
     return max > 0 ? Math.round((val / max) * 100) : 0;
+  }
+
+  // --- Métodos de reserva Odoo ---
+
+  get productosParaReserva(): any[] {
+    return this.coberturaMegamo.filter((s: any) => (s.total_disponible ?? 0) > 0);
+  }
+
+  abrirReserva(): void {
+    this.reservaOpen = true;
+    this.reservaCliente = this.CLIENTES_PRIORITARIOS[0].clave;
+    this.reservaMes = 'agosto';
+    this.reservaSeleccion = new Map();
+    this.reservaResultado = null;
+    this.reservaError = '';
+    this.cdr.markForCheck();
+  }
+
+  cerrarReserva(): void {
+    this.reservaOpen = false;
+    this.reservaResultado = null;
+    this.reservaError = '';
+    this.cdr.markForCheck();
+  }
+
+  toggleReservaSku(sku: string, checked: boolean, disponible: number): void {
+    if (checked) {
+      this.reservaSeleccion.set(sku, Math.min(1, disponible));
+    } else {
+      this.reservaSeleccion.delete(sku);
+    }
+    this.cdr.markForCheck();
+  }
+
+  setReservaCantidad(sku: string, val: string, disponible: number): void {
+    const n = Math.max(1, Math.min(parseInt(val, 10) || 1, disponible));
+    this.reservaSeleccion.set(sku, n);
+    this.cdr.markForCheck();
+  }
+
+  isSkuSeleccionado(sku: string): boolean {
+    return this.reservaSeleccion.has(sku);
+  }
+
+  getReservaCantidad(sku: string): number {
+    return this.reservaSeleccion.get(sku) ?? 1;
+  }
+
+  get reservaLineas(): { sku: string; cantidad: number }[] {
+    return Array.from(this.reservaSeleccion.entries()).map(([sku, cantidad]) => ({ sku, cantidad }));
+  }
+
+  generarReservaOdoo(): void {
+    if (!this.reservaCliente || !this.reservaMes || this.reservaSeleccion.size === 0) return;
+    this.reservaGenerando = true;
+    this.reservaResultado = null;
+    this.reservaError = '';
+    this.cdr.markForCheck();
+    this.svc.generarOrdenOdoo({
+      clave_cliente: this.reservaCliente,
+      mes: this.reservaMes,
+      lineas: this.reservaLineas,
+    }).subscribe({
+      next: (res) => {
+        this.reservaGenerando = false;
+        this.reservaResultado = res;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.reservaGenerando = false;
+        this.reservaError = err?.error?.error || 'Error al generar la orden en Odoo.';
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   private _computeKpis(): any {
