@@ -90,6 +90,7 @@ export interface DetalleDistMes {
   demanda: number;
   asignado: number;
   pendiente: number;
+  pasado?: boolean;
 }
 
 export interface DistribucionCliente {

@@ -592,11 +592,12 @@
             </div>
             <div class="dist-meses" *ngIf="d.detalle_meses.length > 0">
               <div class="dist-mes-item" *ngFor="let dm of d.detalle_meses"
-                   [class.dist-mes-ok]="dm.pendiente === 0"
-                   [class.dist-mes-parcial]="dm.pendiente > 0 && dm.asignado > 0"
-                   [class.dist-mes-sin]="dm.asignado === 0">
+                   [class.dist-mes-pasado]="dm.pasado"
+                   [class.dist-mes-ok]="dm.pendiente === 0 && !dm.pasado"
+                   [class.dist-mes-parcial]="dm.pendiente > 0 && dm.asignado > 0 && !dm.pasado"
+                   [class.dist-mes-sin]="dm.asignado === 0 && !dm.pasado">
                 <span class="dist-mes-lbl">{{ dm.mes | slice:0:3 | uppercase }}</span>
-                <span class="dist-mes-val">{{ dm.asignado }}/{{ dm.demanda }}</span>
+                <span class="dist-mes-val">{{ dm.pasado ? '—' : (dm.asignado + '/' + dm.demanda) }}</span>
               </div>
             </div>
           </div>

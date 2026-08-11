@@ -1544,6 +1544,7 @@
 .dist-mes-ok     { border-color: rgba(76,175,80,.35);  background: rgba(76,175,80,.07); }
 .dist-mes-parcial{ border-color: rgba(235,94,40,.35);  background: rgba(235,94,40,.07); }
 .dist-mes-sin    { border-color: rgba(229,57,53,.3);   background: rgba(229,57,53,.05); }
+.dist-mes-pasado { border-color: rgba(120,120,120,.2); background: rgba(120,120,120,.04); opacity: 0.5; border-style: dashed; }
 .dist-mes-lbl {
   font-size: 0.62rem;
   color: #555;
