@@ -75,6 +75,18 @@ export interface DashboardSolicitudRetroactivo {
   por_producto: GrupoDashboard[];
 }
 
+export interface RazonSocial {
+  id: number;
+  nombre_cliente: string;
+  clave?: string;
+}
+
+export interface Tienda {
+  id: number;
+  nombre: string;
+  cliente_id: number;
+}
+
 // GUÍA: HttpClient ya manda el JWT solo (interceptors/auth.interceptor.ts),
 // no hace falta armar headers de Authorization a mano aquí.
 @Injectable({ providedIn: 'root' })
@@ -109,5 +121,13 @@ export class SolicitudRetroactivoService {
 
   actualizarVenta(id: number, formData: FormData): Observable<any> {
     return this.http.put(`${this.base}/venta/${id}`, formData);
+  }
+
+  buscarRazonesSociales(): Observable<RazonSocial[]> {
+    return this.http.get<RazonSocial[]>(`${this.base}/razones-sociales`);
+  }
+
+  buscarTiendas(clienteId: number): Observable<Tienda[]> {
+    return this.http.get<Tienda[]>(`${this.base}/tiendas/${clienteId}`);
   }
 }

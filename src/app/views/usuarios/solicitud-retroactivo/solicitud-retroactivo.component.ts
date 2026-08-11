@@ -49,9 +49,9 @@ const ETIQUETAS_CAMPOS: Record<string, string> = {
   id_formulario: 'Tipo de Venta',
   id_marca_bicicleta: 'Marca',
   id_msi: 'Meses Sin Intereses',
-  nombre_sucursal: 'Sucursal',
+  id_cliente: 'Razón Social',
+  id_tienda: 'Sucursal / Tienda',
   correo_electronico: 'Correo Electrónico',
-  nombre_completo: 'Nombre Completo',
   fecha_venta: 'Fecha de Venta',
   modelo_bicicleta: 'Modelo de Bicicleta',
   numero_serie: 'Número de Serie',
@@ -68,6 +68,9 @@ export class SolicitudRetroactivoComponent implements OnInit {
   listaMarca: Marca[] = [marcaVacia()];
   listaMsi: Msi[] = [msiVacio()];
   listaFormulario: Formulario[] = [tipoFormularioVacio()];
+  listaRazonSocial: any[] = [];
+  listaTiendas: any[] = [];
+  cargandoTiendas = false;
   
   ventaForm: FormGroup;
   archivos: { [key: string]: File } = {};
@@ -134,9 +137,9 @@ export class SolicitudRetroactivoComponent implements OnInit {
       id_formulario: ['', Validators.required],
       id_marca_bicicleta: [{ value: '', disabled: true }],
       id_msi: [{ value: '', disabled: true }, Validators.required],
-      nombre_sucursal: ['', Validators.required],
+      id_cliente: ['', Validators.required],
+      id_tienda: [{ value: '', disabled: true }, Validators.required],
       correo_electronico: ['', [Validators.required, Validators.email]],
-      nombre_completo: ['', Validators.required],
       fecha_venta: ['', Validators.required],
       modelo_bicicleta: ['', Validators.required],
       numero_serie: ['', Validators.required],
@@ -160,11 +163,6 @@ export class SolicitudRetroactivoComponent implements OnInit {
     }
   }
 
-  // GUÍA: el backend regresa fecha_venta como string RFC ("Sat, 01 Aug 2026
-  // 00:00:00 GMT", así serializa Flask un DATE de MySQL), no como ISO. Un
-  // slice(0,10) directo daba basura ("Sat, 01 Au") que <input type="date">
-  // rechaza -- pero el FormControl se queda con el string inválido completo,
-  // que luego tronaba el UPDATE en MySQL. Pasar por Date normaliza esto.
   private formatFechaParaInput(fecha: string | undefined): string {
     if (!fecha) return '';
     const d = new Date(fecha);
@@ -172,9 +170,6 @@ export class SolicitudRetroactivoComponent implements OnInit {
     return d.toISOString().slice(0, 10);
   }
 
-  // GUÍA: llega por ?editar=<id> desde solicitud-retroactivo-seguimiento
-  // (botón "Editar y reenviar"). No hay endpoint para traer una sola
-  // solicitud, así que reusamos mis-solicitudes y filtramos por id.
   private cargarYPrecargarEdicion(id: number): void {
     this.cargandoEdicion = true;
     this.solicitudService.misSolicitudes().subscribe({
@@ -194,8 +189,6 @@ export class SolicitudRetroactivoComponent implements OnInit {
     });
   }
 
-  // Precarga el formulario con una solicitud rechazada para reenviarla.
-  // onSubmit hace PUT en vez de POST mientras editandoId no sea null.
   iniciarEdicion(s: SolicitudRetroactivo): void {
     this.editandoId = s.id;
     this.mensajeExito = '';
@@ -207,9 +200,7 @@ export class SolicitudRetroactivoComponent implements OnInit {
 
     this.ventaForm.patchValue({
       id_formulario: s.id_formulario,
-      nombre_sucursal: s.nombre_sucursal,
       correo_electronico: s.correo_electronico,
-      nombre_completo: s.nombre_completo,
       fecha_venta: this.formatFechaParaInput(s.fecha_venta),
       modelo_bicicleta: s.modelo_bicicleta,
       numero_serie: s.numero_serie,
@@ -253,6 +244,9 @@ export class SolicitudRetroactivoComponent implements OnInit {
     if (!valores.id_msi) {
       faltantes.push('id_msi');
     }
+    if (this.listaTiendas.length > 0 && !valores.id_tienda) {
+      faltantes.push('id_tienda');
+    }
     if (valores.id_formulario == 1 && !valores.id_marca_bicicleta) {
       faltantes.push('id_marca_bicicleta');
     }
@@ -295,6 +289,9 @@ export class SolicitudRetroactivoComponent implements OnInit {
     const formData = new FormData();
     const datosFormulario = this.ventaForm.getRawValue();
 
+    const clienteSel = this.listaRazonSocial.find(c => c.id == datosFormulario.id_cliente);
+    const tiendaSel = this.listaTiendas.find(t => t.id == datosFormulario.id_tienda);
+
     if (datosFormulario.precio_publico) {
       datosFormulario.precio_publico = datosFormulario.precio_publico.toString().replace(/,/g, '');
     }
@@ -302,6 +299,13 @@ export class SolicitudRetroactivoComponent implements OnInit {
     Object.keys(datosFormulario).forEach(key => {
       formData.append(key, datosFormulario[key] ?? '');
     });
+
+    if (clienteSel) {
+      formData.append('nombre_completo', clienteSel.nombre_cliente);
+    }
+    if (tiendaSel) {
+      formData.append('nombre_sucursal', tiendaSel.nombre);
+    }
 
     Object.keys(this.archivos).forEach(key => {
       formData.append(key, this.archivos[key], this.archivos[key].name);
@@ -324,15 +328,12 @@ export class SolicitudRetroactivoComponent implements OnInit {
 
       this.ventaForm.get('id_marca_bicicleta')?.disable();
       this.ventaForm.get('id_msi')?.disable();
+      this.ventaForm.get('id_tienda')?.disable();
     };
 
     const manejarError = (err: any) => {
       this.enviando = false;
 
-      // GUÍA: si el backend rechaza por "Campos de texto faltantes",
-      // regresa las claves crudas en `campos` (ver solicitud_retroactivo.py).
-      // Las usamos para resaltar los mismos campos en rojo aquí, en vez
-      // de solo mostrar el mensaje genérico.
       const camposBackend: string[] = err.error?.campos ?? [];
       if (camposBackend.length > 0) {
         camposBackend.forEach(campo => this.camposFaltantes.add(campo));
@@ -344,8 +345,6 @@ export class SolicitudRetroactivoComponent implements OnInit {
     };
 
     if (this.editandoId !== null) {
-      // Reenvío de una solicitud rechazada -> PUT, sin id_usuario (el
-      // backend valida dueño contra el token, no contra el body).
       this.solicitudService.actualizarVenta(this.editandoId, formData).subscribe({
         next: () => manejarExito('¡Solicitud actualizada y enviada de nuevo a revisión!'),
         error: manejarError
@@ -353,10 +352,6 @@ export class SolicitudRetroactivoComponent implements OnInit {
       return;
     }
 
-    // GUÍA: usuarioGuard permite entrar aquí también con rol 1 (admin), desde
-    // el botón del monitor "Retroactivos". Si quien llena el formulario es un
-    // admin, este id sale de SU token, no del cliente real -> la venta queda
-    // registrada a nombre del admin. Ver usuario.guard.ts (rutasUsuarioYAdmin).
     formData.set('id_usuario', JSON.parse(atob(token.split('.')[1])).id);
 
     this.http.post(`${environment.apiUrl}/api/solicitud-retroactivo/registrar/venta`, formData)
@@ -367,24 +362,51 @@ export class SolicitudRetroactivoComponent implements OnInit {
   }
 
   async ngOnInit() {
+    let clienteIdUsuario: number | null = null;
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const rol = jwtDecode<any>(token).rol;
-        this.esCliente = rol === 2;
-        this.esAdmin = rol === 1;
-      } catch { /* token inválido: el guard de la ruta ya redirige */ }
+        const decoded: any = jwtDecode(token);
+        this.esCliente = decoded.rol === 2;
+        this.esAdmin = decoded.rol === 1;
+        if (decoded.cliente_id) {
+          clienteIdUsuario = Number(decoded.cliente_id);
+        }
+      } catch { /* token inválido */ }
     }
     const idEditar = Number(this.route.snapshot.queryParamMap.get('editar'));
     if (this.esCliente && idEditar) {
       this.cargarYPrecargarEdicion(idEditar);
     }
 
+    this.ventaForm.get('id_cliente')?.valueChanges.subscribe((clienteId) => {
+      const controlTienda = this.ventaForm.get('id_tienda');
+      controlTienda?.setValue('');
+      controlTienda?.markAsUntouched();
+      controlTienda?.markAsPristine();
+      this.camposFaltantes.delete('id_tienda');
+      if (clienteId) {
+        this.cargarTiendas(Number(clienteId));
+      } else {
+        this.listaTiendas = [];
+        controlTienda?.disable();
+      }
+    });
+
     try {
         this.listaFormulario = await this.buscarTipoFormulario();
 
+        this.solicitudService.buscarRazonesSociales().subscribe({
+          next: (razones) => {
+            this.listaRazonSocial = razones;
+            if (clienteIdUsuario && razones.some(r => r.id === clienteIdUsuario)) {
+              this.ventaForm.patchValue({ id_cliente: clienteIdUsuario });
+            }
+          },
+          error: (err) => console.error("Error al obtener Razones Sociales:", err)
+        });
+
         this.ventaForm.get('id_formulario')?.valueChanges.subscribe(async (valor) => {
-          // Prevención de error 404 cuando el formulario se resetea
           if (!valor) {
             this.listaMarca = [];
             this.listaMsi = [];
@@ -392,7 +414,6 @@ export class SolicitudRetroactivoComponent implements OnInit {
           }
 
           const controlMarca = this.ventaForm.get('id_marca_bicicleta');
-          // const controlUsuario = this.ventaForm.get('id_usuario');
           const controlMsi = this.ventaForm.get('id_msi');
 
           if (valor == 1) {
@@ -400,8 +421,6 @@ export class SolicitudRetroactivoComponent implements OnInit {
             try {
               this.listaMarca = await this.buscarMarca();
               this.listaMarca.length ? controlMarca?.enable() : controlMarca?.disable();
-
-              console.log(this.listaMarca)
             } catch (err) {
               console.error("Error al obtener marcas:", err);
               controlMarca?.disable();
@@ -416,7 +435,6 @@ export class SolicitudRetroactivoComponent implements OnInit {
           controlMarca?.updateValueAndValidity();
           
           try {
-
             this.listaMsi = await this.buscarMsi();
             this.listaMsi.length ? controlMsi?.enable() : controlMsi?.disable();
           } catch (err) {
@@ -427,6 +445,24 @@ export class SolicitudRetroactivoComponent implements OnInit {
     } catch (error) {
       console.error("Error al cargar la información inicial:", error);
     }
+  }
+
+  cargarTiendas(clienteId: number): void {
+    const controlTienda = this.ventaForm.get('id_tienda');
+    this.cargandoTiendas = true;
+    this.solicitudService.buscarTiendas(clienteId).subscribe({
+      next: (tiendas) => {
+        this.cargandoTiendas = false;
+        this.listaTiendas = tiendas;
+        controlTienda?.enable();
+      },
+      error: (err) => {
+        console.error("Error al cargar tiendas:", err);
+        this.cargandoTiendas = false;
+        this.listaTiendas = [];
+        controlTienda?.enable();
+      }
+    });
   }
 
   async buscarTipoFormulario(): Promise<Formulario[]> {

@@ -4,7 +4,7 @@
 
     <div class="page-header">
         <div class="header-left">
-            <button class="back-link" [routerLink]="esCliente ? ['/usuarios/caratula-retroactivos'] : ['/dashboard-retroactivos']">
+            <button class="back-link" [routerLink]="['/usuarios/solicitud-retroactivo']">
                 <i class="fas fa-arrow-left"></i> Volver
             </button>
             <div class="page-title">
@@ -73,22 +73,28 @@
                         <span class="campo-error-text" *ngIf="esCampoInvalido('id_msi')">Este campo es obligatorio</span>
                     </div>
 
-                    <div class="form-group" [class.campo-invalid]="esCampoInvalido('nombre_completo')">
-                        <label>Nombre Completo:</label>
-                        <input type="text" formControlName="nombre_completo" placeholder="Nombre del cliente">
-                        <span class="campo-error-text" *ngIf="esCampoInvalido('nombre_completo')">Este campo es obligatorio</span>
+                    <div class="form-group" [class.campo-invalid]="esCampoInvalido('id_cliente')">
+                        <label for="id_cliente">Razón Social:</label>
+                        <select id="id_cliente" formControlName="id_cliente">
+                            <option value="" disabled selected>-- Selecciona Razón Social --</option>
+                            <option *ngFor="let item of listaRazonSocial" [value]="item.id">{{ item.nombre_cliente }}</option>
+                        </select>
+                        <span class="campo-error-text" *ngIf="esCampoInvalido('id_cliente')">Este campo es obligatorio</span>
+                    </div>
+
+                    <div class="form-group" [class.campo-invalid]="esCampoInvalido('id_tienda')">
+                        <label for="id_tienda">Sucursal / Tienda:</label>
+                        <select id="id_tienda" formControlName="id_tienda">
+                            <option value="" disabled selected>{{ cargandoTiendas ? 'Cargando tiendas...' : '-- Selecciona Sucursal --' }}</option>
+                            <option *ngFor="let item of listaTiendas" [value]="item.id">{{ item.nombre }}</option>
+                        </select>
+                        <span class="campo-error-text" *ngIf="esCampoInvalido('id_tienda')">Este campo es obligatorio</span>
                     </div>
 
                     <div class="form-group" [class.campo-invalid]="esCampoInvalido('correo_electronico')">
                         <label>Correo Electrónico:</label>
                         <input type="email" formControlName="correo_electronico" placeholder="cliente@correo.com">
                         <span class="campo-error-text" *ngIf="esCampoInvalido('correo_electronico')">Correo obligatorio y válido</span>
-                    </div>
-
-                    <div class="form-group" [class.campo-invalid]="esCampoInvalido('nombre_sucursal')">
-                        <label>Sucursal:</label>
-                        <input type="text" formControlName="nombre_sucursal" placeholder="Nombre de sucursal">
-                        <span class="campo-error-text" *ngIf="esCampoInvalido('nombre_sucursal')">Este campo es obligatorio</span>
                     </div>
 
                     <div class="form-group" [class.campo-invalid]="esCampoInvalido('fecha_venta')">
