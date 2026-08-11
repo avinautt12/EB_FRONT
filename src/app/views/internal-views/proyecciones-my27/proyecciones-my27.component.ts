@@ -268,23 +268,25 @@ export class ProyeccionesMY27Component implements OnInit {
 
   actualizar(): void {
     if (this.activeTab === 'inventario') {
-      // Primero regenera el caché del Monitor (con datos frescos de Odoo),
-      // luego recarga cobertura para que lea el caché actualizado
       this.distribucion = [];
       this.distribucionFiltrada = [];
+      this.coberturaMegamo = [];
+      this.coberturaFiltrada = [];
+      this.kpisData = null;
       this.cargando = true;
       this.cdr.markForCheck();
+      // refresh=true en getDatos regenera el monitor; refresh=true en cobertura fuerza re-fetch de Odoo
       this.svc.getDatos(this.periodo, true).subscribe({
         next: (d) => {
           this.datos = d;
           this.cargando = false;
           this.cdr.markForCheck();
-          this.cargarCobertura();
+          this.cargarCobertura(true);
         },
         error: () => {
           this.cargando = false;
           this.cdr.markForCheck();
-          this.cargarCobertura();
+          this.cargarCobertura(true);
         },
       });
     } else {
@@ -324,12 +326,12 @@ export class ProyeccionesMY27Component implements OnInit {
       });
   }
 
-  cargarCobertura(): void {
+  cargarCobertura(refresh = false): void {
     this.cargandoCobertura = true;
     this.errorCobertura = null;
     this.kpisData = null;
     this.cdr.markForCheck();
-    this.svc.getCoberturaMegamo(this.periodo)
+    this.svc.getCoberturaMegamo(this.periodo, refresh)
       .subscribe({
         next: (res) => {
           this.coberturaMegamo = res.cobertura || [];

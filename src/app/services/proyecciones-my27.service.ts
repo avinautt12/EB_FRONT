@@ -149,10 +149,10 @@ export class ProyeccionesMY27Service {
     });
   }
 
-  getCoberturaMegamo(periodo: string = '2026-2027'): Observable<{ periodo: string; cobertura: CoberturaSku[] }> {
-    return this.http.get<any>(`${this.api}/proyecciones-my27/cobertura-megamo`, {
-      params: { periodo }
-    });
+  getCoberturaMegamo(periodo: string = '2026-2027', refresh = false): Observable<{ periodo: string; cobertura: CoberturaSku[] }> {
+    let params: any = { periodo };
+    if (refresh) params['refresh'] = '1';
+    return this.http.get<any>(`${this.api}/proyecciones-my27/cobertura-megamo`, { params });
   }
 
   getExportCoberturaUrl(periodo = '2026-2027'): string {
@@ -164,5 +164,19 @@ export class ProyeccionesMY27Service {
       `${this.api}/proyecciones-my27/distribucion-prioritaria`,
       { params: { periodo } }
     );
+  }
+
+  generarOrdenOdoo(body: {
+    clave_cliente: string;
+    mes: string;
+    lineas: { sku: string; cantidad: number }[];
+  }): Observable<{
+    order_id: number;
+    order_name: string;
+    partner_name: string;
+    lineas_creadas: number;
+    skus_no_encontrados: string[];
+  }> {
+    return this.http.post<any>(`${this.api}/proyecciones-my27/generar-orden-odoo`, body);
   }
 }
