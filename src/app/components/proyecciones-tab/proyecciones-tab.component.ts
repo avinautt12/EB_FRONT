@@ -865,25 +865,35 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
     this._cargarAvance();
   }
 
-  private _cargarAvance(): void {
+  avanceRefrescando = false;
+
+  refrescarAvance(): void {
+    this.avanceRefrescando = true;
+    this._cargarAvance(true);
+  }
+
+  private _cargarAvance(refresh = false): void {
     if (!this.clienteClave || !this.periodoSeleccionado) return;
     this.avanceCargando = true;
     this.avanceError = null;
     this.cdr.markForCheck();
 
-    const params = new HttpParams()
+    let params = new HttpParams()
       .set('clave', this.clienteClave)
       .set('periodo', this.periodoSeleccionado);
+    if (refresh) params = params.set('refresh', '1');
 
     this.http.get<AvanceRow[]>(`${this.apiUrl}/forecast/avance`, { params }).subscribe({
       next: data => {
         this.avanceRows = data;
         this.avanceCargando = false;
+        this.avanceRefrescando = false;
         this.cdr.markForCheck();
       },
       error: err => {
         this.avanceError = err?.error?.error || 'Error al cargar avance';
         this.avanceCargando = false;
+        this.avanceRefrescando = false;
         this.cdr.markForCheck();
       }
     });

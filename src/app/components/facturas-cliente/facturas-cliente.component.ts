@@ -69,6 +69,7 @@ interface Factura {
   styleUrls: ['./facturas-cliente.component.css']
 })
 export class FacturasClienteComponent implements OnInit, OnDestroy {
+  @ViewChild('proyeccionesTabRef') proyeccionesTabRef?: ProyeccionesTabComponent;
   /** Emite cuando el usuario cierra el modal. El padre debe poner isOpen = false. */
   @Output() onClose = new EventEmitter<void>();
   /** Controla la visibilidad del modal. Al pasar a true se dispara la carga de datos. */

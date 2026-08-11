@@ -109,7 +109,21 @@
             </div>
 
             <!-- Proyecciones tab (embebido) — se crea al abrir el modal para pre-cargar datos -->
+            <!-- Botón refresh Odoo cuando pestaña Proyecciones está activa -->
+            <div *ngIf="tabActiva === 'Proyecciones'" class="acciones-monitor" style="margin-bottom:8px;">
+              <button (click)="proyeccionesTabRef?.refrescarAvance()"
+                      [disabled]="proyeccionesTabRef?.avanceRefrescando"
+                      title="Forzar recarga de órdenes desde Odoo (ignora caché de 25 min)">
+                <i class="fas"
+                   [class.fa-sync-alt]="!proyeccionesTabRef?.avanceRefrescando"
+                   [class.fa-spinner]="proyeccionesTabRef?.avanceRefrescando"
+                   [class.fa-spin]="proyeccionesTabRef?.avanceRefrescando"></i>
+                {{ proyeccionesTabRef?.avanceRefrescando ? 'Actualizando desde Odoo...' : 'Refrescar desde Odoo' }}
+              </button>
+            </div>
+
             <app-proyecciones-tab
+                #proyeccionesTabRef
                 *ngIf="(clienteClave && clienteClave !== '__sin_clave__') || idGrupoOdoo"
                 [hidden]="tabActiva !== 'Proyecciones'"
                 [clienteClave]="clienteClave"
