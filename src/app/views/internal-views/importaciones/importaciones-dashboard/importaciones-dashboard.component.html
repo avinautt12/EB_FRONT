@@ -473,6 +473,22 @@
             <i class="fas fa-times"></i>
           </button>
         </div>
+        <div class="table-fecha-filtro" [class.disabled]="fechaFiltroDeshabilitado">
+          <span class="table-fecha-lbl">
+            <i class="fas fa-calendar-day"></i> Filtrar por: <strong>{{ fechaFiltroLabel }}</strong>
+          </span>
+          <app-date-picker
+              mode="range"
+              placeholder="Rango de fechas"
+              [desde]="filtroFechaDesde"
+              [hasta]="filtroFechaHasta"
+              (rangeChange)="onRangoFechaEmbarques($event)">
+          </app-date-picker>
+          <button *ngIf="filtroFechaDesde || filtroFechaHasta" class="table-fecha-clear" (click)="filtroFechaDesde = ''; filtroFechaHasta = ''">
+            <i class="fas fa-times"></i> Limpiar
+          </button>
+          <span *ngIf="fechaFiltroDeshabilitado" class="table-fecha-hint">No aplica para "Pendiente" (sin fecha registrada)</span>
+        </div>
         <div class="pipeline-legend">
           <span class="leg-sep">Días:</span>
           <span class="leg-item leg-ok"><span class="leg-dot"></span>Adelantado / A tiempo</span>

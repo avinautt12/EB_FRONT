@@ -6,6 +6,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HomeBarComponent } from '../../../../components/home-bar/home-bar.component';
+import { DatePickerComponent } from '../../../../components/date-picker/date-picker.component';
 import { TemporadaSelectorComponent, TEMPORADA_HISTORICO } from '../../../../components/temporada-selector/temporada-selector.component';
 import { ImportacionesService } from '../../../../services/importaciones.service';
 import { Chart, registerables } from 'chart.js';
@@ -60,7 +61,7 @@ interface DashData {
 @Component({
   selector: 'app-importaciones-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, HomeBarComponent, DatePipe, TemporadaSelectorComponent],
+  imports: [CommonModule, RouterModule, FormsModule, HomeBarComponent, DatePipe, DatePickerComponent, TemporadaSelectorComponent],
   templateUrl: './importaciones-dashboard.component.html',
   styleUrl: './importaciones-dashboard.component.css',
 })
@@ -87,6 +88,57 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
   activeTab: 'resumen' | 'latencias' | 'costos' | 'embarques' = 'resumen';
 
   filtros = { via: '', estado: '', origen: '', anio: '' };
+
+  // Filtro de rango de fechas de la tabla de embarques. El campo contra el
+  // que compara depende de la etapa activa (misma fecha real que determina
+  // esa etapa) -- si no hay etapa seleccionada, filtra por la fecha en que
+  // se dio de alta el embarque (Aviso de Entrega).
+  filtroFechaDesde = '';
+  filtroFechaHasta = '';
+
+  onRangoFechaEmbarques(rango: { desde: string; hasta: string }): void {
+    this.filtroFechaDesde = rango.desde;
+    this.filtroFechaHasta = rango.hasta;
+  }
+
+  // Etapa (badge) -> key del pipeline cuyo campo "real" define esa etapa.
+  private readonly ETAPA_PIPELINE_KEY: Record<string, string> = {
+    'Booking':           'entrega',
+    'Tránsito Mar/Aér':  'booking',
+    'En Aduana':         'transito',
+    'Tránsito Destino':  'trans_dest',
+    'En Almacén':        'en_almacen',
+    'Verificación':      'verif',
+    'Liberado':          'liberado',
+  };
+
+  /** Fecha real que se usa para el filtro de rango en el embarque `e`, según la etapa activa. */
+  private _fechaFiltroDe(e: any): string | null {
+    if (this.filtroEtapa) {
+      const key = this.ETAPA_PIPELINE_KEY[this.filtroEtapa];
+      return key ? (e?.pipeline?.[key]?.real ?? null) : null;
+    }
+    return e?.log_fecha_notificacion ?? null;
+  }
+
+  private readonly ETAPA_FECHA_LABEL: Record<string, string> = {
+    'Booking':           'Fecha de Entrega',
+    'Tránsito Mar/Aér':  'Salida Tránsito',
+    'En Aduana':         'Llegada a Puerto',
+    'Tránsito Destino':  'Fecha de Cruce',
+    'En Almacén':        'Llegada a Almacén',
+    'Verificación':      'Verificación',
+    'Liberado':          'Liberado',
+  };
+
+  get fechaFiltroLabel(): string {
+    if (this.filtroEtapa) return this.ETAPA_FECHA_LABEL[this.filtroEtapa] || 'Aviso de Entrega';
+    return 'Aviso de Entrega';
+  }
+
+  get fechaFiltroDeshabilitado(): boolean {
+    return this.filtroEtapa === 'Pendiente';
+  }
 
   readonly ETAPAS = [
     { key: 'Booking',           bg: 'rgba(59,130,246,.18)',  color: '#60a5fa' },
@@ -679,6 +731,14 @@ export class ImportacionesDashboardComponent implements OnInit, AfterViewInit, O
     }
     if (this.soloPendientes) {
       filtrados = filtrados.filter((e: any) => e.estado_actual !== 'Liberado');
+    }
+    if ((this.filtroFechaDesde || this.filtroFechaHasta) && !this.fechaFiltroDeshabilitado) {
+      filtrados = filtrados.filter((e: any) => {
+        const f = this._fechaFiltroDe(e);
+        if (!f) return false;
+        return (!this.filtroFechaDesde || f >= this.filtroFechaDesde)
+            && (!this.filtroFechaHasta || f <= this.filtroFechaHasta);
+      });
     }
     return [...filtrados].sort((a, b) => {
       if (this.ordenTabla === 'llegada') {
