@@ -6,8 +6,10 @@ import { FormsModule } from '@angular/forms';
 import {
   SolicitudRetroactivoService,
   SolicitudRetroactivo,
-  EstatusDocumento
+  EstatusDocumento,
+  ItemHistorial
 } from '../../../services/solicitud-retroactivo.service';
+import { AuthService } from '../../../services/auth.service';
 
 interface DocumentoMostrar {
   key: string;
@@ -56,6 +58,7 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
   notaCreditoEditada = '';
   guardandoNotaCredito = false;
   errorNotaCredito = '';
+  usuarioActual = 'Usuario';
 
   etiquetasDoc: Record<string, string> = {
     ticket_compra: 'Ticket de compra',
@@ -64,9 +67,14 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
     factura_xml: 'Factura (XML)'
   };
 
-  constructor(private service: SolicitudRetroactivoService, private route: ActivatedRoute) {}
+  constructor(
+    private service: SolicitudRetroactivoService,
+    private authService: AuthService,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
+    this.usuarioActual = this.authService.getUserName() || 'Usuario';
     // GUÍA: llega por ?estatus=pendiente|validado|rechazado desde las KPI del
     // dashboard (mismo patrón que kpi-clickable en garantias.component: la
     // tarjeta navega a la lista ya filtrada) y/o ?id=<id> para abrir
@@ -78,16 +86,31 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
     this.cargar();
   }
 
+  private normalizarTextoNotaCredito(texto: string): string {
+    if (!texto) return '';
+    return texto.replace(/'([^']+)'/g, '$1');
+  }
+
+  private normalizarHistorial(historial: ItemHistorial[] = []): ItemHistorial[] {
+    return historial.map(item => ({
+      ...item,
+      descripcion: this.normalizarTextoNotaCredito(item.descripcion)
+    }));
+  }
+
   cargar(): void {
     this.cargando = true;
     this.service.listar().subscribe({
       next: (res) => {
-        this.solicitudes = res;
+        this.solicitudes = res.map(s => ({
+          ...s,
+          historial: this.normalizarHistorial(s.historial)
+        }));
         this.cargando = false;
 
         const idParam = this.route.snapshot.queryParamMap.get('id');
         if (idParam) {
-          const solicitud = res.find(s => s.id === Number(idParam));
+          const solicitud = this.solicitudes.find(s => s.id === Number(idParam));
           if (solicitud) this.seleccionar(solicitud);
         }
       },
@@ -161,6 +184,18 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
   // documento está mal, el cliente nada más resube ese (ver PUT /venta/<id>
   // en el backend). El estatus general se recalcula con lo que regresa el
   // backend (_calcular_estatus), no hace falta refrescar toda la lista.
+  private obtenerUsuarioActual(): string {
+    return this.authService.getUserName() || 'Usuario';
+  }
+
+  private agregarHistorial(solicitud: SolicitudRetroactivo, item: ItemHistorial): void {
+    solicitud.historial = [...(solicitud.historial ?? []), item];
+  }
+
+  private normalizarNotaCredito(valor: string): string {
+    return valor?.trim().replace(/^'+|'+$/g, '') ?? '';
+  }
+
   validarDocumento(doc: string, estatus: EstatusDocumento): void {
     if (!this.seleccionada) return;
     const solicitud = this.seleccionada;
@@ -175,6 +210,13 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
         solicitud.estatus = res.estatus;
         if (res.historial) {
           solicitud.historial = res.historial;
+        } else {
+          this.agregarHistorial(solicitud, {
+            fecha: new Date().toISOString(),
+            tipo: 'validacion',
+            descripcion: `${this.etiquetasDoc[doc]}: ${estatus === 'valido' ? 'validado' : 'rechazado'}`,
+            usuario: this.obtenerUsuarioActual()
+          });
         }
         this.procesandoDoc.delete(doc);
       },
@@ -218,12 +260,20 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
     }
 
     const solicitud = this.seleccionada;
+    const notaAnterior = solicitud.nota_credito;
     this.guardandoNotaCredito = true;
     this.service.corregirNotaCredito(solicitud.id, valor).subscribe({
       next: (res) => {
-        solicitud.nota_credito = res.nota_credito;
+        solicitud.nota_credito = this.normalizarNotaCredito(String(res.nota_credito));
         if (res.historial) {
-          solicitud.historial = res.historial;
+          solicitud.historial = this.normalizarHistorial(res.historial);
+        } else {
+          this.agregarHistorial(solicitud, {
+            fecha: new Date().toISOString(),
+            tipo: 'nota_credito',
+            descripcion: `Nota de crédito corregida de ${this.normalizarTextoNotaCredito(String(notaAnterior))} a ${this.normalizarTextoNotaCredito(String(valor))}`,
+            usuario: this.obtenerUsuarioActual()
+          });
         }
         this.guardandoNotaCredito = false;
         this.editandoNotaCredito = false;
@@ -244,14 +294,27 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
     }
 
     const solicitud = this.seleccionada;
+    const precioAnterior = solicitud.precio_publico;
     this.guardandoPrecio = true;
     this.service.corregirPrecio(solicitud.id, valor).subscribe({
       next: (res) => {
-        solicitud.precio_publico = res.precio_publico;
-        solicitud.monto_pagar = res.monto_pagar;
-        solicitud.monto_aplicar = res.monto_aplicar;
+        const precioNuevo = Number(res.precio_publico);
+        const montoPagar = Number(res.monto_pagar);
+        const montoAplicar = Number(res.monto_aplicar);
+
+        solicitud.precio_publico = Number.isFinite(precioNuevo) ? precioNuevo.toString() : '0';
+        solicitud.monto_pagar = Number.isFinite(montoPagar) ? montoPagar.toString() : '0';
+        solicitud.monto_aplicar = Number.isFinite(montoAplicar) ? montoAplicar.toString() : '0';
+
         if (res.historial) {
-          solicitud.historial = res.historial;
+          solicitud.historial = this.normalizarHistorial(res.historial);
+        } else {
+          this.agregarHistorial(solicitud, {
+            fecha: new Date().toISOString(),
+            tipo: 'precio',
+            descripcion: `Precio corregido de ${precioAnterior} a ${solicitud.precio_publico}`,
+            usuario: this.obtenerUsuarioActual()
+          });
         }
         this.guardandoPrecio = false;
         this.editandoPrecio = false;
