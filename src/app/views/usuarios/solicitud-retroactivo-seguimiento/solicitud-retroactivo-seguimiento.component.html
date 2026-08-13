@@ -12,7 +12,7 @@
         {{ seleccionada.modelo_bicicleta }} · {{ seleccionada.numero_serie }}
       </h1>
     </div>
-    <a *ngIf="vista === 'lista'" routerLink="/usuarios/solicitud-retroactivo/formulario" class="btn-nueva">
+    <a *ngIf="vista === 'lista'" routerLink="/usuarios/solicitud-retroactivo" class="btn-nueva">
       <i class="fas fa-plus"></i> Registrar nueva venta
     </a>
     <span *ngIf="vista === 'detalle' && seleccionada" class="badge-estatus badge-grande" [ngClass]="'badge-' + seleccionada.estatus">{{ seleccionada.estatus }}</span>
@@ -31,7 +31,7 @@
     <div class="empty-state" *ngIf="!cargando && !solicitudes.length">
       <i class="fas fa-inbox fa-2x"></i>
       <p>Aún no has registrado ninguna solicitud.</p>
-      <a routerLink="/usuarios/solicitud-retroactivo/formulario" class="btn-nueva btn-nueva-inline">
+      <a routerLink="/usuarios/solicitud-retroactivo" class="btn-nueva btn-nueva-inline">
         <i class="fas fa-plus"></i> Registrar la primera
       </a>
     </div>
@@ -62,7 +62,7 @@
         <span class="filtro-count">{{ solicitudesFiltradas.length }} solicitud{{ solicitudesFiltradas.length !== 1 ? 'es' : '' }}</span>
       </div>
 
-      <!-- Tabla compacta -->
+      <!-- Tabla compacta con Nota de Crédito -->
       <div class="tabla-wrap">
         <table class="solicitudes-tabla">
           <thead>
@@ -70,6 +70,7 @@
               <th>Modelo · Serie</th>
               <th>Campaña</th>
               <th>Estatus</th>
+              <th>Nota de Crédito</th>
               <th>Precio</th>
               <th>Monto</th>
               <th>Fecha</th>
@@ -85,6 +86,11 @@
                       [style.background]="colorEstatus(s.estatus) + '22'"
                       [style.color]="colorEstatus(s.estatus)"
                       [style.border-color]="colorEstatus(s.estatus) + '55'">{{ s.estatus }}</span>
+              </td>
+              <td class="col-estatus">
+                <span class="tc-badge" [ngClass]="estatusNotaCredito(s.nota_credito).clase">
+                  {{ estatusNotaCredito(s.nota_credito).texto }}
+                </span>
               </td>
               <td class="col-secundario">{{ s.precio_publico | currency:'USD':'$':'1.0-0' }}</td>
               <td class="col-monto">{{ s.monto_pagar | currency:'USD':'$':'1.2-2' }}</td>
@@ -115,7 +121,7 @@
     </ng-container>
   </ng-container>
 
-  <!-- ══════════════ VISTA DETALLE (igual que garantias-usuario) ══════════════ -->
+  <!-- ══════════════ VISTA DETALLE ══════════════ -->
   <ng-container *ngIf="vista === 'detalle' && seleccionada as s">
 
     <!-- INFORMACIÓN DE LA VENTA -->
@@ -133,6 +139,7 @@
         <div><span class="ig-label">Meses Sin Intereses</span><span class="ig-value">{{ s.plazo_meses }} meses</span></div>
         <div><span class="ig-label">Precio Público</span><span class="ig-value">{{ s.precio_publico | currency:'USD':'$':'1.2-2' }}</span></div>
         <div><span class="ig-label">Monto de Retroactivo</span><span class="ig-value ig-value-accent">{{ s.monto_pagar | currency:'USD':'$':'1.2-2' }}</span></div>
+        <div><span class="ig-label">Nota de Crédito</span><span class="ig-value">{{ s.nota_credito ? ('#' + s.nota_credito) : 'En proceso' }}</span></div>
         <div><span class="ig-label">Registrada</span><span class="ig-value">{{ s.fecha_registro | date:'dd/MM/yyyy HH:mm' }}</span></div>
       </div>
     </div>
@@ -157,7 +164,7 @@
             <span class="val-status-chip pending" *ngIf="doc.estatus === 'pendiente'"><i class="fas fa-clock"></i> Pendiente</span>
           </a>
 
-          <!-- Reenvío inline: solo si este documento está rechazado -->
+          <!-- Reenvío inline -->
           <div class="doc-reenvio" *ngIf="doc.estatus === 'rechazado'">
             <label class="upload-label">
               <i class="fas fa-cloud-arrow-up"></i>
@@ -184,12 +191,15 @@
       <div class="card-title"><i class="fas fa-clock-rotate-left"></i> Historial de Cambios</div>
       <div class="timeline" *ngIf="s.historial?.length">
         <div class="timeline-item" *ngFor="let item of s.historial" [attr.data-tipo]="item.tipo">
-          <div class="tl-dot"><i class="fas" [ngClass]="{
-            'fa-plus': item.tipo === 'creacion',
-            'fa-check-double': item.tipo === 'validacion',
-            'fa-dollar-sign': item.tipo === 'precio',
-            'fa-redo': item.tipo === 'reenvio'
-          }"></i></div>
+          <div class="tl-dot">
+            <i class="fas" [ngClass]="{
+              'fa-plus': item.tipo === 'creacion',
+              'fa-check-double': item.tipo === 'validacion',
+              'fa-dollar-sign': item.tipo === 'precio',
+              'fa-file-invoice': item.tipo === 'nota_credito',
+              'fa-redo': item.tipo === 'reenvio'
+            }"></i>
+          </div>
           <div class="tl-content">
             <span class="tl-desc">{{ item.descripcion }}</span>
             <span class="tl-fecha">{{ item.fecha | date:'dd/MM/yyyy HH:mm' }}</span>

@@ -141,11 +141,11 @@
                 <div class="campos-grid">
                     <!-- AQUI ESTÁ LA CORRECCIÓN: Se agrega la validación para no pintar de rojo los archivos opcionales -->
                     <div class="form-group form-group-file" *ngFor="let campo of camposArchivosVisibles" 
-                         [class.campo-invalid]="!archivos[campo.key] && mensajeError && campo.key !== 'factura_pdf' && campo.key !== 'factura_xml'">
+                         [class.campo-invalid]="!archivos[campo.key] && mensajeError && campo.key !== 'factura_xml'">
                         
                         <label class="tooltip-informacion">
                             {{ campo.label }}
-                            <span *ngIf="campo.key === 'factura_pdf' || campo.key === 'factura_xml'" style="font-weight: normal; font-size: 0.9em;">(Opcional)</span>:
+                            <span *ngIf="campo.key === 'factura_xml'" style="font-weight: normal; font-size: 0.9em;">(Opcional)</span>:
                             
                             <ng-container *ngIf="campo.tooltip">
                                 <i class="fa fa-question-circle" aria-hidden="true"></i>

@@ -9,20 +9,15 @@ import {
   SolicitudRetroactivo
 } from '../../../services/solicitud-retroactivo.service';
 
-// GUÍA: colores de badge por estatus -- mismo patrón que COLOR_ESTATUS en
-// garantias-usuario.component.ts.
 const COLOR_ESTATUS: Record<string, string> = {
   pendiente: '#f0ad4e',
   validado:  '#4caf50',
   rechazado: '#e53935',
 };
 
-// GUÍA: mismo patrón de 2 estados que la vista de garantias-usuario (lista
-// <-> detalle), pero DENTRO de esta página en vez de navegar al formulario
-// -- info completa, estatus por archivo con preview, historial de cambios,
-// y reenvío inline de los archivos rechazados sin salir de aquí.
 @Component({
   selector: 'app-solicitud-retroactivo-seguimiento',
+  standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, TopBarUsuariosComponent],
   templateUrl: './solicitud-retroactivo-seguimiento.component.html',
   styleUrl: './solicitud-retroactivo-seguimiento.component.css'
@@ -40,7 +35,7 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
   errorReenvio = '';
   mensajeReenvioExito = '';
 
-  // ── Filtros y paginación de lista (mismo patrón que garantias-usuario) ──
+  // ── Filtros y paginación de lista ──
   busqueda = '';
   filtroEstatus = '';
   filtroCampana = '';
@@ -84,7 +79,15 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
     return COLOR_ESTATUS[estatus?.toLowerCase()] ?? '#888';
   }
 
-  // ── Filtrado y paginación de lista ───────────────────────────────────────────
+  // Helper para evaluar y estructurar el estatus de la Nota de Crédito
+  estatusNotaCredito(nota: string | undefined): { texto: string; clase: string } {
+    if (nota && nota.trim() !== '' && nota.trim() !== '0') {
+      return { texto: `Emitida (#${nota})`, clase: 'badge-validado' };
+    }
+    return { texto: 'En proceso', clase: 'badge-pendiente' };
+  }
+
+  // ── Filtrado y paginación ───────────────────────────────────────────
 
   get campanasDisponibles(): string[] {
     const set = new Set(this.solicitudes.map(s => s.nombre_formulario).filter(Boolean));
@@ -135,7 +138,7 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
     this.paginaActual = 1;
   }
 
-  // ═══════════════ Vista de detalle ═══════════════
+  // ── Vista de detalle ──────────────────────────────────────────────────
 
   verDetalle(s: SolicitudRetroactivo): void {
     this.seleccionada = s;
@@ -158,8 +161,6 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
     }));
   }
 
-  // GUÍA: el backend regresa fecha_venta como string RFC ("Sat, 01 Aug 2026
-  // 00:00:00 GMT"), no ISO -- ver el mismo fix en solicitud-retroactivo.component.ts.
   private formatFechaISO(fecha: string): string {
     const d = new Date(fecha);
     return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
@@ -176,9 +177,6 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
     return this.docsRechazados(s).some(key => !this.archivosNuevos[key]);
   }
 
-  // GUÍA: el backend exige TODOS los archivos rechazados en un solo PUT (ver
-  // editar_venta en el backend) -- no se puede reenviar uno a la vez si hay
-  // más de uno marcado rechazado.
   reenviar(s: SolicitudRetroactivo): void {
     this.errorReenvio = '';
     if (this.faltanArchivosPorSeleccionar(s)) {

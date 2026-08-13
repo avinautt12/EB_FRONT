@@ -275,9 +275,9 @@ export class SolicitudRetroactivoComponent implements OnInit {
       return;
     }
 
-    // Se filtran los archivos faltantes excluyendo los opcionales (PDF y XML)
+    // Se filtran los archivos faltantes excluyendo los opcionales (XML)
     const archivosFaltantes = this.camposArchivosVisibles.filter(item => 
-      !this.archivos[item.key] && item.key !== 'factura_pdf' && item.key !== 'factura_xml'
+      !this.archivos[item.key] && item.key !== 'factura_xml'
     );
     if (archivosFaltantes.length > 0) {
       this.mensajeError = `Falta adjuntar los siguientes archivos: ${archivosFaltantes.map(f => f.label).join(', ')}`;

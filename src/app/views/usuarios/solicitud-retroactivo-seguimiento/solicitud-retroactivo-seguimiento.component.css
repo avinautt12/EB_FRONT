@@ -91,7 +91,7 @@
 .empty-state i { color: var(--border2); margin-bottom: 12px; }
 .empty-state p { margin: 0; }
 
-/* ── Filtros de lista (mismo patrón que garantias-usuario) ── */
+/* ── Filtros de lista ── */
 .filtros-bar {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   margin-bottom: 16px;
@@ -184,16 +184,14 @@
   border-radius: 10px;
   text-transform: uppercase;
 }
-.badge-pendiente { background: rgba(245,158,11,0.15); color: #f59e0b; }
-.badge-validado { background: rgba(76,175,80,0.15); color: #4caf50; }
-.badge-rechazado { background: rgba(229,57,53,0.15); color: #e53935; }
+.badge-pendiente { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+.badge-validado { background: rgba(76,175,80,0.15); color: #4caf50; border: 1px solid rgba(76,175,80,0.3); }
+.badge-rechazado { background: rgba(229,57,53,0.15); color: #e53935; border: 1px solid rgba(229,57,53,0.3); }
 
 .back-link-btn { background: none; border: none; cursor: pointer; font-family: inherit; padding: 0; }
 .badge-grande { font-size: 0.8rem; padding: 6px 16px; }
 
-/* ═══════════════════════════════
-   VISTA DE DETALLE (igual patrón que garantias-usuario)
-═══════════════════════════════ */
+/* ── Vista de detalle ── */
 .detalle-card {
   background: var(--card); border: 1px solid var(--border); border-radius: 14px;
   padding: 20px 22px; margin-bottom: 18px;
@@ -311,15 +309,16 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 0.6rem; color: var(--t3);
 }
-.timeline-item[data-tipo="creacion"] .tl-dot   { border-color: var(--orange); color: var(--orange); }
-.timeline-item[data-tipo="validacion"] .tl-dot { border-color: #4caf50; color: #4caf50; }
-.timeline-item[data-tipo="precio"] .tl-dot     { border-color: #5c9bd6; color: #5c9bd6; }
-.timeline-item[data-tipo="reenvio"] .tl-dot    { border-color: #f59e0b; color: #f59e0b; }
+.timeline-item[data-tipo="creacion"] .tl-dot      { border-color: var(--orange); color: var(--orange); }
+.timeline-item[data-tipo="validacion"] .tl-dot    { border-color: #4caf50; color: #4caf50; }
+.timeline-item[data-tipo="precio"] .tl-dot        { border-color: #5c9bd6; color: #5c9bd6; }
+.timeline-item[data-tipo="nota_credito"] .tl-dot  { border-color: #a855f7; color: #a855f7; }
+.timeline-item[data-tipo="reenvio"] .tl-dot       { border-color: #f59e0b; color: #f59e0b; }
 
 .tl-content { display: flex; flex-direction: column; gap: 2px; }
 .tl-desc { font-size: 0.85rem; color: var(--t1); font-weight: 600; }
 .tl-fecha { display: block; font-size: 0.72rem; color: var(--t3); margin-top: 0.25rem; }
-.tl-actor { display: block; font-size: 0.72rem; color: var(--t4); margin-top: 0.15rem; }
+.tl-actor { display: block; font-size: 0.72rem; color: var(--t3); margin-top: 0.15rem; }
 
 .sin-datos-inline { color: var(--t3); font-size: 0.85rem; margin: 0; }
 
