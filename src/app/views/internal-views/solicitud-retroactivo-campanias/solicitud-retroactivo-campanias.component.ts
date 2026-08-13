@@ -1,18 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-import { TopBarUsuariosComponent } from '../../../components/top-bar-usuarios/top-bar-usuarios.component';
-
-// Servicio central de campañas
 import { SolicitudRetroactivoCampaniasService } from '../../../services/solicitud-retroactivo-campanias.service';
-
-// Componente Modal y sus modelos
-import { ProductoCatalogoModalComponent } from '../../../components/producto-catalogo-modal/producto-catalogo-modal/producto-catalogo-modal.component';
+import { CampaniaItem, MsiOption, CrearCampaniaPayload } from './models/solicitud-campania.model';
 import { ProductoDetalle } from '../../../components/producto-catalogo-modal/models/producto-catalogo.model';
-
-// Modelos locales de la vista
-import { CampaniaItem, FiltrosCampania, MsiOption } from './models/solicitud-campania.model';
+import { ProductoCatalogoModalComponent } from '../../../components/producto-catalogo-modal/producto-catalogo-modal/producto-catalogo-modal.component';
+import { TopBarUsuariosComponent } from '../../../components/top-bar-usuarios/top-bar-usuarios.component';
 
 @Component({
   selector: 'app-solicitud-retroactivo-campanias',
@@ -24,258 +17,246 @@ import { CampaniaItem, FiltrosCampania, MsiOption } from './models/solicitud-cam
 export class SolicitudRetroactivoCampaniasComponent implements OnInit {
   private readonly campaniasService = inject(SolicitudRetroactivoCampaniasService);
 
-  // Control del Flujo de Pantallas
-  modoVista: 'LISTADO' | 'FORMULARIO' = 'LISTADO';
-
-  // Mensajes de estado inline (Sin Toasts ni Popups)
-  mensajeListadoExito: string | null = null;
-  mensajeListadoError: string | null = null;
-  mensajeFormError: string | null = null;
-  formEnviado: boolean = false;
-
-  // Listas de datos
-  campanias: CampaniaItem[] = [];
-  campaniasFiltradas: CampaniaItem[] = [];
-  msiList: MsiOption[] = [];
-  productosSeleccionados: ProductoDetalle[] = [];
-
-  // Filtros
-  filtros: FiltrosCampania = {
-    query: '',
-    msi_id: null,
-    activa: null,
-    fecha_inicio: '',
-    fecha_fin: ''
-  };
-
-  // Formulario local
+  // Estados de vista
+  modoFormulario: boolean = false;
   editandoId: number | null = null;
+  guardando: boolean = false;
+
+  // Mensajes de alerta
+  alertMsj: string | null = null;
+  alertTipo: 'success' | 'error' = 'success';
+
+  // Catálogos y Datos
+  campanias: CampaniaItem[] = [];
+  msiList: MsiOption[] = [];
+  selectedProductos: ProductoDetalle[] = [];
+
+  // Control del Modal de Catálogo
+  modalCatalogoVisible: boolean = false;
+
+  // Filtros del Listado
+  filtroTexto: string = '';
+  filtroEstado: string = 'TODOS';
+
+  // Formulario
   formNombre: string = '';
   formFechaInicio: string = '';
   formFechaFin: string = '';
   formMsiId: number | null = null;
-  formActiva: number = 1;
-
-  // Modales y loaders
-  modalVisible: boolean = false;
-  loading: boolean = false;
-  saving: boolean = false;
+  formActiva: boolean = true;
 
   ngOnInit(): void {
-    this.cargarOpcionesMsi();
+    this.cargarMsi();
     this.cargarCampanias();
   }
 
-  /**
-   * Carga la lista de opciones MSI para los selects.
-   */
-  cargarOpcionesMsi(): void {
+  // --- MÉTODOS DE CARGA DE DATOS ---
+  cargarMsi(): void {
     this.campaniasService.getMsi().subscribe({
-      next: (msi) => (this.msiList = msi),
-      error: () => (this.mensajeListadoError = 'Error al consultar las opciones de MSI.')
+      next: (res) => (this.msiList = res),
+      error: (err) => console.error('Error al cargar MSI:', err)
     });
   }
 
-  /**
-   * Carga el listado de campañas desde la API.
-   */
   cargarCampanias(): void {
-    this.loading = true;
-    this.mensajeListadoError = null;
     this.campaniasService.getCampanias().subscribe({
-      next: (res) => {
-        this.campanias = res;
-        this.aplicarFiltros();
-        this.loading = false;
-      },
-      error: () => {
-        this.loading = false;
-        this.mensajeListadoError = 'Error al consultar el listado de campañas.';
-      }
+      next: (res) => (this.campanias = res),
+      error: () => this.mostrarAlerta('Error al cargar la lista de campañas.', 'error')
     });
   }
 
-  /**
-   * Aplica los filtros de Búsqueda, MSI y Estado en memoria.
-   */
-  aplicarFiltros(): void {
-    this.campaniasFiltradas = this.campanias.filter((item) => {
-      // 1. Filtro por nombre
-      const queryVal = (this.filtros.query || '').trim().toLowerCase();
-      const matchQuery = !queryVal || item.nombre.toLowerCase().includes(queryVal);
+  // --- FILTRADO EN LISTADO ---
+  get campaniasFiltradas(): CampaniaItem[] {
+    return this.campanias.filter((c) => {
+      const cumpleTexto =
+        !this.filtroTexto.trim() ||
+        c.nombre.toLowerCase().includes(this.filtroTexto.toLowerCase());
 
-      // 2. Filtro por MSI
-      const matchMsi =
-        this.filtros.msi_id === null ||
-        this.filtros.msi_id === undefined ||
-        String(this.filtros.msi_id) === '' ||
-        Number(item.msi_id) === Number(this.filtros.msi_id);
+      let cumpleEstado = true;
+      if (this.filtroEstado === 'ACTIVAS') cumpleEstado = !!c.activa;
+      if (this.filtroEstado === 'INACTIVAS') cumpleEstado = !c.activa;
 
-      // 3. Filtro por Estado (1 = Activa, 0 = Inactiva)
-      const matchActiva =
-        this.filtros.activa === null ||
-        this.filtros.activa === undefined ||
-        String(this.filtros.activa) === '' ||
-        Number(item.activa) === Number(this.filtros.activa);
-
-      return matchQuery && matchMsi && matchActiva;
+      return cumpleTexto && cumpleEstado;
     });
   }
 
-  /**
-   * Formatea la representación de MSI en texto legible (Ej. '12 MSI - 8.50%').
-   */
-  obtenerTextoMsi(msiId: number): string {
-    const msi = this.msiList.find((m) => m.id === Number(msiId));
-    if (!msi) return `${msiId} MSI`;
-    return `${msi.plazo_meses} MSI - ${Number(msi.porcentaje).toFixed(2)}%`;
-  }
-
- /**
-   * Convierte formatos GMT o cadenas de fecha a 'YYYY-MM-DD' para <input type="date">.
-   */
-  normalizarFechaInput(fechaRaw: any): string {
-    if (!fechaRaw) return '';
-
-    const fecha = new Date(fechaRaw);
-    if (isNaN(fecha.getTime())) return '';
-
-    const yyyy = fecha.getUTCFullYear();
-    const mm = String(fecha.getUTCMonth() + 1).padStart(2, '0');
-    const dd = String(fecha.getUTCDate()).padStart(2, '0');
-
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
-  /**
-   * Prepara el formulario para registrar una nueva campaña.
-   */
+  // --- NAVEGACIÓN Y ACCIONES DEL FORMULARIO ---
   nuevaCampania(): void {
-    this.editandoId = null;
+    this.limpiarFormulario();
+    this.modoFormulario = true;
+  }
+
+  cancelarFormulario(): void {
+    this.limpiarFormulario();
+    this.modoFormulario = false;
+  }
+
+  limpiarFormulario(): void {
     this.formNombre = '';
     this.formFechaInicio = '';
     this.formFechaFin = '';
     this.formMsiId = null;
-    this.formActiva = 1;
-    this.productosSeleccionados = [];
-    this.formEnviado = false;
-    this.mensajeFormError = null;
-    this.modoVista = 'FORMULARIO';
+    this.formActiva = true;
+    this.selectedProductos = [];
+    this.editandoId = null;
   }
 
-  /**
-  * Carga los datos de una campaña en el formulario para edición.
-  */
-  editarCampania(campania: CampaniaItem): void {
-    this.editandoId = campania.id;
-    this.formNombre = campania.nombre;
+  editarCampania(c: CampaniaItem): void {
+    this.editandoId = c.id;
+    this.formNombre = c.nombre;
+    this.formFechaInicio = this.normalizarFecha(c.fecha_inicio);
+    this.formFechaFin = this.normalizarFecha(c.fecha_fin);
+    this.formMsiId = c.msi_id;
+    this.formActiva = !!c.activa;
 
-    // Asignación de fechas garantizando formato YYYY-MM-DD
-    this.formFechaInicio = this.normalizarFechaInput(campania.fecha_inicio);
-    this.formFechaFin = this.normalizarFechaInput(campania.fecha_fin);
+    // Procesar la lista de productos asociando los datos completos desde la API
+    if (Array.isArray(c.productos)) {
+      this.selectedProductos = c.productos
+        .map((p: any) => {
+          if (typeof p === 'string') {
+            try {
+              return JSON.parse(p);
+            } catch {
+              return null;
+            }
+          }
+          return p;
+        })
+        .filter((p: any) => p !== null && typeof p === 'object');
+    } else {
+      this.selectedProductos = [];
+    }
 
-    this.formMsiId = campania.msi_id;
-    this.formActiva = campania.activa;
-    this.productosSeleccionados = [...(campania.productos || [])];
-    this.formEnviado = false;
-    this.mensajeFormError = null;
-    this.modoVista = 'FORMULARIO';
+    this.modoFormulario = true;
   }
 
-  /**
-   * Regresa de la pantalla de formulario al listado general.
-   */
-  volverAlListado(): void {
-    this.modoVista = 'LISTADO';
-    this.formEnviado = false;
-    this.mensajeFormError = null;
-  }
+  guardarCampania(): void {
+    if (!this.formNombre.trim()) {
+      this.mostrarAlerta('El nombre de la campaña es obligatorio.', 'error');
+      return;
+    }
+    if (!this.formFechaInicio || !this.formFechaFin) {
+      this.mostrarAlerta('Las fechas de inicio y fin son obligatorias.', 'error');
+      return;
+    }
+    if (!this.formMsiId) {
+      this.mostrarAlerta('Debe seleccionar una opción de MSI.', 'error');
+      return;
+    }
 
-  /**
-   * Elimina una campaña previa confirmación del usuario.
-   */
-  eliminarCampania(id: number): void {
-    if (!confirm('¿Desea eliminar esta campaña?')) return;
+    this.guardando = true;
 
-    this.campaniasService.deleteCampania(id).subscribe({
+    const payload: CrearCampaniaPayload = {
+      nombre: this.formNombre.trim(),
+      fecha_inicio: this.formFechaInicio,
+      fecha_fin: this.formFechaFin,
+      msi_id: this.formMsiId,
+      activa: this.formActiva ? 1 : 0,
+      productos: this.selectedProductos.map((p) => p.id)
+    };
+
+    const peticion$ = this.editandoId
+      ? this.campaniasService.updateCampania(this.editandoId, payload)
+      : this.campaniasService.createCampania(payload);
+
+    peticion$.subscribe({
       next: () => {
-        this.mensajeListadoExito = 'Campaña eliminada correctamente.';
+        this.guardando = false;
+        this.mostrarAlerta(
+          this.editandoId ? 'Campaña actualizada correctamente.' : 'Campaña creada correctamente.',
+          'success'
+        );
         this.cargarCampanias();
-        setTimeout(() => (this.mensajeListadoExito = null), 4000);
+        this.modoFormulario = false;
       },
-      error: () => {
-        this.mensajeListadoError = 'No se pudo eliminar la campaña.';
+      error: (err) => {
+        this.guardando = false;
+        this.mostrarAlerta(err.error?.error || 'Error al guardar la campaña.', 'error');
       }
     });
   }
 
-  /**
-   * Agrega productos devueltos por el Modal evitando duplicados por ID.
-   */
-  onProductosAgregados(nuevosProductos: ProductoDetalle[]): void {
-    const mapaActual = new Map(this.productosSeleccionados.map((p) => [p.id, p]));
-    nuevosProductos.forEach((p) => mapaActual.set(p.id, p));
-    this.productosSeleccionados = Array.from(mapaActual.values());
+  eliminarCampania(id: number): void {
+    if (!confirm('¿Estás seguro de que deseas eliminar esta campaña?')) return;
+
+    this.campaniasService.deleteCampania(id).subscribe({
+      next: () => {
+        this.mostrarAlerta('Campaña eliminada correctamente.', 'success');
+        this.cargarCampanias();
+      },
+      error: () => this.mostrarAlerta('Error al eliminar la campaña.', 'error')
+    });
+  }
+
+  // --- GESTIÓN DEL MODAL DE CATÁLOGO DE PRODUCTOS ---
+  abrirModalCatalogo(): void {
+    this.modalCatalogoVisible = true;
+  }
+
+  cerrarModalCatalogo(): void {
+    this.modalCatalogoVisible = false;
+  }
+
+  onProductosSeleccionados(productos: ProductoDetalle[]): void {
+    const idsExistentes = new Set(this.selectedProductos.map((p) => p.id));
+    const nuevosUnicos = productos.filter((p) => !idsExistentes.has(p.id));
+
+    this.selectedProductos = [...this.selectedProductos, ...nuevosUnicos];
+  }
+
+  quitarProducto(id: number): void {
+    this.selectedProductos = this.selectedProductos.filter((p) => p.id !== id);
+  }
+
+  // --- HELPERS DE RENDERIZADO Y FECHAS ---
+  obtenerNombreProducto(prod: any): string {
+    if (!prod) return '-';
+    if (typeof prod === 'string') return prod;
+    return prod.modelo || prod.codigo || prod.sku || '-';
+  }
+
+  obtenerSkuProducto(prod: any): string {
+    if (!prod) return '-';
+    return typeof prod === 'object' && prod.sku ? prod.sku : '-';
+  }
+
+  obtenerVarianteProducto(prod: any): string {
+    if (!prod || typeof prod !== 'object') return '';
+    const detalles: string[] = [];
+    if (prod.talla && prod.talla !== '-') detalles.push(`Talla: ${prod.talla}`);
+    if (prod.color && prod.color !== '-') detalles.push(`Color: ${prod.color}`);
+    return detalles.length > 0 ? detalles.join(' | ') : '-';
   }
 
   /**
-   * Quita un producto de la tabla local del formulario.
+   * Normaliza cualquier formato de fecha devuelto por la API a 'YYYY-MM-DD'
+   * para que sea compatible con <input type="date">.
    */
-  quitarProducto(idProductoDetalle: number): void {
-    this.productosSeleccionados = this.productosSeleccionados.filter((p) => p.id !== idProductoDetalle);
+  normalizarFecha(fecha: any): string {
+    if (!fecha) return '';
+
+    const fechaStr = String(fecha).trim();
+
+    // 1. Si ya viene en formato ISO (ej. "2026-08-14" o "2026-08-14T00:00:00")
+    if (/^\d{4}-\d{2}-\d{2}/.test(fechaStr)) {
+      return fechaStr.substring(0, 10);
+    }
+
+    // 2. Si viene como objeto Date o RFC 1123 de Flask (ej. "Fri, 14 Aug 2026 00:00:00 GMT")
+    const d = new Date(fechaStr);
+    if (!isNaN(d.getTime())) {
+      const year = d.getUTCFullYear();
+      const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(d.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    return '';
   }
 
-  /**
-   * Valida y guarda los datos de la campaña (POST / PUT).
-   */
-  guardarCampania(): void {
-    this.formEnviado = true;
-    this.mensajeFormError = null;
-
-    if (!this.formNombre || !this.formFechaInicio || !this.formFechaFin || !this.formMsiId) {
-      this.mensajeFormError = 'Por favor complete todos los campos obligatorios del formulario.';
-      return;
-    }
-
-    const payload = {
-      nombre: this.formNombre,
-      fecha_inicio: this.formFechaInicio,
-      fecha_fin: this.formFechaFin,
-      msi_id: Number(this.formMsiId),
-      activa: Number(this.formActiva),
-      productos: this.productosSeleccionados.map((p) => p.id)
-    };
-
-    this.saving = true;
-
-    if (this.editandoId) {
-      this.campaniasService.updateCampania(this.editandoId, payload).subscribe({
-        next: () => {
-          this.saving = false;
-          this.mensajeListadoExito = `Campaña "${this.formNombre}" actualizada correctamente.`;
-          this.volverAlListado();
-          this.cargarCampanias();
-          setTimeout(() => (this.mensajeListadoExito = null), 4000);
-        },
-        error: () => {
-          this.saving = false;
-          this.mensajeFormError = 'Ocurrió un error al intentar actualizar la campaña.';
-        }
-      });
-    } else {
-      this.campaniasService.createCampania(payload).subscribe({
-        next: () => {
-          this.saving = false;
-          this.mensajeListadoExito = `Campaña "${this.formNombre}" creada correctamente.`;
-          this.volverAlListado();
-          this.cargarCampanias();
-          setTimeout(() => (this.mensajeListadoExito = null), 4000);
-        },
-        error: () => {
-          this.saving = false;
-          this.mensajeFormError = 'Ocurrió un error al intentar crear la campaña.';
-        }
-      });
-    }
+  mostrarAlerta(msj: string, tipo: 'success' | 'error'): void {
+    this.alertMsj = msj;
+    this.alertTipo = tipo;
+    setTimeout(() => (this.alertMsj = null), 4000);
   }
 }

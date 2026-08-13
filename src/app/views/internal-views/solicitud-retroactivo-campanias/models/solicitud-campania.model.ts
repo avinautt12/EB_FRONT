@@ -13,9 +13,18 @@ export interface CampaniaItem {
   fecha_fin: string;
   msi_id: number;
   activa: number;
-  plazo_meses: string;
+  plazo_meses: number;
   porcentaje: number;
-  productos: ProductoDetalle[];
+  productos: number[] | ProductoDetalle[]; // IDs desde la API o lista de objetos en la UI
+}
+
+export interface CrearCampaniaPayload {
+  nombre: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  msi_id: number;
+  activa: number;
+  productos: number[]; // IDs de producto_detalle enviado al backend
 }
 
 export interface FiltrosCampania {

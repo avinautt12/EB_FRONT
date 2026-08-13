@@ -13,7 +13,7 @@
             id="filtroQuery"
             type="text"
             [(ngModel)]="filtroQuery"
-            placeholder="🔍 Buscar por nombre, código o SKU..."
+            placeholder="🔍 Buscar por modelo, código o SKU..."
             (keyup.enter)="buscarProductos(1)"
           />
         </div>
@@ -49,7 +49,7 @@
           <thead>
             <tr>
               <th class="col-check"></th>
-              <th>Producto</th>
+              <th>Producto / Modelo</th>
               <th>SKU</th>
               <th>Talla</th>
               <th>Color</th>
@@ -64,7 +64,7 @@
                   (change)="toggleSeleccion(item)"
                 />
               </td>
-              <td><strong>{{ item.nombre || '-' }}</strong></td>
+              <td><strong>{{ item.modelo || item.codigo || '-' }}</strong></td>
               <td class="sku-cell">{{ item.sku }}</td>
               <td>{{ item.talla }}</td>
               <td>{{ item.color }}</td>
@@ -86,6 +86,27 @@
             <p>Cargando productos...</p>
           </div>
         </ng-template>
+      </div>
+
+      <!-- Paginación del modal -->
+      <div class="pagination-bar" *ngIf="totalRecords > 0">
+        <button
+          type="button"
+          class="btn-page"
+          [disabled]="currentPage === 1"
+          (click)="anteriorPagina()"
+        >
+          &laquo; Anterior
+        </button>
+        <span class="page-info">Página {{ currentPage }} de {{ totalPages }} ({{ totalRecords }} registros)</span>
+        <button
+          type="button"
+          class="btn-page"
+          [disabled]="currentPage >= totalPages"
+          (click)="siguientePagina()"
+        >
+          Siguiente &raquo;
+        </button>
       </div>
     </div>
 

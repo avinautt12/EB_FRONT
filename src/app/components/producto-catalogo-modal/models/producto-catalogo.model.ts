@@ -12,7 +12,6 @@ export interface Marca {
 export interface ProductoDetalle {
   id: number;
   id_producto: number;
-  nombre?: string;
   marca?: string;
   modelo?: string;
   codigo?: string;

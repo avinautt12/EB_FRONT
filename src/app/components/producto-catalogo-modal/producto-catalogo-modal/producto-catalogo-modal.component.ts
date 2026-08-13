@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SolicitudRetroactivoCampaniasService } from '../../../services/solicitud-retroactivo-campanias.service';
@@ -12,6 +12,8 @@ import { Marca, ProductoDetalle } from '../models/producto-catalogo.model';
   styleUrl: './producto-catalogo-modal.component.css'
 })
 export class ProductoCatalogoModalComponent implements OnInit {
+  private readonly campaniasService = inject(SolicitudRetroactivoCampaniasService);
+
   @Input() visible: boolean = false;
 
   @Output() cerrarModal = new EventEmitter<void>();
@@ -24,17 +26,19 @@ export class ProductoCatalogoModalComponent implements OnInit {
   filtroQuery: string = '';
   filtroMarcaId: number | null = null;
   filtroSku: string = '';
-  
+
   loading: boolean = false;
   currentPage: number = 1;
   pageSize: number = 10;
   totalRecords: number = 0;
 
-  constructor(private campaniasService: SolicitudRetroactivoCampaniasService) {}
-
   ngOnInit(): void {
     this.cargarMarcas();
     this.buscarProductos();
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.totalRecords / this.pageSize) || 1;
   }
 
   cargarMarcas(): void {
@@ -86,6 +90,18 @@ export class ProductoCatalogoModalComponent implements OnInit {
 
   isSeleccionado(id: number): boolean {
     return this.seleccionadosMap.has(id);
+  }
+
+  anteriorPagina(): void {
+    if (this.currentPage > 1) {
+      this.buscarProductos(this.currentPage - 1);
+    }
+  }
+
+  siguientePagina(): void {
+    if (this.currentPage < this.totalPages) {
+      this.buscarProductos(this.currentPage + 1);
+    }
   }
 
   confirmarSeleccion(): void {

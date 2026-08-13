@@ -199,7 +199,6 @@ select option {
   font-size: 0.85rem !important;
   font-weight: 800 !important;
   letter-spacing: 0.5px;
-  /* Línea divisoria blanca entre cada opción */
   border-bottom: 1px solid #ffffff !important;
 }
 
@@ -230,7 +229,7 @@ select::-webkit-scrollbar-thumb,
 ::-webkit-scrollbar-thumb {
   background-color: var(--orange);
   border-radius: 8px;
-  border: 2px solid #181818; /* Borde oscuro para efecto flotante */
+  border: 2px solid #181818;
 }
 
 /* --- TARJETAS DE SECCIÓN --- */
@@ -307,7 +306,6 @@ select::-webkit-scrollbar-thumb,
   transition: border-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out);
 }
 
-/* Barra vertical naranja constante */
 .form-group::before {
   content: '';
   position: absolute;
@@ -349,9 +347,29 @@ select::-webkit-scrollbar-thumb,
   font-size: 0.92rem !important;
   font-weight: 700 !important;
   width: 100%;
-  padding: 2px 24px 2px 0 !important;
+  padding: 2px 4px 2px 0 !important;
   box-sizing: border-box;
   cursor: pointer;
+}
+
+/* --- LIMPIEZA DE ARTEFACTOS NATIVOS EN INPUT DATE --- */
+.form-group input[type="date"]::-webkit-inner-spin-button,
+.form-group input[type="date"]::-webkit-outer-spin-button,
+.form-group input[type="date"]::-webkit-clear-button {
+  -webkit-appearance: none;
+  display: none;
+  margin: 0;
+}
+
+.form-group input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.9);
+  opacity: 0.85;
+  transition: opacity 180ms var(--ease-out);
+}
+
+.form-group input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 .form-group select {

@@ -14,7 +14,17 @@ export interface CampaniaPayload {
   fecha_fin: string;
   msi_id: number;
   activa: number;
-  productos: number[]; // IDs de producto_detalle
+  productos: number[]; // IDs de producto_detalle (variantes/SKUs)
+}
+
+/**
+ * Respuesta genérica del API Flask para operaciones de escritura.
+ */
+export interface ApiResponse<T = any> {
+  respuesta: boolean;
+  mensaje: string;
+  datos?: T;
+  id?: number;
 }
 
 /**
@@ -28,15 +38,12 @@ export interface ProductoBase {
   marca_id?: number;
 }
 
-@Injectable({ providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class SolicitudRetroactivoCampaniasService {
-  // Inyección de HttpClient para Angular 19
-  
   // Endpoint base configurado en la API Flask (Blueprint)
   private readonly apiUrl = `${environment.apiUrl}/api/solicitud-retroactivo-campanias`;
 
   constructor(private http: HttpClient) {}
-
 
   /* ========================================================================
      1. ENDPOINTS DE CAMPAÑAS (CRUD)
@@ -44,7 +51,7 @@ export class SolicitudRetroactivoCampaniasService {
 
   /**
    * Obtiene el listado completo de campañas con sus productos asociados.
-   * GET /api/solicitud-retroactivo-campanias/campanias
+   * GET /api/solicitud-retroactivo-campanias
    */
   getCampanias(): Observable<CampaniaItem[]> {
     return this.http.get<CampaniaItem[]>(`${this.apiUrl}`);
@@ -52,7 +59,7 @@ export class SolicitudRetroactivoCampaniasService {
 
   /**
    * Obtiene la información detallada de una campaña por su ID.
-   * GET /api/solicitud-retroactivo-campanias/campanias/:id
+   * GET /api/solicitud-retroactivo-campanias/:id
    */
   getCampaniaById(id: number): Observable<CampaniaItem> {
     return this.http.get<CampaniaItem>(`${this.apiUrl}/${id}`);
@@ -60,26 +67,26 @@ export class SolicitudRetroactivoCampaniasService {
 
   /**
    * Crea una nueva campaña y sus relaciones con productos detalle.
-   * POST /api/solicitud-retroactivo-campanias/campanias
+   * POST /api/solicitud-retroactivo-campanias
    */
-  createCampania(payload: CampaniaPayload): Observable<CampaniaItem> {
-    return this.http.post<CampaniaItem>(`${this.apiUrl}`, payload);
+  createCampania(payload: CampaniaPayload): Observable<ApiResponse<CampaniaItem>> {
+    return this.http.post<ApiResponse<CampaniaItem>>(`${this.apiUrl}`, payload);
   }
 
   /**
    * Actualiza los datos de una campaña y reemplaza sus relaciones en la BD.
-   * PUT /api/solicitud-retroactivo-campanias/campanias/:id
+   * PUT /api/solicitud-retroactivo-campanias/:id
    */
-  updateCampania(id: number, payload: CampaniaPayload): Observable<CampaniaItem> {
-    return this.http.put<CampaniaItem>(`${this.apiUrl}/${id}`, payload);
+  updateCampania(id: number, payload: CampaniaPayload): Observable<ApiResponse<CampaniaItem>> {
+    return this.http.put<ApiResponse<CampaniaItem>>(`${this.apiUrl}/${id}`, payload);
   }
 
   /**
    * Elimina una campaña y desvincula sus registros asociados.
-   * DELETE /api/solicitud-retroactivo-campanias/campanias/:id
+   * DELETE /api/solicitud-retroactivo-campanias/:id
    */
-  deleteCampania(id: number): Observable<{ ok: boolean; mensaje: string }> {
-    return this.http.delete<{ ok: boolean; mensaje: string }>(`${this.apiUrl}/${id}`);
+  deleteCampania(id: number): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(`${this.apiUrl}/${id}`);
   }
 
   /* ========================================================================
