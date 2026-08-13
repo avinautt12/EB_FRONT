@@ -27,7 +27,8 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
   error = '';
   solicitudes: SolicitudRetroactivo[] = [];
 
-  vista: 'lista' | 'detalle' = 'lista';
+  // Ampliamos el control de vistas para incluir la tabla de mis productos
+  vista: 'lista' | 'detalle' | 'productos' = 'lista';
   seleccionada: SolicitudRetroactivo | null = null;
 
   archivosNuevos: { [key: string]: File } = {};
@@ -85,6 +86,17 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
       return { texto: `Emitida (#${nota})`, clase: 'badge-validado' };
     }
     return { texto: 'En proceso', clase: 'badge-pendiente' };
+  }
+
+  // ── Navegación de Vistas ───────────────────────────────────────────
+
+  verMisProductos(): void {
+    this.vista = 'productos';
+  }
+
+  volverALista(): void {
+    this.vista = 'lista';
+    this.seleccionada = null;
   }
 
   // ── Filtrado y paginación ───────────────────────────────────────────
@@ -146,11 +158,6 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
     this.archivosNuevos = {};
     this.errorReenvio = '';
     this.mensajeReenvioExito = '';
-  }
-
-  volverALista(): void {
-    this.vista = 'lista';
-    this.seleccionada = null;
   }
 
   documentos(s: SolicitudRetroactivo) {

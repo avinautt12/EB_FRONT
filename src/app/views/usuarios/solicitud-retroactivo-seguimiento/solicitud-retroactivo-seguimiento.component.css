@@ -29,11 +29,43 @@
   margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
 }
 .header-left { display: flex; flex-direction: column; gap: 4px; }
+
+/* ── Botón Volver / Regresar (Estilo Outline) ── */
 .back-link {
-  color: var(--t3); text-decoration: none; font-size: 0.85rem;
-  display: flex; align-items: center; gap: 6px; transition: color 200ms;
+  color: #bbb;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: all 180ms var(--ease-out);
+  width: fit-content;
+  margin-bottom: 6px;
+  cursor: pointer;
 }
-.back-link:hover { color: var(--orange); }
+
+.back-link i {
+  color: #bbb;
+  font-size: 0.85rem;
+  transition: transform 180ms var(--ease-out);
+}
+
+/* Estado Hover (Igual a la imagen de referencia) */
+.back-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.back-link:hover i {
+  transform: translateX(-2px);
+}
+
 .page-title {
   margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--t1);
   display: flex; align-items: center; gap: 10px;
@@ -44,6 +76,36 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 0.95rem; color: var(--orange); flex-shrink: 0;
 }
+
+/* ── Botones del Encabezado ── */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-mis-productos {
+  background: rgba(235, 94, 40, 0.12);
+  color: var(--orange);
+  border: 1px solid var(--orange-gl);
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 180ms var(--ease-out), border-color 180ms var(--ease-out), transform 160ms var(--ease-out);
+}
+.btn-mis-productos:hover {
+  background: var(--orange);
+  color: #fff;
+  border-color: var(--orange);
+  box-shadow: 0 8px 20px rgba(235, 94, 40, 0.35);
+}
+.btn-mis-productos:active { transform: scale(0.96); }
 
 .btn-nueva {
   background: var(--orange);
@@ -60,7 +122,7 @@
   gap: 8px;
   transition: transform 160ms var(--ease-out), box-shadow 220ms var(--ease-out);
 }
-.btn-nueva:hover { box-shadow: 0 8px 20px rgba(235,94,40,0.35); }
+.btn-nueva:hover { box-shadow: 0 8px 20px rgba(235, 94, 40, 0.35); }
 .btn-nueva:active { transform: scale(0.96); }
 .btn-nueva-inline { margin-top: 14px; }
 
@@ -147,6 +209,15 @@
 .tabla-row { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 150ms var(--ease-out); }
 .tabla-row:last-child { border-bottom: none; }
 .tabla-row:hover { background: var(--orange-g); }
+
+/* Filas para tablas estáticas (Mis Productos) */
+.tabla-row-static {
+  border-bottom: 1px solid var(--border);
+  transition: background 150ms var(--ease-out);
+}
+.tabla-row-static:last-child { border-bottom: none; }
+.tabla-row-static:hover { background: rgba(255, 255, 255, 0.02); }
+
 .solicitudes-tabla td { padding: 13px 14px; font-size: 0.88rem; vertical-align: middle; }
 
 .col-principal { font-weight: 700; color: var(--t1); white-space: nowrap; }

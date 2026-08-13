@@ -5,16 +5,26 @@
   <div class="page-header">
     <div class="header-left">
       <a *ngIf="vista === 'lista'" routerLink="/usuarios/solicitud-retroactivo" class="back-link"><i class="fas fa-arrow-left"></i> Solicitud de Retroactivos</a>
-      <button *ngIf="vista === 'detalle'" type="button" class="back-link back-link-btn" (click)="volverALista()"><i class="fas fa-arrow-left"></i> Mis Solicitudes</button>
+      <button *ngIf="vista === 'detalle' || vista === 'productos'" type="button" class="back-link" (click)="volverALista()"><i class="fas fa-arrow-left"></i> Mis Solicitudes</button>
+
       <h1 class="page-title" *ngIf="vista === 'lista'"><span class="title-icon"><i class="fas fa-list-check"></i></span>Seguimiento de mis Solicitudes</h1>
+      <h1 class="page-title" *ngIf="vista === 'productos'"><span class="title-icon"><i class="fas fa-boxes-stacked"></i></span>Resumen de mis Productos</h1>
       <h1 class="page-title" *ngIf="vista === 'detalle' && seleccionada">
         <span class="title-icon"><i class="fas fa-file-invoice-dollar"></i></span>
         {{ seleccionada.modelo_bicicleta }} · {{ seleccionada.numero_serie }}
       </h1>
     </div>
-    <a *ngIf="vista === 'lista'" routerLink="/usuarios/solicitud-retroactivo" class="btn-nueva">
-      <i class="fas fa-plus"></i> Registrar nueva venta
-    </a>
+
+    <!-- Botones de Acción en el Encabezado -->
+    <div class="header-actions" *ngIf="vista === 'lista'">
+      <button type="button" class="btn-mis-productos" (click)="verMisProductos()">
+        <i class="fas fa-boxes-stacked"></i> Ver Mis Productos
+      </button>
+      <a routerLink="/usuarios/solicitud-retroactivo" class="btn-nueva">
+        <i class="fas fa-plus"></i> Registrar nueva venta
+      </a>
+    </div>
+
     <span *ngIf="vista === 'detalle' && seleccionada" class="badge-estatus badge-grande" [ngClass]="'badge-' + seleccionada.estatus">{{ seleccionada.estatus }}</span>
   </div>
 
@@ -62,7 +72,7 @@
         <span class="filtro-count">{{ solicitudesFiltradas.length }} solicitud{{ solicitudesFiltradas.length !== 1 ? 'es' : '' }}</span>
       </div>
 
-      <!-- Tabla compacta con Nota de Crédito -->
+      <!-- Tabla compacta general -->
       <div class="tabla-wrap">
         <table class="solicitudes-tabla">
           <thead>
@@ -119,6 +129,48 @@
       </div>
 
     </ng-container>
+  </ng-container>
+
+  <!-- ══════════════ VISTA PRODUCTOS (TABLA 3 COLUMNAS) ══════════════ -->
+  <ng-container *ngIf="vista === 'productos'">
+
+    <div *ngIf="cargando" class="cargando-spinner">
+      <div class="spinner"></div>
+      <p>Cargando tus productos...</p>
+    </div>
+
+    <div *ngIf="error" class="alert-error">{{ error }}</div>
+
+    <div class="empty-state" *ngIf="!cargando && !solicitudes.length">
+      <i class="fas fa-inbox fa-2x"></i>
+      <p>Aún no tienes productos asociados a tus solicitudes.</p>
+    </div>
+
+    <ng-container *ngIf="!cargando && solicitudes.length">
+      <div class="tabla-wrap">
+        <table class="solicitudes-tabla">
+          <thead>
+            <tr>
+              <th>Modelo</th>
+              <th>Número de Serie</th>
+              <th>Estatus Nota de Crédito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of solicitudes" class="tabla-row-static">
+              <td class="col-principal">{{ s.modelo_bicicleta }}</td>
+              <td class="col-secundario">{{ s.numero_serie }}</td>
+              <td class="col-estatus">
+                <span class="tc-badge" [ngClass]="estatusNotaCredito(s.nota_credito).clase">
+                  {{ estatusNotaCredito(s.nota_credito).texto }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+
   </ng-container>
 
   <!-- ══════════════ VISTA DETALLE ══════════════ -->
