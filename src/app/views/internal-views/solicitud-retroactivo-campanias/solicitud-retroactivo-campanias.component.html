@@ -1,0 +1,235 @@
+<app-top-bar-usuarios></app-top-bar-usuarios>
+
+
+<div class="retroactivos-layout">
+
+  <!-- 1. VISTA LISTADO DE CAMPAÑAS -->
+  <div *ngIf="modoVista === 'LISTADO'">
+    <header class="page-header">
+      <h2>Campañas de Retroactivos</h2>
+      <button type="button" class="btn btn-primary" (click)="nuevaCampania()">+ Nueva campaña</button>
+    </header>
+
+    <!-- MENSAJE DE NOTIFICACIÓN INLINE (ÉXITO) -->
+    <div class="inline-alert success" *ngIf="mensajeListadoExito">
+      <span>✔</span> {{ mensajeListadoExito }}
+      <button class="close-btn" (click)="mensajeListadoExito = null">&times;</button>
+    </div>
+
+    <!-- MENSAJE DE NOTIFICACIÓN INLINE (ERROR) -->
+    <div class="inline-alert error" *ngIf="mensajeListadoError">
+      <span>✖</span> {{ mensajeListadoError }}
+      <button class="close-btn" (click)="mensajeListadoError = null">&times;</button>
+    </div>
+
+    <!-- BARRA DE FILTROS -->
+    <div class="filtros-bar">
+      <div class="search-box">
+        <input
+          type="text"
+          placeholder="Buscar por nombre..."
+          [(ngModel)]="filtros.query"
+          (ngModelChange)="aplicarFiltros()"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>MSI</label>
+        <select [(ngModel)]="filtros.msi_id" (change)="aplicarFiltros()">
+          <option [ngValue]="null">Todos</option>
+          <option *ngFor="let m of msiList" [ngValue]="m.id">{{ m.plazo_meses }} MSI ({{ m.porcentaje }}%)</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Estado</label>
+        <select [(ngModel)]="filtros.activa" (change)="aplicarFiltros()">
+          <option [ngValue]="null">Todos</option>
+          <option [ngValue]="1">Activas</option>
+          <option [ngValue]="0">Inactivas</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- TABLA DE CAMPAÑAS -->
+    <div class="table-wrap">
+      <table class="data-table" *ngIf="!loading; else loadingState">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>MSI (Plazo - %)</th>
+            <th>Fecha inicio</th>
+            <th>Fecha fin</th>
+            <th class="text-center">Productos</th>
+            <th>Estado</th>
+            <th class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of campaniasFiltradas">
+            <td><strong>{{ c.nombre }}</strong></td>
+            <td>{{ obtenerTextoMsi(c.msi_id) }}</td>
+            <td>{{ c.fecha_inicio | date:'dd/MM/yyyy':'UTC' }}</td>
+            <td>{{ c.fecha_fin | date:'dd/MM/yyyy':'UTC' }}</td>
+            <td class="text-center">{{ c.productos ? c.productos.length : 0 }}</td>
+            <td>
+              <span [class]="c.activa === 1 ? 'badge badge-active' : 'badge badge-inactive'">
+                {{ c.activa === 1 ? 'Activa' : 'Inactiva' }}
+              </span>
+            </td>
+            <td class="td-actions">
+              <button type="button" class="btn-action-icon" title="Editar" (click)="editarCampania(c)">✏️</button>
+              <button type="button" class="btn-action-icon delete" title="Eliminar" (click)="eliminarCampania(c.id)">🗑️</button>
+            </td>
+          </tr>
+
+          <tr *ngIf="campaniasFiltradas.length === 0">
+            <td colspan="7">
+              <div class="empty-state">
+                <div class="empty-icon">📦</div>
+                <h3>No se encontraron campañas</h3>
+                <p>Intenta con otros términos de búsqueda o crea una nueva campaña.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ng-template #loadingState>
+        <div class="empty-state">
+          <p>Cargando información...</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- 2. VISTA FORMULARIO CREAR / EDITAR -->
+  <div *ngIf="modoVista === 'FORMULARIO'">
+    <header class="form-header">
+      <button type="button" class="btn-back" (click)="volverAlListado()">← Volver al listado</button>
+      <h2>{{ editandoId ? 'Editar campaña' : 'Nueva campaña' }}</h2>
+    </header>
+
+    <!-- DATOS DE LA VENTA -->
+    <section class="card-section">
+      <div class="section-title">
+        <div class="title-left">
+          <i>👤</i>
+          <span>INFORMACIÓN DE LA VENTA</span>
+        </div>
+      </div>
+
+      <form (ngSubmit)="guardarCampania()" novalidate>
+        <div class="form-grid">
+          <!-- Campo Nombre -->
+          <div class="form-group" [class.has-error]="formEnviado && !formNombre">
+            <label>CAMPAÑA *</label>
+            <input type="text" [(ngModel)]="formNombre" name="formNombre" placeholder="Nombre de la campaña" />
+            <span class="error-text" *ngIf="formEnviado && !formNombre">Campo requerido</span>
+          </div>
+
+          <!-- Campo MSI -->
+          <div class="form-group" [class.has-error]="formEnviado && !formMsiId">
+            <label>VENTA A MSI *</label>
+            <select [(ngModel)]="formMsiId" name="formMsiId">
+              <option [ngValue]="null" disabled>-- Selecciona --</option>
+              <option *ngFor="let m of msiList" [value]="m.id">{{ m.plazo_meses }} MSI - {{ m.porcentaje }}%</option>
+            </select>
+            <span class="error-text" *ngIf="formEnviado && !formMsiId">Campo requerido</span>
+          </div>
+
+          <!-- Campo Estado -->
+          <div class="form-group">
+            <label>ESTADO</label>
+            <select [(ngModel)]="formActiva" name="formActiva">
+              <option [value]="1">Activa</option>
+              <option [value]="0">Inactiva</option>
+            </select>
+          </div>
+
+          <!-- Campo Fecha Inicio -->
+          <div class="form-group" [class.has-error]="formEnviado && !formFechaInicio">
+            <label>FECHA INICIO *</label>
+            <input type="date" [(ngModel)]="formFechaInicio" name="formFechaInicio" />
+            <span class="error-text" *ngIf="formEnviado && !formFechaInicio">Campo requerido</span>
+          </div>
+
+          <!-- Campo Fecha Fin -->
+          <div class="form-group" [class.has-error]="formEnviado && !formFechaFin">
+            <label>FECHA FIN *</label>
+            <input type="date" [(ngModel)]="formFechaFin" name="formFechaFin" />
+            <span class="error-text" *ngIf="formEnviado && !formFechaFin">Campo requerido</span>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- PRODUCTOS DE LA CAMPAÑA -->
+    <section class="card-section">
+      <div class="section-title">
+        <div class="title-left">
+          <i>📦</i>
+          <span>PRODUCTOS DE LA CAMPAÑA</span>
+          <span class="badge-count">{{ productosSeleccionados.length }}</span>
+        </div>
+        <button type="button" class="btn btn-secondary" (click)="modalVisible = true">+ Agregar productos</button>
+      </div>
+
+      <div class="table-wrap" *ngIf="productosSeleccionados.length > 0; else emptyProds">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>SKU</th>
+              <th>Talla / Color</th>
+              <th class="text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let prod of productosSeleccionados">
+              <td><strong>{{ prod.nombre || '-' }}</strong></td>
+              <td>{{ prod.sku }}</td>
+              <td>{{ prod.talla }} / {{ prod.color }}</td>
+              <td class="td-actions">
+                <button type="button" class="btn-action delete" (click)="quitarProducto(prod.id)">🗑️</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #emptyProds>
+        <div class="empty-products">
+          <p>Aún no hay productos seleccionados.</p>
+          <button type="button" class="btn btn-primary" (click)="modalVisible = true">+ Agregar productos</button>
+        </div>
+      </ng-template>
+    </section>
+
+    <!-- ALERTA INLINE DENTRO DEL FORMULARIO -->
+    <div class="inline-alert error" *ngIf="mensajeFormError">
+      <span>✖</span> {{ mensajeFormError }}
+    </div>
+
+    <!-- FOOTER DEL FORMULARIO -->
+    <div class="form-footer">
+      <div class="saving-indicator" *ngIf="saving">
+        Guardando campaña...
+      </div>
+
+      <div class="footer-buttons">
+        <button type="button" class="btn btn-secondary" (click)="volverAlListado()" [disabled]="saving">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="guardarCampania()" [disabled]="saving">
+          {{ editandoId ? 'Guardar campaña' : 'Guardar campaña' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Catálogo -->
+<app-producto-catalogo-modal
+  [visible]="modalVisible"
+  (cerrarModal)="modalVisible = false"
+  (productosSeleccionados)="onProductosAgregados($event)"
+></app-producto-catalogo-modal>
