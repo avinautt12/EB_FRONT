@@ -31,9 +31,9 @@ export interface Importacion {
 
   // Logística
   log_fecha_notificacion?: string;
+  log_fecha_entrega_prog?: string | null;
   log_fecha_entrega?: string;
   log_titulo_correo_salida?: string;
-  log_titulo_correo_2?: string;
   log_confirmacion_enterado?: string;
   log_origen?: string;
   log_tipo_productos?: string;
@@ -42,7 +42,9 @@ export interface Importacion {
   log_costo_flete?: string;
   log_fecha_shipping_instructions?: string;
   log_confirmacion_booking?: string;
+  log_fecha_booking_prog?: string | null;
   log_fecha_booking?: string;
+  log_eta_puerto_prog?: string | null;
   log_eta_puerto?: string;
   log_buque?: string;
   log_no_viaje?: string;
@@ -64,6 +66,7 @@ export interface Importacion {
   imp_facturas?: string;
   imp_series?: string;
   imp_solicitud_pago_forwarder?: string;
+  imp_llegada_contenedor_prog?: string | null;
   imp_llegada_contenedor_puerto?: string;
   imp_fecha_limite_cruce?: string;
   imp_dias_libres_almacenaje?: number;
@@ -98,6 +101,7 @@ export interface Importacion {
   // Despacho
   des_solicitud_cita_cruce?: string;
   des_cita_cruce?: string;
+  des_fecha_cruce_prog?: string | null;
   des_fecha_cruce_real?: string;
   des_solicitud_pase_maniobras?: string;
   des_carta_maniobras?: string;
@@ -114,6 +118,7 @@ export interface Importacion {
   des_recepcion_eir?: string;
 
   // Odoo
+  odoo_importador?: string;
   odoo_codificacion?: string;
   odoo_alta_catalogo?: string;
   odoo_alta_precios?: string;
@@ -123,16 +128,25 @@ export interface Importacion {
   // Almacén
   alm_base_datos_etiquetas?: string;
   alm_base_datos_verificacion?: string;
+  alm_fecha_limite_etiquetado?: string;
   alm_liberacion_etiquetado?: string;
+  alm_liberacion_etiquetado_uva?: string;
+  alm_envio_info_uva_prog?: string | null;
   alm_envio_info_uva?: string;
   alm_liberacion_uva?: string;
-  alm_fecha_limite_etiquetado?: string;
+  alm_proyectado_dias_etiquetado?: number;
+  alm_inicio_etiquetado?: string;
+  alm_terminacion_etiquetado?: string;
+  alm_real_dias_etiquetado?: number;
 
   // Recepción
   rec_cedula_costeo?: string;
+  rec_recepcion_odoo_prog?: string | null;
   rec_recepcion_odoo?: string;
   rec_folio_compra?: string;
+  rec_liberacion_verificacion_prog?: string | null;
   rec_liberacion_verificacion?: string;
+  rec_liberacion_final_prog?: string | null;
   rec_liberacion_final?: string;
 
   // Cierre
@@ -165,8 +179,54 @@ export interface Importacion {
   cos_impuestos_pagados_pesos?: number;
   cos_reconocimiento_aduanero?: number;
 
+  // Piezas por tipo de caja
+  cos_caja_scott_r24?: number;
+  cos_caja_scott_r20?: number;
+  cos_caja_scott_adulto?: number;
+  cos_caja_scott_tw?: number;
+  cos_caja_scott_tw_electrica?: number;
+  cos_caja_megamo_track?: number;
+  cos_caja_megamo_reason?: number;
+  cos_caja_megamo_vitae?: number;
+
+  // Conversiones USD calculadas (pesos / tipo_cambio_pedimento)
+  cos_gastos_forwarder_usd?: number;
+  cos_seguro_usd?: number;
+  cos_custodia_usd?: number;
+  cos_maniobras_usd?: number;
+  cos_cargos_adicionales_usd?: number;
+  cos_honorarios_usd?: number;
+  cos_verificacion_usd?: number;
+  cos_lavado_contenedor_usd?: number;
+  cos_monitoreo_usd?: number;
+  cos_impuestos_pagados_usd?: number;
+  cos_reconocimiento_aduanero_usd?: number;
+
+  // Precio por bicicleta por tipo de caja (distribución proporcional por volumen, en USD)
+  cos_precio_bici_scott_r24?: number;
+  cos_precio_bici_scott_r20?: number;
+  cos_precio_bici_scott_adulto?: number;
+  cos_precio_bici_scott_tw?: number;
+  cos_precio_bici_scott_tw_electrica?: number;
+  cos_precio_bici_megamo_track?: number;
+  cos_precio_bici_megamo_reason?: number;
+  cos_precio_bici_megamo_vitae?: number;
+  cos_precio_bici_total?: number;
+
+  // Proyección de costos
+  cos_flete_proyectado_usd?: number;
+  cos_tipo_cambio_proyectado?: number;
+  cos_maniobras_proyectado_pesos?: number;
+  cos_honorarios_proyectado_pesos?: number;
+
   notas?: string;
   borradores?: Record<string, Record<string, any>>;
+  campos_na?: string[];
+
+  // Monitor pipeline
+  pipeline?: Record<string, { proy: string | null; real: string | null; delta: number | null }>;
+  lat_total?: number | null;
+  estado_actual?: string;
 }
 
 @Injectable({ providedIn: 'root' })

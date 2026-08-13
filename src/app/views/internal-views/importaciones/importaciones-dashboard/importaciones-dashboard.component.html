@@ -56,133 +56,149 @@
 
   <ng-container *ngIf="!cargando && data">
 
-    <!-- ══ KPIs ══════════════════════════════════════════════════════════════ -->
-    <div class="kpi-row">
-
-      <div class="kpi-card">
-        <div class="kpi-icon kpi-blue"><i class="fas fa-boxes"></i></div>
-        <div class="kpi-info">
-          <span class="kpi-num">{{ data.kpis.total }}</span>
-          <span class="kpi-lbl">Total Embarques</span>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-icon kpi-yellow"><i class="fas fa-clock"></i></div>
-        <div class="kpi-info">
-          <span class="kpi-num" style="color:#f59e0b">{{ data.kpis.activos }}</span>
-          <span class="kpi-lbl">En Proceso</span>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-icon kpi-green"><i class="fas fa-check-circle"></i></div>
-        <div class="kpi-info">
-          <span class="kpi-num" style="color:#22c55e">{{ data.kpis.cerrados }}</span>
-          <span class="kpi-lbl">Cerrados</span>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-icon kpi-blue"><i class="fas fa-dollar-sign"></i></div>
-        <div class="kpi-info">
-          <span class="kpi-num kpi-sm">{{ data.kpis.flete_total_usd | number:'1.0-0' }} <small>USD</small></span>
-          <span class="kpi-lbl">Flete Total</span>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-icon kpi-purple"><i class="fas fa-calculator"></i></div>
-        <div class="kpi-info">
-          <span class="kpi-num kpi-sm">{{ data.kpis.flete_promedio_usd | number:'1.0-0' }} <small>USD</small></span>
-          <span class="kpi-lbl">Flete Promedio</span>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-icon kpi-cyan"><i class="fas fa-ship"></i></div>
-        <div class="kpi-info">
-          <span class="kpi-num">{{ data.kpis.transito_maritimo_promedio_dias || '—' }}<small> días</small></span>
-          <span class="kpi-lbl">Tránsito Marítimo</span>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-icon kpi-green"><i class="fas fa-tasks"></i></div>
-        <div class="kpi-info">
-          <span class="kpi-num" [style.color]="colorPct(data.kpis.pct_avance_promedio)">
-            {{ data.kpis.pct_avance_promedio }}%
-          </span>
-          <span class="kpi-lbl">Avance Promedio</span>
-        </div>
-      </div>
-
+    <!-- ── Tabs ── -->
+    <div class="dash-tabs">
+      <button class="tab-btn" [class.active]="activeTab === 'resumen'" (click)="switchTab('resumen')">
+        <i class="fas fa-tachometer-alt"></i> Resumen
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'latencias'" (click)="switchTab('latencias')">
+        <i class="fas fa-stopwatch"></i> Latencias
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'costos'" (click)="switchTab('costos')">
+        <i class="fas fa-dollar-sign"></i> Costos
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'embarques'" (click)="switchTab('embarques')">
+        <i class="fas fa-list-alt"></i>
+        Embarques
+        <span class="tab-count">{{ data.kpis.total }}</span>
+      </button>
     </div>
 
-    <!-- ══ Gráficas — Fila 1 ══════════════════════════════════════════════════ -->
-    <div class="charts-row r1">
+    <!-- ════════════════════════════════ TAB: RESUMEN ══════════════════════════ -->
+    <ng-container *ngIf="activeTab === 'resumen'">
+    <div class="tab-panel">
 
-      <!-- Donut: Vía de transporte -->
-      <div class="chart-card">
-        <div class="chart-title"><i class="fas fa-circle-notch"></i> Vía de Transporte</div>
-        <div class="donut-wrap">
-          <canvas #chartVia height="190"></canvas>
-          <div class="donut-center">
-            <span class="donut-total">{{ data.kpis.total }}</span>
-            <span class="donut-sub">emb.</span>
+      <div class="kpi-row">
+
+        <div class="kpi-card kpi-card--clickable" (click)="abrirModalResumen('total')" title="Ver todos los embarques">
+          <div class="kpi-icon kpi-blue"><i class="fas fa-boxes"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-num">{{ data.kpis.total }}</span>
+            <span class="kpi-lbl">Total Embarques</span>
           </div>
         </div>
-        <div class="via-legend">
-          <div class="via-item" *ngFor="let v of data.por_via">
-            <span class="via-dot" [style.background]="v.via === 'AEREO' ? '#8b5cf6' : '#3b82f6'"></span>
-            <i class="fas" [ngClass]="v.via === 'AEREO' ? 'fa-plane' : 'fa-ship'" [style.color]="v.via === 'AEREO' ? '#8b5cf6' : '#3b82f6'"></i>
-            <span class="via-name">{{ v.via === 'AEREO' ? 'Aéreo' : 'Marítimo' }}</span>
-            <span class="via-count">{{ v.count }}</span>
-            <span class="via-pct">{{ pctVia(v.count) }}%</span>
+
+        <div class="kpi-card kpi-card--clickable" (click)="abrirModalResumen('activos')" title="Ver embarques en proceso">
+          <div class="kpi-icon kpi-yellow"><i class="fas fa-clock"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-num" style="color:#f59e0b">{{ data.kpis.activos }}</span>
+            <span class="kpi-lbl">En Proceso</span>
           </div>
         </div>
+
+        <div class="kpi-card kpi-card--clickable" (click)="abrirModalResumen('cerrados')" title="Ver embarques cerrados">
+          <div class="kpi-icon kpi-green"><i class="fas fa-check-circle"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-num" style="color:#22c55e">{{ data.kpis.cerrados }}</span>
+            <span class="kpi-lbl">Cerrados</span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-card--clickable" (click)="abrirModalResumen('transito')" title="Ver embarques marítimos · entrega → liberación final">
+          <div class="kpi-icon kpi-cyan"><i class="fas fa-ship"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-num">
+              {{ data.kpis.transito_maritimo_promedio_dias != null ? data.kpis.transito_maritimo_promedio_dias : '—' }}<small *ngIf="data.kpis.transito_maritimo_promedio_dias != null"> días</small>
+            </span>
+            <span class="kpi-lbl">Tránsito Marítimo</span>
+            <span class="kpi-sub">Entrega → Liberado<span *ngIf="data.kpis.transito_maritimo_n"> · n={{ data.kpis.transito_maritimo_n }}</span></span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-card--clickable" (click)="abrirModalResumen('transito_aereo')" title="Ver embarques aéreos · entrega → liberación final">
+          <div class="kpi-icon kpi-purple"><i class="fas fa-plane"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-num">
+              {{ data.kpis.transito_aereo_promedio_dias != null ? data.kpis.transito_aereo_promedio_dias : '—' }}<small *ngIf="data.kpis.transito_aereo_promedio_dias != null"> días</small>
+            </span>
+            <span class="kpi-lbl">Tránsito Aéreo</span>
+            <span class="kpi-sub">Entrega → Liberado<span *ngIf="data.kpis.transito_aereo_n"> · n={{ data.kpis.transito_aereo_n }}</span></span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-card--clickable" (click)="abrirModalResumen('avance')" title="Ver avance por embarque">
+          <div class="kpi-icon kpi-green"><i class="fas fa-tasks"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-num" [style.color]="colorPct(data.kpis.pct_avance_promedio)">
+              {{ data.kpis.pct_avance_promedio }}%
+            </span>
+            <span class="kpi-lbl">Avance Promedio</span>
+          </div>
+        </div>
+
       </div>
 
-      <!-- H-Bar: Por origen -->
-      <div class="chart-card chart-grow">
-        <div class="chart-title"><i class="fas fa-globe-americas"></i> Embarques por Origen</div>
-        <canvas #chartOrigen></canvas>
-      </div>
+      <!-- Distribución: vía + origen + estado -->
+      <div class="charts-row r1">
 
-      <!-- Bar: Flete promedio por vía -->
-      <div class="chart-card">
-        <div class="chart-title"><i class="fas fa-dollar-sign"></i> Flete Promedio por Vía</div>
-        <canvas #chartFlete height="140"></canvas>
-        <div class="flete-legend">
-          <div class="flete-item" *ngIf="data.flete_por_via.maritimo_count > 0">
-            <i class="fas fa-ship" style="color:#3b82f6"></i>
-            <div>
-              <span class="fl-label">Marítimo</span>
-              <span class="fl-val">{{ formatUsd(data.flete_por_via.maritimo_avg) }}</span>
-              <span class="fl-count">{{ data.flete_por_via.maritimo_count }} con datos</span>
+        <div class="chart-card">
+          <div class="chart-title"><i class="fas fa-circle-notch"></i> Vía de Transporte</div>
+          <div class="donut-wrap">
+            <canvas #chartVia height="190"></canvas>
+            <div class="donut-center">
+              <span class="donut-total">{{ data.kpis.total }}</span>
+              <span class="donut-sub">emb.</span>
             </div>
           </div>
-          <div class="flete-item" *ngIf="data.flete_por_via.aereo_count > 0">
-            <i class="fas fa-plane" style="color:#8b5cf6"></i>
-            <div>
-              <span class="fl-label">Aéreo</span>
-              <span class="fl-val">{{ formatUsd(data.flete_por_via.aereo_avg) }}</span>
-              <span class="fl-count">{{ data.flete_por_via.aereo_count }} con datos</span>
+          <div class="via-legend">
+            <div class="via-item" *ngFor="let v of data.por_via">
+              <span class="via-dot" [style.background]="v.via === 'AEREO' ? '#8b5cf6' : '#3b82f6'"></span>
+              <i class="fas" [ngClass]="v.via === 'AEREO' ? 'fa-plane' : 'fa-ship'"
+                 [style.color]="v.via === 'AEREO' ? '#8b5cf6' : '#3b82f6'"></i>
+              <span class="via-name">{{ v.via === 'AEREO' ? 'Aéreo' : 'Marítimo' }}</span>
+              <span class="via-count">{{ v.count }}</span>
+              <span class="via-pct">{{ pctVia(v.count) }}%</span>
             </div>
           </div>
-          <div class="flete-sin" *ngIf="data.flete_por_via.maritimo_count === 0 && data.flete_por_via.aereo_count === 0">
-            Sin datos de costos aún
+        </div>
+
+        <div class="chart-card chart-grow">
+          <div class="chart-title"><i class="fas fa-globe-americas"></i> Embarques por Origen</div>
+          <canvas #chartOrigen></canvas>
+        </div>
+
+        <div class="chart-card estado-card">
+          <div class="chart-title"><i class="fas fa-flag"></i> Estado de Embarques</div>
+          <div class="estado-bars">
+            <div class="estado-item" *ngFor="let e of data.por_estado">
+              <div class="estado-head">
+                <span class="estado-lbl">{{ e.estado | titlecase }}</span>
+                <span class="estado-num">{{ e.count }}</span>
+              </div>
+              <div class="estado-bar-bg">
+                <div class="estado-bar-fill"
+                  [style.width.%]="(e.count / data.kpis.total) * 100"
+                  [style.background]="colorEstado(e.estado)">
+                </div>
+              </div>
+              <span class="estado-pct">{{ ((e.count / data.kpis.total) * 100).toFixed(0) }}%</span>
+            </div>
+          </div>
+          <div class="avance-ring-wrap">
+            <p class="avance-ring-lbl">Avance Operativo Global</p>
+            <div class="avance-ring"
+              [style.--pct]="data.kpis.pct_avance_promedio + '%'"
+              [style.--color]="colorPct(data.kpis.pct_avance_promedio)">
+              <span>{{ data.kpis.pct_avance_promedio }}%</span>
+            </div>
+            <p class="avance-ring-sub">promedio · {{ data.kpis.total }} embarques</p>
           </div>
         </div>
+
       </div>
 
-    </div>
-
-    <!-- ══ Gráficas — Fila 2 ══════════════════════════════════════════════════ -->
-    <div class="charts-row r2">
-
-      <!-- Stacked bar: Por mes -->
-      <div class="chart-card chart-grow">
+      <!-- Timeline por mes (full width) -->
+      <div class="chart-card chart-full">
         <div class="chart-title"><i class="fas fa-calendar-alt"></i> Embarques por Mes</div>
         <div *ngIf="data.por_mes.length === 0" class="chart-empty">
           <i class="fas fa-inbox"></i> Sin datos de fechas de booking
@@ -190,103 +206,726 @@
         <canvas #chartMes *ngIf="data.por_mes.length > 0"></canvas>
       </div>
 
-      <!-- Estado + Avance ring -->
-      <div class="chart-card">
-        <div class="chart-title"><i class="fas fa-flag"></i> Estado de Embarques</div>
-        <div class="estado-bars">
-          <div class="estado-item" *ngFor="let e of data.por_estado">
-            <div class="estado-head">
-              <span class="estado-lbl">{{ e.estado | titlecase }}</span>
-              <span class="estado-num">{{ e.count }}</span>
-            </div>
-            <div class="estado-bar-bg">
-              <div class="estado-bar-fill"
-                [style.width.%]="(e.count / data.kpis.total) * 100"
-                [style.background]="colorEstado(e.estado)">
+    </div>
+    </ng-container>
+
+    <!-- ════════════════════════════════ TAB: LATENCIAS ═══════════════════════ -->
+    <ng-container *ngIf="activeTab === 'latencias'">
+    <div class="tab-panel">
+
+      <div class="kpi-row">
+
+        <div class="kpi-card kpi-card--clickable" (click)="abrirModalLat('almacen')" title="Ver detalle por embarque">
+          <div class="kpi-icon kpi-orange"><i class="fas fa-warehouse"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-num">
+              {{ data.latencias.almacen.dias_promedio ?? '—' }}<small *ngIf="data.latencias.almacen.dias_promedio !== null"> días</small>
+            </span>
+            <span class="kpi-lbl">Lat. Almacén</span>
+            <span class="kpi-sub">llegada → recepción Odoo · n={{ data.latencias.almacen.n }}</span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-card--clickable" (click)="abrirModalLat('contabilidad')" title="Ver detalle por embarque">
+          <div class="kpi-icon kpi-red"><i class="fas fa-file-invoice"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-num">
+              {{ data.latencias.contabilidad.dias_promedio ?? '—' }}<small *ngIf="data.latencias.contabilidad.dias_promedio !== null"> días</small>
+            </span>
+            <span class="kpi-lbl">Lat. Contabilidad</span>
+            <span class="kpi-sub">cruce → recepción docs · n={{ data.latencias.contabilidad.n }}</span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-card--clickable" (click)="abrirModalLat('transito')" title="Ver detalle por embarque">
+          <div class="kpi-icon kpi-cyan"><i class="fas fa-truck-moving"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-num">
+              {{ data.latencias.transito.dias_promedio ?? '—' }}<small *ngIf="data.latencias.transito.dias_promedio !== null"> días</small>
+            </span>
+            <span class="kpi-lbl">Lat. Tránsito</span>
+            <span class="kpi-sub">entrega → almacén · n={{ data.latencias.transito.n }}</span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-card--clickable" (click)="abrirModalLat('total')" title="Ver detalle por embarque">
+          <div class="kpi-icon kpi-blue"><i class="fas fa-hourglass-half"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-num">
+              {{ data.latencias.total_dias ?? '—' }}<small *ngIf="data.latencias.total_dias !== null"> días</small>
+            </span>
+            <span class="kpi-lbl">Lat. Total Prom.</span>
+            <span class="kpi-sub">entrega → liberación final</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Origen + Importador: misma altura proporcional -->
+      <div class="charts-row r2 lat-row-igual">
+
+        <div class="chart-card">
+          <div class="chart-title">
+            <span><i class="fas fa-globe-americas"></i> Latencia por Origen</span>
+            <button class="btn-desglose" (click)="toggleDesglose()">
+              <i class="fas" [ngClass]="desgloseOrigen ? 'fa-compress-alt' : 'fa-expand-alt'"></i>
+              {{ desgloseOrigen ? 'Ver general' : 'Ver por origen' }}
+            </button>
+          </div>
+          <div *ngIf="!desgloseOrigen && data.latencias.total_dias === null" class="chart-empty">
+            <i class="fas fa-inbox"></i> Sin datos suficientes
+          </div>
+          <div class="lat-canvas-wrap" *ngIf="desgloseOrigen || data.latencias.total_dias !== null">
+            <canvas #chartLatOrigen></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title"><i class="fas fa-user-tie"></i> Tránsito por Importador</div>
+          <div *ngIf="data.latencias.transito_x_importador.length === 0" class="chart-empty">
+            <i class="fas fa-inbox"></i> Sin datos de importador
+          </div>
+          <div class="lat-canvas-wrap" *ngIf="data.latencias.transito_x_importador.length > 0">
+            <canvas #chartLatImp></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Latencia por embarque + Etiquetado: lado a lado -->
+      <div class="charts-row r2 r2-emb-etiq">
+
+        <div class="chart-card">
+          <div class="chart-title"><i class="fas fa-sort-amount-down"></i> Latencia por Embarque</div>
+          <div class="lat-legend">
+            <span class="lat-dot" style="background:#3b82f6"></span> ≤ 40 d &nbsp;
+            <span class="lat-dot" style="background:#f59e0b"></span> 41–60 d &nbsp;
+            <span class="lat-dot" style="background:#ef4444"></span> > 60 d
+          </div>
+          <div *ngIf="data.latencias.x_embarque.length === 0" class="chart-empty">
+            <i class="fas fa-inbox"></i> Sin embarques con ambas fechas
+          </div>
+          <div class="lat-canvas-wrap" *ngIf="data.latencias.x_embarque.length > 0">
+            <canvas #chartLatEmbarque></canvas>
+          </div>
+        </div>
+
+        <!-- ── Etiquetado: estimado vs real ─────────────────────────────── -->
+        <div class="chart-card" *ngIf="data.latencias.etiquetado">
+        <div class="chart-title">
+          <span><i class="fas fa-tag"></i> Etiquetado — Estimado vs Real</span>
+          <button class="btn-desglose" (click)="modalEtiq=true"
+            *ngIf="data.latencias.etiquetado.x_embarque.length > 0">
+            <i class="fas fa-expand-alt"></i> Ver todo ({{ data.latencias.etiquetado.x_embarque.length }})
+          </button>
+        </div>
+
+        <!-- Strip resumen -->
+        <div class="etiq-strip" *ngIf="data.latencias.etiquetado.proyectado_promedio !== null">
+          <div class="etiq-strip-stat">
+            <span class="etiq-strip-val">{{ data.latencias.etiquetado.proyectado_promedio | number:'1.0-1' }}</span>
+            <span class="etiq-strip-unit">días</span>
+            <span class="etiq-strip-lbl">Estimado prom. · n={{ data.latencias.etiquetado.n_proyectado }}</span>
+          </div>
+          <i class="fas fa-long-arrow-alt-right etiq-strip-arrow"></i>
+          <div class="etiq-strip-stat">
+            <span class="etiq-strip-val" [class.etiq-strip-val--over]="etiqRatio !== null && etiqRatio > 1" [class.etiq-strip-val--under]="etiqRatio !== null && etiqRatio <= 1">
+              {{ data.latencias.etiquetado.real_promedio !== null ? (data.latencias.etiquetado.real_promedio | number:'1.0-1') : '—' }}
+            </span>
+            <span class="etiq-strip-unit" *ngIf="data.latencias.etiquetado.real_promedio !== null">días</span>
+            <span class="etiq-strip-lbl">Real prom. · n={{ data.latencias.etiquetado.n_real }}</span>
+          </div>
+          <div class="etiq-strip-badge"
+            *ngIf="etiqRatio !== null"
+            [class.etiq-strip-badge--over]="etiqRatio > 1"
+            [class.etiq-strip-badge--under]="etiqRatio <= 1">
+            {{ etiqRatio }}× {{ etiqRatio > 1 ? 'sobre estimado' : 'del estimado' }}
+          </div>
+        </div>
+
+        <div *ngIf="data.latencias.etiquetado.x_embarque.length === 0" class="chart-empty">
+          <i class="fas fa-inbox"></i> Sin embarques con datos de etiquetado
+        </div>
+        <div class="lat-canvas-wrap" *ngIf="data.latencias.etiquetado.x_embarque.length > 0">
+          <canvas #chartEtiquetado></canvas>
+        </div>
+        </div><!-- /etiquetado chart-card -->
+
+      </div><!-- /charts-row r2 embarque+etiquetado -->
+
+    </div>
+    </ng-container>
+
+    <!-- ════════════════════════════════ TAB: COSTOS ══════════════════════════ -->
+    <ng-container *ngIf="activeTab === 'costos'">
+    <div class="tab-panel">
+
+      <div class="kpi-row">
+
+        <div class="kpi-card kpi-card--clickable" (click)="abrirModalCostosDetalle('flete')" [title]="'$' + (data.kpis.flete_total_usd | number:'1.0-0') + ' USD — Ver desglose'">
+          <div class="kpi-icon kpi-blue"><i class="fas fa-dollar-sign"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-num kpi-sm">{{ abreviarUsd(data.kpis.flete_total_usd) }} <small>USD</small></span>
+            <span class="kpi-lbl">Flete Total</span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-card--clickable" (click)="abrirModalCostosDetalle('flete')" [title]="'$' + (data.kpis.flete_promedio_usd | number:'1.0-0') + ' USD — Ver desglose'">
+          <div class="kpi-icon kpi-purple"><i class="fas fa-calculator"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-num kpi-sm">{{ abreviarUsd(data.kpis.flete_promedio_usd) }} <small>USD</small></span>
+            <span class="kpi-lbl">Flete Promedio</span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-card--clickable" *ngIf="data.precio_bici_total_promedio" (click)="abrirModalCostosDetalle('bici')" title="Ver costo por bicicleta">
+          <div class="kpi-icon" style="background:rgba(99,102,241,.15);color:#6366f1"><i class="fas fa-bicycle"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-num kpi-sm">${{ data.precio_bici_total_promedio | number:'1.2-2' }} <small>USD</small></span>
+            <span class="kpi-lbl">Costo / Bici Prom.</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="charts-row r2">
+
+        <div class="chart-card">
+          <div class="chart-title"><i class="fas fa-dollar-sign"></i> Flete Promedio por Vía</div>
+          <canvas #chartFlete height="140"></canvas>
+          <div class="flete-legend">
+            <div class="flete-item" *ngIf="data.flete_por_via.maritimo_count > 0">
+              <i class="fas fa-ship" style="color:#3b82f6"></i>
+              <div>
+                <span class="fl-label">Marítimo</span>
+                <span class="fl-val">{{ formatUsd(data.flete_por_via.maritimo_avg) }}</span>
+                <span class="fl-count">{{ data.flete_por_via.maritimo_count }} con datos</span>
               </div>
             </div>
-            <span class="estado-pct">{{ ((e.count / data.kpis.total) * 100).toFixed(0) }}%</span>
+            <div class="flete-item" *ngIf="data.flete_por_via.aereo_count > 0">
+              <i class="fas fa-plane" style="color:#8b5cf6"></i>
+              <div>
+                <span class="fl-label">Aéreo</span>
+                <span class="fl-val">{{ formatUsd(data.flete_por_via.aereo_avg) }}</span>
+                <span class="fl-count">{{ data.flete_por_via.aereo_count }} con datos</span>
+              </div>
+            </div>
+            <div class="flete-sin" *ngIf="data.flete_por_via.maritimo_count === 0 && data.flete_por_via.aereo_count === 0">
+              Sin datos de costos aún
+            </div>
           </div>
         </div>
-        <div class="avance-ring-wrap">
-          <p class="avance-ring-lbl">Avance Operativo Global</p>
-          <div class="avance-ring"
-            [style.--pct]="data.kpis.pct_avance_promedio + '%'"
-            [style.--color]="colorPct(data.kpis.pct_avance_promedio)">
-            <span>{{ data.kpis.pct_avance_promedio }}%</span>
+
+        <div class="chart-card chart-grow">
+          <div class="chart-title"><i class="fas fa-bicycle"></i> Costo Logístico por Tipo de Bicicleta (USD prom.)</div>
+          <div *ngIf="!(data.precio_bici_x_caja?.length ?? 0)" class="chart-empty">
+            <i class="fas fa-inbox"></i> Guarda una importación con cajas y costos para ver este análisis
           </div>
-          <p class="avance-ring-sub">promedio · {{ data.kpis.total }} embarques</p>
+          <canvas #chartPrecioBici *ngIf="(data.precio_bici_x_caja?.length ?? 0) > 0"></canvas>
         </div>
+
+      </div>
+
+      <div class="chart-card chart-full">
+        <div class="chart-title"><i class="fas fa-box-open"></i> Costo de Paquetería por Importación (USD)</div>
+        <div class="costo-paq-sub">
+          Maniobras + Cargos adicionales + Flete terrestre + Flete internacional + Pernoctas + Paquetexpress + Demoras + Lavado + Rec. aduanero
+        </div>
+        <div *ngIf="costoPaqConDatos.length === 0" class="chart-empty">
+          <i class="fas fa-inbox"></i> Sin datos de costos en USD
+        </div>
+        <canvas #chartCostoPaq *ngIf="costoPaqConDatos.length > 0"></canvas>
       </div>
 
     </div>
+    </ng-container>
 
-    <!-- ══ Tabla de costos ════════════════════════════════════════════════════ -->
-    <div class="table-card">
-      <div class="table-head">
-        <div class="table-title"><i class="fas fa-table"></i> Resumen por Embarque</div>
-        <div class="table-order">
-          <span>Ordenar:</span>
-          <button [class.active]="ordenTabla === 'pct'"   (click)="ordenTabla = 'pct'">Avance</button>
-          <button [class.active]="ordenTabla === 'flete'" (click)="ordenTabla = 'flete'">Flete USD</button>
-          <button [class.active]="ordenTabla === 'costo'" (click)="ordenTabla = 'costo'">Costo Total</button>
+    <!-- ════════════════════════════════ TAB: EMBARQUES ══════════════════════ -->
+    <ng-container *ngIf="activeTab === 'embarques'">
+    <div class="tab-panel">
+
+      <div class="table-card">
+        <div class="table-head">
+          <div class="table-title"><i class="fas fa-list-alt"></i> Resumen por Embarque</div>
+          <div class="table-head-right">
+            <div class="temporada-wrap">
+              <span class="temporada-lbl"><i class="fas fa-calendar-week"></i> Temporada:</span>
+              <app-temporada-selector
+                [temporadas]="temporadasCerradas"
+                [seleccionada]="temporadaSelValor"
+                [incluirHistorico]="true"
+                labelActual="MY27 · actual"
+                (cambio)="onTemporadaCambio($event)">
+              </app-temporada-selector>
+            </div>
+            <div class="table-order">
+              <span>Ordenar:</span>
+              <button [class.active]="ordenTabla === 'llegada'" (click)="ordenTabla = 'llegada'">Llegada</button>
+              <button [class.active]="ordenTabla === 'costo'"   (click)="ordenTabla = 'costo'">Costo Total</button>
+              <button [class.active]="ordenTabla === 'bici'"    (click)="ordenTabla = 'bici'">Costo/Bici</button>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Referencia</th>
-              <th>Vía</th>
-              <th>Origen</th>
-              <th>Estado</th>
-              <th>Booking</th>
-              <th>Llegada Almacén</th>
-              <th>Tránsito</th>
-              <th>Flete Int. (USD)</th>
-              <th>Costo Total (MXN)</th>
-              <th>Avance</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let e of embarquesOrdenados" class="emb-row" (click)="irDetalle(e.id)">
-              <td>
-                <span class="ref-badge">{{ e.referencia }}</span>
-                <span class="ref-nombre">{{ e.nombre }}</span>
-              </td>
-              <td>
-                <span class="via-pill" [style.background]="colorVia(e.via_transporte) + '22'" [style.color]="colorVia(e.via_transporte)">
-                  <i class="fas" [ngClass]="e.via_transporte === 'AEREO' ? 'fa-plane' : 'fa-ship'"></i>
-                  {{ e.via_transporte === 'AEREO' ? 'Aéreo' : 'Marítimo' }}
-                </span>
-              </td>
-              <td class="td-gray">{{ e.log_origen || '—' }}</td>
-              <td>
-                <span class="estado-dot" [style.color]="colorEstado(e.estado)">
-                  <i class="fas fa-circle" style="font-size:.5rem"></i> {{ e.estado }}
-                </span>
-              </td>
-              <td class="td-gray">{{ e.log_fecha_booking ? (e.log_fecha_booking | date:'dd/MM/yy') : '—' }}</td>
-              <td class="td-gray">{{ e.des_llegada_almacen ? (e.des_llegada_almacen | date:'dd/MM/yy') : '—' }}</td>
-              <td class="td-num">{{ e.log_dias_transito_maritimo != null ? e.log_dias_transito_maritimo + ' d' : '—' }}</td>
-              <td class="td-num">{{ formatUsd(e.cos_flete_internacional_usd) }}</td>
-              <td class="td-num">{{ e.costo_total_pesos ? formatPesos(e.costo_total_pesos) : '—' }}</td>
-              <td>
-                <div class="pct-cell">
-                  <div class="pct-bar-bg">
-                    <div class="pct-bar-fill" [style.width.%]="e.pct_global" [style.background]="colorPct(e.pct_global)"></div>
-                  </div>
-                  <span class="pct-num" [style.color]="colorPct(e.pct_global)">{{ e.pct_global }}%</span>
+        <div class="table-search">
+          <i class="fas fa-search table-search-icon"></i>
+          <input class="table-search-input" type="text" [(ngModel)]="textoBuscador" placeholder="Buscar por referencia, nombre, origen, contenido..." />
+          <button *ngIf="textoBuscador" class="table-search-clear" (click)="textoBuscador = ''">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="pipeline-legend">
+          <span class="leg-sep">Días:</span>
+          <span class="leg-item leg-ok"><span class="leg-dot"></span>Adelantado / A tiempo</span>
+          <span class="leg-item leg-late"><span class="leg-dot"></span>Atrasado</span>
+          <span class="leg-divider"></span>
+          <span class="leg-item"><span class="rk rk-p">P</span>Proyectado</span>
+          <span class="leg-item"><span class="rk rk-r">R</span>Real</span>
+          <span class="leg-item leg-realcell"><span class="leg-cell-sw"></span>Fecha real registrada</span>
+          <span class="leg-divider"></span>
+          <span class="leg-sep">Filtrar por etapa:</span>
+          <button class="etapa-pill etapa-all"
+                  [class.active]="!filtroEtapa && !soloPendientes"
+                  (click)="seleccionarTodas()">
+            Todas <span class="etapa-count">{{ embarquesTemporada.length }}</span>
+          </button>
+          <button class="etapa-pill pill-pendientes"
+                  [class.active]="soloPendientes"
+                  (click)="toggleSinLiberar()"
+                  title="Todo lo que sigue en proceso (aún no Liberado)">
+            <i class="fas fa-hourglass-half"></i> Sin liberar <span class="etapa-count">{{ countPendientes }}</span>
+          </button>
+          <span class="etapa-divider"></span>
+          <button *ngFor="let et of ETAPAS"
+                  class="etapa-pill"
+                  [class.active]="filtroEtapa === et.key"
+                  [style.--ec]="et.color"
+                  [style.--eb]="et.bg"
+                  (click)="seleccionarEtapa(et.key)">
+            {{ et.key }} <span class="etapa-count">{{ countEtapa(et.key) }}</span>
+          </button>
+        </div>
+        <div class="cards-wrap pipeline-wrap">
+
+          <div *ngFor="let e of embarquesOrdenados" class="emb-card" (click)="irDetalle(e.id)">
+
+            <!-- ══ Banda superior: identidad + costos + notas ══ -->
+            <div class="ec-top">
+
+              <!-- Identidad -->
+              <div class="ec-ident">
+                <div class="ec-ref-row">
+                  <span class="ref-badge">{{ e.referencia }}</span>
+                  <span class="via-pill"
+                    [style.background]="colorVia(e.via_transporte) + '1a'"
+                    [style.color]="colorVia(e.via_transporte)">
+                    <i class="fas" [ngClass]="e.via_transporte === 'AEREO' ? 'fa-plane' : 'fa-ship'"></i>
+                    {{ e.via_transporte === 'AEREO' ? 'Aéreo' : 'Marítimo' }}
+                  </span>
+                  <span class="ref-estado" [ngStyle]="estadoStyle(e.estado_actual)">{{ e.estado_actual }}</span>
                 </div>
-              </td>
-            </tr>
-            <tr *ngIf="embarquesOrdenados.length === 0">
-              <td colspan="10" class="sin-datos"><i class="fas fa-inbox"></i> Sin embarques con los filtros seleccionados</td>
-            </tr>
-          </tbody>
-        </table>
+                <span class="ec-nombre" [title]="e.nombre">{{ e.nombre || abrevContenido(e.log_tipo_productos) }}</span>
+                <div class="ec-meta">
+                  <span class="ec-chip ec-chip-origen" [title]="origenBonito(e.log_origen)">
+                    <i class="fas fa-map-marker-alt"></i> {{ origenBonito(e.log_origen) }}
+                  </span>
+                  <span class="ec-chip ec-chip-contenido" [title]="e.log_tipo_productos">
+                    <i class="fas fa-box-open"></i> {{ abrevContenido(e.log_tipo_productos) }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Proy/Real (costo) -->
+              <div class="ec-costos">
+                <span class="ec-block-lbl">Costo Proy / Real</span>
+                <div class="costo-line">
+                  <span class="ctag ctag-proy">PROY</span>
+                  <span class="cval" [class.cval-sin-dato]="!e.costo_proyectado_pesos">
+                    {{ e.costo_proyectado_pesos ? formatPesos(e.costo_proyectado_pesos) : '—' }}
+                  </span>
+                </div>
+                <div class="costo-line">
+                  <span class="ctag ctag-real">REAL</span>
+                  <span class="cval cval-real" [class.cval-sin-dato]="!e.costo_real_pesos">
+                    {{ e.costo_real_pesos ? formatPesos(e.costo_real_pesos) : '—' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Costo / Bici -->
+              <div class="ec-bici">
+                <span class="ec-block-lbl">Costo / Bici</span>
+                <ng-container *ngIf="e.costo_por_bicicleta; else sinBici">
+                  <span class="bici-num">${{ e.costo_por_bicicleta | number:'1.2-2' }} <span class="bici-cur">USD</span></span>
+                  <span class="bici-sub" *ngIf="e.cos_cantidad_bicicletas">{{ e.cos_cantidad_bicicletas }} uds</span>
+                </ng-container>
+                <ng-template #sinBici><span class="td-gray">—</span></ng-template>
+              </div>
+
+              <!-- Notas -->
+              <div class="ec-notas" (click)="abrirNotasEdit(e, $event)">
+                <span class="ec-block-lbl">Notas <i class="fas fa-pen notas-edit-icon"></i></span>
+                <div class="notas-editor" *ngIf="notasEditId === e.id" (click)="$event.stopPropagation()">
+                  <textarea class="notas-input"
+                    [(ngModel)]="notasEditVal"
+                    (keydown.escape)="cancelarNotas()"
+                    (keydown.control.enter)="confirmarNotas(e)"
+                    placeholder="Escribe una nota..."
+                    rows="3"></textarea>
+                  <div class="notas-actions-row">
+                    <span class="notas-hint">Ctrl+Enter guarda · Esc cancela</span>
+                    <div class="notas-actions">
+                      <button class="notas-save" (click)="$event.stopPropagation(); confirmarNotas(e)" title="Guardar"><i class="fas fa-check"></i></button>
+                      <button class="notas-cancel" (click)="$event.stopPropagation(); cancelarNotas()" title="Cancelar"><i class="fas fa-times"></i></button>
+                    </div>
+                  </div>
+                </div>
+                <ng-container *ngIf="notasEditId !== e.id">
+                  <div class="ec-notas-lista" *ngIf="e.notas; else sinNotas" [title]="e.notas">
+                    <div class="ec-nota-linea" *ngFor="let linea of notasLineas(e.notas)">{{ linea }}</div>
+                  </div>
+                  <ng-template #sinNotas>
+                    <span class="ec-notas-text notas-empty">Sin notas — clic para agregar</span>
+                  </ng-template>
+                </ng-container>
+              </div>
+            </div>
+
+            <!-- ══ Banda inferior: tira de etapas (proyectado vs real) ══ -->
+            <div class="ec-pipeline">
+              <div *ngFor="let st of PIPELINE_STAGES" class="ec-stage" [ngClass]="stageCls(stage(e, st.key))">
+                <span class="ec-stage-lbl">{{ st.label }}</span>
+                <span class="ec-stage-p">
+                  <span class="rk rk-p" title="Proyectado">P</span>{{ fmtD(stage(e, st.key)?.proy) }}
+                </span>
+                <span class="ec-stage-r">
+                  <span class="rk rk-r" title="Real">R</span>{{ fmtD(stage(e, st.key)?.real) }}
+                </span>
+                <span class="ec-stage-d" *ngIf="stage(e, st.key)?.delta != null"
+                      [ngClass]="deltaClass(stage(e, st.key)!.delta)">
+                  {{ absDelta(stage(e, st.key)!.delta!) }}d
+                </span>
+              </div>
+              <!-- Latencia total -->
+              <div class="ec-stage ec-stage-lat">
+                <span class="ec-stage-lbl">Lat. Total</span>
+                <span class="lat-total-badge" *ngIf="e.lat_total != null" [style.color]="latTotalColor(e.lat_total)">
+                  {{ e.lat_total }}d
+                </span>
+                <span class="td-gray" *ngIf="e.lat_total == null">—</span>
+              </div>
+            </div>
+
+          </div>
+
+          <div *ngIf="embarquesOrdenados.length === 0" class="sin-datos">
+            <i class="fas fa-inbox"></i> Sin embarques con los filtros seleccionados
+          </div>
+        </div>
       </div>
+
     </div>
+    </ng-container>
 
   </ng-container>
+
+  <!-- ══════════════════════ MODAL: LATENCIA DETALLE ══════════════════════ -->
+  <div class="modal-overlay" *ngIf="modalLat" (click)="cerrarModalLat()">
+    <div class="modal-panel" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-header-text">
+          <h3 class="modal-titulo">{{ modalLat.titulo }}</h3>
+          <span class="modal-sub">{{ modalLat.subtitulo }}</span>
+        </div>
+        <button class="modal-close-btn" (click)="cerrarModalLat()"><i class="fas fa-times"></i></button>
+      </div>
+
+      <!-- Stats strip -->
+      <div class="modal-stats-strip" *ngIf="modalLat.items.length">
+        <div class="mss-item">
+          <span class="mss-val">{{ modalLat.n }}</span>
+          <span class="mss-lbl">embarques</span>
+        </div>
+        <div class="mss-sep"></div>
+        <div class="mss-item">
+          <span class="mss-val"
+            [style.color]="modalLat.promedio !== null ? (modalLat.promedio > 60 ? '#ef4444' : modalLat.promedio > 40 ? '#f59e0b' : '#22c55e') : '#64748b'">
+            {{ modalLat.promedio !== null ? modalLat.promedio + 'd' : '—' }}
+          </span>
+          <span class="mss-lbl">promedio</span>
+        </div>
+        <div class="mss-sep"></div>
+        <div class="mss-item">
+          <span class="mss-val" style="color:#22c55e">{{ modalLat.min_dias !== null ? modalLat.min_dias + 'd' : '—' }}</span>
+          <span class="mss-lbl">mínimo</span>
+        </div>
+        <div class="mss-sep"></div>
+        <div class="mss-item">
+          <span class="mss-val" style="color:#ef4444">{{ modalLat.max_dias !== null ? modalLat.max_dias + 'd' : '—' }}</span>
+          <span class="mss-lbl">máximo</span>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-empty" *ngIf="!modalLat.items.length">
+          <i class="fas fa-inbox"></i> Sin embarques con ambas fechas registradas
+        </p>
+        <div class="modal-table-wrap" *ngIf="modalLat.items.length">
+          <table class="lat-modal-table">
+            <thead>
+              <tr>
+                <th class="th-rank">#</th>
+                <th>Ref.</th>
+                <th>Nombre</th>
+                <th>Origen</th>
+                <th>Inicio</th>
+                <th>Fin</th>
+                <th class="th-dias">Días</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of modalLat.items; let i = index"
+                class="lat-modal-row"
+                [class.row-over60]="item.dias > 60"
+                [class.row-over40]="item.dias > 40 && item.dias <= 60"
+                (click)="irDetalle(item.id); cerrarModalLat()">
+                <td class="td-rank">{{ i + 1 }}</td>
+                <td><span class="ref-badge">{{ item.referencia }}</span></td>
+                <td class="td-nombre">{{ item.nombre || '—' }}</td>
+                <td><span class="origen-chip">{{ item.log_origen || '—' }}</span></td>
+                <td class="td-fecha">{{ item.fecha_ini ? (item.fecha_ini | date:'dd/MM/yy') : '—' }}</td>
+                <td class="td-fecha">
+                  <ng-container *ngIf="item.fecha_fin; else sinFin">{{ item.fecha_fin | date:'dd/MM/yy' }}</ng-container>
+                  <ng-template #sinFin><span class="tag-pendiente">Pendiente</span></ng-template>
+                </td>
+                <td class="td-dias-val">
+                  <span class="dias-badge"
+                    [style.background]="item.dias > 60 ? 'rgba(239,68,68,.12)' : item.dias > 40 ? 'rgba(245,158,11,.12)' : 'rgba(34,197,94,.12)'"
+                    [style.color]="item.dias > 60 ? '#ef4444' : item.dias > 40 ? '#f59e0b' : '#22c55e'"
+                    [style.border-color]="item.dias > 60 ? 'rgba(239,68,68,.3)' : item.dias > 40 ? 'rgba(245,158,11,.3)' : 'rgba(34,197,94,.3)'">
+                    {{ item.dias }}d
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════ MODAL: ETIQUETADO COMPLETO ═══════════════════ -->
+  <div class="modal-overlay" *ngIf="modalEtiq && data?.latencias?.etiquetado" (click)="cerrarModalEtiq()">
+    <div class="modal-panel modal-panel--wide" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-header-text">
+          <h3 class="modal-titulo"><i class="fas fa-tag"></i> Etiquetado — Estimado vs Real</h3>
+          <span class="modal-sub">
+            Estimado prom: {{ data?.latencias?.etiquetado?.proyectado_promedio | number:'1.0-1' }}d (n={{ data?.latencias?.etiquetado?.n_proyectado }}) &nbsp;·&nbsp;
+            Real prom: {{ data?.latencias?.etiquetado?.real_promedio !== null ? (data?.latencias?.etiquetado?.real_promedio | number:'1.0-1') + 'd' : '—' }} (n={{ data?.latencias?.etiquetado?.n_real }})
+            <span *ngIf="etiqRatio !== null" class="etiq-ratio-badge" [class.etiq-ratio-badge--over]="etiqRatio > 1">
+              {{ etiqRatio }}×
+            </span>
+          </span>
+        </div>
+        <button class="modal-close-btn" (click)="cerrarModalEtiq()"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-table-wrap">
+          <table class="lat-modal-table etiq-modal-table">
+            <thead>
+              <tr>
+                <th>Ref.</th>
+                <th>Nombre</th>
+                <th class="th-num">Estimado (días)</th>
+                <th class="th-num">Real (días)</th>
+                <th class="th-num">Diferencia</th>
+                <th class="th-num">Barra</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let e of data?.latencias?.etiquetado?.x_embarque" class="lat-modal-row" (click)="irDetalle(e.id); cerrarModalEtiq()">
+                <td><span class="ref-badge">{{ e.referencia }}</span></td>
+                <td class="td-nombre">{{ e.nombre || '—' }}</td>
+                <td class="td-num">{{ e.proyectado ?? '—' }}</td>
+                <td class="td-num" [style.color]="e.diferencia !== null ? (e.diferencia > 0 ? '#ef4444' : '#22c55e') : ''">
+                  {{ e.real ?? '—' }}
+                </td>
+                <td class="td-num td-diff"
+                  [style.color]="e.diferencia !== null ? (e.diferencia > 0 ? '#ef4444' : e.diferencia < 0 ? '#22c55e' : '#64748b') : '#64748b'">
+                  {{ e.diferencia !== null ? ((e.diferencia > 0 ? '+' : '') + e.diferencia + 'd') : '—' }}
+                </td>
+                <td class="td-bar-cell">
+                  <div class="etiq-bar-wrap" *ngIf="e.proyectado !== null">
+                    <div class="etiq-bar etiq-bar--est" [style.width.px]="Math.min(e.proyectado! * 3, 120)"></div>
+                    <div class="etiq-bar etiq-bar--real"
+                      *ngIf="e.real !== null"
+                      [style.width.px]="Math.min(e.real * 3, 120)"
+                      [style.background]="e.diferencia !== null && e.diferencia > 0 ? '#ef444488' : '#22c55e88'">
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════ MODAL: EMBARQUES DETALLE ═════════════════════ -->
+  <div class="modal-overlay" *ngIf="modalEmbarquesDet" (click)="cerrarModalEmbarquesDet()">
+    <div class="modal-panel modal-panel--wide" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-header-text">
+          <h3 class="modal-titulo">{{ modalEmbarquesDet.titulo }}</h3>
+          <span class="modal-sub">{{ modalEmbarquesDet.subtitulo }}</span>
+        </div>
+        <button class="modal-close-btn" (click)="cerrarModalEmbarquesDet()"><i class="fas fa-times"></i></button>
+      </div>
+
+      <!-- Stats strip — modo resumen -->
+      <div class="modal-stats-strip" *ngIf="modalEmbarquesDet.mode === 'resumen'">
+        <div class="mss-item">
+          <span class="mss-val">{{ modalEmbarquesDet.n }}</span>
+          <span class="mss-lbl">embarques</span>
+        </div>
+      </div>
+
+      <!-- Stats strip — modo costos -->
+      <div class="modal-stats-strip" *ngIf="modalEmbarquesDet.mode === 'costos' && modalEmbarquesDet.total_usd">
+        <div class="mss-item">
+          <span class="mss-val">{{ modalEmbarquesDet.n }}</span>
+          <span class="mss-lbl">con flete</span>
+        </div>
+        <div class="mss-sep"></div>
+        <div class="mss-item">
+          <span class="mss-val" style="color:#3b82f6">{{ abreviarUsd(modalEmbarquesDet.total_usd) }}</span>
+          <span class="mss-lbl">total USD</span>
+        </div>
+        <div class="mss-sep"></div>
+        <div class="mss-item">
+          <span class="mss-val" style="color:#8b5cf6">{{ abreviarUsd(modalEmbarquesDet.total_usd / modalEmbarquesDet.n) }}</span>
+          <span class="mss-lbl">promedio</span>
+        </div>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- ── Tabla modo: resumen ──────────────────────────────────── -->
+        <div class="modal-table-wrap" *ngIf="modalEmbarquesDet.mode === 'resumen'">
+          <table class="lat-modal-table">
+            <thead>
+              <tr>
+                <th class="th-rank">#</th>
+                <th>Ref.</th>
+                <th>Contenido</th>
+                <th>Origen</th>
+                <th>Vía</th>
+                <th>Estado</th>
+                <th>Avance</th>
+                <th>Llegada Almacén</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let e of modalEmbarquesDet.items; let i = index"
+                class="lat-modal-row"
+                (click)="irDetalle(e.id); cerrarModalEmbarquesDet()">
+                <td class="td-rank">{{ i + 1 }}</td>
+                <td><span class="ref-badge">{{ e.referencia }}</span></td>
+                <td class="td-nombre">
+                  <span class="contenido-chip" [title]="e.log_tipo_productos">{{ abrevContenido(e.log_tipo_productos) }}</span>
+                </td>
+                <td><span class="origen-chip">{{ e.log_origen || '—' }}</span></td>
+                <td>
+                  <span class="via-pill"
+                    [style.background]="colorVia(e.via_transporte) + '1a'"
+                    [style.color]="colorVia(e.via_transporte)">
+                    <i class="fas" [ngClass]="e.via_transporte === 'AEREO' ? 'fa-plane' : 'fa-ship'"></i>
+                    {{ e.via_transporte === 'AEREO' ? 'Aéreo' : 'Mar.' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="estatus-badge"
+                    [style.color]="colorEstado(e.estado)"
+                    [style.border-color]="colorEstado(e.estado) + '44'"
+                    [style.background]="colorEstado(e.estado) + '12'">
+                    {{ e.estado | titlecase }}
+                  </span>
+                </td>
+                <td>
+                  <ng-container *ngIf="e.pct_avance !== undefined && e.pct_avance !== null; else sinAvance">
+                    <div class="pct-cell" style="min-width:90px">
+                      <div class="pct-bar-bg" style="flex:none;width:60px">
+                        <div class="pct-bar-fill" [style.width.%]="e.pct_avance" [style.background]="colorPct(e.pct_avance)"></div>
+                      </div>
+                      <span class="pct-num" [style.color]="colorPct(e.pct_avance)">{{ e.pct_avance }}%</span>
+                    </div>
+                  </ng-container>
+                  <ng-template #sinAvance><span class="td-gray">—</span></ng-template>
+                </td>
+                <td class="td-fecha">
+                  <ng-container *ngIf="e.des_llegada_almacen; else sinLlegadaMod">
+                    {{ e.des_llegada_almacen | date:'dd/MM/yy' }}
+                    <span class="llegada-rel">{{ llegadaRelativa(e.des_llegada_almacen) }}</span>
+                  </ng-container>
+                  <ng-template #sinLlegadaMod><span class="tag-pendiente">Pendiente</span></ng-template>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ── Tabla modo: costos ──────────────────────────────────── -->
+        <div class="modal-table-wrap" *ngIf="modalEmbarquesDet.mode === 'costos'">
+          <table class="lat-modal-table">
+            <thead>
+              <tr>
+                <th class="th-rank">#</th>
+                <th>Ref.</th>
+                <th>Origen</th>
+                <th>Vía</th>
+                <th class="th-num">Flete Internacional</th>
+                <th class="th-num">Costo Total MXN</th>
+                <th class="th-num">Costo / Bici</th>
+                <th class="th-num">Bicis</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let e of modalEmbarquesDet.items; let i = index"
+                class="lat-modal-row"
+                (click)="irDetalle(e.id); cerrarModalEmbarquesDet()">
+                <td class="td-rank">{{ i + 1 }}</td>
+                <td><span class="ref-badge">{{ e.referencia }}</span></td>
+                <td><span class="origen-chip">{{ e.log_origen || '—' }}</span></td>
+                <td>
+                  <span class="via-pill"
+                    [style.background]="colorVia(e.via_transporte) + '1a'"
+                    [style.color]="colorVia(e.via_transporte)">
+                    <i class="fas" [ngClass]="e.via_transporte === 'AEREO' ? 'fa-plane' : 'fa-ship'"></i>
+                    {{ e.via_transporte === 'AEREO' ? 'Aéreo' : 'Mar.' }}
+                  </span>
+                </td>
+                <td class="td-num" style="color:#60a5fa;font-weight:600">
+                  {{ e.cos_flete_internacional_usd ? formatUsd(e.cos_flete_internacional_usd) : '—' }}
+                </td>
+                <td class="td-num">{{ e.costo_total_pesos ? formatPesos(e.costo_total_pesos) : '—' }}</td>
+                <td class="td-num" style="color:#a78bfa;font-weight:600">
+                  {{ e.costo_por_bicicleta ? ('$' + (e.costo_por_bicicleta | number:'1.2-2') + ' USD') : '—' }}
+                </td>
+                <td class="td-num td-gray">{{ e.cos_cantidad_bicicletas || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
 </div>

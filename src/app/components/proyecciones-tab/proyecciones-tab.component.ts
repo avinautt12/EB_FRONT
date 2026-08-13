@@ -34,6 +34,7 @@ export interface ProductoBusqueda {
   color: string;
   talla: string;
   label: string;
+  fuente?: string;
 }
 
 export interface VarianteColor {
@@ -47,6 +48,7 @@ export interface ProductoGrupo {
   marca: string;
   colores: VarianteColor[];
   soloUna?: ProductoBusqueda;
+  fuente?: string;
 }
 
 export interface ForecastRow {
@@ -57,6 +59,10 @@ export interface ForecastRow {
   modelo: string;
   color: string;
   talla: string;
+  fuente?: string;
+  categ_path?: string;
+  actualizado_en?: string;
+  precio_publico?: number | null;
   mayo: number;
   junio: number;
   julio: number;
@@ -97,6 +103,8 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
 
   @Input() clienteClave: string | null = null;
   @Input() idCliente: number | null = null;
+  @Input() idGrupoOdoo: number | null = null;
+  @Input() ocultarBotonesImport = false;
   @Output() rowCountChange = new EventEmitter<number>();
 
   @ViewChild('tableScroll',  { read: ElementRef }) tableScroll!:  ElementRef<HTMLElement>;
@@ -125,10 +133,12 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   modoExpandido = false;   // false = compact (total only), true = 12 meses
   modoEdicion = false;
   vistaActiva: 'forecast' | 'avance' = 'forecast';
+  _seccionesColapsadas = new Set<string>();
 
   // OTP dialog + permisos
   otpDialog = { abierto: false, codigo: '', error: '', verificando: false };
   permisoEdicion: 'super' | 'eliminar' | 'meses' | null = null;
+  sincronizando = false;
 
   get puedeEliminar(): boolean {
     return this.permisoEdicion === 'super' || this.permisoEdicion === 'eliminar';
@@ -139,7 +149,13 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   }
 
   // Avance vs Pedidos
-  avanceRows: AvanceRow[] = [];
+  private _avanceMapCache = new Map<string, AvanceRow>();
+  private _avanceRows: AvanceRow[] = [];
+  get avanceRows(): AvanceRow[] { return this._avanceRows; }
+  set avanceRows(rows: AvanceRow[]) {
+    this._avanceRows = rows;
+    this._avanceMapCache = new Map(rows.map(r => [r.sku, r]));
+  }
   avanceCargando = false;
   avanceError: string | null = null;
 
@@ -155,7 +171,12 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
     colorActivo: null as string | null,
     offset: 0,
     hasMore: false,
+    error: '' as string,
   };
+
+  // Price catalog cache: loaded once when the tab opens, used for instant lookups
+  private _preciosCatalogo = new Map<string, { precio?: number; precio_publico?: number }>();
+  private _nivelPrecioCatalogo = '';
 
   // Import state
   importando = false;
@@ -171,13 +192,153 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
     return [...new Set(this.rows.map(r => r.modelo).filter(Boolean))].sort();
   }
 
+  // Palabras clave para detectar ropa/accesorios de vestir
+  private static readonly _ROPA_KW = [
+    'JERSEY', 'SHORT', 'BIB', 'CULOTTE', 'JACKET', 'CHAQUETA', 'CHAMARRA',
+    'VEST', 'CHALECO', 'MAILLOT', 'GOGGLE', 'GLASSES', 'LENTES', 'GLOVE',
+    'GUANTE', 'TIGHTS', 'MALLAS', 'BALACLAVA', 'SOCKS', 'CALCETINES', 'CAP',
+    'GORRA', 'SHOE', 'ZAPATILLA', 'BUFF', 'SOFTSHELL', 'WINDBREAKER', 'THERMAL',
+    'POLO', 'CAMISETA', 'LEGWARMER', 'ARMWARMER', 'OVERSOCK', 'BEANIE',
+  ];
+
+  // Palabras clave para accesorios (cascos, zapatos, lentes, protecciones, mochilas) → solo diciembre
+  private static readonly _ACCESORIO_KW = [
+    // Cascos
+    'CASCO', 'HELMET',
+    // Zapatos
+    'SHOE', 'ZAPATILLA', 'OVERSHOE',
+    // Lentes / gafas
+    'GOGGLE', 'GLASSES', 'LENTES', 'SUNGLASSES', 'GAFA',
+    // Protecciones
+    'PROTECCION', 'PROTECTION', 'PROTECTOR', 'RODILLERA', 'CODDERA',
+    'KNEE', 'ELBOW', 'SHIN GUARD',
+    // Mochilas
+    'MOCHILA', 'BACKPACK', 'HYDRATION',
+  ];
+
+  // Palabras clave para detectar refacciones/componentes → sección Syncros
+  private static readonly _PARTE_KW = [
+    'SYNCROS', 'MANUBRIO', 'HANDLEBAR', 'DIRECCION', 'HEADSET', 'JUEGO DE DIR',
+    'POTENCIA', 'STEM', 'TIJA', 'SEATPOST', 'SILLON', 'SILLIN', 'SADDLE',
+    'PEDAL', 'PUÑO', 'GRIP', 'TAPA', 'ALMOHADILLA', 'ADAPTADOR', 'DADO',
+    'ESPACIADOR', 'CANASTILLA', 'BOTTLE CAGE', 'BRIDA', 'ABRAZADERA', 'CLAMP',
+    'CASSETTE', 'CADENA', 'CHAIN', 'FRENO', 'BRAKE', 'ROTOR', 'PASTILLA',
+    'PLATO', 'CHAINRING', 'BIELA', 'CRANK', 'HORQUILLA', 'FORK', 'AMORTIGUADOR',
+    'SHOCK', 'CUADRO', 'FRAME', 'TORNILLO', 'BOLT', 'KIT DE TAPA', 'KIT SYN',
+    ' SYN ',   // sufijo Syncros al final del nombre (ej. "PLASMA 6 SYN")
+    'SYN ',
+  ];
+
   get rowsFiltrados(): ForecastRow[] {
     return this.rows.filter(r => {
       if (r._eliminar) return false;
       if (this.filtroMarca && r.marca !== this.filtroMarca) return false;
       if (this.filtroModelo && r.modelo !== this.filtroModelo) return false;
+      // Ocultar bicicletas con 0 unidades fuera del modo edición.
+      // Productos excel (apparel/Syncros) siempre se muestran para que el usuario pueda editarlos.
+      if (!this.modoEdicion && !r._nuevo && this.calcTotal(r) === 0) return false;
       return true;
     });
+  }
+
+  /** Filas agrupadas: nuevas → secciones por tipo/marca */
+  get rowsAgrupados(): { label: string; brand: string; rows: ForecastRow[] }[] {
+    const all    = this.rowsFiltrados;
+    const nuevas = all.filter(r => r._nuevo);
+
+    const esRopa = (r: ForecastRow): boolean => {
+      const n = (r.producto || '').toUpperCase();
+      return ProyeccionesTabComponent._ROPA_KW.some(kw => n.includes(kw));
+    };
+
+    // Refacciones/componentes: si la ropa tiene prioridad, no es Syncros
+    const esSyncros = (r: ForecastRow): boolean => {
+      if (esRopa(r)) return false;
+      const n = ' ' + (r.producto || '').toUpperCase() + ' ';
+      const m = (r.marca || '').toUpperCase();
+      return m === 'SYNCROS' ||
+             ProyeccionesTabComponent._PARTE_KW.some(kw => n.includes(kw));
+    };
+
+    // Extrae la marca desde categ_path de Odoo (primer segmento): "SCOTT / BICICLETA / ..." → "SCOTT"
+    const _categBrand = (r: ForecastRow): string => {
+      const cat = (r.categ_path || '').toUpperCase().trim();
+      if (!cat || !cat.includes(' / ')) return '';
+      return cat.split(' / ')[0].trim();
+    };
+
+    // Detectar bicicleta usando categ_path de Odoo; fallback por nombre de producto
+    const esBicicleta = (r: ForecastRow): boolean => {
+      const cat = (r.categ_path || '').toUpperCase().trim();
+      if (cat) {
+        if (cat.includes('BICICLET') || cat === 'BICIS' || cat === 'BICICLETAS') return true;
+        if (cat.includes(' / ') && !cat.includes('BICICLET')) return false;
+      }
+      const n = (r.producto || '').toUpperCase();
+      return n.includes('BICICLET') || n.includes('E-BIKE') || n.includes('EBIKE');
+    };
+
+    const esBici = (r: ForecastRow): boolean => {
+      if (r._nuevo || esRopa(r) || esSyncros(r) || !esBicicleta(r)) return false;
+      return true;
+    };
+
+    // Inferir marca: priorizar categ_path, luego campo marca, luego nombre de producto
+    const _marcaBici = (r: ForecastRow): string => {
+      const brand = _categBrand(r);
+      if (brand === 'MEGAMO' || brand === 'SCOTT') return brand;
+      const m = (r.marca || '').toUpperCase();
+      if (m === 'MEGAMO' || m === 'SCOTT') return m;
+      const n = (r.producto || '').toUpperCase();
+      if (n.includes('MEGAMO')) return 'MEGAMO';
+      if (n.includes('SCOTT')) return 'SCOTT';
+      return m;
+    };
+    const megamo  = all.filter(r => esBici(r) && _marcaBici(r) === 'MEGAMO');
+    const scott   = all.filter(r => esBici(r) && _marcaBici(r) === 'SCOTT');
+    const syncros = all.filter(r => !r._nuevo && !esBici(r) && esSyncros(r));
+
+    // Ropa/accesorios de vestir agrupados por marca (todo lo que no es bici ni Syncros)
+    const apparel = all.filter(r => !r._nuevo && !esBici(r) && !esSyncros(r));
+    const marcasApparel = [...new Set(apparel.map(r => (r.marca || 'N/A').toUpperCase()))].sort();
+
+    const dated: { label: string; brand: string; rows: ForecastRow[] }[] = [];
+    if (megamo.length)  dated.push({ label: 'Proyección Bicicletas Megamo', brand: 'MEGAMO',  rows: megamo  });
+    if (scott.length)   dated.push({ label: 'Proyección Bicicletas Scott',  brand: 'SCOTT',   rows: scott   });
+    if (syncros.length) dated.push({ label: 'Syncros',                      brand: 'SYNCROS', rows: syncros });
+
+    for (const m of marcasApparel) {
+      const rows = apparel.filter(r => (r.marca || 'N/A').toUpperCase() === m);
+      if (!rows.length) continue;
+      const label = m === 'N/A' ? 'Otros' : `Apparel ${m.charAt(0) + m.slice(1).toLowerCase()}`;
+      dated.push({ label, brand: `APPAREL_${m}`, rows });
+    }
+
+    // Sort sections by most recently updated row (newest section on top)
+    dated.sort((a, b) => {
+      const aDate = a.rows[0]?.actualizado_en ?? '';
+      const bDate = b.rows[0]?.actualizado_en ?? '';
+      return bDate < aDate ? -1 : bDate > aDate ? 1 : 0;
+    });
+
+    const sections: { label: string; brand: string; rows: ForecastRow[] }[] = [];
+    if (nuevas.length) sections.push({ label: '', brand: 'nuevo', rows: nuevas });
+    sections.push(...dated);
+
+    return sections;
+  }
+
+  toggleSeccion(brand: string): void {
+    if (this._seccionesColapsadas.has(brand)) {
+      this._seccionesColapsadas.delete(brand);
+    } else {
+      this._seccionesColapsadas.add(brand);
+    }
+    this.cdr.markForCheck();
+  }
+
+  isColapsada(brand: string): boolean {
+    return this._seccionesColapsadas.has(brand);
   }
 
   get avanceRowsFiltrados(): AvanceRow[] {
@@ -209,16 +370,9 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
     return this.rowsFiltrados.reduce((s, r) => s + this.calcTotal(r), 0);
   }
 
-  /** Mapa sku → AvanceRow para acceso O(1) desde la plantilla */
-  get avanceMap(): Map<string, AvanceRow> {
-    const m = new Map<string, AvanceRow>();
-    for (const r of this.avanceRows) { m.set(r.sku, r); }
-    return m;
-  }
-
   /** Devuelve el restante (forecast − pedido) si ya se cargó avance, o el total bruto. */
   getRestante(row: ForecastRow): number {
-    const av = this.avanceMap.get(row.sku);
+    const av = this._avanceMapCache.get(row.sku);
     return av != null ? av.restante : this.calcTotal(row);
   }
 
@@ -233,7 +387,7 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   }
 
   totalMes(mes: keyof ForecastRow): number {
-    return this.rowsFiltrados.reduce((s, r) => s + (Number(r[mes]) || 0), 0);
+    return this.rowsFiltrados.reduce((s, r) => s + this.getMesDisplay(r, mes), 0);
   }
 
   totalPrecioMes(mes: keyof ForecastRow): number {
@@ -244,12 +398,146 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
     }, 0);
   }
 
+  formatPrecioCorto(v: number): string {
+    if (!v) return '$0';
+    if (Math.abs(v) >= 1_000_000) return '$' + (v / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (Math.abs(v) >= 1_000)     return '$' + Math.round(v / 1_000) + 'K';
+    return '$' + Math.round(v);
+  }
+
+  totalPrecioMarcaMes(marca: string, mes: keyof ForecastRow): number {
+    return this.rowsFiltrados
+      .filter(r => (r.marca || '').toUpperCase() === marca)
+      .reduce((s, r) => {
+        const qty    = Number(r[mes]) || 0;
+        const precio = Number(r['precio']) || 0;
+        return s + qty * precio;
+      }, 0);
+  }
+
+  /** Pre-calcula precios y unidades por sección × mes para el footer compacto */
+  get desgloseData(): { brand: string; cls: string; label: string; meses: Record<string, { precio: number; count: number }> }[] {
+    const configs = [
+      { brand: 'MEGAMO',        cls: 'megamo',  label: 'Megamo'  },
+      { brand: 'SCOTT',         cls: 'scott',   label: 'Scott'   },
+      { brand: 'APPAREL_SCOTT', cls: 'apparel', label: 'Apparel' },
+      { brand: 'SYNCROS',       cls: 'syncros', label: 'Syncros' },
+    ];
+    return configs.map(cfg => {
+      const rows = this._seccionRows(cfg.brand);
+      const meses: Record<string, { precio: number; count: number }> = {};
+      for (const mes of MESES) {
+        meses[mes] = {
+          precio: rows.reduce((s, r) => s + (Number(r[mes as keyof ForecastRow]) || 0) * (Number(r.precio) || 0), 0),
+          count:  rows.filter(r => (Number(r[mes as keyof ForecastRow]) || 0) > 0).length,
+        };
+      }
+      return { ...cfg, meses };
+    });
+  }
+
   get totalPrecioGeneral(): number {
     return this.rowsFiltrados.reduce((s, r) => {
       const total  = MESES.reduce((t, m) => t + (Number(r[m]) || 0), 0);
       const precio = Number(r['precio']) || 0;
       return s + total * precio;
     }, 0);
+  }
+
+  // ── Totales por sección (bikes, apparel, syncros) ──────────────────────────
+  private _seccionRows(brand: string): ForecastRow[] {
+    const sec = this.rowsAgrupados.find(s => s.brand === brand);
+    return sec ? sec.rows : [];
+  }
+  private _seccionUnidades(brand: string): number {
+    return this._seccionRows(brand).reduce((s, r) => s + this.calcTotal(r), 0);
+  }
+  private _seccionCosto(brand: string): number {
+    return this._seccionRows(brand).reduce((s, r) => s + this.calcTotal(r) * (Number(r.precio) || 0), 0);
+  }
+  private _seccionCuentas(brand: string): number {
+    return this._seccionRows(brand).filter(r => this.calcTotal(r) > 0).length;
+  }
+
+  // Megamo bikes
+  get totalMegamoUnidades(): number  { return this._seccionUnidades('MEGAMO'); }
+  get totalMegamoCosto(): number     { return this._seccionCosto('MEGAMO'); }
+  // Scott bikes
+  get totalScottUnidades(): number   { return this._seccionUnidades('SCOTT'); }
+  get totalScottCosto(): number      { return this._seccionCosto('SCOTT'); }
+  // Apparel Scott
+  get totalApparelScottUnidades(): number { return this._seccionUnidades('APPAREL_SCOTT'); }
+  get totalApparelScottCosto(): number    { return this._seccionCosto('APPAREL_SCOTT'); }
+  // Syncros
+  get totalSyncrosUnidades(): number { return this._seccionUnidades('SYNCROS'); }
+  get totalSyncrosCosto(): number    { return this._seccionCosto('SYNCROS'); }
+
+  get totalGlobalUnidades(): number  {
+    return this.rowsFiltrados
+      .filter(r => !r._nuevo)
+      .reduce((s, r) => s + this.calcTotal(r), 0);
+  }
+  get totalGlobalCosto(): number {
+    return this.rowsFiltrados
+      .filter(r => !r._nuevo)
+      .reduce((s, r) => s + this.calcTotal(r) * (Number(r.precio) || 0), 0);
+  }
+
+  private static readonly _MESES_BLOQUEADOS_MEGAMO = new Set<string>(['mayo', 'junio']);
+
+  isBloqueadoMegamo(row: ForecastRow, mes: keyof ForecastRow): boolean {
+    const mesStr = mes as string;
+    const n      = ' ' + (row.producto || '').toUpperCase() + ' ';
+    const marca  = (row.marca || '').toUpperCase();
+
+    const esAccesorio    = ProyeccionesTabComponent._ACCESORIO_KW.some(kw => n.includes(kw));
+    const esParte        = ProyeccionesTabComponent._PARTE_KW.some(kw => n.includes(kw));
+    const esSyncrosMarca = marca === 'SYNCROS';
+    const esRopa         = !esAccesorio && ProyeccionesTabComponent._ROPA_KW.some(kw => n.includes(kw));
+
+    // Bicis Scott (whitelist, no es ropa, accesorio ni refacción): sin restricción
+    if (marca === 'SCOTT' && row.fuente === 'whitelist' && !esRopa && !esAccesorio && !esParte && !esSyncrosMarca) {
+      return false;
+    }
+
+    // Syncros / Refacciones → solo diciembre
+    if (esSyncrosMarca || esParte) return mesStr !== 'diciembre';
+
+    // Accesorios (cascos, zapatos, lentes, protecciones, mochilas) → solo diciembre
+    if (esAccesorio) return mesStr !== 'diciembre';
+
+    // Ropa (jerseys, shorts, bibs, etc.) → solo marzo
+    if (esRopa) return mesStr !== 'marzo';
+
+    // Bicicletas Megamo y otros → bloquear mayo y junio
+    return ProyeccionesTabComponent._MESES_BLOQUEADOS_MEGAMO.has(mesStr);
+  }
+
+  esMesBloqueadoMegamo(mes: keyof ForecastRow): boolean {
+    return ProyeccionesTabComponent._MESES_BLOQUEADOS_MEGAMO.has(mes as string);
+  }
+
+  /** Cuántos SKUs de una marca tienen qty > 0 en ese mes */
+  cuentasMarcaMes(marca: string, mes: keyof ForecastRow): number {
+    return this.rowsFiltrados.filter(
+      r => !r._nuevo && (r.marca || '').toUpperCase() === marca && (Number(r[mes]) || 0) > 0
+    ).length;
+  }
+
+  /** Cuántos SKUs en total (ambas marcas) tienen qty > 0 en ese mes */
+  cuentasGlobalMes(mes: keyof ForecastRow): number {
+    return this.rowsFiltrados.filter(
+      r => !r._nuevo && (Number(r[mes]) || 0) > 0
+    ).length;
+  }
+
+  // ── Cuentas (SKUs con al menos 1 unidad proyectada) por sección ─────────────
+  get cuentasMegamo(): number        { return this._seccionCuentas('MEGAMO'); }
+  get cuentasScott(): number         { return this._seccionCuentas('SCOTT'); }
+  get cuentasApparelScott(): number  { return this._seccionCuentas('APPAREL_SCOTT'); }
+  get cuentasSyncros(): number       { return this._seccionCuentas('SYNCROS'); }
+  get cuentasGlobal(): number {
+    return this.rowsFiltrados.filter(r => !r._nuevo && this.calcTotal(r) > 0).length;
   }
 
   constructor(private http: HttpClient, protected cdr: ChangeDetectorRef) {}
@@ -263,7 +551,8 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['clienteClave'] && this.clienteClave) {
+    if ((changes['clienteClave'] && this.clienteClave) ||
+        (changes['idGrupoOdoo'] && this.idGrupoOdoo)) {
       this._initPeriodo();
     }
   }
@@ -287,11 +576,15 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   }
 
   private _updateStickyInnerWidth(): void {
-    const ts = this.tableScroll?.nativeElement;
-    const si = this.stickyInner?.nativeElement;
-    if (ts && si) {
-      si.style.width  = ts.scrollWidth + 'px';
-      si.style.height = '1px';
+    try {
+      const ts = this.tableScroll?.nativeElement;
+      const si = this.stickyInner?.nativeElement;
+      if (ts?.scrollWidth && si) {
+        si.style.width  = ts.scrollWidth + 'px';
+        si.style.height = '1px';
+      }
+    } catch (e) {
+      console.warn('Error in _updateStickyInnerWidth:', e);
     }
   }
 
@@ -300,7 +593,7 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   // ─────────────────────────────────────────
 
   private _initPeriodo(): void {
-    if (!this.clienteClave) return;
+    if (!this.clienteClave && !this.idGrupoOdoo) return;
     this.periodoSeleccionado = this._periodoActual();
     this._cargarPeriodos();
     this.cdr.markForCheck();
@@ -326,9 +619,18 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   }
 
   private _cargarPeriodos(): void {
-    if (!this.clienteClave) return;
-    const params = new HttpParams().set('clave', this.clienteClave);
-    this.http.get<string[]>(`${this.apiUrl}/forecast/periodos`, { params }).subscribe({
+    let params: HttpParams;
+    let url: string;
+    if (this.idGrupoOdoo) {
+      params = new HttpParams().set('grupo_id', String(this.idGrupoOdoo));
+      url = `${this.apiUrl}/forecast/periodos/integral`;
+    } else if (this.clienteClave) {
+      params = new HttpParams().set('clave', this.clienteClave);
+      url = `${this.apiUrl}/forecast/periodos`;
+    } else {
+      return;
+    }
+    this.http.get<string[]>(url, { params }).subscribe({
       next: p => { this.periodos = p; this.cdr.markForCheck(); },
       error: () => { this.periodos = []; }
     });
@@ -349,37 +651,74 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   // ─────────────────────────────────────────
 
   cargarForecast(): void {
-    if (!this.clienteClave || !this.periodoSeleccionado) return;
+    if (!this.periodoSeleccionado) return;
+    if (!this.clienteClave && !this.idGrupoOdoo) return;
+
     this.cargando = true;
     this.error = null;
     this.modoEdicion = false;
     this.avanceRows = [];
     this.cdr.markForCheck();
 
-    const params = new HttpParams()
-      .set('clave', this.clienteClave)
-      .set('periodo', this.periodoSeleccionado);
+    let forecastUrl: string;
+    let avanceUrl: string;
+    let params: HttpParams;
 
-    // Ambas peticiones en paralelo; el spinner se mantiene hasta que las DOS
-    // responden. El backend cachea Odoo 3 min, así que en recargas es rápido.
+    if (this.idGrupoOdoo) {
+      params      = new HttpParams().set('grupo_id', String(this.idGrupoOdoo)).set('periodo', this.periodoSeleccionado);
+      forecastUrl = `${this.apiUrl}/forecast/integral`;
+      avanceUrl   = `${this.apiUrl}/forecast/avance/integral`;
+    } else {
+      params      = new HttpParams().set('clave', this.clienteClave!).set('periodo', this.periodoSeleccionado);
+      forecastUrl = `${this.apiUrl}/forecast`;
+      avanceUrl   = `${this.apiUrl}/forecast/avance`;
+    }
+
     forkJoin({
-      forecast: this.http.get<ForecastRow[]>(`${this.apiUrl}/forecast`, { params }),
-      avance:   this.http.get<AvanceRow[]>(`${this.apiUrl}/forecast/avance`, { params })
+      forecast: this.http.get<ForecastRow[]>(forecastUrl, { params }),
+      avance:   this.http.get<AvanceRow[]>(avanceUrl, { params })
     }).subscribe({
       next: ({ forecast, avance }) => {
         this.avanceRows   = avance;
         this.rows         = forecast.map(r => ({ ...r, _editado: false, _nuevo: false, _eliminar: false }));
+        // Propagar precio_publico dentro del mismo grupo marca+modelo
+        // (Odoo pricelist puede tener entrada solo para algunas tallas)
+        const ppByModel = new Map<string, number>();
+        for (const r of this.rows) {
+          if (r.modelo && r.precio_publico) ppByModel.set(`${r.marca}|${r.modelo}`, r.precio_publico);
+        }
+        for (const r of this.rows) {
+          if (!r.precio_publico && r.modelo) {
+            r.precio_publico = ppByModel.get(`${r.marca}|${r.modelo}`) ?? undefined;
+          }
+        }
         this.rowsOriginal = JSON.parse(JSON.stringify(this.rows));
         this.cargando     = false;
-        this.rowCountChange.emit(this.rows.length);
+        this.rowCountChange.emit(
+          this.rows.filter(r => !r._eliminar).reduce((s, r) => s + this.calcTotal(r), 0)
+        );
         this.cdr.markForCheck();
         setTimeout(() => this._updateStickyInnerWidth(), 200);
       },
       error: err => {
         this.error    = err?.error?.error || 'Error al cargar proyecciones';
         this.cargando = false;
+        this.rowCountChange.emit(0);
         this.cdr.markForCheck();
       }
+    });
+
+    // Catálogo de precios: se carga por separado para no bloquear el forecast
+    const claveParam  = this.clienteClave || '';
+    const preciosUrl  = `${this.apiUrl}/forecast/precios-catalogo`;
+    this.http.get<{ precios: Record<string, { precio?: number; precio_publico?: number }>; nivel_precio: string }>(
+      preciosUrl, { params: new HttpParams().set('clave', claveParam) }
+    ).subscribe({
+      next: res => {
+        this._preciosCatalogo     = new Map(Object.entries(res.precios || {}));
+        this._nivelPrecioCatalogo = res.nivel_precio || '';
+      },
+      error: () => {}
     });
   }
 
@@ -505,8 +844,15 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
 
   toggleMeses(): void {
     this.modoExpandido = !this.modoExpandido;
+    this.cdr.markForCheck();
     // Recalcular el ancho después de que la tabla se renderice con los meses expandidos
-    setTimeout(() => this._updateStickyInnerWidth(), 100);
+    setTimeout(() => {
+      try {
+        this._updateStickyInnerWidth();
+      } catch (e) {
+        console.warn('Error updating sticky width:', e);
+      }
+    }, 100);
   }
 
   // ─────────────────────────────────────────
@@ -576,7 +922,12 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   // Edit mode
   // ─────────────────────────────────────────
 
+  get modoIntegral(): boolean {
+    return !!this.idGrupoOdoo && !this.clienteClave;
+  }
+
   activarEdicion(): void {
+    if (this.modoIntegral) return;
     this.otpDialog = { abierto: true, codigo: '', error: '', verificando: false };
     this.cdr.markForCheck();
   }
@@ -625,13 +976,46 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
     this.cdr.markForCheck();
   }
 
+  sincronizarCatalogo(): void {
+    if (this.sincronizando) return;
+    this.sincronizando = true;
+    this.mensajeExito = null;
+    this.cdr.markForCheck();
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+    this.http.post<any>(`${this.apiUrl}/forecast/sync-catalogo`, { force: true }, { headers })
+      .subscribe({
+        next: () => {
+          this.sincronizando = false;
+          this.mensajeExito = 'Catálogo sincronizado con Odoo. Recarga la página para ver los nuevos productos.';
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.sincronizando = false;
+          this.importError = 'Error al sincronizar el catálogo. Inténtalo de nuevo.';
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
   markEdited(row: ForecastRow): void {
     row._editado = true;
   }
 
   agregarProducto(): void {
+    // Toggle: si ya existe una fila nueva sin producto asignado, quitarla
+    const existente = this.rows.find(r => r._nuevo && !r._searchSeleccionado);
+    if (existente) {
+      this.rows = this.rows.filter(r => r !== existente);
+      // Si se entró al modo edición solo para agregar (sin OTP) y ya no hay filas nuevas, salir
+      if (!this.permisoEdicion && !this.rows.some(r => r._nuevo)) {
+        this.modoEdicion = false;
+        this.rows = JSON.parse(JSON.stringify(this.rowsOriginal));
+      }
+      this.cdr.markForCheck();
+      return;
+    }
     if (!this.modoEdicion) {
-      // Activar modo edición sólo para agregar (sin OTP — acción no destructiva)
       this.rowsOriginal = JSON.parse(JSON.stringify(this.rows));
       this.modoEdicion = true;
       this.mensajeExito = null;
@@ -644,6 +1028,8 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
     };
     this.rows = [nuevo, ...this.rows];
     this.cdr.markForCheck();
+    // Abrir modal directamente sin esperar que el usuario haga clic en "Seleccionar"
+    this.abrirModalBusqueda(nuevo);
   }
 
   // ─────────────────────────────────────────
@@ -660,13 +1046,23 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
     this.searchModal.colorActivo = null;
     this.searchModal.offset = 0;
     this.searchModal.hasMore = false;
+    this.searchModal.error = '';
     this.cdr.markForCheck();
   }
 
   cerrarModalBusqueda(): void {
     clearTimeout(this.searchModal.timer);
+    const target = this.searchModal.rowTarget;
     this.searchModal.abierto = false;
     this.searchModal.rowTarget = null;
+    // Si se cerró sin seleccionar producto, eliminar la fila vacía pendiente
+    if (target && target._nuevo && !target._searchSeleccionado) {
+      this.rows = this.rows.filter(r => r !== target);
+      if (!this.permisoEdicion && !this.rows.some(r => r._nuevo)) {
+        this.modoEdicion = false;
+        this.rows = JSON.parse(JSON.stringify(this.rowsOriginal));
+      }
+    }
     this.cdr.markForCheck();
   }
 
@@ -676,6 +1072,7 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
     this.searchModal.hasMore = false;
     this.searchModal.grupoActivo = null;
     this.searchModal.colorActivo = null;
+    this.searchModal.error = '';
     if (!q || q.length < 2) {
       this.searchModal.grupos = [];
       this.searchModal.cargando = false;
@@ -705,11 +1102,16 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
       next: resp => {
         const nuevos = this._agruparResultados(resp.results);
         this.searchModal.grupos = append
-          ? [...this.searchModal.grupos, ...nuevos]
+          ? this._mergeGrupos(this.searchModal.grupos, nuevos)
           : nuevos;
         this.searchModal.hasMore = resp.has_more;
         this.searchModal.cargando = false;
         this.cdr.markForCheck();
+        // Auto-cargar siguiente página si quedan resultados
+        if (resp.has_more) {
+          this.searchModal.offset += 500;
+          this._ejecutarBusqueda(true);
+        }
       },
       error: () => {
         if (!append) this.searchModal.grupos = [];
@@ -721,9 +1123,12 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   }
 
   private _agruparResultados(results: ProductoBusqueda[]): ProductoGrupo[] {
+    // Agrupa por nombre completo del producto (consistente entre SKUs del mismo template Odoo).
+    // Se normaliza whitespace interno para evitar duplicados cuando el mismo producto
+    // tiene espacios dobles o diferentes en distintos registros de odoo_catalogo.
     const map = new Map<string, ProductoBusqueda[]>();
     for (const r of results) {
-      const key = (r.modelo || r.producto).toUpperCase();
+      const key = r.producto.trim().replace(/\s+/g, ' ').toUpperCase();
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(r);
     }
@@ -738,17 +1143,95 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
       }
       const colores: VarianteColor[] = [];
       for (const [color, tallas] of colorMap.entries()) {
-        colores.push({ color, tallas });
+        colores.push({ color, tallas: this._sortTallas(tallas) });
       }
+      // Toma el primer modelo no vacío del grupo
+      const modelo = variantes.find(v => v.modelo)?.modelo || primer.modelo;
+      // Si la marca es genérica ('ALL', 'N/A'), intentar inferirla del nombre del producto
+      let marca = primer.marca;
+      if (!marca || marca === 'ALL' || marca === 'N/A') {
+        const np = primer.producto.toUpperCase();
+        if (np.includes('MEGAMO'))       marca = 'MEGAMO';
+        else if (np.includes('SCOTT'))   marca = 'SCOTT';
+        else if (np.includes('SYNCROS')) marca = 'SYNCROS';
+      }
+      const fuente = primer.fuente;
+      const totalVariantes = variantes.length;
       grupos.push({
         producto: primer.producto,
-        modelo: primer.modelo,
-        marca: primer.marca,
+        modelo,
+        marca,
         colores,
-        soloUna: variantes.length === 1 ? primer : undefined,
+        fuente,
+        // soloUna must use the inferred marca, not the raw primer.marca
+        soloUna: totalVariantes === 1 ? { ...primer, marca, fuente } : undefined,
       });
     }
     return grupos;
+  }
+
+  private static readonly _TALLA_ORDER: Record<string, number> = {
+    'XXS': 0,
+    'XS 27.5"': 1, 'XS': 2,
+    'S 27.5"': 3,  'S': 4,
+    'SM': 5, 'M': 6, 'ML': 7, 'L': 8, 'XL': 9,
+    'XXL': 10, 'XXXL': 11, '3XL': 11, 'XXXXL': 12, '4XL': 12,
+    'UNI': 99, 'ONESIZE': 99, 'N/A': 100,
+  };
+
+  private _sortTallas<T extends { talla: string }>(arr: T[]): T[] {
+    return [...arr].sort((a, b) => {
+      const ta = (a.talla || '').toUpperCase();
+      const tb = (b.talla || '').toUpperCase();
+      const na = parseFloat(ta);
+      const nb = parseFloat(tb);
+      if (!isNaN(na) && !isNaN(nb)) return na - nb;
+      const oa = ProyeccionesTabComponent._TALLA_ORDER[ta] ?? 50;
+      const ob = ProyeccionesTabComponent._TALLA_ORDER[tb] ?? 50;
+      if (oa !== ob) return oa - ob;
+      return ta.localeCompare(tb);
+    });
+  }
+
+  /** Fusiona grupos de páginas sucesivas: si un producto ya existe, añade sus colores/tallas en lugar de duplicarlo. */
+  private _mergeGrupos(existing: ProductoGrupo[], nuevos: ProductoGrupo[]): ProductoGrupo[] {
+    const idx = new Map<string, number>();
+    const result = [...existing];
+    result.forEach((g, i) => idx.set(g.producto.trim().replace(/\s+/g, ' ').toUpperCase(), i));
+
+    for (const nuevo of nuevos) {
+      const key = nuevo.producto.trim().replace(/\s+/g, ' ').toUpperCase();
+      const pos = idx.get(key);
+      if (pos !== undefined) {
+        // El grupo ya existe — fusionar colores/tallas
+        const dest = result[pos];
+        for (const vc of nuevo.colores) {
+          const colorDest = dest.colores.find(c => c.color === vc.color);
+          if (colorDest) {
+            for (const t of vc.tallas) {
+              if (!colorDest.tallas.find(et => et.sku === t.sku)) {
+                colorDest.tallas.push(t);
+              }
+            }
+            colorDest.tallas = this._sortTallas(colorDest.tallas);
+          } else {
+            dest.colores.push(vc);
+          }
+        }
+        const totalVariantes = dest.colores.reduce((s, c) => s + c.tallas.length, 0);
+        dest.soloUna = totalVariantes === 1 ? {
+          sku: dest.colores[0].tallas[0].sku,
+          producto: dest.colores[0].tallas[0].producto,
+          marca: dest.marca, modelo: dest.modelo,
+          color: dest.colores[0].color, talla: dest.colores[0].tallas[0].talla, label: '',
+          fuente: dest.fuente,
+        } : undefined;
+      } else {
+        result.push(nuevo);
+        idx.set(key, result.length - 1);
+      }
+    }
+    return result;
   }
 
   seleccionarGrupo(grupo: ProductoGrupo): void {
@@ -780,6 +1263,7 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
       modelo: grupo.modelo,
       color,
       talla,
+      fuente: grupo.fuente,
       label: v.sku,
     });
   }
@@ -787,25 +1271,58 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   private _llenarFila(prod: ProductoBusqueda): void {
     const row = this.searchModal.rowTarget;
     if (!row) return;
+    // Verificar que el SKU no esté ya en el forecast (evitar duplicados)
+    const duplicado = this.rows.find(r => r !== row && r.sku === prod.sku);
+    if (duplicado) {
+      this.searchModal.error = `${prod.sku} ya está en el forecast de este periodo.`;
+      this.searchModal.grupoActivo = null;
+      this.cdr.markForCheck();
+      return;
+    }
     row.sku      = prod.sku;
     row.producto = prod.producto;
     row.marca    = prod.marca;
     row.modelo   = prod.modelo;
     row.color    = prod.color;
     row.talla    = prod.talla;
+    row.fuente   = prod.fuente;
+    // Safety net: infer brand from product name when marca is generic
+    if (!row.marca || row.marca === 'N/A' || row.marca === 'ALL') {
+      const np = row.producto.toUpperCase();
+      if (np.includes('MEGAMO'))       row.marca = 'MEGAMO';
+      else if (np.includes('SCOTT'))   row.marca = 'SCOTT';
+      else if (np.includes('SYNCROS')) row.marca = 'SYNCROS';
+    }
+    // Lookup instantáneo desde el catálogo de precios pre-cargado
+    const p = this._preciosCatalogo.get(prod.sku);
+    if (p) {
+      if (p.precio != null)         row.precio         = p.precio;
+      if (p.precio_publico != null) row.precio_publico = p.precio_publico;
+      if (this._nivelPrecioCatalogo) row.nivel_precio  = this._nivelPrecioCatalogo;
+    }
     row._searchSeleccionado = true;
     row._editado = true;
-    
-    // Limpiar errores previos cuando se selecciona un producto válido
-    this.importError = null;
-    this.importAdvertencias = [];
-    
+    this.searchModal.error = '';
     this.cerrarModalBusqueda();
   }
 
   limpiarBusqueda(row: ForecastRow): void {
+    // Filas nuevas no guardadas: eliminar la fila en lugar de dejarla vacía
+    if (row._nuevo) {
+      this.rows = this.rows.filter(r => r !== row);
+      if (!this.permisoEdicion && !this.rows.some(r => r._nuevo)) {
+        this.modoEdicion = false;
+        this.rows = JSON.parse(JSON.stringify(this.rowsOriginal));
+      }
+      this.cdr.markForCheck();
+      return;
+    }
     row.sku = ''; row.producto = ''; row.marca = '';
     row.modelo = ''; row.color = ''; row.talla = '';
+    row.precio = undefined; row.precio_publico = undefined; row.nivel_precio = undefined;
+    row.mayo = 0; row.junio = 0; row.julio = 0; row.agosto = 0;
+    row.septiembre = 0; row.octubre = 0; row.noviembre = 0; row.diciembre = 0;
+    row.enero = 0; row.febrero = 0; row.marzo = 0; row.abril = 0;
     row._searchSeleccionado = false;
     row._editado = false;
     this.cdr.markForCheck();
@@ -829,9 +1346,32 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
     return row.id ?? row.sku;
   }
 
+  trackByBrand(_: number, section: { brand: string }): string {
+    return section.brand;
+  }
+
   /** Type-safe getter for month value on a row */
   getMes(row: ForecastRow, mes: keyof ForecastRow): number {
     return Number(row[mes]) || 0;
+  }
+
+  /**
+   * Valor del mes descontando lo ya pedido (FIFO: descuenta de los meses más tempranos primero).
+   * En modo edición devuelve el valor bruto para no confundir al usuario.
+   */
+  getMesDisplay(row: ForecastRow, mes: keyof ForecastRow): number {
+    if (this.modoEdicion) return this.getMes(row, mes);
+    const av = this._avanceMapCache.get(row.sku);
+    if (!av || av.pedido_total <= 0) return this.getMes(row, mes);
+    let restante = av.pedido_total;
+    for (const m of MESES) {
+      const qty = Number(row[m]) || 0;
+      const deducido = Math.min(restante, qty);
+      if (m === mes) return Math.max(0, qty - deducido);
+      restante -= deducido;
+      if (restante <= 0) break;
+    }
+    return this.getMes(row, mes);
   }
 
   /** Type-safe setter for month value on a row */
@@ -840,7 +1380,7 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   }
 
   guardarCambios(): void {
-    if (!this.clienteClave || !this.idCliente || !this.periodoSeleccionado) return;
+    if (!this.clienteClave || !this.periodoSeleccionado) return;
 
     const toDelete = this.rows.filter(r => r._eliminar && r.id);
     const toSave   = this.rows.filter(r => !r._eliminar && (r._editado || r._nuevo));

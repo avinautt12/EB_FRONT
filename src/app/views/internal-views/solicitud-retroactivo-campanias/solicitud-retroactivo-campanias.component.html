@@ -1,0 +1,203 @@
+<app-top-bar-usuarios></app-top-bar-usuarios>
+
+<div class="retroactivos-layout">
+
+  <!-- NOTIFICACIÓN ALERTA INLINE -->
+  <div *ngIf="alertMsj" class="inline-alert" [ngClass]="alertTipo">
+    <span>{{ alertMsj }}</span>
+    <button type="button" class="close-btn" (click)="alertMsj = null">&times;</button>
+  </div>
+
+  <!-- VISTA 1: LISTADO DE CAMPAÑAS -->
+  <div *ngIf="!modoFormulario">
+    <div class="page-header">
+      <h2>Campañas de Retroactivos</h2>
+      <button type="button" class="btn btn-primary" (click)="nuevaCampania()">
+        + Nueva Campaña
+      </button>
+    </div>
+
+    <!-- Barra de Filtros -->
+    <div class="filtros-bar">
+      <div class="search-box">
+        <input
+          type="text"
+          [(ngModel)]="filtroTexto"
+          placeholder="🔍 Buscar campaña por nombre..."
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>Estado</label>
+        <select [(ngModel)]="filtroEstado">
+          <option value="TODOS">Todos</option>
+          <option value="ACTIVAS">Activas</option>
+          <option value="INACTIVAS">Inactivas</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Tabla de Campañas -->
+    <div class="table-wrap">
+      <table class="data-table" *ngIf="campaniasFiltradas.length > 0; else sinCampanias">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Vigencia</th>
+            <th>MSI</th>
+            <th>SKUs</th>
+            <th class="text-center">Estado</th>
+            <th class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of campaniasFiltradas">
+            <td><strong>{{ c.nombre }}</strong></td>
+            <td>{{ c.fecha_inicio | date:'dd/MM/yyyy' }} - {{ c.fecha_fin | date:'dd/MM/yyyy' }}</td>
+            <td>{{ c.plazo_meses }} Meses ({{ c.porcentaje }}%)</td>
+            <td><span class="badge-count">{{ c.productos?.length || 0 }} SKUs</span></td>
+            <td class="text-center">
+              <span class="badge" [ngClass]="c.activa ? 'badge-active' : 'badge-inactive'">
+                {{ c.activa ? 'Activa' : 'Inactiva' }}
+              </span>
+            </td>
+            <td class="td-actions">
+              <button type="button" class="btn-action" (click)="editarCampania(c)" title="Editar">✏️</button>
+              <button type="button" class="btn-action delete" (click)="eliminarCampania(c.id)" title="Eliminar">🗑️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ng-template #sinCampanias>
+        <div class="empty-state">
+          <div class="empty-icon">📁</div>
+          <h3>No hay campañas para mostrar</h3>
+          <p>Crea una nueva campaña para asociarle meses sin intereses y SKUs.</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- VISTA 2: FORMULARIO DE REGISTRO / EDICIÓN -->
+  <div *ngIf="modoFormulario">
+    <div class="form-header">
+      <h2>{{ editandoId ? 'Editar Campaña' : 'Nueva Campaña' }}</h2>
+      <button type="button" class="btn-back" (click)="cancelarFormulario()">
+        &larr; Volver al listado
+      </button>
+    </div>
+
+    <!-- Datos Principales -->
+    <div class="card-section">
+      <div class="section-title">
+        <div class="title-left">
+          <i class="fas fa-calendar-alt"></i>
+          <span>Información de la Campaña</span>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="formNombre">Nombre de la Campaña *</label>
+          <input id="formNombre" type="text" [(ngModel)]="formNombre" placeholder="Ej. Buen Fin 2026" />
+        </div>
+
+        <div class="form-group">
+          <label for="formFechaInicio">Fecha Inicio *</label>
+          <input id="formFechaInicio" type="date" [(ngModel)]="formFechaInicio" />
+        </div>
+
+        <div class="form-group">
+          <label for="formFechaFin">Fecha Fin *</label>
+          <input id="formFechaFin" type="date" [(ngModel)]="formFechaFin" />
+        </div>
+
+        <div class="form-group">
+          <label for="formMsi">Plan MSI *</label>
+          <select id="formMsi" [(ngModel)]="formMsiId">
+            <option [ngValue]="null" disabled selected>Selecciona MSI...</option>
+            <option *ngFor="let m of msiList" [value]="m.id">
+              {{ m.plazo_meses }} Meses ({{ m.porcentaje }}%)
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección Productos Asociados -->
+    <div class="card-section">
+      <div class="section-title">
+        <div class="title-left">
+          <i class="fas fa-boxes"></i>
+          <span>Productos asociados</span>
+          <span class="badge-count">{{ selectedProductos.length }} SKUs</span>
+        </div>
+        <button type="button" class="btn btn-secondary" (click)="abrirModalCatalogo()">
+          🔍 Seleccionar del catálogo
+        </button>
+      </div>
+
+      <!-- Tabla de Productos Seleccionados -->
+      <div class="table-wrap" *ngIf="selectedProductos.length > 0; else emptyProductos">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Modelo / Código</th>
+              <th>SKU</th>
+              <th>Variante</th>
+              <th class="text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let prod of selectedProductos">
+              <td><strong>{{ obtenerNombreProducto(prod) }}</strong></td>
+              <td class="sku-cell">{{ obtenerSkuProducto(prod) }}</td>
+              <td>{{ obtenerVarianteProducto(prod) }}</td>
+              <td class="td-actions">
+                <button
+                  type="button"
+                  class="btn-action-icon delete"
+                  (click)="quitarProducto(prod.id)"
+                  title="Quitar de la campaña"
+                >
+                  &times;
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #emptyProductos>
+        <div class="empty-products">
+          <p>No has asociado ninguna variante de producto a esta campaña.</p>
+          <button type="button" class="btn btn-primary" (click)="abrirModalCatalogo()">
+            + Agregar Productos
+          </button>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Footer Formulario -->
+    <div class="form-footer">
+      <div class="saving-indicator" *ngIf="guardando">
+        <span>Guardando campaña...</span>
+      </div>
+      <div class="footer-buttons">
+        <button type="button" class="btn btn-secondary" (click)="cancelarFormulario()">Cancelar</button>
+        <button type="button" class="btn btn-primary" [disabled]="guardando" (click)="guardarCampania()">
+          {{ editandoId ? 'Guardar Cambios' : 'Crear Campaña' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE CATÁLOGO DE PRODUCTOS -->
+  <app-producto-catalogo-modal
+    [visible]="modalCatalogoVisible"
+    (cerrarModal)="cerrarModalCatalogo()"
+    (productosSeleccionados)="onProductosSeleccionados($event)"
+  ></app-producto-catalogo-modal>
+
+</div>

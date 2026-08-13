@@ -1,0 +1,93 @@
+<app-top-bar-usuarios></app-top-bar-usuarios>
+
+<div class="landing-page" *ngIf="esAdmin">
+
+  <div class="ambient-blob blob-1" aria-hidden="true"></div>
+  <div class="ambient-blob blob-2" aria-hidden="true"></div>
+  <div class="ambient-blob blob-3" aria-hidden="true"></div>
+
+  <header class="landing-header">
+    <button class="btn btn-volver" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+    <span class="greeting-label">Solicitud de Retroactivos</span>
+      <h1 class="greeting-title">¿Qué necesitas hacer?</h1>
+  </header>
+
+  <main class="landing-grid">
+
+    <a routerLink="/usuarios/solicitud-retroactivo/gestor" class="landing-card card-gestor">
+      <div class="card-blob" aria-hidden="true"></div>
+
+      <div class="card-top">
+        <div class="card-icon-wrap"><i class="fas fa-clipboard-check"></i></div>
+      </div>
+
+      <div class="card-body">
+        <h2>Gestor de Respuestas</h2>
+        <p><strong>Revisión centralizada.</strong> Valida o rechaza las solicitudes que suben los clientes, con sus archivos adjuntos.</p>
+      </div>
+
+      <div class="card-link">Abrir <i class="fas fa-arrow-right"></i></div>
+    </a>
+
+    <a routerLink="/usuarios/solicitud-retroactivo/dashboard" class="landing-card card-dashboard">
+      <div class="card-blob" aria-hidden="true"></div>
+
+      <div class="card-top">
+        <div class="card-icon-wrap"><i class="fas fa-chart-pie"></i></div>
+      </div>
+
+      <div class="card-body">
+        <h2>Dashboard</h2>
+        <p><strong>Números en tiempo real.</strong> Totales generales, por campaña, por cliente y por año modelo.</p>
+      </div>
+
+      <div class="card-link">Ver números <i class="fas fa-arrow-right"></i></div>
+    </a>
+
+    <a routerLink="/usuarios/solicitud-retroactivo/formulario" class="landing-card card-formulario card-wide">
+      <div class="card-blob" aria-hidden="true"></div>
+
+      <div class="card-top">
+        <div class="card-icon-wrap"><i class="fas fa-file-signature"></i></div>
+      </div>
+
+      <div class="card-body">
+        <h2>Formulario</h2>
+        <p><strong>Captura directa.</strong> Abre el formulario de registro de venta tal como lo ve un cliente.</p>
+      </div>
+
+      <div class="card-link">Abrir <i class="fas fa-arrow-right"></i></div>
+    </a>
+
+  </main>
+</div>
+
+<!-- GUÍA: mismo patrón hub-grid/hub-card que garantias-usuario.component.html
+     (vista='hub'), para que el cliente tenga la misma experiencia consistente
+     entre ambos módulos. -->
+<div class="hub-page" *ngIf="esCliente">
+  <div class="page-header">
+    <div class="header-left">
+      <a routerLink="/usuarios/dashboard" class="back-link"><i class="fas fa-arrow-left"></i> Inicio</a>
+      <h1 class="page-title"><span class="title-icon"><i class="fas fa-file-invoice-dollar"></i></span>Solicitud de Retroactivos</h1>
+    </div>
+  </div>
+
+  <div class="hub-grid">
+    <a routerLink="/usuarios/solicitud-retroactivo/seguimiento" class="hub-card">
+      <div class="hub-card-icon"><i class="fas fa-list-check"></i></div>
+      <h2>Seguimiento de mis solicitudes</h2>
+      <p>Consulta el estado de tus ventas registradas y vuelve a cargar los archivos que hayan sido rechazados.</p>
+      <div class="hub-card-btn">Ver mis solicitudes <i class="fas fa-arrow-right"></i></div>
+    </a>
+
+    <a routerLink="/usuarios/solicitud-retroactivo/formulario" class="hub-card hub-card-secondary">
+      <div class="hub-card-icon"><i class="fas fa-plus-circle"></i></div>
+      <h2>Registrar nueva venta</h2>
+      <p>¿Hiciste una venta a MSI? Regístrala llenando el formulario correspondiente.</p>
+      <div class="hub-card-btn">Ir al formulario <i class="fas fa-arrow-right"></i></div>
+    </a>
+  </div>
+</div>

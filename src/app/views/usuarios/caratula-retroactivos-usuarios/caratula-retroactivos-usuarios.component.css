@@ -1,3 +1,23 @@
+/* ================= BANNER TEMPORADA CERRADA ================= */
+.banner-temporada-cerrada {
+    width: 100%;
+    background-color: #fff5f5;
+    border-left: 5px solid #dc2626;
+    border-top: 1px solid #fecaca;
+    border-bottom: 1px solid #fecaca;
+    border-right: 1px solid #fecaca;
+    color: #991b1b;
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 14px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 /* FONDO GENERAL DE PANTALLA */
 .monitor-container {
     padding: 2rem;
@@ -16,6 +36,7 @@
     display: flex;
     justify-content: flex-start;
     margin-bottom: 20px;
+    gap: 21px;
 }
 
 .btn-volver-sm { 
@@ -34,6 +55,24 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 .btn-volver-sm:hover { background-color: #5a5a5a; }
+
+.btn-calculadora, .btn-solicitud-retroactivos {
+    background-color: #F07D22;
+    color: #ffffff;
+    border: 1px solid #C96510;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s ease;
+    box-shadow: 0 2px 5px rgba(240,125,34,0.35);
+    margin-left: 10px;
+}
+.btn-calculadora:hover, .btn-solicitud-retroactivos:hover { background-color: #C96510; }
 
 .loading-message, .error-message {
     background: #ffffff;
@@ -184,6 +223,81 @@
     font-size: 0.8rem;
     color: #666666 !important;
     line-height: 1.5;
+}
+
+/* ================= BANNERS CIERRE SPLIT ================= */
+.banner-split-scott {
+    background-color: #1a1a2e !important;
+    border-left: 4px solid #EB5E28;
+}
+.banner-split-apparel {
+    background-color: #0f3460 !important;
+    border-left: 4px solid #4fc3f7;
+    margin-top: 6px;
+}
+
+/* ================= BOTÓN DESCARGAR PDF ================= */
+.barra-acciones-pdf {
+    width: 100%;
+    max-width: 950px;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+.btn-descargar-pdf {
+    background-color: #EB5E28;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.btn-descargar-pdf:hover { background-color: #d15020; }
+
+/* ================= PRINT / PDF ================= */
+@media print {
+    app-home-bar,
+    .action-bar,
+    .error-message,
+    .loading-message,
+    .barra-acciones-pdf { display: none !important; }
+
+    body, .monitor-container {
+        background-color: #ffffff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .caratula-wrapper {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 20px 30px !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    .table-moderna, .escalera-calculo, .row-calc { page-break-inside: avoid; }
+
+    .nota-footer {
+        margin-top: 12px !important;
+        page-break-before: avoid;
+        page-break-inside: avoid;
+    }
+
+    .seccion-header { margin-bottom: 10px !important; }
+    .section-divider { margin: 10px 0 !important; }
+    .caratula-header { margin-bottom: 10px !important; padding-bottom: 10px !important; }
+    .importe-final-wrapper { margin-top: 10px !important; }
+
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
 
 /* ================= RESPONSIVIDAD PARA CELULARES ================= */

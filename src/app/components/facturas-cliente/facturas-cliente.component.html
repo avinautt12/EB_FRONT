@@ -1,7 +1,12 @@
 <div class="modal-overlay" [class.open]="isOpen" (click)="closeModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
         <div class="modal-header">
-            <h2>Detalles de Compra</h2>
+            <div class="modal-header-info">
+                <h2>Detalles de Compra</h2>
+                <span *ngIf="infoCliente?.nombre_cliente" class="modal-cliente-nombre">
+                    {{ infoCliente.nombre_cliente }}
+                </span>
+            </div>
             <button class="close-button" (click)="closeModal()">×</button>
         </div>
 
@@ -10,6 +15,10 @@
             <div *ngIf="tabActiva !== 'Proyecciones'" class="acciones-monitor">
                 <button (click)="exportarExcel()">
                     <i class="fas fa-file-export"></i> Exportar Excel
+                </button>
+                <button (click)="refrescar()" [disabled]="cargando" title="Forzar recarga desde Odoo (ignora caché)">
+                    <i class="fas" [class.fa-sync-alt]="!refrescando" [class.fa-spinner]="refrescando" [class.fa-spin]="refrescando"></i>
+                    {{ refrescando ? 'Actualizando...' : 'Refrescar' }}
                 </button>
             </div>
 
@@ -52,7 +61,14 @@
                     </select>
                     <button *ngIf="filtroMarca" class="buscador-limpiar" (click)="limpiarFiltroMarca()" title="Quitar filtro">×</button>
                 </div>
-                <span *ngIf="textoBusqueda || filtroMarca" class="buscador-resultado">
+                <!-- Filtro proyección -->
+                <button class="filtro-proy-btn"
+                        [class.filtro-proy-activo]="filtroProyeccion"
+                        (click)="filtroProyeccion = !filtroProyeccion; filtrarFacturas()"
+                        title="Mostrar solo pedidos de proyecciones">
+                    <i class="fas fa-chart-bar"></i> Solo PROY
+                </button>
+                <span *ngIf="textoBusqueda || filtroMarca || filtroProyeccion" class="buscador-resultado">
                     {{ facturasFiltradas.length }} resultado{{ facturasFiltradas.length !== 1 ? 's' : '' }}
                 </span>
             </div>
@@ -77,7 +93,7 @@
                 </div>
                 <div class="resumen-separador"></div>
                 <div class="resumen-item">
-                    <span class="resumen-temporada">Temporada MY26</span>
+                    <span class="resumen-temporada" *ngIf="etiquetaTemporadaMostrada">Temporada {{ etiquetaTemporadaMostrada }}</span>
                 </div>
             </div>
 
@@ -92,11 +108,13 @@
                 <p>{{ error }}</p>
             </div>
 
-            <!-- Proyecciones tab (embebido) -->
+            <!-- Proyecciones tab (embebido) — se crea al abrir el modal para pre-cargar datos -->
             <app-proyecciones-tab
-                *ngIf="tabActiva === 'Proyecciones'"
+                *ngIf="(clienteClave && clienteClave !== '__sin_clave__') || idGrupoOdoo"
+                [hidden]="tabActiva !== 'Proyecciones'"
                 [clienteClave]="clienteClave"
                 [idCliente]="idClienteNum"
+                [idGrupoOdoo]="idGrupoOdoo"
                 (rowCountChange)="proyeccionesCount = $event">
             </app-proyecciones-tab>
 
@@ -147,7 +165,11 @@
                     </thead>
                     <tbody>
                         <tr *ngFor="let factura of facturasPaginadas">
-                            <td>{{ factura.numero_factura }}</td>
+                            <td>
+                                {{ factura.numero_factura }}
+                                <span *ngIf="factura.de_proyeccion" class="badge-proyeccion" title="Pedido de proyecciones">PROY</span>
+                                <span *ngFor="let tag of factura.etiquetas" class="badge-etiqueta" [title]="tag">{{ tag }}</span>
+                            </td>
                             <td>{{ factura.referencia_interna }}</td>
                             <td>{{ factura.nombre_producto }}</td>
                             <td>{{ formatearFecha(factura.fecha_factura) }}</td>

@@ -23,33 +23,48 @@
 .proy-selector-group {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.12rem;
+  background: rgba(235, 94, 40, 0.06);
+  border: 1px solid rgba(235, 94, 40, 0.18);
+  border-left: 3px solid #EB5E28;
+  border-radius: 8px;
+  padding: 0.45rem 1rem 0.5rem 0.85rem;
+  transition: border-color 0.2s, background 0.2s;
+}
+.proy-selector-group:focus-within {
+  background: rgba(235, 94, 40, 0.1);
+  border-color: rgba(235, 94, 40, 0.35);
 }
 
 .proy-label {
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.6rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
   color: #EB5E28;
+  opacity: 0.8;
   display: flex;
   align-items: center;
   gap: 0.35rem;
+  line-height: 1;
 }
 
 .proy-select {
-  background: #252320;
-  border: 1px solid #403D39;
-  border-radius: 7px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
   color: #FFFCF2;
-  padding: 0.45rem 0.9rem;
-  font-size: 0.88rem;
+  padding: 0.12rem 1.4rem 0.12rem 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   cursor: pointer;
   outline: none;
-  transition: border-color 0.15s;
-  min-width: 160px;
+  min-width: 140px;
+  appearance: auto;
+  -webkit-appearance: auto;
 }
-.proy-select:focus { border-color: #EB5E28; }
+.proy-select option { background: #252320; }
 
 /* ══════════════════════════════════════════
    BUTTONS
@@ -173,11 +188,13 @@
 
 /* Button for selecting a product in new rows */
 .proy-btn-buscar {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.75rem;
   border: 2px solid #EB5E28;
   background: rgba(235, 94, 40, 0.08);
   border-radius: 8px;
@@ -440,31 +457,41 @@
   border: 1px solid #2e2c29;
   display: flex;
   flex-direction: column;
+  /* La barra de scroll naranja va arriba, luego el área de tabla */
 }
 
 .proy-tabla-scroll {
   overflow-x: scroll;
   overflow-y: auto;
-  /* max-height ajustado al modal (90vh) menos: header modal (72px) +
-     padding modal-body (40px) + tabs (52px) + toolbar (71px) +
-     filtros (60px) + acciones (50px) + margen de seguridad (15px) = 360px */
-  max-height: calc(90vh - 360px);
+  max-height: calc(90vh - 374px);
   min-height: 200px;
   width: 100%;
-  scrollbar-width: thin;
-  scrollbar-color: #4a4744 #1a1917;
+  /* Sin scrollbar visible — se navega con rueda/trackpad; top-bar naranja maneja horizontal */
+  scrollbar-width: none;
 }
 
-/* Webkit scrollbar — vertical + horizontal */
-.proy-tabla-scroll::-webkit-scrollbar { width: 7px; height: 7px; }
-.proy-tabla-scroll::-webkit-scrollbar-track { background: #1a1917; }
-.proy-tabla-scroll::-webkit-scrollbar-thumb { background: #4a4744; border-radius: 4px; }
-.proy-tabla-scroll::-webkit-scrollbar-thumb:hover { background: #EB5E28; }
-.proy-tabla-scroll::-webkit-scrollbar-corner { background: #1a1917; }
+/* Webkit: ocultar todos los scrollbars (vertical + horizontal) */
+.proy-tabla-scroll::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
-/* Sticky bar desactivado — la barra horizontal va directa en .proy-tabla-scroll */
-.proy-scroll-sticky { display: none; }
-.proy-scroll-inner  { display: none; }
+/* Scrollbar horizontal en la parte SUPERIOR — naranja, siempre visible */
+.proy-scroll-sticky {
+  display: block;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  height: 14px;
+  width: 100%;
+  background: #181715;
+  border-bottom: 1px solid #2e2c29;
+  flex-shrink: 0;
+}
+.proy-scroll-sticky::-webkit-scrollbar        { height: 6px; }
+.proy-scroll-sticky::-webkit-scrollbar-track  { background: #252320; }
+.proy-scroll-sticky::-webkit-scrollbar-thumb  { background: #EB5E28; border-radius: 3px; }
+.proy-scroll-sticky::-webkit-scrollbar-thumb:hover { background: #ff7a4b; }
+/* Firefox */
+.proy-scroll-sticky { scrollbar-width: thin; scrollbar-color: #EB5E28 #252320; }
+
+.proy-scroll-inner { height: 1px; }
 
 .proy-tabla {
   width: 100%;
@@ -509,9 +536,9 @@
 
 /* Column sizing + sticky columns */
 .th-sku, .td-sku {
-  width: 100px;
-  min-width: 100px;
-  max-width: 100px;
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
   font-size: 0.78rem;
   color: #888;
   /* Sticky izquierda */
@@ -523,9 +550,9 @@
 
 .th-producto, .td-producto {
   min-width: 180px;
-  /* Sticky izquierda después de SKU */
+  /* Sticky izquierda después de SKU (200px = ancho de td-sku) */
   position: sticky;
-  left: 100px;
+  left: 200px;
   z-index: 2;
   background: #1e1d1b;
   border-right: 1px solid #403d39;
@@ -556,20 +583,90 @@
 .proy-tabla tbody .proy-fila-eliminar .td-producto { background: #1f1212; }
 .proy-tabla tbody .proy-fila-editada .td-sku,
 .proy-tabla tbody .proy-fila-editada .td-producto  { background: #1c1b10; }
-.th-total, .td-total { text-align: center; font-weight: 700; color: #FFFCF2; white-space: nowrap; }
-.th-mes             { min-width: 52px; text-align: center; }
+
+/* Section separator header — two-td approach for horizontal sticky */
+.td-seccion-sticky {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  min-width: 380px;
+  background: #1e1b14;
+  color: #EB5E28;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 8px 14px;
+  border-top: 2px solid #EB5E28;
+  border-bottom: 1px solid #3a3630;
+}
+.td-seccion-sticky i { margin-right: 6px; opacity: 0.8; }
+.td-seccion-filler {
+  background: #1e1b14;
+  border-top: 2px solid #EB5E28;
+  border-bottom: 1px solid #3a3630;
+  padding: 0;
+}
+.proy-seccion-toggle:hover .td-seccion-sticky,
+.proy-seccion-toggle:hover .td-seccion-filler { background: #26211a; }
+
+/* Legacy label approach (kept for safety, not used) */
+.proy-seccion-label {
+  position: sticky;
+  left: 0;
+  display: block;
+  padding: 8px 14px;
+  background: #1e1b14;
+  color: #EB5E28;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  z-index: 2;
+}
+.proy-seccion-label i { margin-right: 6px; opacity: 0.8; }
+.proy-seccion-toggle:hover td { background: #26211a; }
+.proy-seccion-toggle:hover .proy-seccion-label { background: #26211a; }
+
+/* Collapsible section */
+.proy-seccion-toggle { cursor: pointer; user-select: none; }
+.proy-seccion-chevron {
+  margin-right: 8px !important;
+  font-size: 0.68rem;
+  transition: transform 0.2s ease;
+  display: inline-block;
+  opacity: 1 !important;
+}
+.proy-seccion-chevron--collapsed { transform: rotate(-90deg); }
+.proy-seccion-count {
+  margin-left: 8px;
+  font-size: 0.68rem;
+  font-weight: 400;
+  opacity: 0.55;
+  letter-spacing: 0;
+}
+
+/* .th-total / .td-total definidos en sección "Precio column" abajo */
+.th-mes             { min-width: 68px; text-align: center; }
 .td-qty             { text-align: center; }
 .th-acciones, .td-acciones { width: 48px; text-align: center; }
 .th-center, .td-center { text-align: center; }
 
-/* Precio column */
-.th-precio          { min-width: 100px; text-align: right; }
-.td-precio          { text-align: right; font-size: 0.82rem; color: #FFFCF2; white-space: nowrap; }
+/* Precio column — width fijo en th y td para garantizar alineación */
+.th-precio          { width: 115px; min-width: 115px; text-align: right; }
+.th-precio-pub      { color: #aed6f1; }
+.td-precio          { width: 115px; min-width: 115px; text-align: right; font-size: 0.82rem; color: #FFFCF2; white-space: nowrap; }
+.td-precio-pub      { color: #aed6f1; }
 .td-precio-nd       { color: #555; }
 
+/* Total uds. column — ancho fijo */
+.th-total, .td-total { width: 90px; min-width: 90px; text-align: center; font-weight: 700; color: #FFFCF2; white-space: nowrap; }
+
 /* Total $ column */
-.th-total-precio    { min-width: 110px; text-align: center; background: #7a3010 !important; color: #FFFCF2 !important; }
-.td-total-precio    { text-align: center; font-weight: 700; color: #EB5E28; white-space: nowrap; font-size: 0.85rem; }
+.th-total-precio    { width: 120px; min-width: 120px; text-align: center; background: #7a3010 !important; color: #FFFCF2 !important; }
+.td-total-precio    { width: 120px; min-width: 120px; text-align: center; font-weight: 700; color: #EB5E28; white-space: nowrap; font-size: 0.85rem; }
 
 /* Row state classes */
 .proy-fila-nueva    { background: rgba(235,94,40,.06) !important; }
@@ -591,7 +688,12 @@
 }
 .proy-input-num:focus { border-color: #EB5E28; }
 
-/* TFOOT */
+/* TFOOT — sticky al fondo del área visible de la tabla */
+.proy-tabla tfoot {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+}
 .proy-fila-totales {
   background: #1e1d1b;
   border-top: 2px solid #403D39;
@@ -600,22 +702,103 @@
   padding: 0.6rem 0.75rem;
   color: #FFFCF2;
   font-size: 0.82rem;
+  background: #1e1d1b;
 }
-.td-total-foot      { text-align: center; font-weight: 700; color: #FFFCF2; }
-.td-precio-foot     { background: transparent; }
+.td-total-foot      { text-align: center; font-weight: 700; color: #FFFCF2; background: #1e1d1b; }
+.td-precio-foot     { background: #1e1d1b; }
 
-/* Fila azul: precio por mes */
-.proy-fila-precio-mes {
-  background: #0d2a4a;
-  border-top: 1px solid #1B5E9C;
+/* ── FOOTER ROWS — diseño limpio, fondo neutro, accent por marca ── */
+
+/* Shared base for all brand footer rows */
+/* ══════════════════════════════════════════
+   FOOTER — DESGLOSE POR SECCIÓN + TOTAL $
+══════════════════════════════════════════ */
+
+/* ─ Filas de sección (Megamo / Scott / Apparel / Syncros) ─ */
+.proy-fila-sec td {
+  padding: 4px 8px;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1;
 }
-.proy-fila-precio-mes td {
-  padding: 0.5rem 0.75rem;
-  color: #90CAF9;
-  font-size: 0.80rem;
+.proy-fila-sec--last {
+  border-bottom: 2px solid #2a2825;
 }
-.td-precio-mes-lbl  { text-align: right; color: #90CAF9 !important; font-weight: 700; letter-spacing: 0.03em; }
-.td-precio-mes      { text-align: center; font-weight: 700; white-space: nowrap; }
+
+/* Label sticky izquierdo */
+.td-sec-lbl {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  text-align: left !important;
+  padding-left: 14px !important;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* Un solo dato por celda */
+.td-sec-num {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.td-sec-dash {
+  opacity: 0.08;
+  font-size: 0.65rem;
+}
+.td-sec-trail { padding: 0; }
+
+/* Colores por sección — fondo propio en lbl para el sticky */
+.proy-fila-sec--megamo td          { background: #1a1916; color: #9a6d30; }
+.proy-fila-sec--megamo .td-sec-lbl { border-left: 3px solid #e88c2e; color: #e88c2e; background: #1a1916; }
+
+.proy-fila-sec--scott td           { background: #171819; color: #426a85; }
+.proy-fila-sec--scott .td-sec-lbl  { border-left: 3px solid #4a9edd; color: #4a9edd; background: #171819; }
+
+.proy-fila-sec--apparel td             { background: #1a1714; color: #8a5030; }
+.proy-fila-sec--apparel .td-sec-lbl    { border-left: 3px solid #EB5E28; color: #EB5E28; background: #1a1714; }
+
+.proy-fila-sec--syncros td             { background: #161616; color: #484848; }
+.proy-fila-sec--syncros .td-sec-lbl    { border-left: 3px solid #444; color: #777; background: #161616; }
+
+/* ─ Fila total inversión ─ */
+.proy-fila-total-precio {
+  background: #0f0e0c;
+}
+.proy-fila-total-precio td {
+  padding: 7px 8px;
+  text-align: center;
+  white-space: nowrap;
+}
+.td-total-precio-lbl {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  background: #0f0e0c;
+  text-align: left !important;
+  padding-left: 12px !important;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: #EB5E28;
+  text-transform: uppercase;
+  border-left: 3px solid #EB5E28;
+}
+.td-total-precio-mes {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ccc8c2;
+}
+.td-total-precio-global { color: #EB5E28; }
+.td-total-precio-empty  { background: #0f0e0c; }
+
+.td-cuentas-lock {
+  font-size: 0.65rem;
+  opacity: 0.35;
+  display: inline-block;
+}
 
 /* ══════════════════════════════════════════
    MODAL BACKDROP (OTP)
@@ -806,6 +989,21 @@
   transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 .sbm-btn-cerrar:hover { border-color: #c0392b; color: #e74c3c; background: rgba(192,57,43,.1); }
+
+/* Error banner inside search modal */
+.sbm-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.2rem;
+  background: rgba(192, 57, 43, 0.15);
+  border-bottom: 1px solid rgba(192, 57, 43, 0.4);
+  color: #e74c3c;
+  font-size: 0.83rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.sbm-error-banner i { flex-shrink: 0; }
 
 /* Search bar */
 .sbm-search-bar {
@@ -1020,3 +1218,128 @@
 .sbm-estado-icono-sm { font-size: 0.85rem; color: #555; }
 .sbm-estado-txt-sm { font-size: 0.8rem; color: #555; font-style: italic; }
 
+
+/* ── Totales por marca ── */
+.proy-resumen-marcas {
+  display: flex;
+  gap: 12px;
+  margin: 0 0 14px 0;
+  flex-wrap: wrap;
+}
+.proy-resumen-card {
+  flex: 1;
+  min-width: 220px;
+  background: #1c1b19;
+  border: 1px solid #2e2b28;
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.proy-resumen-megamo { border-left: 3px solid #e88c2e; }
+.proy-resumen-scott  { border-left: 3px solid #4a9edd; }
+.proy-resumen-global { border-left: 3px solid #EB5E28; background: #1f1d1a; }
+.proy-resumen-logo {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 2px;
+}
+.proy-resumen-megamo .proy-resumen-logo { color: #e88c2e; }
+.proy-resumen-scott  .proy-resumen-logo { color: #4a9edd; }
+.proy-resumen-global .proy-resumen-logo { color: #EB5E28; }
+.proy-resumen-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.proy-resumen-num {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f0ede8;
+}
+.proy-resumen-lbl {
+  font-size: 0.7rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.td-qty-bloqueado {
+  background: rgba(255, 255, 255, 0.03);
+  cursor: not-allowed;
+}
+/* Mes con unidades pendientes (proyectado y aún no cubierto) */
+.mes-pendiente {
+  color: #EB5E28;
+  font-weight: 700;
+}
+/* Mes que fue proyectado y ya fue pedido+entregado (cubierto) */
+.mes-entregado {
+  color: #52B788;
+  font-weight: 600;
+}
+.td-qty-lock {
+  color: #444;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  opacity: 0.5;
+}
+
+.proy-resumen-stat-cuentas {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+.proy-resumen-num-sm {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #aaa;
+}
+
+/* ── Split vertical dentro de la card ──────────────────────────────────────── */
+.proy-resumen-split {
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+}
+.proy-resumen-half {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.proy-resumen-half + .proy-resumen-half {
+  padding-left: 12px;
+  margin-left: 12px;
+  border-left: 1px solid rgba(255,255,255,0.07);
+}
+
+/* Colores de logo para los halves secundarios */
+.proy-resumen-half-syncros .proy-resumen-logo {
+  color: #9e9e9e;
+}
+.proy-resumen-half-apparel .proy-resumen-logo {
+  color: #EB5E28;
+}
+
+/* Números más pequeños dentro del split para que quepan */
+.proy-resumen-split .proy-resumen-num {
+  font-size: 0.9rem;
+}
+.proy-resumen-split .proy-resumen-lbl {
+  font-size: 0.65rem;
+}
+.proy-resumen-split .proy-resumen-stat-cuentas {
+  margin-top: auto;
+}

@@ -1,3 +1,115 @@
+/* ================= BANNER TEMPORADA CERRADA ================= */
+.banner-temporada-cerrada {
+    width: 100%;
+    background-color: #7f1d1d;
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 16px 25px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-left: 6px solid #dc2626;
+}
+
+/* ================= SECCIÓN CERRAR TEMPORADA (admin) ================= */
+/* Diseño tipo "row-calc" — nativo de la caratula */
+.seccion-cerrar-temporada {
+    width: 100%;
+    margin-bottom: 28px;
+    border: 1px solid #dcdcdc;
+    display: flex;
+}
+
+.cerrar-label-side {
+    width: 55%;
+    background-color: #252525;
+    color: #ffffff;
+    padding: 18px 25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+}
+
+.cerrar-label-titulo {
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cerrar-label-desc {
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.3;
+}
+
+.cerrar-action-side {
+    width: 45%;
+    background-color: #ffffff;
+    border-left: 1px solid #dcdcdc;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+}
+
+.cerrar-controles {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.input-fecha-cierre {
+    flex: 1;
+    min-width: 130px;
+    padding: 9px 12px;
+    border: 1px solid #cccccc;
+    background-color: #f9f9f9;
+    color: #222222;
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.input-fecha-cierre:focus { border-color: #EB5E28; background-color: #fff; }
+.input-fecha-cierre:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-cerrar-temporada {
+    padding: 9px 18px;
+    border: none;
+    background-color: #EB5E28;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+.btn-cerrar-temporada:hover:not(:disabled) { background-color: #d15020; }
+.btn-cerrar-temporada:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.cerrar-error {
+    color: #dc2626;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
 /* ================= FONDO GENERAL DE PANTALLA ================= */
 .monitor-container {
     padding: 2rem;
@@ -345,7 +457,83 @@
     line-height: 1.5;
 }
 
-/* Responsive para pantallas pequeñas */
+/* ================= BANNERS CIERRE SPLIT ================= */
+.banner-split-scott {
+    background-color: #1a1a2e !important;
+    border-left: 4px solid #EB5E28;
+}
+.banner-split-apparel {
+    background-color: #0f3460 !important;
+    border-left: 4px solid #4fc3f7;
+    margin-top: 6px;
+}
+
+/* ================= BOTÓN DESCARGAR PDF ================= */
+.barra-acciones-pdf {
+    width: 100%;
+    max-width: 950px;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+.btn-descargar-pdf {
+    background-color: #EB5E28;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.btn-descargar-pdf:hover { background-color: #d15020; }
+
+/* ================= PRINT / PDF ================= */
+@media print {
+    app-home-bar,
+    .search-card,
+    .error-message,
+    .barra-acciones-pdf,
+    .seccion-cerrar-temporada { display: none !important; }
+
+    body, .monitor-container {
+        background-color: #ffffff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .caratula-wrapper {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 20px 30px !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    .table-moderna, .escalera-calculo, .row-calc { page-break-inside: avoid; }
+
+    .nota-footer {
+        margin-top: 12px !important;
+        page-break-before: avoid;
+        page-break-inside: avoid;
+    }
+
+    /* Reducir márgenes verticales para que todo entre en una sola página */
+    .seccion-header { margin-bottom: 10px !important; }
+    .section-divider { margin: 10px 0 !important; }
+    .caratula-header { margin-bottom: 10px !important; padding-bottom: 10px !important; }
+    .importe-final-wrapper { margin-top: 10px !important; }
+
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
+
+/* ================= RESPONSIVE ================= */
 @media (max-width: 768px) {
     .caratula-wrapper { padding: 30px 20px; }
     

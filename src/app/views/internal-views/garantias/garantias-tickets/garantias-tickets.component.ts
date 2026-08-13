@@ -1,7 +1,7 @@
-import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HomeBarComponent } from '../../../../components/home-bar/home-bar.component';
 import {
   GarantiasService,
@@ -22,14 +22,6 @@ const COLOR_ESTATUS: Record<string, string> = {
 };
 
 const ESTATUSES_PIEZA = ['Sin pieza', 'Solicitada', 'En tránsito', 'En almacén', 'Enviada al cliente', 'Rechazada'];
-
-const PIEZAS_REEMPLAZO = [
-  'N/A',
-  'ASIENTO', 'BATERIA', 'CUADRO', 'DROPPER', 'DROPPER POST',
-  'FRENOS', 'GOOGLES', 'GUANTES', 'HANGER', 'LLANTA', 'MANDO E-BIKE',
-  'MAUBRIO', 'POTENCIA', 'RINES', 'SUSPENSION', 'TRANSMISION',
-  'TWINLOCK', 'UNIDAD MOTRIZ', 'ZAPATOS',
-];
 
 const DOC_LABELS: Record<string, string> = {
   // Bicicletas (Scott / Megamo)
@@ -98,19 +90,71 @@ const COLOR_PIEZA: Record<string, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GarantiasTicketsComponent implements OnInit {
-  readonly estatuses        = ESTATUSES;
-  readonly estatusesPieza   = ESTATUSES_PIEZA;
-  readonly piezasReemplazo  = PIEZAS_REEMPLAZO;
+  readonly estatuses      = ESTATUSES;
+  readonly estatusesPieza = ESTATUSES_PIEZA;
+
+  @ViewChild('dpScroll') dpScrollEl!: ElementRef<HTMLElement>;
+
+  piezasReemplazo: string[] = [];
 
   tickets: GarantiaFormulario[] = [];
   cargando = true;
   error = '';
 
   // Filtros
-  busqueda     = '';
-  filtroEstatus = 'Todos';
+  busqueda      = '';
+  filtrosEstatus: string[] = []; // vacío = todos los estatus
   filtroMarca   = 'Todas';
-  filtroMes     = '';
+  fechaDesde    = '';
+  fechaHasta    = '';
+  ordenFecha: 'desc' | 'asc' = 'desc';
+
+  // Popover de selección múltiple de estatus
+  mostrarEstatusPopover = false;
+  @ViewChild('estatusWrap') estatusWrapEl!: ElementRef<HTMLElement>;
+
+  toggleEstatusPopover(e: MouseEvent): void {
+    e.stopPropagation();
+    this.mostrarEstatusPopover = !this.mostrarEstatusPopover;
+    this.cdr.markForCheck();
+  }
+
+  toggleEstatusSeleccionado(estatus: string): void {
+    const i = this.filtrosEstatus.indexOf(estatus);
+    if (i === -1) this.filtrosEstatus = [...this.filtrosEstatus, estatus];
+    else this.filtrosEstatus = this.filtrosEstatus.filter(e => e !== estatus);
+    this.cdr.markForCheck();
+  }
+
+  limpiarFiltroEstatus(e: MouseEvent): void {
+    e.stopPropagation();
+    this.filtrosEstatus = [];
+    this.cdr.markForCheck();
+  }
+
+  get estatusFiltroLabel(): string {
+    const n = this.filtrosEstatus.length;
+    if (n === 0) return 'Todos los estatus';
+    if (n === 1) return this.filtrosEstatus[0];
+    return `${n} estatus seleccionados`;
+  }
+
+  toggleOrdenFecha(): void {
+    this.ordenFecha = this.ordenFecha === 'desc' ? 'asc' : 'desc';
+    this.cdr.markForCheck();
+  }
+
+  // Custom date picker
+  readonly NOMBRES_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  readonly DIAS_SEM = ['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
+  mostrarCalendario   = false;
+  calMes              = new Date().getMonth();
+  calAnio             = new Date().getFullYear();
+  calVista: 'dias' | 'meses' | 'anios' = 'dias';
+  calDecadaInicio     = Math.floor(new Date().getFullYear() / 12) * 12;
+  seleccionando: 'inicio' | 'fin' = 'inicio';
+
+  @ViewChild('drWrap') drWrapEl!: ElementRef<HTMLElement>;
 
   // Detalle
   selected: GarantiaFormulario | null = null;
@@ -139,6 +183,26 @@ export class GarantiasTicketsComponent implements OnInit {
   cambiandoPiezaReem = false;
   piezaSeleccionada  = '';
 
+  // Agregar nueva pieza al catálogo
+  mostrarFormPieza  = false;
+  nuevaPieza        = '';
+  agregandoPieza    = false;
+  piezasError       = false;
+
+  // Gestionar (eliminar) piezas duplicadas o mal capturadas del catálogo
+  mostrarGestionPiezas = false;
+  piezaAEliminar: string | null = null;
+  usoPiezaConteo: number | null = null;
+  cargandoUsoPieza = false;
+  eliminandoPieza  = false;
+
+  // Importación masiva histórica
+  modalImport           = false;
+  archivoImport: File | null = null;
+  importando            = false;
+  descargandoPlantilla  = false;
+  importResult: any     = null;
+
   // Selector de fecha al cambiar estatus
   pendienteEstatus   = '';
   pendientePieza     = '';
@@ -148,8 +212,10 @@ export class GarantiasTicketsComponent implements OnInit {
   // Edición inline de fechas existentes
   editandoFechaEstatus = false;
   editandoFechaPieza   = false;
+  editandoFechaCreacion = false;
   editFechaEstatus     = '';
   editFechaPieza       = '';
+  editFechaCreacion    = '';
 
   get hoy(): string {
     return new Date().toISOString().slice(0, 10);
@@ -159,11 +225,34 @@ export class GarantiasTicketsComponent implements OnInit {
   validacionDocs: Record<string, string> = {};
   validandoDoc: Record<string, boolean>  = {};
 
-  constructor(private svc: GarantiasService, private cdr: ChangeDetectorRef, private auth: AuthService) {}
+  /** true solo si llegamos aquí desde un enlace con ?id= (deep-link a un ticket puntual) */
+  vieneDeDeepLink = false;
+
+  constructor(
+    private svc: GarantiasService,
+    private cdr: ChangeDetectorRef,
+    private auth: AuthService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private location: Location,
+  ) {
+    this.vieneDeDeepLink = !!this.route.snapshot.queryParamMap.get('id');
+  }
 
   get esAdmin(): boolean { return this.auth.isAdmin(); }
 
-  ngOnInit(): void { this.cargar(); }
+  volver(): void {
+    if (this.vieneDeDeepLink) {
+      this.location.back();
+    } else {
+      this.router.navigateByUrl('/garantias/dashboard');
+    }
+  }
+
+  ngOnInit(): void {
+    this.cargar();
+    this.cargarPiezas();
+  }
 
   cargar(): void {
     this.cargando = true;
@@ -173,6 +262,7 @@ export class GarantiasTicketsComponent implements OnInit {
       next: (t) => {
         this.tickets  = t;
         this.cargando = false;
+        this.seleccionarDesdeQueryParam();
         this.cdr.markForCheck();
       },
       error: () => {
@@ -183,39 +273,203 @@ export class GarantiasTicketsComponent implements OnInit {
     });
   }
 
+  private seleccionarDesdeQueryParam(): void {
+    const id = Number(this.route.snapshot.queryParamMap.get('id'));
+    if (!id) return;
+    const t = this.tickets.find(x => x.id === id);
+    if (t) this.seleccionarTicket(t);
+  }
+
   get marcas(): string[] {
     const set = new Set(this.tickets.map(t => t.marca).filter(Boolean));
     return ['Todas', ...Array.from(set).sort()];
   }
 
-  get mesesDisponibles(): string[] {
-    const set = new Set<string>();
-    this.tickets.forEach(t => {
-      const m = (t.fecha_creacion ?? '').slice(0, 7);
-      if (m) set.add(m);
-    });
-    return Array.from(set).sort((a, b) => b.localeCompare(a));
+  // ── Custom date picker ────────────────────────────────────────────────────
+
+  @HostListener('document:click', ['$event'])
+  onDocClick(e: MouseEvent): void {
+    if (this.mostrarCalendario && !this.drWrapEl?.nativeElement.contains(e.target as Node)) {
+      this.mostrarCalendario = false;
+      this.cdr.markForCheck();
+    }
+    if (this.mostrarEstatusPopover && !this.estatusWrapEl?.nativeElement.contains(e.target as Node)) {
+      this.mostrarEstatusPopover = false;
+      this.cdr.markForCheck();
+    }
   }
 
-  formatMes(ym: string): string {
-    if (!ym) return '';
-    const [y, m] = ym.split('-');
+  toggleCalendario(e: MouseEvent): void {
+    e.stopPropagation();
+    if (!this.mostrarCalendario) this.calVista = 'dias';
+    this.mostrarCalendario = !this.mostrarCalendario;
+    this.cdr.markForCheck();
+  }
+
+  diasDelMes(): (number | null)[] {
+    const primerDia = new Date(this.calAnio, this.calMes, 1).getDay();
+    const totalDias = new Date(this.calAnio, this.calMes + 1, 0).getDate();
+    const dias: (number | null)[] = Array(primerDia).fill(null);
+    for (let i = 1; i <= totalDias; i++) dias.push(i);
+    return dias;
+  }
+
+  private diaAFecha(dia: number): string {
+    return `${this.calAnio}-${String(this.calMes + 1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+  }
+
+  seleccionarDia(dia: number): void {
+    const fecha = this.diaAFecha(dia);
+    if (this.seleccionando === 'inicio') {
+      this.fechaDesde    = fecha;
+      this.fechaHasta    = '';
+      this.seleccionando = 'fin';
+    } else {
+      if (fecha < this.fechaDesde) {
+        this.fechaHasta = this.fechaDesde;
+        this.fechaDesde = fecha;
+      } else {
+        this.fechaHasta = fecha;
+      }
+      this.seleccionando    = 'inicio';
+      this.mostrarCalendario = false;
+    }
+    this.cdr.markForCheck();
+  }
+
+  esInicio(dia: number | null): boolean {
+    return !!dia && !!this.fechaDesde && this.diaAFecha(dia) === this.fechaDesde;
+  }
+
+  esFin(dia: number | null): boolean {
+    return !!dia && !!this.fechaHasta && this.diaAFecha(dia) === this.fechaHasta;
+  }
+
+  enRango(dia: number | null): boolean {
+    if (!dia || !this.fechaDesde || !this.fechaHasta) return false;
+    const f = this.diaAFecha(dia);
+    return f > this.fechaDesde && f < this.fechaHasta;
+  }
+
+  esHoy(dia: number | null): boolean {
+    return !!dia && this.diaAFecha(dia) === new Date().toISOString().slice(0, 10);
+  }
+
+  mesAnterior(): void {
+    if (this.calVista === 'anios')       { this.calDecadaInicio -= 12; }
+    else if (this.calVista === 'meses')  { this.calAnio--; }
+    else {
+      if (this.calMes === 0) { this.calMes = 11; this.calAnio--; }
+      else this.calMes--;
+    }
+    this.cdr.markForCheck();
+  }
+
+  mesSiguiente(): void {
+    if (this.calVista === 'anios')       { this.calDecadaInicio += 12; }
+    else if (this.calVista === 'meses')  { this.calAnio++; }
+    else {
+      if (this.calMes === 11) { this.calMes = 0; this.calAnio++; }
+      else this.calMes++;
+    }
+    this.cdr.markForCheck();
+  }
+
+  abrirVistaMeses(): void {
+    this.calVista = 'meses';
+    this.cdr.markForCheck();
+  }
+
+  abrirVistaAnios(): void {
+    this.calDecadaInicio = Math.floor(this.calAnio / 12) * 12;
+    this.calVista = 'anios';
+    this.cdr.markForCheck();
+  }
+
+  seleccionarMes(mes: number): void {
+    this.calMes   = mes;
+    this.calVista = 'dias';
+    this.cdr.markForCheck();
+  }
+
+  seleccionarAnio(anio: number): void {
+    this.calAnio  = anio;
+    this.calVista = 'meses';
+    this.cdr.markForCheck();
+  }
+
+  aniosDecada(): number[] {
+    return Array.from({ length: 12 }, (_, i) => this.calDecadaInicio + i);
+  }
+
+  esMesActual(mes: number): boolean {
+    const h = new Date();
+    return this.calAnio === h.getFullYear() && mes === h.getMonth();
+  }
+
+  esAnioActual(anio: number): boolean {
+    return anio === new Date().getFullYear();
+  }
+
+  limpiarFechas(): void {
+    this.fechaDesde        = '';
+    this.fechaHasta        = '';
+    this.seleccionando     = 'inicio';
+    this.mostrarCalendario = false;
+    this.cdr.markForCheck();
+  }
+
+  formatDisplayDate(fecha: string): string {
+    if (!fecha) return '';
+    const [y, m, d] = fecha.split('-');
     const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    return `${meses[parseInt(m, 10) - 1] ?? m} ${y}`;
+    return `${parseInt(d)} ${meses[parseInt(m) - 1]} ${y}`;
+  }
+
+  private parseFechaTicket(f: string): Date | null {
+    // Formato: dd/mm/yyyy HH:MM
+    const m = f?.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+    if (!m) return null;
+    return new Date(+m[3], +m[2] - 1, +m[1]);
   }
 
   get ticketsFiltrados(): GarantiaFormulario[] {
-    const q  = this.busqueda.toLowerCase().trim();
-    const es = this.filtroEstatus;
-    const ma = this.filtroMarca;
-    const me = this.filtroMes;
-    return this.tickets.filter(t => {
-      if (es !== 'Todos' && t.estatus !== es) return false;
+    const q     = this.busqueda.toLowerCase().trim();
+    const es    = this.filtrosEstatus;
+    const ma    = this.filtroMarca;
+    const desde = this.fechaDesde ? new Date(this.fechaDesde + 'T00:00:00') : null;
+    const hasta = this.fechaHasta ? new Date(this.fechaHasta + 'T23:59:59') : null;
+
+    const resultado = this.tickets.filter(t => {
+      if (es.length > 0 && !es.includes(t.estatus)) return false;
       if (ma !== 'Todas' && t.marca    !== ma) return false;
-      if (me && !(t.fecha_creacion ?? '').startsWith(me))   return false;
+      if (desde || hasta) {
+        const fecha = this.parseFechaTicket(t.fecha_creacion ?? '');
+        if (!fecha) return false;
+        if (desde && fecha < desde) return false;
+        if (hasta && fecha > hasta) return false;
+      }
       if (q && !(`${t.folio} ${t.distribuidor} ${t.contacto} ${t.marca}`).toLowerCase().includes(q)) return false;
       return true;
     });
+
+    const signo = this.ordenFecha === 'asc' ? 1 : -1;
+    return resultado.sort((a, b) => {
+      const fa = this.parseFechaTicket(a.fecha_creacion ?? '')?.getTime() ?? 0;
+      const fb = this.parseFechaTicket(b.fecha_creacion ?? '')?.getTime() ?? 0;
+      return (fa - fb) * signo;
+    });
+  }
+
+  /** Conteo por estatus de los tickets actualmente filtrados/buscados (no del total sin filtrar). */
+  get conteoPorEstatus(): { estatus: string; count: number }[] {
+    const conteo = new Map<string, number>();
+    for (const t of this.ticketsFiltrados) {
+      conteo.set(t.estatus, (conteo.get(t.estatus) ?? 0) + 1);
+    }
+    return ESTATUSES.slice(1)
+      .map(estatus => ({ estatus, count: conteo.get(estatus) ?? 0 }))
+      .filter(e => e.count > 0);
   }
 
   colorEstatus(estatus: string): string {
@@ -227,7 +481,7 @@ export class GarantiasTicketsComponent implements OnInit {
     this.comentarios = [];
     this.nuevoComentario = '';
     this.notaInterna = '';
-    this.fechaValidacion = '';
+    this.fechaValidacion = localStorage.getItem(`garantias_fecha_retro_${t.id}`) ?? '';
     this.confirmandoEliminacion = false;
     this.validacionDocs   = { ...(t.validacion_docs_json ?? {}) };
     this.validandoDoc     = {};
@@ -236,9 +490,29 @@ export class GarantiasTicketsComponent implements OnInit {
     this.pendientePieza     = '';
     this.editandoFechaEstatus = false;
     this.editandoFechaPieza   = false;
+    if (this.piezasReemplazo.length === 0) this.cargarPiezas();
     this.cdr.markForCheck();
     this.cargarDetalle(t.id);
     this.cargarComentarios(t.id);
+  }
+
+  guardarFechaRetro(fecha: string): void {
+    this.fechaValidacion = fecha;
+    if (this.selected) {
+      if (fecha) {
+        localStorage.setItem(`garantias_fecha_retro_${this.selected.id}`, fecha);
+      } else {
+        localStorage.removeItem(`garantias_fecha_retro_${this.selected.id}`);
+      }
+    }
+  }
+
+  limpiarFechaRetro(): void {
+    if (this.selected) {
+      localStorage.removeItem(`garantias_fecha_retro_${this.selected.id}`);
+    }
+    this.fechaValidacion = '';
+    this.cdr.markForCheck();
   }
 
   cerrarDetalle(): void {
@@ -283,16 +557,176 @@ export class GarantiasTicketsComponent implements OnInit {
     });
   }
 
-  private cargarComentarios(id: number): void {
-    this.cargandoComentarios = true;
-    this.cdr.markForCheck();
+  private cargarComentarios(id: number, silencioso = false): void {
+    const scrollEl = this.dpScrollEl?.nativeElement;
+    const savedScroll = silencioso ? (scrollEl?.scrollTop ?? 0) : null;
+
+    if (!silencioso) {
+      this.cargandoComentarios = true;
+      this.cdr.markForCheck();
+    }
+
     this.svc.getComentarios(id).subscribe({
       next: (c) => {
         this.comentarios = c;
         this.cargandoComentarios = false;
         this.cdr.markForCheck();
+        if (savedScroll !== null && scrollEl) {
+          setTimeout(() => { scrollEl.scrollTop = savedScroll; }, 0);
+        }
       },
       error: () => { this.cargandoComentarios = false; this.cdr.markForCheck(); },
+    });
+  }
+
+  // ── Importación masiva ────────────────────────────────────────────────────
+
+  abrirModalImport(): void {
+    this.modalImport   = true;
+    this.archivoImport = null;
+    this.importResult  = null;
+    this.cdr.markForCheck();
+  }
+
+  cerrarModalImport(): void {
+    if (this.importando) return;
+    this.modalImport = false;
+    this.cdr.markForCheck();
+  }
+
+  onArchivoImport(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.archivoImport = input.files?.[0] ?? null;
+    this.importResult  = null;
+    this.cdr.markForCheck();
+  }
+
+  descargarPlantilla(): void {
+    if (this.descargandoPlantilla) return;
+    this.descargandoPlantilla = true;
+    this.cdr.markForCheck();
+    this.svc.descargarPlantillaImport().subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href     = url;
+        a.download = 'plantilla_importacion_garantias.xlsx';
+        a.click();
+        URL.revokeObjectURL(url);
+        this.descargandoPlantilla = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.descargandoPlantilla = false;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  ejecutarImport(): void {
+    if (!this.archivoImport || this.importando) return;
+    this.importando   = true;
+    this.importResult = null;
+    this.cdr.markForCheck();
+    this.svc.importarHistorico(this.archivoImport).subscribe({
+      next: (res) => {
+        this.importResult = res;
+        this.importando   = false;
+        if (res.insertados > 0) this.cargar();
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.importResult = { error: err?.error?.error ?? 'Error al importar. Verifica el archivo.' };
+        this.importando   = false;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+
+  get piezasGestionables(): string[] {
+    return this.piezasReemplazo.filter(p => p !== 'N/A');
+  }
+
+  cargarPiezas(): void {
+    this.piezasError = false;
+    this.svc.getPiezas().subscribe({
+      next: (p) => {
+        this.piezasReemplazo = Array.isArray(p) ? p : [];
+        this.piezasError     = this.piezasReemplazo.length === 0;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('Error al cargar catálogo de piezas:', err);
+        this.piezasError = true;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  agregarNuevaPieza(): void {
+    const nombre = this.nuevaPieza.trim().toUpperCase();
+    if (!nombre || this.agregandoPieza) return;
+    this.agregandoPieza = true;
+    this.cdr.markForCheck();
+    this.svc.agregarPieza(nombre).subscribe({
+      next: () => {
+        this.agregandoPieza   = false;
+        this.mostrarFormPieza = false;
+        this.nuevaPieza       = '';
+        this.cargarPiezas();
+      },
+      error: () => { this.agregandoPieza = false; this.cdr.markForCheck(); },
+    });
+  }
+
+  // ── Gestionar catálogo: quitar piezas duplicadas o mal capturadas ─────────
+  abrirGestionPiezas(): void {
+    this.mostrarGestionPiezas = true;
+    this.mostrarFormPieza     = false;
+    this.piezaAEliminar       = null;
+    this.cdr.markForCheck();
+  }
+
+  cerrarGestionPiezas(): void {
+    this.mostrarGestionPiezas = false;
+    this.piezaAEliminar       = null;
+    this.cdr.markForCheck();
+  }
+
+  pedirConfirmacionEliminarPieza(nombre: string): void {
+    if (nombre === 'N/A') return;
+    this.piezaAEliminar   = nombre;
+    this.usoPiezaConteo   = null;
+    this.cargandoUsoPieza = true;
+    this.cdr.markForCheck();
+    this.svc.contarUsoPieza(nombre).subscribe({
+      next: (res) => { this.usoPiezaConteo = res.count; this.cargandoUsoPieza = false; this.cdr.markForCheck(); },
+      error: () => { this.usoPiezaConteo = null; this.cargandoUsoPieza = false; this.cdr.markForCheck(); },
+    });
+  }
+
+  cancelarEliminarPieza(): void {
+    this.piezaAEliminar = null;
+    this.usoPiezaConteo = null;
+    this.cdr.markForCheck();
+  }
+
+  confirmarEliminarPieza(): void {
+    if (!this.piezaAEliminar || this.eliminandoPieza) return;
+    const nombre = this.piezaAEliminar;
+    this.eliminandoPieza = true;
+    this.cdr.markForCheck();
+    this.svc.eliminarPieza(nombre).subscribe({
+      next: () => {
+        this.piezasReemplazo = this.piezasReemplazo.filter(p => p !== nombre);
+        this.piezaAEliminar  = null;
+        this.usoPiezaConteo  = null;
+        this.eliminandoPieza = false;
+        this.cdr.markForCheck();
+      },
+      error: () => { this.eliminandoPieza = false; this.cdr.markForCheck(); },
     });
   }
 
@@ -328,7 +762,7 @@ export class GarantiasTicketsComponent implements OnInit {
           this.tickets[idx].fecha_estatus = fecha;
         }
         this.cambiandoEstatus = false;
-        this.cargarComentarios(this.selected!.id);
+        this.cargarComentarios(this.selected!.id, true);
       },
       error: () => { this.cambiandoEstatus = false; this.cdr.markForCheck(); },
     });
@@ -348,9 +782,36 @@ export class GarantiasTicketsComponent implements OnInit {
         this.selected!.fecha_estatus  = fecha;
         this.editandoFechaEstatus     = false;
         this.cdr.markForCheck();
-        this.cargarComentarios(this.selected!.id);
+        this.cargarComentarios(this.selected!.id, true);
       },
       error: () => { this.editandoFechaEstatus = false; this.cdr.markForCheck(); },
+    });
+  }
+
+  // Fecha de alta (creación) del ticket — para corregir tickets dados de alta
+  // con la fecha equivocada sin tener que borrarlos y volver a capturarlos.
+  iniciarEditFechaCreacion(): void {
+    const f = this.parseFechaTicket(this.selected?.fecha_creacion ?? '');
+    this.editFechaCreacion    = f ? f.toISOString().slice(0, 10) : this.hoy;
+    this.editandoFechaCreacion = true;
+    this.cdr.markForCheck();
+  }
+
+  guardarFechaCreacion(): void {
+    if (!this.selected || !this.editFechaCreacion) return;
+    const fecha = this.editFechaCreacion;
+    this.svc.actualizarFechaCreacion(this.selected.id, fecha).subscribe({
+      next: () => {
+        const [y, m, d] = fecha.split('-');
+        const fechaMostrada = `${d}/${m}/${y} 00:00`;
+        this.selected!.fecha_creacion = fechaMostrada;
+        const idx = this.tickets.findIndex(t => t.id === this.selected!.id);
+        if (idx >= 0) this.tickets[idx].fecha_creacion = fechaMostrada;
+        this.editandoFechaCreacion = false;
+        this.cdr.markForCheck();
+        this.cargarComentarios(this.selected!.id, true);
+      },
+      error: () => { this.editandoFechaCreacion = false; this.cdr.markForCheck(); },
     });
   }
 
@@ -362,7 +823,7 @@ export class GarantiasTicketsComponent implements OnInit {
       next: () => {
         this.nuevoComentario = '';
         this.enviandoComentario = false;
-        this.cargarComentarios(this.selected!.id);
+        this.cargarComentarios(this.selected!.id, true);
       },
       error: () => { this.enviandoComentario = false; this.cdr.markForCheck(); },
     });
@@ -376,7 +837,7 @@ export class GarantiasTicketsComponent implements OnInit {
       next: () => {
         this.notaInterna = '';
         this.enviandoNota = false;
-        this.cargarComentarios(this.selected!.id);
+        this.cargarComentarios(this.selected!.id, true);
       },
       error: () => { this.enviandoNota = false; this.cdr.markForCheck(); },
     });
@@ -397,7 +858,7 @@ export class GarantiasTicketsComponent implements OnInit {
         const idx = this.tickets.findIndex(t => t.id === this.selected!.id);
         if (idx >= 0) this.tickets[idx].pieza_reemplazo = pieza;
         this.cambiandoPiezaReem = false;
-        this.cargarComentarios(this.selected!.id);
+        this.cargarComentarios(this.selected!.id, true);
       },
       error: () => { this.cambiandoPiezaReem = false; this.cdr.markForCheck(); },
     });
@@ -438,7 +899,7 @@ export class GarantiasTicketsComponent implements OnInit {
           this.tickets[idx].fecha_pieza   = fecha;
         }
         this.cambiandoPieza = false;
-        this.cargarComentarios(this.selected!.id);
+        this.cargarComentarios(this.selected!.id, true);
       },
       error: () => { this.cambiandoPieza = false; this.cdr.markForCheck(); },
     });
@@ -458,7 +919,7 @@ export class GarantiasTicketsComponent implements OnInit {
         this.selected!.fecha_pieza  = fecha;
         this.editandoFechaPieza     = false;
         this.cdr.markForCheck();
-        this.cargarComentarios(this.selected!.id);
+        this.cargarComentarios(this.selected!.id, true);
       },
       error: () => { this.editandoFechaPieza = false; this.cdr.markForCheck(); },
     });
@@ -478,7 +939,7 @@ export class GarantiasTicketsComponent implements OnInit {
         this.validacionDocs = { ...(res.validacion_docs_json ?? {}) };
         if (this.selected) this.selected.validacion_docs_json = this.validacionDocs;
         this.validandoDoc[campo] = false;
-        this.cargarComentarios(this.selected!.id);
+        this.cargarComentarios(this.selected!.id, true);
       },
       error: () => { this.validandoDoc[campo] = false; this.cdr.markForCheck(); },
     });
@@ -556,6 +1017,71 @@ export class GarantiasTicketsComponent implements OnInit {
       .map(([k, v]) => ({ label: LABELS[k], value: v }));
   }
 
+  // Prefijo de campos según la categoría de producto (no aplica a bicicletas/marcos,
+  // que ya se cubren con datosBicicleta/danosMarco).
+  private get prefijoProducto(): string | null {
+    const marca = this.selected?.marca;
+    const datos = (this.selected?.datos ?? {}) as Record<string, any>;
+    if (marca === 'SCOTT') {
+      switch (datos['scott_grupo']) {
+        case 'Cascos':       return 'casco';
+        case 'Protecciones': return 'prot';
+        case 'Zapatos':      return 'zapato';
+        case 'Componentes':
+        case 'Componentes - Piezas Eléctricas': return 'comp';
+        default: return null; // Cuadros -> bici_*
+      }
+    }
+    if (marca === 'SYNCROS') {
+      switch (datos['syncros_tipo']) {
+        case 'Manubrios':     return 'manubrio';
+        case 'Asientos':      return 'asiento';
+        case 'Poste':         return 'poste';
+        case 'Ruedos/Rines':  return 'rin';
+        default: return null;
+      }
+    }
+    if (marca === 'VITTORIA') return 'vittoria';
+    return null; // BOLD/MEGAMO -> bici_*
+  }
+
+  private readonly SUFIJOS_PRODUCTO: Record<string, string> = {
+    modelo: 'Modelo', anio: 'Año', color: 'Color', serie: 'Número de Serie',
+    talla: 'Talla', lote: 'Número de Lote / Código', medida: 'Medida', tipo: 'Tipo de Componente',
+  };
+
+  private readonly SUFIJOS_DANO: Record<string, string> = {
+    localizacion: 'Localización del Daño',
+    localizacion_otro: 'Especificar Localización',
+    localizacion_otros: 'Especificar Localización',
+    tipo_dano: 'Tipo de Daño',
+    tipo_dano_otro: 'Especificar Tipo de Daño',
+    tipo_dano_otros: 'Especificar Tipo de Daño',
+    dano_desc: 'Descripción del Daño',
+    comentarios: 'Comentarios',
+    error: 'Código de Error',
+  };
+
+  private camposPorSufijo(sufijos: Record<string, string>): Array<{ label: string; value: any }> {
+    const prefijo = this.prefijoProducto;
+    if (!prefijo || !this.selected?.datos) return [];
+    const datos = this.selected.datos as Record<string, any>;
+    return Object.entries(sufijos)
+      .filter(([suf]) => {
+        const v = datos[`${prefijo}_${suf}`];
+        return v !== undefined && v !== null && v !== '';
+      })
+      .map(([suf, label]) => ({ label, value: datos[`${prefijo}_${suf}`] }));
+  }
+
+  get datosProducto(): Array<{ label: string; value: any }> {
+    return this.camposPorSufijo(this.SUFIJOS_PRODUCTO);
+  }
+
+  get danoProducto(): Array<{ label: string; value: any }> {
+    return this.camposPorSufijo(this.SUFIJOS_DANO);
+  }
+
   get danosMarco(): Array<{ seccion: number; localizacion: string; tipo: string; comentarios: string }> {
     if (!this.selected?.datos) return [];
     const datos = this.selected.datos as Record<string, any>;
@@ -581,6 +1107,7 @@ export class GarantiasTicketsComponent implements OnInit {
 
   get hayDatos(): boolean {
     return this.datosBicicleta.length > 0 || this.documentos.length > 0
-        || this.datosMarca.length > 0 || this.danosMarco.length > 0;
+        || this.datosMarca.length > 0 || this.danosMarco.length > 0
+        || this.datosProducto.length > 0 || this.danoProducto.length > 0;
   }
 }

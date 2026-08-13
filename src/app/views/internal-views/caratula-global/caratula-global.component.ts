@@ -6,11 +6,13 @@ import { HomeBarComponent } from "../../../components/home-bar/home-bar.componen
 import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import { TemporadaSelectorComponent } from '../../../components/temporada-selector/temporada-selector.component';
+import { AvisoHistoricoComponent } from '../../../components/aviso-historico/aviso-historico.component';
 
 @Component({
   selector: 'app-caratula-global',
   standalone: true,
-  imports: [HomeBarComponent, CommonModule, RouterModule],
+  imports: [HomeBarComponent, CommonModule, RouterModule, TemporadaSelectorComponent, AvisoHistoricoComponent],
   templateUrl: './caratula-global.component.html',
   styleUrl: './caratula-global.component.css'
 })
@@ -57,52 +59,167 @@ export class CaratulaGlobalComponent implements OnInit {
 
   diferencia1: number = 0;
 
+  temporadasDisponibles: string[] = [];
+  modoHistorico = false;
+  temporadaHistoricaSeleccionada: string | null = null;
+
+  /** Inicio real de la temporada actualmente abierta -- se sobreescribe en
+   * ngOnInit con el valor real de /temporadas (estado='abierta'). El valor
+   * aqui es solo un fallback por si esa consulta falla. */
+  private fechaInicioTemporadaActual: Date = new Date(2025, 6, 1);
+
   constructor(
     private caratulasService: CaratulasService,
     private router: Router,
     private multimarcasService: MultimarcasService
   ) { }
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
+    this.caratulasService.getTemporadas().subscribe({
+      next: (temporadas) => {
+        const abierta = temporadas.find(t => t.estado === 'abierta');
+        if (abierta) {
+          const [y, m, d] = abierta.fecha_inicio.split('-').map(Number);
+          this.fechaInicioTemporadaActual = new Date(y, m - 1, d);
+        }
+        this.inicializarCalculos();
+      },
+      error: (err) => {
+        console.error('Error cargando temporada actual, usando fallback:', err);
+        this.inicializarCalculos();
+      }
+    });
+  }
+
+  private inicializarCalculos(): void {
     this.semanasTranscurridas = this.obtenerSemanasTranscurridas();
 
-    // Primero cargar todos los datos necesarios
-    await Promise.all([
-      this.calculateTotalMeta(),
-      this.calculateTotalMeta2(),
-      this.calculateTotalAcumulado(),
-      this.calculateTotalAcumulado2(),
-      this.calculateAcumuladoGeneral(),
-      this.calculateAcumuladoScott(),  // Asegurar que esto se complete
-      this.calculateAcumuladoApparel()
-    ]);
+    this.calculateTotalMeta();
+    this.calculateTotalMeta2();
+    this.calculateTotalAcumulado();
+    this.calculateTotalAcumulado2();
+    this.calculateAcumuladoGeneral();
+    this.calculateAcumuladoScott();
+    this.calculateAcumuladoApparel();
 
-    // Luego calcular metadatos
     this.calcularMetaVittoria();
     this.calcularMetaSyncros();
-    await this.calcularMetaApparel(); // Esperar porque es async
-    this.calcularMetaScott();         // Depende de metaApparel
+    this.calcularMetaApparel();
+    this.calcularMetaScott();
 
-    // Finalmente calcular proyecciones y porcentajes
     this.calcularProyectadoMonto3();
     this.calcularPorcentajeMonto2();
     this.calcularProyectadoVittoria();
     this.calcularProyectadoSyncros();
     this.calcularProyectadoApparel();
     this.calcularProyectadoScott();
-    this.calcularPorcentajeScott(); // Ahora se ejecuta al final con todos los datos disponibles
+    this.calcularPorcentajeScott();
     this.calcularPorcentajeApparel();
-
     this.calcularPorcentajeScott_2();
     this.calcularPorcentajeApparel_2();
-
     this.calcularDiferencia1();
+
+    this.cargarTemporadasDisponibles();
+  }
+
+  cargarTemporadasDisponibles(): void {
+    this.caratulasService.getTemporadasDisponibles().subscribe({
+      next: (temporadas) => this.temporadasDisponibles = temporadas,
+      error: (err) => console.error('Error cargando temporadas disponibles:', err)
+    });
+  }
+
+  // Mismos miembros de Grupos Integral que excluye /datos_previo en vivo: su
+  // avance ya esta representado por la fila "Integral N" -- sumarlos aparte
+  // duplicaria el monto (previo_historico no aplica esa exclusion como si lo
+  // hace el endpoint en vivo, asi que se replica aqui para el total general).
+  private readonly CLAVES_INTEGRAL_MIEMBROS = new Set([
+    'JC539', 'EC216', 'LC657',
+    'GC411', 'MC679', 'MC677',
+    'LC625', 'LC626', 'LC627',
+    'LD653', 'MD680', 'ID492',
+    'LD660', 'NA718', '7C042'
+  ]);
+
+  private readonly NIVELES_PARTNER_PLUS = new Set(['Partner', 'Partner Elite', 'Partner Elite Plus']);
+
+  verTemporadaPasada(temporada: string): void {
+    if (!temporada) {
+      this.volverATemporadaActual();
+      return;
+    }
+    this.modoHistorico = true;
+    this.temporadaHistoricaSeleccionada = temporada;
+    this.caratulasService.getDatosPrevioHistorico(temporada).subscribe({
+      next: (datos) => {
+        const datosSinDuplicados = datos.filter((item: any) => !this.CLAVES_INTEGRAL_MIEMBROS.has(item.clave));
+
+        this.acumuladoGeneral = datosSinDuplicados
+          .reduce((total: number, item: any) => total + (Number(item.acumulado_anticipado) || 0), 0);
+
+        this.totalAcumulado = datosSinDuplicados
+          .filter((item: any) => this.NIVELES_PARTNER_PLUS.has(item.nivel))
+          .reduce((total: number, item: any) => total + (Number(item.acumulado_anticipado) || 0), 0);
+
+        this.totalAcumulado_2 = datosSinDuplicados
+          .filter((item: any) => item.nivel === 'Distribuidor')
+          .reduce((total: number, item: any) => total + (Number(item.acumulado_anticipado) || 0), 0);
+
+        // Seccion b) Especifico -- por categoria de producto (SCOTT / APPAREL-SYNCROS-VITTORIA),
+        // no por nivel de cliente. Multimarcas no aplica a temporadas cerradas.
+        this.acumuladoScott = datosSinDuplicados.reduce((total: number, item: any) =>
+          total + (Number(item.avance_global_scott) || 0) + (Number(item.acumulado_bold) || 0), 0);
+
+        this.acumuladoApparel = datosSinDuplicados.reduce((total: number, item: any) =>
+          total + (Number(item.avance_global_apparel_syncros_vittoria) || 0), 0);
+
+        // Temporada cerrada -> "Avance Proyectado" ya no es una fraccion de semanas
+        // transcurridas (eso es para la temporada EN CURSO): la proyeccion de una
+        // temporada terminada es su propia meta completa (100%).
+        this.avance_proyectado_monto3 = this.metaPrincipal;
+        this.avance_proyectado_monto1 = this.totalMetaMY25;
+        this.avance_proyectado_monto2 = this.totalMetaMY25_2;
+        this.proyectadoScott = this.metaScott;
+        this.proyectadoApparel = this.metaApparel;
+
+        this.calcularPorcentajeMonto1();
+        this.calcularPorcentajeMonto2();
+        this.calcularPorcentajeMonto3();
+        this.calcularPorcentajeScott();
+        this.calcularPorcentajeApparel();
+        this.calcularPorcentajeScott_2();
+        this.calcularPorcentajeApparel_2();
+        this.calcularDiferencia1();
+      },
+      error: (err) => console.error('Error cargando temporada historica:', err)
+    });
+  }
+
+  volverATemporadaActual(): void {
+    this.modoHistorico = false;
+    this.temporadaHistoricaSeleccionada = null;
+    this.ngOnInit();
+  }
+
+  get totalAcumuladoCategorias(): number {
+    return (Number(this.acumuladoScott) || 0) + (Number(this.acumuladoApparel) || 0);
+  }
+
+  get totalProyectadoCategorias(): number {
+    return (Number(this.proyectadoScott) || 0) + (Number(this.proyectadoApparel) || 0);
+  }
+
+  get otrosProductos(): number {
+    return Number(this.diferencia1) || 0;
   }
 
   calcularDiferencia1(): void {
-    this.diferencia1 = this.acumuladoGeneral - (this.acumuladoScott + this.acumuladoApparel);
-  }
+    const diferencia =
+      (Number(this.acumuladoGeneral) || 0) -
+      ((Number(this.acumuladoScott) || 0) + (Number(this.acumuladoApparel) || 0));
 
+    this.diferencia1 = Math.round(diferencia * 100) / 100;
+  }
 
   obtenerFechaHoy(): string {
     const opciones: Intl.DateTimeFormatOptions = {
@@ -227,7 +344,7 @@ export class CaratulaGlobalComponent implements OnInit {
           this.totalMetaMY25_2 = my25A.meta + my25B.meta;
           this.calcularProyectadoMonto2();
         } else {
-          console.error('No se encontraron datos MY25 en uno o ambos conjuntos');
+          console.error('No se encontraron datos MY25_2 en uno o ambos conjuntos');
         }
       },
       error: (err) => {
@@ -271,7 +388,7 @@ export class CaratulaGlobalComponent implements OnInit {
           this.totalAcumulado_2 = my25A.acumulado_real + my25B.acumulado_real;
           this.calcularPorcentajeMonto3();
         } else {
-          console.error('No se encontraron datos MY25 en uno o ambos conjuntos');
+          console.error('No se encontraron datos MY25_2 en uno o ambos conjuntos');
         }
       },
       error: (err) => {
@@ -288,14 +405,22 @@ export class CaratulaGlobalComponent implements OnInit {
     return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
   }
 
+  /** Semanas transcurridas desde el inicio REAL de la temporada (1 jul 2025),
+   * no desde "la semana ISO 26 mas reciente" -- ese calculo por modulo de
+   * calendario se reiniciaba cada año en la semana 26 (~fin de junio),
+   * dando semanas absurdamente bajas (p. ej. 3) apenas pasaba esa semana en
+   * 2026 aunque la temporada llevara +50 semanas corriendo. Acotado a
+   * [0, 52] para que el proyectado nunca exceda la meta una vez terminada
+   * la duracion normal de una temporada. */
   obtenerSemanasTranscurridas(): number {
-    const semanaActual = this.obtenerSemanaISO();
-    const semanaInicioTemporada = 26;
-
-    if (semanaActual < semanaInicioTemporada) {
-      return (52 - semanaInicioTemporada) + semanaActual;
-    }
-    return semanaActual - semanaInicioTemporada;
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const dias = Math.floor((hoy.getTime() - this.fechaInicioTemporadaActual.getTime()) / 86400000);
+    if (dias < 0) return 0;
+    // Numero de semana ACTUAL (1-indexado), no semanas completas transcurridas:
+    // el dia 16 (17 jul, temporada inicia 1 jul) cae en la semana 3 (dias 14-20),
+    // asi que el proyectado debe multiplicar por 3, no por floor(16/7)=2.
+    return Math.min(52, Math.floor(dias / 7) + 1);
   }
 
   calcularProyectadoMonto1(): void {
@@ -303,7 +428,7 @@ export class CaratulaGlobalComponent implements OnInit {
 
     this.avance_proyectado_monto1 = (this.semanasTranscurridas / this.semanasEnTemporada) * this.totalMetaMY25;
     this.avance_proyectado_monto1 = Math.round(this.avance_proyectado_monto1 * 100) / 100;
-    this.calcularPorcentajeMonto1();
+    this.calcularPorcentajeMonto2();
   }
 
   calcularProyectadoMonto2(): void {
@@ -311,6 +436,7 @@ export class CaratulaGlobalComponent implements OnInit {
 
     this.avance_proyectado_monto2 = (this.semanasTranscurridas / this.semanasEnTemporada) * this.totalMetaMY25_2;
     this.avance_proyectado_monto2 = Math.round(this.avance_proyectado_monto2 * 100) / 100;
+    this.calcularPorcentajeMonto3();
   }
 
   calcularProyectadoMonto3(): void {
@@ -318,14 +444,16 @@ export class CaratulaGlobalComponent implements OnInit {
 
     this.avance_proyectado_monto3 = (this.semanasTranscurridas / this.semanasEnTemporada) * this.metaPrincipal;
     this.avance_proyectado_monto3 = Math.round(this.avance_proyectado_monto3 * 100) / 100;
+    this.calcularPorcentajeMonto1();
   }
 
   calculateAcumuladoGeneral(): void {
     forkJoin([
       this.caratulasService.getDatosPrevio(),
-      this.multimarcasService.getMultimarcasTodo()
+      this.multimarcasService.getMultimarcasTodo(),
+      this.caratulasService.getVentasNoRegistradas()
     ]).subscribe({
-      next: ([datosPrevio, multimarcas]) => {
+      next: ([datosPrevio, multimarcas, ventasNoRegistradas]) => {
         try {
           const sumPrevio = datosPrevio.reduce((total: number, item: any) => {
             return total + (Number(item.acumulado_anticipado) || 0);
@@ -335,9 +463,12 @@ export class CaratulaGlobalComponent implements OnInit {
             return total + (Number(item.avance_global) || 0);
           }, 0);
 
-          this.acumuladoGeneral = sumPrevio + sumMultimarcas;
+          const sumNoRegistradas = Number(ventasNoRegistradas?.total) || 0;
+
+          this.acumuladoGeneral = sumPrevio + sumMultimarcas + sumNoRegistradas;
 
           this.calcularPorcentajeMonto1();
+          this.calcularDiferencia1();
 
         } catch (e) {
           console.error('Error procesando datos:', e);
@@ -352,24 +483,28 @@ export class CaratulaGlobalComponent implements OnInit {
   calculateAcumuladoScott(): void {
     forkJoin([
       this.caratulasService.getDatosPrevio(),
-      this.multimarcasService.getMultimarcasTodo()
+      this.multimarcasService.getMultimarcasTodo(),
+      this.caratulasService.getVentasNoRegistradas()
     ]).subscribe({
-      next: ([datosPrevio, multimarcas]) => {
+      next: ([datosPrevio, multimarcas, ventasNoRegistradas]) => {
         try {
           const sumPrevio = datosPrevio.reduce((total: number, item: any) => {
-            return total + (Number(item.avance_global_scott) || 0);
+            return total
+              + (Number(item.avance_global_scott) || 0)
+              + (Number(item.acumulado_bold) || 0);
           }, 0);
 
           const sumMultimarcas = multimarcas.reduce((total: number, item: any) => {
             return total + (Number(item.avance_global_scott) || 0);
           }, 0);
 
-          this.acumuladoScott = sumPrevio + sumMultimarcas; // Asignación a acumuladoScott
+          const sumNoRegistradas =
+            (Number(ventasNoRegistradas?.scott) || 0) + (Number(ventasNoRegistradas?.bold) || 0);
 
-          this.calcularPorcentajeMonto1(); // Si aún necesitas esta función
-          this.calcularPorcentajeScott();  // Y esta también
+          this.acumuladoScott = sumPrevio + sumMultimarcas + sumNoRegistradas;
+
+          this.calcularPorcentajeScott();
           this.calcularPorcentajeScott_2();
-
           this.calcularDiferencia1();
 
         } catch (e) {
@@ -385,30 +520,34 @@ export class CaratulaGlobalComponent implements OnInit {
   calculateAcumuladoApparel(): void {
     forkJoin([
       this.caratulasService.getDatosPrevio(),
-      this.multimarcasService.getMultimarcasTodo()
+      this.multimarcasService.getMultimarcasTodo(),
+      this.caratulasService.getVentasNoRegistradas()
     ]).subscribe({
-      next: ([datosPrevio, multimarcas]) => {
+      next: ([datosPrevio, multimarcas, ventasNoRegistradas]) => {
         try {
-          // Suma en datosPrevio: solo 'avance_global_apparel_syncros_vittoria'
           const sumPrevio = datosPrevio.reduce((total: number, item: any) => {
             return total + (Number(item.avance_global_apparel_syncros_vittoria) || 0);
           }, 0);
 
-          // Suma en multimarcas: 3 campos
           const sumMultimarcas = multimarcas.reduce((total: number, item: any) => {
             const sumItem =
               (Number(item.avance_global_vittoria) || 0) +
               (Number(item.avance_global_syncros) || 0) +
               (Number(item.avance_global_apparel) || 0);
+
             return total + sumItem;
           }, 0);
 
-          const totalApparel = sumPrevio + sumMultimarcas;
+          const sumNoRegistradas =
+            (Number(ventasNoRegistradas?.vittoria) || 0) +
+            (Number(ventasNoRegistradas?.syncros) || 0) +
+            (Number(ventasNoRegistradas?.apparel) || 0);
 
-          this.acumuladoApparel = totalApparel;
+          this.acumuladoApparel = sumPrevio + sumMultimarcas + sumNoRegistradas;
 
           this.calcularPorcentajeApparel();
           this.calcularPorcentajeApparel_2();
+          this.calcularDiferencia1();
 
         } catch (e) {
           console.error('Error procesando datos:', e);
@@ -421,41 +560,44 @@ export class CaratulaGlobalComponent implements OnInit {
   }
 
   calcularPorcentajeMonto1(): void {
-    if (this.acumuladoGeneral === null ||
+    if (
+      this.acumuladoGeneral === null ||
       this.avance_proyectado_monto3 === null ||
-      this.avance_proyectado_monto3 === 0) {
+      this.avance_proyectado_monto3 === 0
+    ) {
       this.porcentajeMonto1 = null;
       return;
     }
 
     const valorCalculado = (this.acumuladoGeneral / this.avance_proyectado_monto3) - 1;
-
     this.porcentajeMonto1 = Math.round(valorCalculado * 100) / 100;
   }
 
   calcularPorcentajeMonto2(): void {
-    if (this.totalAcumulado === null ||
+    if (
+      this.totalAcumulado === null ||
       this.avance_proyectado_monto1 === null ||
-      this.avance_proyectado_monto1 === 0) {
-      this.porcentajeMonto1 = null;
+      this.avance_proyectado_monto1 === 0
+    ) {
+      this.porcentajeMonto2 = null;
       return;
     }
 
     const valorCalculado = (this.totalAcumulado / this.avance_proyectado_monto1) - 1;
-
     this.porcentajeMonto2 = Math.round(valorCalculado * 100) / 100;
   }
 
   calcularPorcentajeMonto3(): void {
-    if (this.totalAcumulado_2 === null ||
+    if (
+      this.totalAcumulado_2 === null ||
       this.avance_proyectado_monto2 === null ||
-      this.avance_proyectado_monto2 === 0) {
+      this.avance_proyectado_monto2 === 0
+    ) {
       this.porcentajeMonto3 = null;
       return;
     }
 
     const valorCalculado = (this.totalAcumulado_2 / this.avance_proyectado_monto2) - 1;
-
     this.porcentajeMonto3 = Math.round(valorCalculado * 100) / 100;
   }
 
@@ -465,12 +607,8 @@ export class CaratulaGlobalComponent implements OnInit {
       return;
     }
 
-    // Cálculo: (acumulado/proyectado) - 1 y convertido a porcentaje
     const porcentaje = ((this.acumuladoScott / this.proyectadoScott) - 1) * 100;
-
-    // Redondear al entero más cercano
     this.porcentajeScott = Math.round(porcentaje);
-
   }
 
   calcularPorcentajeApparel(): void {
@@ -480,28 +618,26 @@ export class CaratulaGlobalComponent implements OnInit {
     }
 
     const porcentaje = ((this.acumuladoApparel / this.proyectadoApparel) - 1) * 100;
-
     this.porcentajeApparel = Math.round(porcentaje);
-
   }
 
   calcularPorcentajeScott_2(): void {
     if (this.metaScott === null || this.metaScott === 0 || this.acumuladoScott === null) {
-      this.porcentajeScott_2 = null; // ✅ Asignar a _2
+      this.porcentajeScott_2 = null;
       return;
     }
 
     const porcentaje = ((this.acumuladoScott / this.metaScott) - 1) * 100;
-    this.porcentajeScott_2 = Math.round(porcentaje); // ✅ Asignar a _2
+    this.porcentajeScott_2 = Math.round(porcentaje);
   }
 
   calcularPorcentajeApparel_2(): void {
     if (this.metaApparel === null || this.metaApparel === 0 || this.acumuladoApparel === null) {
-      this.porcentajeApparel_2 = null; // ✅ Asignar a _2
+      this.porcentajeApparel_2 = null;
       return;
     }
 
     const porcentaje = ((this.acumuladoApparel / this.metaApparel) - 1) * 100;
-    this.porcentajeApparel_2 = Math.round(porcentaje); // ✅ Asignar a _2
+    this.porcentajeApparel_2 = Math.round(porcentaje);
   }
 }

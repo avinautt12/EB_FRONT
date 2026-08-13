@@ -1,0 +1,507 @@
+table {
+  width: 100%;
+  border-collapse: collapse; /* Evita bordes dobles desalineados */
+}
+
+th, td {
+  padding: 10px 12px;
+}
+
+.celda-doble {
+  display: flex;
+  justify-content: space-between; 
+  align-items: center;
+  width: 100%;
+}
+
+/* Crea la línea divisoria exacta en medio */
+.celda-doble div:first-child {
+  flex: 1;
+  border-right: 1px solid #cbd5e1; /* Línea divisoria central */
+  padding-right: 8px;
+}
+
+.celda-doble div:last-child {
+  flex: 1;
+  padding-left: 8px;
+}
+
+.cabecera {
+  background-color: #2A2A28;
+}
+
+.cabecera th {
+  color: #EB5E28;
+  border: 1px solid #484848;
+}
+
+.cabecera th[rowspan="1"] {
+  border-bottom: none;
+}
+
+.cabecera th[rowspan="2"]{
+  border-top: none;
+}
+
+.tabla {
+  background-color: #1E1E1C;
+  color: #CCC5B9;
+  border: 1px solid #484848;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 0.88rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.nota-simulador-apparel {
+  margin: 8px 0 12px;
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.nota-simulador-apparel span:first-child {
+  color: #F07D22;
+}
+.nota-simulador-apparel span:last-child {
+  color: #4caf80;
+}
+
+.simulador {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.simulador th:nth-child(1), .simulador th:nth-child(2) {
+  width: 235px;
+}
+
+.tabla tr:nth-child(even) {
+  background-color: linear-gradient(145deg, rgba(35, 35, 35, 0.9), rgba(20, 20, 20, 0.95));
+}
+
+.tooltip-informacion i {
+  font-size: 1.1rem;
+  position: absolute;
+  top: 10%;
+  right: 5%;
+  color: #60a5fa;
+}
+
+.tooltip-informacion {
+  position: relative;
+}
+
+.tooltip-informacion .tooltip-informacion-recuadro {
+  display: none;
+  position: absolute;
+  width: 280px;
+  padding: 5px;
+  border-radius: 5px;
+  top: 20%;
+  right: 20%;
+  background: #484848;
+  color: white;
+  font-weight: 500;
+  font-size: .8rem; 
+}
+
+.tooltip-informacion i:hover {
+  cursor: pointer;
+}
+
+.tooltip-informacion i:hover + .tooltip-informacion-recuadro {
+  display: block;
+} 
+
+.tabla tr:nth-child(odd) {
+  background-color: #252422;
+}
+
+.margen-retroactivo {
+  position: sticky;
+  top: 0;
+  table-layout: fixed;
+  width: 100%;
+  z-index: 2;
+}
+
+.margen-retroactivo td:nth-child(4) {
+  text-align: center;
+}
+
+.tabla td {
+  border: 1px solid #484848;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  padding: 0rem 10rem 2rem;
+  border-radius: 12px;
+  font-size: 0.82rem;
+}
+
+.titulo {
+  color: #EB5E28;
+  font-weight: 700;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.dropdown {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 332px;
+  padding: 12px 16px;
+  gap: 4px;
+  border-radius: 12px;
+  
+  /* Fondo oscuro con degradado muy suave y borde translúcido */
+  background: linear-gradient(145deg, rgba(35, 35, 35, 0.9), rgba(20, 20, 20, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  
+  /* Sombra elegante de fondo */
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Indicador luminoso lateral en el lado izquierdo */
+.dropdown::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #eb5e28;
+  opacity: 0.4;
+  transition: all 0.3s ease;
+}
+
+/* Hover: El componente "se levanta" y cobra vida */
+.dropdown:hover {
+  transform: translateY(-2px);
+  border-color: rgba(235, 94, 40, 0.4);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.6), 0 0 15px rgba(235, 94, 40, 0.15);
+}
+
+.dropdown:hover::before {
+  opacity: 1;
+  box-shadow: 0 0 8px #eb5e28;
+}
+
+/* Focus: Modo Activo brillante con Neón Glow */
+.dropdown:focus-within {
+  border-color: #eb5e28;
+  box-shadow: 0 0 20px rgba(235, 94, 40, 0.35), 0 10px 20px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(145deg, rgba(40, 40, 40, 0.95), rgba(25, 25, 25, 1));
+}
+
+.dropdown:focus-within::before {
+  opacity: 1;
+  box-shadow: 0 0 12px #eb5e28;
+}
+
+/* Etiqueta interactiva */
+.dropdown label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #888;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: color 0.3s ease;
+}
+
+.dropdown span {
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.dropdown:focus-within label {
+  color: #eb5e28;
+}
+
+/* Select interactivo */
+.select-control {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  padding-right: 30px;
+  
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+/* Menú desplegable nativo */
+.select-control option {
+  background-color: #181818;
+  color: #ffffff;
+  padding: 12px;
+  font-weight: 500;
+}
+
+.dropdown:hover, input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.select-control, ::picker(select) {
+  appearance: base-select;
+  background-color: #484848;
+  color: #161616;
+  border: none;
+  border-radius: 4px;
+  scrollbar-color: #EB5E28 #343333;
+}
+
+.select-control {
+  background-color: #484848;
+  color: white;
+  padding: 4px;
+  border: none;
+  border-radius: 4px;
+}
+ /* Contenedor compacto para tablas con el estilo neón base */
+.table-numberbox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px 8px 14px; /* Un poco más compacto para tablas */
+  border-radius: 10px;
+  
+  /* Fondo oscuro con degradado y borde translúcido */
+  background: linear-gradient(145deg, rgba(35, 35, 35, 0.9), rgba(20, 20, 20, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  
+  /* Sombra elegante */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Indicador luminoso lateral en el lado izquierdo */
+.table-numberbox::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #eb5e28;
+  opacity: 0.4;
+  transition: all 0.3s ease;
+}
+
+/* Hover: El elemento "se levanta" y se enciende */
+.table-numberbox:hover {
+  transform: translateY(-2px);
+  border-color: rgba(235, 94, 40, 0.4);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6), 0 0 12px rgba(235, 94, 40, 0.15);
+}
+
+.table-numberbox:hover::before {
+  opacity: 1;
+  box-shadow: 0 0 8px #eb5e28;
+}
+
+/* Focus: Modo Activo brillante con Neón Glow */
+.table-numberbox:focus-within {
+  border-color: #eb5e28;
+  box-shadow: 0 0 18px rgba(235, 94, 40, 0.35), 0 6px 15px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(145deg, rgba(40, 40, 40, 0.95), rgba(25, 25, 25, 1));
+}
+
+.table-numberbox:focus-within::before {
+  opacity: 1;
+  box-shadow: 0 0 12px #eb5e28;
+}
+
+/* Redefinición del input .numberbox para integrarse al contenedor */
+.numberbox {
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  color: #EB5E28; /* Mantiene tu color naranja característico de texto */
+  font-weight: 700;
+  font-size: 0.95rem;
+  font-family: inherit;
+  padding: 0;
+}
+
+/* Estilo para el placeholder */
+.numberbox::placeholder {
+  color: #666666;
+  font-weight: 500;
+}
+
+.select-control option {
+  padding: 6px;
+}
+
+.descripcion {
+  font-weight: 700;
+}
+
+.beneficios-descripcion p{
+  font-weight: 700;
+  margin: 0.3rem;
+}
+
+.titulo {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #EB5E28;
+  letter-spacing: .03rem;
+  text-align: start;
+}
+
+.alineacion-derecha{
+  text-align: end;
+}
+
+.totales {
+  font-weight: 700;
+}
+
+.alineacion-centrada {
+  text-align: center;
+} 
+
+td.alineacion-centrada:nth-child(2) {
+  border-right: 1px solid #484848;
+}
+
+input[type="checkbox"]{
+  width: 18px;
+  height: 18px;
+  accent-color: #EB5E28;
+}
+
+.principal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.principal p {
+  text-align: center;
+  font-size: 1.5rem;
+  width: 100%;
+  transform: translateX(-5%);
+  font-weight: 700;
+  color: #EB5E28;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+
+.btn-volver {
+  background-color: transparent;
+  border-color: #666;
+  color: #bbb;
+  z-index: 1;
+}
+
+.btn-volver:hover {
+  background-color: #333;
+  color: #fff;
+  border-color: #fff;
+}
+
+.contenedor-compra-anual {
+  align-items: end;
+  display: flex;
+  flex-direction: column;
+}
+
+.programa-especial tr td:first-child {
+  width: 20%;
+  font-weight: 700;
+}
+
+.contenedor-compra-minima-apparel {
+  background: #0C102C;
+  font-weight: 500;
+  font-size: .9rem;
+  display: flex;
+  flex-direction: column;
+}
+.contenedor-compra-minima-apparel > p:first-child {
+    background: #5b1553;
+    width: 100%;
+    padding: 5px;
+    font-weight: 500;
+    color: white;
+    font-size: 1rem;
+    margin: 0;
+    text-align: center;
+}
+
+.contenedor-compra-minima-apparel div {
+  display: flex;
+}
+
+.contenedor-compra-minima-apparel div p {
+  margin-left: 1rem;
+}
+
+.contenedor-compra-minima-apparel div p:nth-child(1), .contenedor-compra-minima-apparel div p:nth-child(3) {
+  width: 20%;
+}
+
+.contenedor-compra-minima-apparel div p:nth-child(2) {
+  width: 60%;
+}
+
+.restriccion-programa {
+  margin-top: 1rem;
+  background-color: #5b1553;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.restriccion-programa p {
+  font-size: 1rem;
+  text-align: center;
+}
+
+.restriccion-programa ol{
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.contenedor-nivel {
+  display: flex;
+  gap: 10px;
+  margin-bottom: .8rem;
+  flex-wrap: wrap;
+}
+
+.checkbox {
+  width: 0;
+}

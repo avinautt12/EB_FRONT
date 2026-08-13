@@ -2,10 +2,13 @@ import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subject, EMPTY, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { RetroactivosService } from '../../../services/retroactivos.service';
+import { AuthService } from '../../../services/auth.service';
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
+import { TemporadaSelectorComponent } from '../../../components/temporada-selector/temporada-selector.component';
+import { AvisoHistoricoComponent } from '../../../components/aviso-historico/aviso-historico.component';
 
 // Interfaz para el buscador
 interface SugerenciaCliente {
@@ -13,31 +16,36 @@ interface SugerenciaCliente {
   CLIENTE: string;
 }
 
-// Interfaz con los datos exactos que devuelve Python
+// Interfaz flexible porque el backend puede devolver campos en MAYÚSCULAS o minúsculas
 interface DatosRetroactivo {
   CLAVE: string;
   ZONA: string;
   CLIENTE: string;
   CATEGORIA: string;
-  
+  temporada_cerrada?: boolean;
+  fecha_cierre_temporada?: string | null;
+
   COMPRA_MINIMA_ANUAL: number;
   COMPRA_GLOBAL_SCOTT: number;
   porcentaje_avance_scott: number;
-  
+
   COMPRA_MINIMA_APPAREL: number;
   COMPRA_GLOBAL_APPAREL: number;
   porcentaje_avance_apparel: number;
-  
+
+  COMPRA_GLOBAL_BOLD: number;
+  TOTAL_ACUMULADO: number;
+
   COMPRAS_TOTALES_CRUDO: number;
   notas_credito: number;
   garantias: number;
   acumulado_global_calculado: number;
-  
+
   productos_ofertados: number;
   bicicleta_demo: number;
   bicicletas_bold: number;
   importe_final: number;
-  
+
   compra_adicional: number;
   porcentaje_retroactivo: number;
   porcentaje_retroactivo_apparel: number;
@@ -46,14 +54,16 @@ interface DatosRetroactivo {
 
   porcentaje_avance_general: number;
   total_bicis_deduccion: number;
+
+  [key: string]: any;
 }
 
 @Component({
   selector: 'app-caratula-retroactivos',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, HomeBarComponent],
+  imports: [CommonModule, RouterModule, FormsModule, HomeBarComponent, TemporadaSelectorComponent, AvisoHistoricoComponent],
   templateUrl: './caratula-retroactivos.component.html',
-  styleUrl: './caratula-retroactivos.component.css' 
+  styleUrl: './caratula-retroactivos.component.css'
 })
 export class CaratulaRetroactivosComponent implements OnInit {
   @ViewChild('searchInput') searchInput!: ElementRef;
@@ -67,24 +77,118 @@ export class CaratulaRetroactivosComponent implements OnInit {
   datosCliente: DatosRetroactivo | null = null;
 
   private searchSubject = new Subject<string>();
-  private allClientes: SugerenciaCliente[] = []; // Caché para el buscador
+  private allClientes: SugerenciaCliente[] = [];
+  private cacheClientesCargado = false;
   private isSearchingDirectly = false;
 
-  constructor(private retroactivosService: RetroactivosService) { }
+  isAdmin = false;
+  fechaCierreInput: string = '';
+  cerrando = false;
+  mensajeCierre: string | null = null;
+  errorCierre: string | null = null;
+
+  temporadasDisponibles: string[] = [];
+  modoHistorico = false;
+  temporadaHistoricaSeleccionada: string | null = null;
+  private datosHistorico: DatosRetroactivo[] = [];
+
+  constructor(
+    private retroactivosService: RetroactivosService,
+    private authService: AuthService
+  ) { }
 
   ngOnInit() {
+    this.isAdmin = this.authService.isAdmin();
     this.cargarCacheClientes();
     this.configurarBuscador();
+    this.cargarTemporadasDisponibles();
   }
 
-  // Carga todos los clientes una sola vez para que la búsqueda sea ultra rápida
-  private cargarCacheClientes() {
-    this.retroactivosService.getRetroactivos().subscribe({
-      next: (data) => {
-        this.allClientes = data.map(item => ({ CLAVE: item.CLAVE, CLIENTE: item.CLIENTE }));
-      },
-      error: (err) => console.error('Error al cargar caché:', err)
+  cargarTemporadasDisponibles(): void {
+    this.retroactivosService.getTemporadasDisponibles().subscribe({
+      next: (temporadas) => this.temporadasDisponibles = temporadas,
+      error: (err) => console.error('Error cargando temporadas disponibles:', err)
     });
+  }
+
+  verTemporadaPasada(temporada: string): void {
+    if (!temporada) {
+      this.volverATemporadaActual();
+      return;
+    }
+    const claveActual = this.datosCliente?.CLAVE || this.terminoBusqueda.trim();
+
+    this.modoHistorico = true;
+    this.temporadaHistoricaSeleccionada = temporada;
+    this.mostrarSugerencias = false;
+    this.error = null;
+
+    this.retroactivosService.getRetroactivosHistorico(temporada).subscribe({
+      next: (data) => {
+        this.datosHistorico = data;
+        this.allClientes = data.map(item => ({ CLAVE: item.CLAVE, CLIENTE: item.CLIENTE }));
+        if (claveActual) {
+          this.terminoBusqueda = claveActual;
+          this.buscarCliente(claveActual);
+        }
+      },
+      error: (err) => console.error('Error cargando temporada histórica:', err)
+    });
+  }
+
+  volverATemporadaActual(): void {
+    const claveActual = this.datosCliente?.CLAVE || this.terminoBusqueda.trim();
+
+    this.modoHistorico = false;
+    this.temporadaHistoricaSeleccionada = null;
+    this.datosHistorico = [];
+    this.mostrarSugerencias = false;
+    this.error = null;
+    this.cargarCacheClientes();
+
+    if (claveActual) {
+      this.terminoBusqueda = claveActual;
+      this.buscarCliente(claveActual);
+    } else {
+      this.datosCliente = null;
+    }
+  }
+
+  private cargarCacheClientes() {
+    this.cacheClientesCargado = false;
+
+    this.retroactivosService.getTodasLasClaves().subscribe({
+      next: (data) => {
+        this.allClientes = data.map(item => ({
+          CLAVE: item.CLAVE,
+          CLIENTE: item.CLIENTE
+        }));
+
+        this.cacheClientesCargado = true;
+
+        // Si el usuario ya escribió algo antes de que terminara el cache,
+        // recalculamos sugerencias automáticamente.
+        const terminoActual = this.terminoBusqueda.trim();
+        if (terminoActual.length >= 2 && !this.isSearchingDirectly) {
+          this.filtrarSugerencias(terminoActual);
+        }
+      },
+      error: (err) => {
+        this.cacheClientesCargado = false;
+        console.error('Error al cargar caché:', err);
+      }
+    });
+  }
+
+  private filtrarSugerencias(term: string) {
+    const termLower = term.toLowerCase();
+
+    this.sugerenciasFiltradas = this.allClientes.filter(c =>
+      (c.CLAVE && c.CLAVE.toLowerCase().includes(termLower)) ||
+      (c.CLIENTE && c.CLIENTE.toLowerCase().includes(termLower))
+    ).slice(0, 10);
+
+    this.mostrarSugerencias = this.sugerenciasFiltradas.length > 0;
   }
 
   private configurarBuscador() {
@@ -98,13 +202,15 @@ export class CaratulaRetroactivosComponent implements OnInit {
         return;
       }
 
-      const termLower = term.toLowerCase();
-      this.sugerenciasFiltradas = this.allClientes.filter(c => 
-        (c.CLAVE && c.CLAVE.toLowerCase().includes(termLower)) || 
-        (c.CLIENTE && c.CLIENTE.toLowerCase().includes(termLower))
-      ).slice(0, 10); // Máximo 10 sugerencias
+      // Si todavía no terminó de cargar el cache, no hacemos nada.
+      // Cuando termine cargarCacheClientes(), se filtra automáticamente.
+      if (!this.cacheClientesCargado) {
+        this.sugerenciasFiltradas = [];
+        this.mostrarSugerencias = false;
+        return;
+      }
 
-      this.mostrarSugerencias = this.sugerenciasFiltradas.length > 0;
+      this.filtrarSugerencias(term);
     });
   }
 
@@ -132,7 +238,10 @@ export class CaratulaRetroactivosComponent implements OnInit {
     this.datosCliente = null;
     this.sugerenciasFiltradas = [];
     this.error = null;
-    this.searchInput.nativeElement.focus();
+
+    if (this.searchInput) {
+      this.searchInput.nativeElement.focus();
+    }
   }
 
   buscarCliente(claveForzada?: string) {
@@ -144,15 +253,295 @@ export class CaratulaRetroactivosComponent implements OnInit {
     this.datosCliente = null;
     this.mostrarSugerencias = false;
 
+    if (this.modoHistorico) {
+      const idLower = identificador.toLowerCase();
+      const encontrado = this.datosHistorico.find(d =>
+        d.CLAVE?.toLowerCase() === idLower || d.CLIENTE?.toLowerCase().includes(idLower)
+      );
+      this.isLoading = false;
+      if (encontrado) {
+        this.datosCliente = encontrado;
+      } else {
+        this.error = 'No se encontró información para este cliente en esa temporada.';
+      }
+      return;
+    }
+
     this.retroactivosService.getRetroactivoCliente(identificador).subscribe({
       next: (data) => {
         this.datosCliente = data;
         this.isLoading = false;
+
+        console.log('Datos retroactivo recibidos:', data);
+        console.log('TOTAL_ACUMULADO calculado:', this.getTotalAcumulado());
       },
       error: (err) => {
         this.error = 'No se encontró información para este cliente.';
         this.isLoading = false;
         console.error(err);
+      }
+    });
+  }
+
+  private n(...values: any[]): number {
+    for (const value of values) {
+      if (value !== null && value !== undefined && value !== '') {
+        const parsed = Number(value);
+        if (!isNaN(parsed)) return parsed;
+      }
+    }
+    return 0;
+  }
+
+  getCompraMinimaAnual(): number {
+    if (!this.datosCliente) return 0;
+    const d: any = this.datosCliente;
+
+    return this.n(
+      d.COMPRA_MINIMA_ANUAL,
+      d.compra_minima_anual
+    );
+  }
+
+  getCompraMinimaApparel(): number {
+    if (!this.datosCliente) return 0;
+    const d: any = this.datosCliente;
+
+    return this.n(
+      d.COMPRA_MINIMA_APPAREL,
+      d.compra_minima_apparel
+    );
+  }
+
+  getCompraGlobalScott(): number {
+    if (!this.datosCliente) return 0;
+    const d: any = this.datosCliente;
+
+    return this.n(
+      d.COMPRA_GLOBAL_SCOTT,
+      d.compra_global_scott,
+      d.avance_global_scott
+    );
+  }
+
+  getCompraGlobalApparel(): number {
+    if (!this.datosCliente) return 0;
+    const d: any = this.datosCliente;
+
+    return this.n(
+      d.COMPRA_GLOBAL_APPAREL,
+      d.compra_global_apparel,
+      d.avance_global_apparel_syncros_vittoria
+    );
+  }
+
+  getCompraGlobalBold(): number {
+    if (!this.datosCliente) return 0;
+    const d: any = this.datosCliente;
+
+    return this.n(
+      d.COMPRA_GLOBAL_BOLD,
+      d.compra_global_bold,
+      d.acumulado_bold
+    );
+  }
+
+  getTotalAcumulado(): number {
+    if (!this.datosCliente) return 0;
+    const d: any = this.datosCliente;
+
+    const totalAcumulado = this.n(
+      d.COMPRAS_TOTALES_CRUDO,
+      d.compras_totales_crudo,
+      d.TOTAL_ACUMULADO,
+      d.total_acumulado,
+      d.avance_global
+    );
+
+    if (totalAcumulado > 0) {
+      return totalAcumulado;
+    }
+
+    return (
+      this.getCompraGlobalScott() +
+      this.getCompraGlobalApparel() +
+      this.getCompraGlobalBold()
+    );
+  }
+
+  getPorcentajeAvanceGeneral(): number {
+    const meta = this.getCompraMinimaAnual();
+    if (!meta) return 0;
+
+    return this.getTotalAcumulado() / meta;
+  }
+
+  getPorcentajeAvanceApparel(): number {
+    if (!this.datosCliente) return 0;
+    const d: any = this.datosCliente;
+
+    const porcentaje = this.n(
+      d.porcentaje_avance_apparel,
+      d.PORCENTAJE_AVANCE_APPAREL
+    );
+
+    if (porcentaje > 0) {
+      return porcentaje;
+    }
+
+    const metaApparel = this.getCompraMinimaApparel();
+    if (!metaApparel) return 0;
+
+    return this.getCompraGlobalApparel() / metaApparel;
+  }
+
+  getNotasCredito(): number {
+    if (!this.datosCliente) return 0;
+    const d: any = this.datosCliente;
+
+    return this.n(
+      d.notas_credito,
+      d.NOTAS_CREDITO
+    );
+  }
+
+  getGarantias(): number {
+    if (!this.datosCliente) return 0;
+    const d: any = this.datosCliente;
+
+    return this.n(
+      d.garantias,
+      d.GARANTIAS
+    );
+  }
+
+  getAcumuladoGlobalCalculado(): number {
+    return (
+      this.getTotalAcumulado() -
+      this.getNotasCredito() -
+      this.getGarantias()
+    );
+  }
+
+  getProductosOfertados(): number {
+    if (!this.datosCliente) return 0;
+    const d: any = this.datosCliente;
+
+    return this.n(
+      d.productos_ofertados,
+      d.PRODUCTOS_OFERTADOS
+    );
+  }
+
+  getTotalBicisDeduccion(): number {
+    if (!this.datosCliente) return 0;
+    const d: any = this.datosCliente;
+
+    const totalBicis = this.n(
+      d.total_bicis_deduccion,
+      d.TOTAL_BICIS_DEDUCCION
+    );
+
+    if (totalBicis > 0) {
+      return totalBicis;
+    }
+
+    return (
+      this.n(d.bicicleta_demo, d.BICICLETA_DEMO) +
+      this.n(d.bicicletas_bold, d.BICICLETAS_BOLD)
+    );
+  }
+
+  getImporteFinalBase(): number {
+    return (
+      this.getAcumuladoGlobalCalculado() -
+      this.getProductosOfertados() -
+      this.getTotalBicisDeduccion()
+    );
+  }
+
+  getCompraAdicionalCalculada(): number {
+    return (
+      this.getAcumuladoGlobalCalculado() -
+      this.getCompraMinimaAnual()
+    );
+  }
+
+  getPorcentajeRetroactivo(): number {
+    if (!this.datosCliente) return 0;
+    const d: any = this.datosCliente;
+
+    return this.n(
+      d.porcentaje_retroactivo,
+      d.PORCENTAJE_RETROACTIVO
+    );
+  }
+
+  getPorcentajeRetroactivoApparel(): number {
+    if (!this.datosCliente) return 0;
+    const d: any = this.datosCliente;
+
+    return this.n(
+      d.porcentaje_retroactivo_apparel,
+      d.PORCENTAJE_RETROACTIVO_APPAREL
+    );
+  }
+
+  getRetroactivoTotal(): number {
+    return this.getPorcentajeRetroactivo() + this.getPorcentajeRetroactivoApparel();
+  }
+
+  getImportePagar(): number {
+    return this.getImporteFinalBase() * this.getRetroactivoTotal();
+  }
+
+  get temporadaCerrada(): boolean {
+    return !!this.datosCliente?.temporada_cerrada;
+  }
+
+  descargarPDF(): void {
+    window.print();
+  }
+
+  get fechaCierreFormateada(): string {
+    const f = this.datosCliente?.fecha_cierre_temporada;
+    if (!f) return '';
+    const [year, month, day] = f.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  get fechaCierreApparel(): string | null {
+    const f = (this.datosCliente as any)?.fecha_cierre_apparel;
+    if (!f) return null;
+    const [year, month, day] = f.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  confirmarCierreTemporada(): void {
+    if (!this.datosCliente || !this.fechaCierreInput) return;
+    const clave = this.datosCliente.CLAVE;
+    const nombre = this.datosCliente.CLIENTE;
+    const [year, month, day] = this.fechaCierreInput.split('-');
+    const fechaFormateada = `${day}/${month}/${year}`;
+
+    const confirmar = window.confirm(
+      `¿Confirmas el cierre de temporada para:\n\n${clave} - ${nombre}\nFecha de cierre: ${fechaFormateada}\n\nEsta acción es IRREVERSIBLE. ¿Continuar?`
+    );
+    if (!confirmar) return;
+
+    this.cerrando = true;
+    this.mensajeCierre = null;
+    this.errorCierre = null;
+
+    this.retroactivosService.cerrarTemporada(clave, this.fechaCierreInput).subscribe({
+      next: (res) => {
+        this.cerrando = false;
+        this.mensajeCierre = `Temporada cerrada el ${fechaFormateada}`;
+        this.buscarCliente(clave);
+      },
+      error: (err) => {
+        this.cerrando = false;
+        this.errorCierre = err.error?.error || 'Error al cerrar la temporada.';
       }
     });
   }

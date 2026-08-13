@@ -44,6 +44,10 @@ interface Factura {
   fecha_esperada: string | null;
   /** Número de la Orden de Compra relacionada (informativo). */
   po_name: string | null;
+  /** Verdadero cuando el SKU de esta línea existe en forecast_proyecciones para este cliente. */
+  de_proyeccion: boolean;
+  /** Etiquetas de la orden de venta en Odoo (ej. ["MY27 SEP"]). */
+  etiquetas: string[];
 }
 
 /**
@@ -87,6 +91,14 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
    * matches parciales por nombre o referencia parecida.
    */
   @Input() claveExacta = false;
+  /**
+   * Etiqueta de temporada histórica seleccionada en la carátula padre (ej. "2025-2026").
+   * Cuando está presente, el modal muestra los pedidos de esa temporada pasada
+   * (acotados a su rango fijo) en vez de la temporada actual del cliente.
+   */
+  @Input() temporadaSeleccionada: string | null = null;
+  /** Etiqueta de la temporada actualmente abierta (ej. "2026-2027"), para mostrar "Temporada MYxx" cuando no hay temporada histórica seleccionada. */
+  @Input() temporadaActualEtiqueta: string | null = null;
 
   /** Lista completa de líneas de orden recibidas del backend. */
   facturas: Factura[] = [];
@@ -99,6 +111,8 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
   infoCliente: any = null;
   /** Referencia al timeout de aviso de carga lenta. */
   loadingTimer: any = null;
+  /** true cuando el usuario pidió forzar recarga desde Odoo (ignora caché) */
+  refrescando = false;
 
   // ── Paginación ────────────────────────────────────────────────────────────
   paginaActual = 1;
@@ -123,8 +137,11 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
 
   // ── Buscador ───────────────────────────────────────────────────────────────
   /** Cadena de texto ingresada por el usuario para filtrar resultados. */
-  textoBusqueda = '';  /** Marca seleccionada en el filtro desplegable. Vacío = todas. */
+  textoBusqueda = '';
+  /** Marca seleccionada en el filtro desplegable. Vacío = todas. */
   filtroMarca = '';
+  /** Cuando es true, muestra solo líneas marcadas como de proyección. */
+  filtroProyeccion = false;
   /** Filtros activos por columna (estilo Excel). Clave = campo de Factura, valor = lista seleccionada. */
   columnFilters: Record<string, string[]> = {};
   /** Columna cuyo popover de filtro está abierto. */
@@ -196,7 +213,12 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     return this.ESTADO_FACTURA_LABELS[raw] ?? raw;
   }
 
-  obtenerFacturas() {
+  refrescar(): void {
+    this.refrescando = true;
+    this.obtenerFacturas(true);
+  }
+
+  obtenerFacturas(forceRefresh = false) {
     this.cargando = true;
     this.error = null;
     this.facturas = [];
@@ -206,13 +228,16 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     this.tabActiva = 'Total';
     this.indiceTabActiva = 0;
     this.textoBusqueda = '';
+    this.filtroMarca = '';
+    this.filtroProyeccion = false;
     this.fechaInicioTemporada = null;
     this.avancePrevio = null;
+    this.proyeccionesCount = 0;
 
     // ── RUTA 0: Vista Global integral ← prioridad más alta ───────────────────────
     if (this.idGrupoOdoo) {
       this.clientesService.getDetalleComprasCliente(
-        undefined, undefined, undefined, undefined, false, this.idGrupoOdoo
+        undefined, undefined, undefined, undefined, false, this.idGrupoOdoo, forceRefresh, this.temporadaSeleccionada
       ).subscribe({
         next: (response: any) => {
           if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
@@ -241,7 +266,8 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
             estado_orden: r.estado_orden ?? '',
             cantidad_entregada: Number(r.cantidad_entregada ?? 0) || 0,
             fecha_esperada: r.fecha_esperada ?? null,
-            po_name: r.po_name ?? null
+            po_name: r.po_name ?? null,
+            de_proyeccion: r.de_proyeccion ?? false
           }));
           if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
           this.error = null;
@@ -275,7 +301,8 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
           if (response.success) {
             this.facturas = (response.data || []).map((r: any) => ({
               ...r,
-              estado_factura: this.mapEstadoFactura(r.estado_factura ?? '')
+              estado_factura: this.mapEstadoFactura(r.estado_factura ?? ''),
+              de_proyeccion: r.de_proyeccion ?? false
             }));
             this.infoCliente = response.cliente ?? null;
             if (this.facturas.length > 0) {
@@ -307,7 +334,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
       if (clienteParam) {
         this.infoCliente = { nombre_cliente: clienteParam };
         // Sin límite: traer todos los registros; la paginación local se encarga de mostrarlos por páginas
-        this.clientesService.getDetalleComprasCliente(undefined, undefined, undefined, clienteParam, this.claveExacta).subscribe({
+        this.clientesService.getDetalleComprasCliente(undefined, undefined, undefined, clienteParam, this.claveExacta, undefined, forceRefresh, this.temporadaSeleccionada).subscribe({
             next: (response: any) => {
             if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
               this.fechaInicioTemporada = response.meta?.fecha_inicio_temporada ?? null;
@@ -340,10 +367,22 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
                 estado_orden: r.estado_orden ?? '',
                 cantidad_entregada: Number(r.cantidad_entregada ?? 0) || 0,
                 fecha_esperada: r.fecha_esperada ?? null,
-                po_name: r.po_name ?? null
+                po_name: r.po_name ?? null,
+                de_proyeccion: r.de_proyeccion ?? false,
+                etiquetas: Array.isArray(r.etiquetas) ? r.etiquetas.filter((t: string) => t.includes('MY27')) : []
               }));
               if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
               this.error = null;
+              this.refrescando = false;
+              // Nombre real: preferir campo cliente del response, si no leer del primer row
+              if (response?.cliente?.nombre_cliente) {
+                this.infoCliente = response.cliente;
+              } else {
+                const primeraFila = response?.data?.[0] ?? response?.rows?.[0];
+                if (primeraFila?.cliente) {
+                  this.infoCliente = { nombre_cliente: primeraFila.cliente, clave: clienteParam ?? '' };
+                }
+              }
               if (this.facturas.length > 0) {
                 this.filtrarFacturas();
               }
@@ -386,7 +425,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
               this.cargando = false;
               return;
             }
-            this.clientesService.getDetalleComprasCliente(undefined, undefined, undefined, clienteParam2, this.claveExacta).subscribe({
+            this.clientesService.getDetalleComprasCliente(undefined, undefined, undefined, clienteParam2, this.claveExacta, undefined, false, this.temporadaSeleccionada).subscribe({
               next: (response: any) => {
                 if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
                 this.error = null;
@@ -418,7 +457,8 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
                     estado_orden: r.estado_orden ?? '',
                     cantidad_entregada: Number(r.cantidad_entregada ?? 0) || 0,
                     fecha_esperada: r.fecha_esperada ?? null,
-                    po_name: r.po_name ?? null
+                    po_name: r.po_name ?? null,
+                    de_proyeccion: r.de_proyeccion ?? false
                   }));
 
                   if (this.facturas.length > 0) {
@@ -472,7 +512,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     // Pestañas fijas en orden definido — siempre visibles aunque tengan 0 productos
     const PESTANAS_DATOS = ['En tránsito', 'Almacén EB', 'Entregado', 'Cancelado'];
     const tabsBase = ['Total'];
-    if (this.clienteClave && this.clienteClave !== '__sin_clave__') tabsBase.push('Proyecciones');
+    if ((this.clienteClave && this.clienteClave !== '__sin_clave__') || this.idGrupoOdoo) tabsBase.push('Proyecciones');
     this.tabsDisponibles = [...tabsBase, ...PESTANAS_DATOS];
 
     // Aplicar filtro de pestaña activa
@@ -507,6 +547,11 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     // Aplicar filtro de marca
     if (this.filtroMarca) {
       base = base.filter(f => (f.marca ?? '').trim() === this.filtroMarca);
+    }
+
+    // Aplicar filtro de proyección
+    if (this.filtroProyeccion) {
+      base = base.filter(f => f.de_proyeccion);
     }
 
     // Filtros de columna estilo Excel
@@ -766,6 +811,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
       fila['Cliente / EVAC'] = factura.evac ?? '';
       fila['Marca'] = factura.marca ?? '';
       fila['Subcategoría'] = factura.subcategoria ?? '';
+      fila['Proyección'] = factura.de_proyeccion ? 'Sí' : 'No';
       return fila;
     });
 
@@ -784,6 +830,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     filaTotal['Cliente / EVAC'] = '';
     filaTotal['Marca'] = '';
     filaTotal['Subcategoría'] = '';
+    filaTotal['Proyección'] = '';
     datosExportar.push(filaTotal);
 
     const worksheet = XLSX.utils.json_to_sheet(datosExportar);
@@ -791,7 +838,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     const headers = [
       'Número Pedido', 'Clave Producto', 'Producto', 'Fecha',
       'Precio Unit.', 'Cantidad Pedida', 'Cantidad Entregada', 'Total',
-      'Estatus Entrega', 'Estado Orden', 'Cliente / EVAC', 'Marca', 'Subcategoría'
+      'Estatus Entrega', 'Estado Orden', 'Cliente / EVAC', 'Marca', 'Subcategoría', 'Proyección'
     ];
 
     const colWidths = headers.map(header => {
@@ -883,10 +930,24 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
 
   /** Formatea 'YYYY-MM-DD' a texto corto como '11 jun 2025' para mostrar en el resumen. */
   get fechaInicioFormateada(): string {
-    if (!this.fechaInicioTemporada) return 'MY26';
+    if (!this.fechaInicioTemporada) return '';
     const [y, m, d] = this.fechaInicioTemporada.split('-').map(Number);
     const fecha = new Date(y, m - 1, d);
     return fecha.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  /** Convierte una etiqueta de temporada ("2026-2027") a su nombre corto ("MY27"). */
+  private etiquetaAMY(etiqueta: string | null | undefined): string | null {
+    if (!etiqueta) return null;
+    const anioFin = etiqueta.split('-')[1];
+    return anioFin ? `MY${anioFin.slice(-2)}` : null;
+  }
+
+  /** Etiqueta de temporada a mostrar en el resumen: la histórica seleccionada, o la temporada actual. */
+  get etiquetaTemporadaMostrada(): string {
+    return this.etiquetaAMY(this.temporadaSeleccionada)
+      ?? this.etiquetaAMY(this.temporadaActualEtiqueta)
+      ?? '';
   }
 
   /** Suma total de piezas pedidas en la vista filtrada activa. */

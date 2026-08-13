@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FlujoService, RenglonDashboard } from '../../../services/flujo.service';
 import { HomeBarComponent } from "../../../components/home-bar/home-bar.component";
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ModalConfirmacionFlujoComponent } from '../../../components/modal-confirmacion-flujo/modal-confirmacion-flujo.component';
 import { AlertaService } from '../../../services/alerta.service';
 
@@ -18,6 +18,7 @@ export class TableroComponent implements OnInit {
 
   private flujoService = inject(FlujoService);
   private alertaService = inject(AlertaService);
+  private router = inject(Router);
 
   renglones: RenglonDashboard[] = [];
   saldoFinalProyectado: number = 0;
@@ -111,10 +112,14 @@ export class TableroComponent implements OnInit {
           this.cargarDatos();
         },
         error: (err) => {
-          alert("Error guardando valor");
-          // Opcional: Revertir el valor si falla
           if (columna === 'real') item.col_real = valorOriginal;
           else item.col_proyectado = valorOriginal;
+          if (err.status === 401) {
+            localStorage.removeItem('token');
+            this.router.navigate(['/login']);
+          } else {
+            alert("Error guardando valor");
+          }
         }
       });
     }

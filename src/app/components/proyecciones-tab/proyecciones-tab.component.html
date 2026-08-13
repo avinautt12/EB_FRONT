@@ -14,26 +14,28 @@
     </div>
 
     <div class="proy-toolbar-right" *ngIf="!modoEdicion">
-      <button class="proy-btn proy-btn-outline"
-              [disabled]="!periodoSeleccionado"
-              (click)="exportarPlantilla()"
-              title="Exportar plantilla Excel prellenada con productos autorizados">
-        <i class="fas fa-file-excel"></i> Exportar plantilla
-      </button>
-      <button class="proy-btn proy-btn-outline"
-              [disabled]="!periodoSeleccionado || importando"
-              (click)="abrirSelector()"
-              title="Importar plantilla Excel con cantidades de forecast">
-        <i class="fas fa-file-import"></i>
-        {{ importando ? 'Importando...' : 'Importar plantilla' }}
-      </button>
-      <button class="proy-btn proy-btn-outline proy-btn-global"
-              [disabled]="importando"
-              (click)="abrirSelectorGlobal()"
-              title="Importar plantilla global enviada por cualquier distribuidor (la clave se lee del archivo)">
-        <i class="fas fa-globe"></i>
-        {{ importando ? 'Importando...' : 'Importar global' }}
-      </button>
+      <ng-container *ngIf="!ocultarBotonesImport">
+        <button class="proy-btn proy-btn-outline"
+                [disabled]="!periodoSeleccionado"
+                (click)="exportarPlantilla()"
+                title="Exportar plantilla Excel prellenada con productos autorizados">
+          <i class="fas fa-file-excel"></i> Exportar plantilla
+        </button>
+        <button class="proy-btn proy-btn-outline"
+                [disabled]="!periodoSeleccionado || importando"
+                (click)="abrirSelector()"
+                title="Importar plantilla Excel con cantidades de forecast">
+          <i class="fas fa-file-import"></i>
+          {{ importando ? 'Importando...' : 'Importar plantilla' }}
+        </button>
+        <button class="proy-btn proy-btn-outline proy-btn-global"
+                [disabled]="importando"
+                (click)="abrirSelectorGlobal()"
+                title="Importar plantilla global enviada por cualquier distribuidor (la clave se lee del archivo)">
+          <i class="fas fa-globe"></i>
+          {{ importando ? 'Importando...' : 'Importar global' }}
+        </button>
+      </ng-container>
       <button class="proy-btn proy-btn-primary"
               *ngIf="rows.length > 0"
               (click)="activarEdicion()">
@@ -46,6 +48,14 @@
         <i class="fas fa-shield-alt"></i>
         {{ permisoEdicion === 'super' ? 'Super' : permisoEdicion === 'eliminar' ? 'Solo eliminar' : 'Solo meses' }}
       </span>
+      <button *ngIf="permisoEdicion === 'super'"
+              class="proy-btn proy-btn-outline"
+              [disabled]="sincronizando"
+              (click)="sincronizarCatalogo()"
+              title="Sincronizar catálogo de productos desde Odoo (actualiza nombres, colores, tallas)">
+        <i class="fas" [class.fa-sync-alt]="!sincronizando" [class.fa-spinner]="sincronizando" [class.fa-spin]="sincronizando"></i>
+        {{ sincronizando ? 'Sincronizando...' : 'Sync catálogo Odoo' }}
+      </button>
       <button class="proy-btn proy-btn-success" (click)="guardarCambios()">
         <i class="fas fa-save"></i> Guardar cambios
       </button>
@@ -106,12 +116,15 @@
   <!-- ── Estado vacío sin datos y sin loading ── -->
   <div *ngIf="!cargando && rows.length === 0 && !error && periodoSeleccionado" class="proy-empty">
     <i class="fas fa-chart-line proy-empty-icon"></i>
-    <p>Aún no tienes proyecciones registradas para el periodo <strong>{{ periodoSeleccionado }}</strong>.</p>
-    <p class="proy-empty-sub">
+    <p>Aún no hay proyecciones registradas para el periodo <strong>{{ periodoSeleccionado }}</strong>.</p>
+    <p class="proy-empty-sub" *ngIf="!ocultarBotonesImport">
       Descarga la plantilla Excel con tus productos, llena las cantidades que planeas pedir
       mes a mes y luego cárgala de vuelta aquí con <strong>Importar plantilla</strong>.
     </p>
-    <button class="proy-btn proy-btn-primary" (click)="exportarPlantilla()">
+    <p class="proy-empty-sub" *ngIf="ocultarBotonesImport">
+      Tu ejecutivo de cuenta estará cargando la proyección en breve. Contacta a Elite Bike si tienes dudas.
+    </p>
+    <button *ngIf="!ocultarBotonesImport" class="proy-btn proy-btn-primary" (click)="exportarPlantilla()">
       <i class="fas fa-file-excel"></i> Exportar plantilla ahora
     </button>
   </div>
@@ -128,11 +141,104 @@
     <p class="proy-error-neutral-sub">Importa una plantilla o agrega productos manualmente para comenzar.</p>
   </div>
 
+  <!-- ── Totales por marca ── -->
+  <div *ngIf="!cargando && rowsFiltrados.length > 0" class="proy-resumen-marcas">
+
+    <!-- MEGAMO (bicis) + SYNCROS -->
+    <div class="proy-resumen-card proy-resumen-megamo">
+      <div class="proy-resumen-split">
+        <div class="proy-resumen-half">
+          <div class="proy-resumen-logo"><i class="fas fa-bicycle"></i> MEGAMO</div>
+          <div class="proy-resumen-stat">
+            <span class="proy-resumen-num">{{ totalMegamoUnidades | number:'1.0-0' }}</span>
+            <span class="proy-resumen-lbl">unidades</span>
+          </div>
+          <div class="proy-resumen-stat">
+            <span class="proy-resumen-num">{{ totalMegamoCosto | currency:'MXN':'symbol':'1.0-0' }}</span>
+            <span class="proy-resumen-lbl">costo total</span>
+          </div>
+          <div class="proy-resumen-stat proy-resumen-stat-cuentas">
+            <span class="proy-resumen-num proy-resumen-num-sm">{{ cuentasMegamo }}</span>
+            <span class="proy-resumen-lbl">modelos pedidos</span>
+          </div>
+        </div>
+        <div class="proy-resumen-half proy-resumen-half-syncros">
+          <div class="proy-resumen-logo"><i class="fas fa-wrench"></i> SYNCROS</div>
+          <div class="proy-resumen-stat">
+            <span class="proy-resumen-num">{{ totalSyncrosUnidades | number:'1.0-0' }}</span>
+            <span class="proy-resumen-lbl">unidades</span>
+          </div>
+          <div class="proy-resumen-stat">
+            <span class="proy-resumen-num">{{ totalSyncrosCosto | currency:'MXN':'symbol':'1.0-0' }}</span>
+            <span class="proy-resumen-lbl">costo total</span>
+          </div>
+          <div class="proy-resumen-stat proy-resumen-stat-cuentas">
+            <span class="proy-resumen-num proy-resumen-num-sm">{{ cuentasSyncros }}</span>
+            <span class="proy-resumen-lbl">modelos pedidos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCOTT (bicis) + APPAREL SCOTT -->
+    <div class="proy-resumen-card proy-resumen-scott">
+      <div class="proy-resumen-split">
+        <div class="proy-resumen-half">
+          <div class="proy-resumen-logo"><i class="fas fa-bicycle"></i> SCOTT</div>
+          <div class="proy-resumen-stat">
+            <span class="proy-resumen-num">{{ totalScottUnidades | number:'1.0-0' }}</span>
+            <span class="proy-resumen-lbl">unidades</span>
+          </div>
+          <div class="proy-resumen-stat">
+            <span class="proy-resumen-num">{{ totalScottCosto | currency:'MXN':'symbol':'1.0-0' }}</span>
+            <span class="proy-resumen-lbl">costo total</span>
+          </div>
+          <div class="proy-resumen-stat proy-resumen-stat-cuentas">
+            <span class="proy-resumen-num proy-resumen-num-sm">{{ cuentasScott }}</span>
+            <span class="proy-resumen-lbl">modelos pedidos</span>
+          </div>
+        </div>
+        <div class="proy-resumen-half proy-resumen-half-apparel">
+          <div class="proy-resumen-logo"><i class="fas fa-tshirt"></i> APPAREL SCOTT</div>
+          <div class="proy-resumen-stat">
+            <span class="proy-resumen-num">{{ totalApparelScottUnidades | number:'1.0-0' }}</span>
+            <span class="proy-resumen-lbl">unidades</span>
+          </div>
+          <div class="proy-resumen-stat">
+            <span class="proy-resumen-num">{{ totalApparelScottCosto | currency:'MXN':'symbol':'1.0-0' }}</span>
+            <span class="proy-resumen-lbl">costo total</span>
+          </div>
+          <div class="proy-resumen-stat proy-resumen-stat-cuentas">
+            <span class="proy-resumen-num proy-resumen-num-sm">{{ cuentasApparelScott }}</span>
+            <span class="proy-resumen-lbl">modelos pedidos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GLOBAL -->
+    <div class="proy-resumen-card proy-resumen-global">
+      <div class="proy-resumen-logo"><i class="fas fa-globe"></i> GLOBAL</div>
+      <div class="proy-resumen-stat">
+        <span class="proy-resumen-num">{{ totalGlobalUnidades | number:'1.0-0' }}</span>
+        <span class="proy-resumen-lbl">unidades totales</span>
+      </div>
+      <div class="proy-resumen-stat">
+        <span class="proy-resumen-num">{{ totalGlobalCosto | currency:'MXN':'symbol':'1.0-0' }}</span>
+        <span class="proy-resumen-lbl">costo global</span>
+      </div>
+      <div class="proy-resumen-stat proy-resumen-stat-cuentas">
+        <span class="proy-resumen-num proy-resumen-num-sm">{{ cuentasGlobal }}</span>
+        <span class="proy-resumen-lbl">modelos pedidos</span>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Botón Agregar producto (siempre visible cuando hay periodo) ── -->
   <div *ngIf="!cargando && periodoSeleccionado" class="proy-tabla-acciones proy-acciones-standalone">
     <button class="proy-btn proy-btn-outline-sm proy-btn-add"
             (click)="agregarProducto()">
-      <i class="fas fa-plus"></i> Agregar producto manualmente
+      <i class="fas fa-plus"></i> Agregar Producto
     </button>
     <button *ngIf="rows.length > 0" class="proy-btn proy-btn-outline-sm" (click)="toggleMeses()">
       <i class="fas" [class.fa-compress]="modoExpandido" [class.fa-expand]="!modoExpandido"></i>
@@ -142,6 +248,11 @@
 
   <!-- ── Tabla principal ── -->
   <div *ngIf="!cargando && rows.length > 0" class="proy-tabla-wrap" [class.expandido]="modoExpandido">
+
+    <!-- Scrollbar horizontal en la parte SUPERIOR (siempre accesible) -->
+    <div class="proy-scroll-sticky" #stickyScroll (scroll)="_onStickyScroll()">
+      <div class="proy-scroll-inner" #stickyInner></div>
+    </div>
 
     <div class="proy-tabla-scroll" #tableScroll>
       <table class="proy-tabla">
@@ -155,6 +266,7 @@
             <th class="th-center">Color</th>
             <th class="th-center">Talla</th>
             <th class="th-precio">Precio</th>
+            <th class="th-precio th-precio-pub">P. Público c/IVA</th>
             <th class="th-total">Total uds.</th>
             <th class="th-total-precio">Total $</th>
             <th *ngIf="modoEdicion" class="th-acciones">Acciones</th>
@@ -166,6 +278,7 @@
             <th class="th-center">Color</th>
             <th class="th-center">Talla</th>
             <th class="th-precio">Precio</th>
+            <th class="th-precio th-precio-pub">P. Público c/IVA</th>
             <th *ngFor="let label of mesesLabels" class="th-mes">{{ label }}</th>
             <th class="th-total">Total uds.</th>
             <th class="th-total-precio">Total $</th>
@@ -174,7 +287,22 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let row of rowsFiltrados; trackBy: trackById"
+          <ng-container *ngFor="let section of rowsAgrupados; trackBy: trackByBrand">
+            <!-- Encabezado de sección (Megamo / Scott / Otros) — clickable para colapsar -->
+            <!-- Dos tds: el label sticky al left, el filler transparente para cubrir el resto -->
+            <tr *ngIf="section.label" class="proy-seccion-header proy-seccion-toggle"
+                (click)="toggleSeccion(section.brand)">
+              <td class="td-seccion-sticky" colspan="2">
+                <i class="fas fa-chevron-down proy-seccion-chevron"
+                   [class.proy-seccion-chevron--collapsed]="isColapsada(section.brand)"></i>
+                <i [class]="section.brand === 'SYNCROS' ? 'fas fa-wrench' : section.brand.startsWith('APPAREL_') ? 'fas fa-tshirt' : 'fas fa-bicycle'"></i>
+                {{ section.label }}
+                <span class="proy-seccion-count">({{ section.rows.length }})</span>
+              </td>
+              <td class="td-seccion-filler" colspan="97"></td>
+            </tr>
+          <ng-container *ngIf="!isColapsada(section.brand)">
+          <tr *ngFor="let row of section.rows; trackBy: trackById"
               [class.proy-fila-nueva]="row._nuevo"
               [class.proy-fila-eliminar]="row._eliminar"
               [class.proy-fila-editada]="row._editado && !row._nuevo">
@@ -183,21 +311,14 @@
             <td class="td-sku">
               <span *ngIf="!modoEdicion || !row._nuevo">{{ row.sku }}</span>
 
-              <!-- New row: select product button / chip -->
+              <!-- New row: chip con sku seleccionado + botón cambiar -->
               <ng-container *ngIf="modoEdicion && row._nuevo">
-                <!-- Already selected: chip with change button -->
                 <div *ngIf="row._searchSeleccionado" class="proy-search-selected">
                   <span class="proy-search-chip">{{ row.sku }}</span>
-                  <button class="proy-btn-text proy-search-change" (click)="limpiarBusqueda(row)" title="Cambiar producto">
-                    <i class="fas fa-times-circle"></i>
+                  <button class="proy-btn-text proy-search-change" (click)="abrirModalBusqueda(row)" title="Cambiar producto">
+                    <i class="fas fa-pencil-alt"></i>
                   </button>
                 </div>
-                <!-- Not yet selected: open modal -->
-                <button *ngIf="!row._searchSeleccionado"
-                        class="proy-btn-buscar"
-                        (click)="abrirModalBusqueda(row)">
-                  <i class="fas fa-search"></i> Seleccionar producto...
-                </button>
               </ng-container>
             </td>
 
@@ -232,25 +353,39 @@
               <span *ngIf="modoEdicion && row._nuevo">{{ row._searchSeleccionado ? row.talla : '&mdash;' }}</span>
             </td>
 
-            <!-- Precio (siempre visible) -->
+            <!-- Precio distribuidor (siempre visible) -->
             <td class="td-precio">
               <span *ngIf="row.precio">{{ row.precio | currency:'MXN':'symbol':'1.2-2' }}</span>
               <span *ngIf="!row.precio" class="td-precio-nd">—</span>
             </td>
 
-            <!-- Meses (solo en modo expandido) -->
-            <ng-container *ngIf="modoExpandido">
-              <td *ngFor="let mes of mesesKeys" class="td-qty">
-                <span *ngIf="!modoEdicion || row._eliminar || !puedeEditarMeses">{{ getMes(row, mes) | number:'1.0-0' }}</span>
-                <input *ngIf="modoEdicion && !row._eliminar && puedeEditarMeses"
-                       class="proy-input-num"
-                       type="number"
-                       min="0"
-                       step="1"
-                       [ngModel]="getMes(row, mes)"
-                       (ngModelChange)="setMes(row, mes, $event); markEdited(row)" />
-              </td>
-            </ng-container>
+            <!-- Precio público sin IVA (solo bicis de whitelist) -->
+            <td class="td-precio td-precio-pub">
+              <span *ngIf="row.precio_publico">{{ row.precio_publico | currency:'MXN':'symbol':'1.2-2' }}</span>
+              <span *ngIf="!row.precio_publico" class="td-precio-nd">—</span>
+            </td>
+
+            <!-- Meses (visibles en modo expandido, siempre en DOM para evitar spike de creación) -->
+            <td *ngFor="let mes of mesesKeys" class="td-qty"
+                [style.display]="modoExpandido ? '' : 'none'"
+                [class.td-qty-bloqueado]="isBloqueadoMegamo(row, mes)">
+              <!-- Celda bloqueada: MEGAMO antes de Julio -->
+              <span *ngIf="isBloqueadoMegamo(row, mes)" class="td-qty-lock" title="Solo disponible a partir de Julio">
+                <i class="fas fa-lock"></i>
+              </span>
+              <!-- Vista normal: 0 en todos los meses; naranja=pendiente, verde=ya entregado -->
+              <span *ngIf="!isBloqueadoMegamo(row, mes) && (!modoEdicion || row._eliminar || (!puedeEditarMeses && !row._nuevo))"
+                    [class.mes-pendiente]="getMes(row, mes) > 0 && getMesDisplay(row, mes) > 0"
+                    [class.mes-entregado]="getMes(row, mes) > 0 && getMesDisplay(row, mes) === 0">{{ getMes(row, mes) > 0 ? getMesDisplay(row, mes) : 0 }}</span>
+              <!-- Edición -->
+              <input *ngIf="!isBloqueadoMegamo(row, mes) && modoEdicion && !row._eliminar && (puedeEditarMeses || row._nuevo)"
+                     class="proy-input-num"
+                     type="number"
+                     min="0"
+                     step="1"
+                     [ngModel]="getMes(row, mes)"
+                     (ngModelChange)="setMes(row, mes, $event); markEdited(row)" />
+            </td>
 
             <!-- Total uds. -->
             <td class="td-total">{{ getRestante(row) | number:'1.0-0' }}</td>
@@ -279,14 +414,17 @@
             </td>
 
           </tr>
+          </ng-container><!-- /collapse -->
+          </ng-container><!-- /section -->
         </tbody>
 
         <!-- Totales footer -->
         <tfoot *ngIf="rowsFiltrados.length > 0">
-          <!-- Fila naranja: totales de unidades -->
+
+          <!-- Fila 1: Totales de unidades por mes -->
           <tr class="proy-fila-totales">
             <td [attr.colspan]="modoExpandido ? 4 : 6"><strong>TOTALES</strong></td>
-            <!-- columna Precio vacía -->
+            <td class="td-precio-foot"></td>
             <td class="td-precio-foot"></td>
             <ng-container *ngIf="modoExpandido">
               <td *ngFor="let mes of mesesKeys" class="td-total-foot">
@@ -297,24 +435,39 @@
             <td class="td-total-precio"><strong>{{ totalPrecioGeneral | currency:'MXN':'symbol':'1.0-0' }}</strong></td>
             <td *ngIf="modoEdicion"></td>
           </tr>
-          <!-- Fila azul: total en precio por mes -->
-          <tr class="proy-fila-precio-mes" *ngIf="modoExpandido">
-            <td colspan="5" class="td-precio-mes-lbl"><strong>PRECIO POR MES</strong></td>
-            <td *ngFor="let mes of mesesKeys" class="td-precio-mes">
-              <strong>{{ totalPrecioMes(mes) | currency:'MXN':'symbol':'1.0-0' }}</strong>
+
+          <!-- Filas 2-5: Una fila por sección (generadas desde desgloseData) -->
+          <ng-container *ngIf="modoExpandido">
+            <tr *ngFor="let sec of desgloseData; let last = last"
+                class="proy-fila-sec" [ngClass]="'proy-fila-sec--' + sec.cls"
+                [class.proy-fila-sec--last]="last">
+              <td colspan="5" class="td-sec-lbl">{{ sec.label | uppercase }}</td>
+              <td *ngFor="let mes of mesesKeys" class="td-sec-val">
+                <span *ngIf="sec.meses[mes].precio > 0" class="td-sec-num">{{ formatPrecioCorto(sec.meses[mes].precio) }}</span>
+                <span *ngIf="sec.meses[mes].precio === 0" class="td-sec-dash">—</span>
+              </td>
+              <td class="td-sec-trail"></td>
+              <td class="td-sec-trail"></td>
+              <td *ngIf="modoEdicion"></td>
+            </tr>
+          </ng-container>
+
+          <!-- Fila 3: Total $ por mes -->
+          <tr class="proy-fila-total-precio" *ngIf="modoExpandido">
+            <td colspan="5" class="td-total-precio-lbl">TOTAL INVERSIÓN</td>
+            <td *ngFor="let mes of mesesKeys" class="td-total-precio-mes">
+              <strong>{{ formatPrecioCorto(totalPrecioMes(mes)) }}</strong>
             </td>
-            <td class="td-precio-mes"></td>
-            <td class="td-precio-mes"></td>
+            <td class="td-total-precio-empty"></td>
+            <td class="td-total-precio-mes td-total-precio-global">
+              <strong>{{ totalPrecioGeneral | currency:'MXN':'symbol':'1.0-0' }}</strong>
+            </td>
             <td *ngIf="modoEdicion"></td>
           </tr>
+
         </tfoot>
       </table>
     </div><!-- /scroll -->
-
-    <!-- Barra scrollbar sticky — siempre visible en la parte inferior -->
-    <div class="proy-scroll-sticky" #stickyScroll (scroll)="_onStickyScroll()">
-      <div class="proy-scroll-inner" #stickyInner></div>
-    </div>
 
   </div><!-- /tabla wrap -->
 
@@ -346,6 +499,12 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
+    </div>
+
+    <!-- ── Error de duplicado (visible en cualquier paso) ── -->
+    <div *ngIf="searchModal.error" class="sbm-error-banner">
+      <i class="fas fa-exclamation-triangle"></i>
+      {{ searchModal.error }}
     </div>
 
     <!-- ── PASO 1: Búsqueda ── -->
@@ -405,13 +564,9 @@
         </div>
       </div>
 
-      <!-- Ver más -->
-      <div class="sbm-ver-mas-wrap" *ngIf="searchModal.hasMore || (searchModal.cargando && searchModal.offset > 0)">
-        <button class="sbm-btn-ver-mas" [disabled]="searchModal.cargando" (click)="cargarMas()">
-          <i class="fas" [class.fa-chevron-down]="!searchModal.cargando"
-             [class.fa-circle-notch]="searchModal.cargando" [class.fa-spin]="searchModal.cargando"></i>
-          {{ searchModal.cargando ? 'Cargando...' : 'Ver más resultados' }}
-        </button>
+      <!-- Cargando más páginas automáticamente -->
+      <div class="sbm-ver-mas-wrap" *ngIf="searchModal.cargando && searchModal.offset > 0">
+        <i class="fas fa-circle-notch fa-spin" style="color:#888;font-size:0.8rem"></i>
       </div>
 
     </ng-container><!-- /paso 1 -->

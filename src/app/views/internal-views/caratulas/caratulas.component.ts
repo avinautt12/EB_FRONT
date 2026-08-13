@@ -13,6 +13,8 @@ import html2canvas from 'html2canvas';
 
 import { EmailService, EmailData, EmailConfig } from '../../../services/email.service';
 import { FechaActualizacionComponent } from '../../../components/fecha-actualizacion/fecha-actualizacion.component';
+import { TemporadaSelectorComponent } from '../../../components/temporada-selector/temporada-selector.component';
+import { AvisoHistoricoComponent } from '../../../components/aviso-historico/aviso-historico.component';
 
 interface SugerenciaCliente {
   clave: string;
@@ -27,6 +29,9 @@ interface DatosCliente {
   evac: string;
   nombre_cliente: string;
   nivel: string;
+  temporada_cerrada?: boolean;
+  fecha_cierre_temporada?: string | null;
+  fecha_cierre_apparel?: string | null;
   compra_minima_anual: number;
   compromiso_scott: number;
   avance_global_scott: number;
@@ -72,6 +77,9 @@ interface DatosCliente {
   porcentaje_may_jun_app: number;
   compra_minima_inicial: number;
   avance_global: number;
+  acumulado_bold?: number;
+  acumulado_megamo?: number;
+  avance_global_total_marcas: number;
   porcentaje_global: number;
   acumulado_anticipado: number;
   porcentaje_anual: number;
@@ -86,7 +94,7 @@ interface DatosCliente {
 @Component({
   selector: 'app-caratulas',
   standalone: true,
-  imports: [RouterModule, CommonModule, HomeBarComponent, FormsModule, FechaActualizacionComponent],
+  imports: [RouterModule, CommonModule, HomeBarComponent, FormsModule, FechaActualizacionComponent, TemporadaSelectorComponent, AvisoHistoricoComponent],
   templateUrl: './caratulas.component.html',
   styleUrls: ['./caratulas.component.css']
 })
@@ -124,6 +132,12 @@ export class CaratulasComponent implements OnInit {
 
   exportandoPDF = false;
 
+  etiquetaTemporadaActual = '';
+  temporadasDisponibles: string[] = [];
+  modoHistorico = false;
+  temporadaHistoricaSeleccionada: string | null = null;
+  datosClienteEnVivo: DatosCliente | null = null;
+
   constructor(
     private caratulasService: CaratulasService,
     private router: Router,
@@ -136,6 +150,8 @@ export class CaratulasComponent implements OnInit {
     this.initializeSearch();
     this.loadAllClientes();
     this.verificarConfiguracionEmail();
+    this.cargarTemporadaActual();
+    this.cargarTemporadasDisponibles();
 
     this.route.queryParams.subscribe(params => {
       const query = params['q'];
@@ -147,6 +163,58 @@ export class CaratulasComponent implements OnInit {
         }, 100);
       }
     });
+  }
+
+  cargarTemporadaActual(): void {
+    this.caratulasService.getTemporadas().subscribe({
+      next: (temporadas) => {
+        const abierta = temporadas.find(t => t.estado === 'abierta');
+        this.etiquetaTemporadaActual = abierta ? abierta.etiqueta : '';
+      },
+      error: (err) => console.error('Error cargando temporada actual:', err)
+    });
+  }
+
+  cargarTemporadasDisponibles(): void {
+    this.caratulasService.getTemporadasDisponibles().subscribe({
+      next: (temporadas) => this.temporadasDisponibles = temporadas,
+      error: (err) => console.error('Error cargando temporadas disponibles:', err)
+    });
+  }
+
+  verTemporadaPasada(temporada: string): void {
+    if (!temporada) {
+      this.volverATemporadaActual();
+      return;
+    }
+    if (!this.datosClienteEnVivo) {
+      this.mostrarError('Primero busca un cliente antes de ver una temporada pasada');
+      return;
+    }
+
+    const clave = this.datosClienteEnVivo.clave;
+    this.caratulasService.getDatosPrevioHistorico(temporada).subscribe({
+      next: (datos: any[]) => {
+        const fila = datos.find(d => (d.clave || '').toUpperCase() === clave.toUpperCase());
+        if (!fila) {
+          this.mostrarError(`No hay datos de ${clave} para la temporada ${temporada}`);
+          return;
+        }
+        this.modoHistorico = true;
+        this.temporadaHistoricaSeleccionada = temporada;
+        this.datosCliente = this.procesarDatosCliente(fila);
+      },
+      error: (err) => {
+        console.error('Error cargando temporada historica:', err);
+        this.mostrarError('Error al cargar la temporada histórica');
+      }
+    });
+  }
+
+  volverATemporadaActual(): void {
+    this.modoHistorico = false;
+    this.temporadaHistoricaSeleccionada = null;
+    this.datosCliente = this.datosClienteEnVivo;
   }
 
   abrirModalEmail() {
@@ -181,9 +249,17 @@ export class CaratulasComponent implements OnInit {
       evac: this.datosCliente.evac,
       nombre_cliente: this.datosCliente.nombre_cliente,
       nivel: this.datosCliente.nivel,
+
       compra_minima_anual: this.datosCliente.compra_minima_anual,
       compra_minima_inicial: this.datosCliente.compra_minima_inicial,
+
+      avance_global: this.datosCliente.avance_global,
+      avance_global_total_marcas: this.datosCliente.avance_global_total_marcas,
+
       acumulado_anticipado: this.datosCliente.acumulado_anticipado,
+      acumulado_bold: this.datosCliente.acumulado_bold,
+      acumulado_megamo: this.datosCliente.acumulado_megamo,
+
       porcentaje_global: this.datosCliente.porcentaje_global,
       porcentaje_anual: this.datosCliente.porcentaje_anual,
 
@@ -505,10 +581,14 @@ export class CaratulasComponent implements OnInit {
 
         if (datos && Object.keys(datos).length > 0) {
           this.datosCliente = this.procesarDatosCliente(datos);
+          this.datosClienteEnVivo = this.datosCliente;
+          this.modoHistorico = false;
+          this.temporadaHistoricaSeleccionada = null;
           this.caratulaSeleccionada = true;
           this.error = null;
         } else {
           this.datosCliente = null;
+          this.datosClienteEnVivo = null;
           this.caratulaSeleccionada = false;
           this.error = 'No se encontraron datos para este cliente';
         }
@@ -550,6 +630,9 @@ export class CaratulasComponent implements OnInit {
 
   private resetearBusqueda() {
     this.datosCliente = null;
+    this.datosClienteEnVivo = null;
+    this.modoHistorico = false;
+    this.temporadaHistoricaSeleccionada = null;
     this.sugerenciasFiltradas = [];
     this.mostrarSugerencias = false;
     this.caratulaSeleccionada = false;
@@ -575,10 +658,21 @@ export class CaratulasComponent implements OnInit {
     // Calcular datos de compra mínima usando los campos de Flask
     const metaInicial = this.parseNumber(datos.compra_minima_inicial || '0');
     const metaAnual = this.parseNumber(datos.compra_minima_anual || '0');
-    const avanceReal = this.parseNumber(datos.acumulado_anticipado || '0');
-    const avanceGlobal = this.parseNumber(datos.avance_global || '0');
-    const porcentajeGlobal = this.parseNumber(datos.porcentaje_global || '0');
-    const porcentajeAnual = this.parseNumber(datos.porcentaje_anual || '0');
+    const avanceGlobal = this.parseNumber(datos.avance_global ?? '0');
+    const acumuladoAnticipado = this.parseNumber(datos.acumulado_anticipado ?? '0');
+
+    const acumuladoBold = this.parseNumber(datos.acumulado_bold ?? '0');
+    const acumuladoMegamo = this.parseNumber(datos.acumulado_megamo ?? '0');
+
+    const avanceGlobalTotalMarcas = avanceGlobal;
+
+    const porcentajeGlobal = metaInicial > 0
+      ? Math.round((avanceGlobalTotalMarcas / metaInicial) * 100)
+      : 0;
+
+    const porcentajeAnual = metaAnual > 0
+      ? Math.round((avanceGlobalTotalMarcas / metaAnual) * 100)
+      : 0;
 
     // Determinar estatus del compromiso
     const totalMeta = metaScott + metaCombined;
@@ -593,6 +687,9 @@ export class CaratulasComponent implements OnInit {
       evac: datos.evac || '',
       nombre_cliente: datos.nombre_cliente || '',
       nivel: datos.nivel || '',
+      temporada_cerrada: !!datos.temporada_cerrada,
+      fecha_cierre_temporada: datos.fecha_cierre_temporada || null,
+      fecha_cierre_apparel: datos.fecha_cierre_apparel || null,
       compra_minima_anual: this.parseNumber(datos.compra_minima_anual || totalMeta || '0'),
       compromiso_scott: metaScott,
       avance_global_scott: avanceScott,
@@ -637,15 +734,37 @@ export class CaratulasComponent implements OnInit {
       avance_may_jun_app: this.parseNumber(datos.avance_may_jun_app || '0'),
       porcentaje_may_jun_app: this.parseNumber(datos.porcentaje_may_jun_app || '0'),
       compra_minima_inicial: this.parseNumber(datos.compra_minima_inicial || metaInicial || '0'),
-      avance_global: this.parseNumber(datos.avance_global || avanceGlobal || '0'),
-      porcentaje_global: metaInicial > 0 ? Math.round((avanceReal / metaInicial) * 100) : 0, acumulado_anticipado: this.parseNumber(datos.acumulado_anticipado || '0'),
-      porcentaje_anual: metaAnual > 0 ? Math.round((avanceReal / metaAnual) * 100) : 0,
+      avance_global: avanceGlobal,
+      avance_global_total_marcas: avanceGlobalTotalMarcas,
+      acumulado_anticipado: acumuladoAnticipado,
+      acumulado_bold: acumuladoBold,
+      acumulado_megamo: acumuladoMegamo,
+      porcentaje_global: porcentajeGlobal,
+      porcentaje_anual: porcentajeAnual,
       periodoJulAgo: datos.periodoJulAgo || 'Julio - Agosto',
       periodoSepOct: datos.periodoSepOct || 'Septiembre - Octubre',
       periodoNovDic: datos.periodoNovDic || 'Noviembre - Diciembre',
       estatus: datos.estatus || '',
       estado: datos.estado || ''
     };
+  }
+
+  get temporadaCerrada(): boolean {
+    return !!this.datosCliente?.temporada_cerrada;
+  }
+
+  get fechaCierreFormateada(): string {
+    const f = this.datosCliente?.fecha_cierre_temporada;
+    if (!f) return '';
+    const [year, month, day] = f.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  get fechaCierreApparel(): string | null {
+    const f = this.datosCliente?.fecha_cierre_apparel;
+    if (!f) return null;
+    const [year, month, day] = f.split('-');
+    return `${day}/${month}/${year}`;
   }
 
   // Método auxiliar para parsear números de forma segura
@@ -661,6 +780,9 @@ export class CaratulasComponent implements OnInit {
   limpiarBusqueda() {
     this.terminoBusqueda = '';
     this.datosCliente = null;
+    this.datosClienteEnVivo = null;
+    this.modoHistorico = false;
+    this.temporadaHistoricaSeleccionada = null;
     this.sugerenciasFiltradas = [];
     this.mostrarSugerencias = false;
     this.error = null;
@@ -832,6 +954,32 @@ export class CaratulasComponent implements OnInit {
     });
   }
 
+  getAvanceGlobalMarcas(): number {
+    if (!this.datosCliente) return 0;
+
+    return this.parseNumber(this.datosCliente.avance_global_total_marcas || 0);
+  }
+
+  getPorcentajeGlobalMarcas(): number {
+    if (!this.datosCliente) return 0;
+
+    const meta = this.parseNumber(this.datosCliente.compra_minima_inicial || 0);
+
+    if (meta <= 0) return 0;
+
+    return Math.round((this.getAvanceGlobalMarcas() / meta) * 100);
+  }
+
+  getPorcentajeAnualMarcas(): number {
+    if (!this.datosCliente) return 0;
+
+    const meta = this.parseNumber(this.datosCliente.compra_minima_anual || 0);
+
+    if (meta <= 0) return 0;
+
+    return Math.round((this.getAvanceGlobalMarcas() / meta) * 100);
+  }
+
   // Función para determinar si debe mostrar el período Sep-Oct
   mostrarPeriodoSepOct(): boolean {
     const mesActual = this.getMesActual();
@@ -905,6 +1053,9 @@ export class CaratulasComponent implements OnInit {
   }
 
   getEstadoPeriodo(periodo: string): string {
+    // Si la temporada está cerrada, todos sus periodos están cerrados
+    if (this.temporadaCerrada) return 'Cerrado';
+
     const mesActual = this.getMesActual();
 
     const periodos = {
@@ -919,12 +1070,20 @@ export class CaratulasComponent implements OnInit {
     const data = periodos[periodo as keyof typeof periodos];
     if (!data) return 'Sin definir';
 
-    // Si estamos en 2026 (mes 1-6), los de 2025 ya cerraron
+    // Si estamos en mes 1-6 (segunda mitad del año fiscal), los bimestres Jul-Dic ya cerraron
     if (mesActual <= 6 && data.inicio >= 7) return 'Cerrado';
 
     if (mesActual < data.inicio) return 'Sin iniciar';
     if (mesActual > data.fin) return 'Cerrado';
     return 'En curso';
+  }
+
+  etiquetaAMY(etiqueta: string | null): string {
+    if (!etiqueta) return '';
+    // "2025-2026" → "MY26", "2026-2027" → "MY27"
+    const partes = etiqueta.split('-');
+    if (partes.length === 2) return 'MY' + partes[1].slice(-2);
+    return etiqueta;
   }
 
   getCompromisoAcumuladoScott(): number {

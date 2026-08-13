@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HomeBarComponent } from '../../../../components/home-bar/home-bar.component';
+import { TitleCaseDirective } from '../../../../directives/title-case.directive';
 import { GarantiasService } from '../../../../services/garantias.service';
 import { AuthService } from '../../../../services/auth.service';
 
@@ -11,6 +12,53 @@ export interface SeccionDef {
   label: string;
   isVisible: (d: any) => boolean;
 }
+
+// ── Catálogos de valores editables desde /garantias/editor ──────────────────
+// NOTA: marca, scott_grupo, syncros_tipo y scott_tipo_marco (y sus variantes)
+// NO son catálogos editables: controlan qué secciones se muestran (ver
+// SECCIONES más abajo) y editarlos sin tocar esa lógica rompería el formulario.
+// Las localizaciones numeradas contra un diagrama (casco, zapato, marco)
+// tampoco son editables por la misma razón (desincronizarían con la imagen).
+export const PUESTOS: string[] = ['Dueño', 'Encargado de Sucursal', 'Servicio Técnico', 'Vendedor'];
+export const TALLAS_PROTECCION: string[] = ['XS', 'S', 'M', 'L', 'XL', 'Unitalla'];
+export const TIPOS_COMPONENTE: string[] = ['Bosch', 'Mahle', 'TQ', 'AVINOX', 'Suspension/Shock'];
+export const PROT_LOCALIZACIONES: string[] = [
+  'Cascarón de Plástico', 'D30 Insert', 'Relleno / Espuma', 'Correa / Velcro',
+  'Cierre / Cremallera', 'Hebilla', 'Tejido', 'Decoloración', 'Otros',
+];
+export const PROT_TIPOS_DANO: string[] = [
+  'Roto', 'Defecto en Costura', 'Defecto de Armado', 'Rasgado', 'Descolorido', 'Malfunción', 'Otros',
+];
+export const ZAPATO_TIPOS_DANO: string[] = [
+  'Costura', 'Delaminación', 'Desgastado', 'Marca de Pegamento', 'Marca de Impresión', 'Roto', 'Otros',
+];
+export const CASCO_TIPOS_DANO: string[] = [
+  'Roto', 'Descolorido', 'Defecto en Costura', 'Rasgado', 'Malfunción', 'Otros',
+];
+export const MANUBRIO_LOCALIZACIONES: string[] = [
+  'Potencia', 'Barra de la base', 'Extension', 'Manubrio',
+  'Abrazadera del Manubrio', 'Hardware de la Potencia', 'Otros',
+];
+export const SYNCROS_TIPOS_DANO: string[] = [
+  'Raspado', 'Roto', 'Color de la Capa Base Defectuoso', 'Asimétrico', 'Otros',
+];
+export const ASIENTO_LOCALIZACIONES: string[] = ['Base', 'Almohadilla', 'Riel', 'Otros'];
+export const POSTE_LOCALIZACIONES: string[] = [
+  'Poste de Asiento', 'Abrazadera del asiento', 'Cartucho', 'Base', 'Dropper Seatpost', 'Otros',
+];
+export const RIN_LOCALIZACIONES: string[] = [
+  'Base del Rin', 'Banda del Rin', 'Rayo de Carbon',
+  'Nucleo del cascarón', 'Nucleo interno', 'Otros',
+];
+export const RIN_TIPOS_DANO: string[] = [
+  'Roto', 'Asimétrico', 'Delaminación', 'Color de la Capa Base Defectuoso', 'Otros',
+];
+export const TIPOS_DANO: string[] = [
+  'Rayado', 'BB ID DIMENSION', 'Roto', 'Asimétrico',
+  'Hilo Defectuoso', 'Soldadura de Unión Defectuosa',
+  'Color de la Capa Base Defectuoso', 'Burbujas de Aire',
+  'Línea de Separación del Molde', 'Otros',
+];
 
 export const DISTRIBUIDORES: string[] = [
   'ADAN JOSUE SUAREZ HERNANDEZ',
@@ -71,6 +119,7 @@ export const DISTRIBUIDORES: string[] = [
   'MANUEL DE JESUS SOTO ACOSTA',
   'MARCO ANTONIO GARCIA VEJAR',
   'MARCO TULIO ANDRADE NAVARRO',
+  'MARIA ANTONIETA ENRIQUEZ POZOS',
   'MARIA CRISTINA QUINTERO MILLAN',
   'MARIA GUADALUPE GODINEZ FERNANDEZ',
   'MARKETER AYV',
@@ -78,6 +127,7 @@ export const DISTRIBUIDORES: string[] = [
   'NARUCO',
   'OPCIONES CREATIVAS',
   'ORIOI MEDRANO CESPEDES',
+  'OSCAR MAURICIO CUEVAS TELLEZ',
   'OSIRIS ONDAL DELFIN',
   'PAULINA ALVAREZ FERNANDEZ',
   'RAMON DE JESUS MARTINEZ LOPEZ',
@@ -110,8 +160,8 @@ export const SECCIONES: SeccionDef[] = [
   { id: 8,  label: 'Protecciones — Descripción del Daño',   isVisible: d => d.marca === 'SCOTT' && d.scott_grupo === 'Protecciones' },
   { id: 9,  label: 'Zapatos — Datos del Producto',          isVisible: d => d.marca === 'SCOTT' && d.scott_grupo === 'Zapatos' },
   { id: 10, label: 'Zapatos — Descripción del Daño',        isVisible: d => d.marca === 'SCOTT' && d.scott_grupo === 'Zapatos' },
-  { id: 11, label: 'Componentes — Datos del Producto',      isVisible: d => d.marca === 'SCOTT' && d.scott_grupo === 'Componentes' },
-  { id: 12, label: 'Componentes — Descripción del Daño',    isVisible: d => d.marca === 'SCOTT' && d.scott_grupo === 'Componentes' },
+  { id: 11, label: 'Componentes - Piezas Eléctricas — Datos del Producto',      isVisible: d => d.marca === 'SCOTT' && d.scott_grupo === 'Componentes - Piezas Eléctricas' },
+  { id: 12, label: 'Componentes - Piezas Eléctricas — Descripción del Daño',    isVisible: d => d.marca === 'SCOTT' && d.scott_grupo === 'Componentes - Piezas Eléctricas' },
   { id: 13, label: 'Documentos de Soporte SCOTT',           isVisible: d => d.marca === 'SCOTT' && d.scott_grupo !== 'Cuadros' && !!d.scott_grupo },
   { id: 14, label: 'SCOTT Cuadros — Datos',                 isVisible: d => d.marca === 'SCOTT' && d.scott_grupo === 'Cuadros' },
   { id: 15, label: 'Daño en Marco — Doble Suspensión',      isVisible: d => (d.marca === 'SCOTT' && d.scott_grupo === 'Cuadros' || d.marca === 'BOLD' || d.marca === 'MEGAMO') && d.scott_tipo_marco === 'Doble suspensión' },
@@ -146,7 +196,7 @@ export const SECCIONES: SeccionDef[] = [
 @Component({
   selector: 'app-garantias-formulario',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, HomeBarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, HomeBarComponent, TitleCaseDirective],
   templateUrl: './garantias-formulario.component.html',
   styleUrl: './garantias-formulario.component.css',
 })
@@ -154,47 +204,23 @@ export class GarantiasFormularioComponent implements OnInit, OnDestroy {
 
   private readonly STORAGE_KEY = 'garantias_form_draft';
   private autoSaveInterval?: ReturnType<typeof setInterval>;
-  readonly distribuidores = DISTRIBUIDORES;
   readonly secciones = SECCIONES;
+
+  // Catálogos de ramificación (isVisible) — NO editables desde el editor.
   readonly marcas = ['SCOTT', 'SYNCROS', 'VITTORIA', 'BOLD', 'MEGAMO'];
-  readonly scottGrupos = ['Cuadros', 'Cascos', 'Protecciones', 'Zapatos', 'Componentes'];
+  readonly scottGrupos = ['Cuadros', 'Cascos', 'Protecciones', 'Zapatos', 'Componentes - Piezas Eléctricas'];
   readonly tiposMarco  = ['Doble suspensión', 'Rígida', 'Plasma', 'Foil', 'Ruta', 'Gravel', 'E-Ride'];
   readonly tiposMarcoB = ['Doble suspensión'];
   readonly tiposMarcoM = ['Doble suspensión', 'Rígida', 'Ruta', 'Gravel', 'E-Ride'];
-  readonly tiposComponente = ['Bosch', 'Mahle', 'TQ', 'AVINOX'];
   readonly syncrosTipos = ['Manubrios', 'Asientos', 'Poste', 'Ruedos/Rines'];
   readonly megamoGrupos = ['Cuadros', 'Componentes'];
 
-  readonly syncrosTiposDano = [
-    'Raspado', 'Roto', 'Color de la Capa Base Defectuoso', 'Asimétrico', 'Otros',
-  ];
-
-  readonly protLocalizaciones = [
-    'Cascarón de Plástico',
-    'D30 Insert',
-    'Relleno / Espuma',
-    'Correa / Velcro',
-    'Cierre / Cremallera',
-    'Hebilla',
-    'Tejido',
-    'Decoloración',
-    'Otros',
-  ];
-  readonly protTiposDano = [
-    'Roto', 'Defecto en Costura', 'Defecto de Armado', 'Rasgado', 'Descolorido', 'Malfunción', 'Otros',
-  ];
-  readonly tallasProteccion = ['XS', 'S', 'M', 'L', 'XL', 'Unitalla'];
-
+  // Localizaciones numeradas contra un diagrama fijo — NO editables.
   readonly zapatoLocalizaciones = [
     'Suela', 'Media Suela', 'Suela Interior', 'Empeine', 'Lengua',
     'Forro', 'Contra dedos', 'Contra talon', 'Cordones Ojal',
     'Correa de Velcro', 'Hebilla', 'Sistema de Cordones BOA',
   ];
-  readonly zapatoTiposDano = [
-    'Costura', 'Delaminación', 'Desgastado', 'Marca de Pegamento',
-    'Marca de Impresión', 'Roto', 'Otros',
-  ];
-
   readonly cascoLocalizaciones = [
     'Casco',
     'Visor',
@@ -207,35 +233,37 @@ export class GarantiasFormularioComponent implements OnInit, OnDestroy {
     'Pin de ajuste MIPS',
     'Fijación de gama MIPS',
   ];
-  readonly cascoTiposDano = [
-    'Roto', 'Descolorido', 'Defecto en Costura', 'Rasgado', 'Malfunción', 'Otros',
-  ];
 
-  readonly manubrioLocalizaciones = [
-    'Potencia', 'Barra de la base', 'Extension', 'Manubrio',
-    'Abrazadera del Manubrio', 'Hardware de la Potencia', 'Otros',
-  ];
-  readonly asientoLocalizaciones = [
-    'Base', 'Almohadilla', 'Riel', 'Otros',
-  ];
-  readonly posteLocalizaciones = [
-    'Poste de Asiento', 'Abrazadera del asiento', 'Cartucho', 'Base', 'Dropper Seatpost', 'Otros',
-  ];
-  readonly rinLocalizaciones = [
-    'Base del Rin', 'Banda del Rin', 'Rayo de Carbon',
-    'Nucleo del cascarón', 'Nucleo interno', 'Otros',
-  ];
-  readonly rinTiposDano = [
-    'Roto', 'Asimétrico', 'Delaminación',
-    'Color de la Capa Base Defectuoso', 'Otros',
-  ];
+  // ── Catálogos editables desde /garantias/editor ──────────────────────────
+  // Cada getter usa la lista guardada en garantia_estructura si existe,
+  // y si no, el default hardcodeado (ver constantes al inicio del archivo).
+  private opcionesPorCampo: Record<string, string[]> = {};
+  private tituloPorSeccion: Record<number, string> = {};
+  private descripcionPorSeccion: Record<number, string> = {};
 
-  readonly tiposDano = [
-    'Rayado', 'BB ID DIMENSION', 'Roto', 'Asimétrico',
-    'Hilo Defectuoso', 'Soldadura de Unión Defectuosa',
-    'Color de la Capa Base Defectuoso', 'Burbujas de Aire',
-    'Línea de Separación del Molde', 'Otros',
-  ];
+  get distribuidores(): string[] { return this.opcionesPorCampo['distribuidor'] ?? DISTRIBUIDORES; }
+  get puestos(): string[] { return this.opcionesPorCampo['puesto'] ?? PUESTOS; }
+  get tallasProteccion(): string[] { return this.opcionesPorCampo['casco_talla'] ?? TALLAS_PROTECCION; }
+  get tiposComponente(): string[] { return this.opcionesPorCampo['comp_tipo'] ?? TIPOS_COMPONENTE; }
+  get protLocalizaciones(): string[] { return this.opcionesPorCampo['prot_localizacion'] ?? PROT_LOCALIZACIONES; }
+  get protTiposDano(): string[] { return this.opcionesPorCampo['prot_tipo_dano'] ?? PROT_TIPOS_DANO; }
+  get zapatoTiposDano(): string[] { return this.opcionesPorCampo['zapato_tipo_dano'] ?? ZAPATO_TIPOS_DANO; }
+  get cascoTiposDano(): string[] { return this.opcionesPorCampo['casco_tipo_dano'] ?? CASCO_TIPOS_DANO; }
+  get manubrioLocalizaciones(): string[] { return this.opcionesPorCampo['manubrio_localizacion'] ?? MANUBRIO_LOCALIZACIONES; }
+  get syncrosTiposDano(): string[] { return this.opcionesPorCampo['manubrio_tipo_dano'] ?? SYNCROS_TIPOS_DANO; }
+  get asientoLocalizaciones(): string[] { return this.opcionesPorCampo['asiento_localizacion'] ?? ASIENTO_LOCALIZACIONES; }
+  get posteLocalizaciones(): string[] { return this.opcionesPorCampo['poste_localizacion'] ?? POSTE_LOCALIZACIONES; }
+  get rinLocalizaciones(): string[] { return this.opcionesPorCampo['rin_localizacion'] ?? RIN_LOCALIZACIONES; }
+  get rinTiposDano(): string[] { return this.opcionesPorCampo['rin_tipo_dano'] ?? RIN_TIPOS_DANO; }
+  get tiposDano(): string[] { return this.opcionesPorCampo['marco_tipo_dano_15'] ?? TIPOS_DANO; }
+
+  tituloSeccion(id: number): string {
+    return this.tituloPorSeccion[id] || this.secciones.find(s => s.id === id)?.label || '';
+  }
+
+  descripcionSeccion(id: number): string {
+    return this.descripcionPorSeccion[id] || '';
+  }
 
   // Partes exactas según diagrama oficial SCOTT (marcos rígidos)
   private readonly PARTES_RIGIDA = [
@@ -599,6 +627,29 @@ export class GarantiasFormularioComponent implements OnInit, OnDestroy {
         error: () => {},
       });
     }
+    this.cargarEstructuraDinamica();
+  }
+
+  // Trae las opciones/títulos/descripciones editados en /garantias/editor.
+  // Si no hay estructura guardada (o falla la petición), se quedan los
+  // defaults hardcodeados de arriba — nunca se vacía una lista existente.
+  private cargarEstructuraDinamica(): void {
+    this.svc.obtenerEstructura().subscribe({
+      next: (res) => {
+        if (!res?.estructura || !Array.isArray(res.estructura)) return;
+        for (const sec of res.estructura) {
+          if (sec?.titulo) this.tituloPorSeccion[sec.id] = sec.titulo;
+          if (sec?.descripcion) this.descripcionPorSeccion[sec.id] = sec.descripcion;
+          for (const campo of sec?.campos ?? []) {
+            if (Array.isArray(campo?.opciones) && campo.opciones.length > 0) {
+              this.opcionesPorCampo[campo.id] = campo.opciones;
+            }
+          }
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {},
+    });
   }
 
   get visibleSections(): SeccionDef[] {
@@ -626,11 +677,77 @@ export class GarantiasFormularioComponent implements OnInit, OnDestroy {
 
   next(): void {
     if (!this.isLastStep) {
+      if (!this.esAdmin && !this.validarSeccionActual()) return;
       this.currentStepIdx++;
       this.errorMensaje = '';
       this.guardarBorrador();
       window.scrollTo({ top: (document.querySelector('app-home-bar') as HTMLElement | null)?.offsetHeight ?? 64, behavior: 'smooth' });
     }
+  }
+
+  private validarSeccionActual(): boolean {
+    const id = this.currentSection.id;
+    const fd = this.formData;
+    const uf = this.uploadedFiles;
+    const campos: string[] = [];
+    const archivos: string[] = [];
+
+    switch (id) {
+      case 1:   campos.push('email'); break;
+      case 2:   campos.push('distribuidor', 'contacto', 'puesto', 'marca'); break;
+      case 3:
+      case 35:
+      case 14:  campos.push('bici_modelo', 'bici_anio', 'bici_serie', 'scott_tipo_marco'); break;
+      case 4:   campos.push('scott_grupo'); break;
+      case 5:   campos.push('casco_modelo', 'casco_anio', 'casco_color', 'casco_talla', 'casco_serie'); break;
+      case 6:   campos.push('casco_localizacion', 'casco_tipo_dano', 'casco_comentarios'); break;
+      case 7:   campos.push('prot_modelo', 'prot_talla'); break;
+      case 8:   campos.push('prot_localizacion', 'prot_tipo_dano', 'prot_comentarios'); break;
+      case 9:   campos.push('zapato_modelo', 'zapato_color', 'zapato_talla', 'zapato_serie'); break;
+      case 10:  campos.push('zapato_localizacion', 'zapato_tipo_dano', 'zapato_comentarios'); break;
+      case 11:  campos.push('comp_tipo', 'comp_modelo'); break;
+      case 12:  campos.push('comp_dano_desc'); break;
+      case 13:  archivos.push('scott_doc1', 'scott_doc2', 'scott_doc3', 'scott_doc4a', 'scott_doc4b'); break;
+      case 22:  archivos.push('bici_doc1', 'bici_doc2', 'bici_doc3', 'bici_doc4a', 'bici_doc4b'); break;
+      case 23:  campos.push('syncros_tipo'); break;
+      case 24:  campos.push('manubrio_modelo'); break;
+      case 25:  campos.push('manubrio_localizacion', 'manubrio_tipo_dano', 'manubrio_dano_desc'); break;
+      case 252: archivos.push('manubrio_doc1', 'manubrio_doc2', 'manubrio_doc3', 'manubrio_doc4a', 'manubrio_doc4b'); break;
+      case 26:  campos.push('asiento_modelo'); break;
+      case 27:  campos.push('asiento_localizacion', 'asiento_tipo_dano', 'asiento_dano_desc'); break;
+      case 272: archivos.push('asiento_doc1', 'asiento_doc2', 'asiento_doc3', 'asiento_doc4a', 'asiento_doc4b'); break;
+      case 28:  campos.push('poste_modelo'); break;
+      case 29:  campos.push('poste_localizacion', 'poste_tipo_dano', 'poste_dano_desc'); break;
+      case 292: archivos.push('poste_doc1', 'poste_doc2', 'poste_doc3', 'poste_doc4a', 'poste_doc4b'); break;
+      case 30:  campos.push('rin_modelo'); break;
+      case 31:  campos.push('rin_localizacion', 'rin_tipo_dano', 'rin_dano_desc'); break;
+      case 315: archivos.push('rin_doc1', 'rin_doc2', 'rin_doc3', 'rin_doc4a', 'rin_doc4b'); break;
+      case 32:  campos.push('vittoria_modelo'); break;
+      case 33:
+        campos.push('vittoria_dano_desc');
+        archivos.push('vittoria_doc1', 'vittoria_doc2', 'vittoria_doc3', 'vittoria_doc4a', 'vittoria_doc4b');
+        break;
+      case 34:  campos.push('terminos_aceptados'); break;
+    }
+
+    if (id >= 15 && id <= 21) {
+      campos.push(`marco_localizacion_${id}`, `marco_tipo_dano_${id}`, `marco_comentarios_${id}`);
+    }
+
+    for (const c of campos) {
+      const v = fd[c];
+      if (v === undefined || v === null || v === '' || v === false) {
+        this.errorMensaje = 'Por favor completa todos los campos obligatorios antes de continuar.';
+        return false;
+      }
+    }
+    for (const a of archivos) {
+      if (!uf[a]) {
+        this.errorMensaje = 'Por favor adjunta todos los documentos requeridos antes de continuar.';
+        return false;
+      }
+    }
+    return true;
   }
 
   back(): void {

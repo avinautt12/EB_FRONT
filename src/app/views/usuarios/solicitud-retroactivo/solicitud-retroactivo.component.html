@@ -1,0 +1,183 @@
+<app-top-bar-usuarios></app-top-bar-usuarios>
+
+<div class="solicitud-page">
+
+    <div class="page-header">
+        <div class="header-left">
+            <button class="back-link" [routerLink]="['/usuarios/solicitud-retroactivo']">
+                <i class="fas fa-arrow-left"></i> Volver
+            </button>
+            <div class="page-title">
+                <div class="title-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                <div>
+                    <h1>Registro de Ventas</h1>
+                    <span>Retroactivos Scott Sale 2026</span>
+                </div>
+            </div>
+        </div>
+        <a *ngIf="esCliente" class="link-seguimiento" [routerLink]="['/usuarios/solicitud-retroactivo/seguimiento']">
+            <i class="fas fa-list-check"></i> Ver mis solicitudes
+        </a>
+    </div>
+
+    <div class="info-box">
+        <p>Completa el formulario para registrar tus compras a MSI para SCOTT, MEGAMO y BOLD</p>
+        <ul>
+            <li><strong>Aplica para:</strong> Ventas a 6, 12 y 18 MSI sobre modelos participantes.</li>
+            <li><strong>Documentación:</strong> Factura timbrada (PDF/XML) y Voucher/Ticket deben tener la misma fecha.</li>
+        </ul>
+    </div>
+
+    <div class="alert editando" *ngIf="cargandoEdicion">
+        <i class="fas fa-spinner fa-spin"></i> Cargando la solicitud a reeditar...
+    </div>
+
+    <div class="alert editando" *ngIf="editandoId !== null">
+        <i class="fas fa-pen-to-square"></i> Estás reeditando una solicitud rechazada.
+        <button type="button" class="btn-cancelar-edicion" (click)="cancelarEdicion()">Cancelar</button>
+    </div>
+
+    <div class="form-container">
+        <form [formGroup]="ventaForm" (ngSubmit)="onSubmit()">
+
+            <!-- INFORMACIÓN DE LA VENTA -->
+            <div class="detalle-card">
+                <div class="card-title"><i class="fas fa-receipt"></i> Información de la Venta</div>
+                <div class="campos-grid">
+
+                    <div class="form-group" [class.campo-invalid]="esCampoInvalido('id_formulario')">
+                        <label for="id_formulario">Campaña:</label>
+                        <select id="id_formulario" formControlName="id_formulario">
+                            <option value="" disabled selected>-- Selecciona --</option>
+                            <option *ngFor="let item of listaFormulario" [value]="item.id">{{ item.nombre }}</option>
+                        </select>
+                        <span class="campo-error-text" *ngIf="esCampoInvalido('id_formulario')">Este campo es obligatorio</span>
+                    </div>
+
+                    <!-- MARCA (Condicionado a Tipo de Venta == 1) -->
+                    <div class="form-group" *ngIf="ventaForm.get('id_formulario')?.value == 1" [class.campo-invalid]="esCampoInvalido('id_marca_bicicleta')">
+                        <label for="id_marca_bicicleta">Marca:</label>
+                        <select id="id_marca_bicicleta" formControlName="id_marca_bicicleta">
+                            <option value="" disabled selected>-- Selecciona --</option>
+                            <option *ngFor="let item of listaMarca" [value]="item.id">{{ item.nombre }}</option>
+                        </select>
+                        <span class="campo-error-text" *ngIf="esCampoInvalido('id_marca_bicicleta')">Este campo es obligatorio</span>
+                    </div>
+
+                    <div class="form-group" [class.campo-invalid]="esCampoInvalido('id_msi')">
+                        <label for="id_msi">Venta a MSI:</label>
+                        <select id="id_msi" formControlName="id_msi">
+                            <option value="" disabled selected>-- Selecciona --</option>
+                            <option *ngFor="let item of listaMsi" [value]="item.id">{{ item.plazo_meses }} Meses</option>
+                        </select>
+                        <span class="campo-error-text" *ngIf="esCampoInvalido('id_msi')">Este campo es obligatorio</span>
+                    </div>
+
+                    <div class="form-group" [class.campo-invalid]="esCampoInvalido('id_cliente')">
+                        <label for="id_cliente">Razón Social:</label>
+                        <select id="id_cliente" formControlName="id_cliente">
+                            <option value="" disabled selected>-- Selecciona Razón Social --</option>
+                            <option *ngFor="let item of listaRazonSocial" [value]="item.id">{{ item.nombre_cliente }}</option>
+                        </select>
+                        <span class="campo-error-text" *ngIf="esCampoInvalido('id_cliente')">Este campo es obligatorio</span>
+                    </div>
+
+                    <div class="form-group" [class.campo-invalid]="esCampoInvalido('id_tienda')">
+                        <label for="id_tienda">Sucursal / Tienda:</label>
+                        <select id="id_tienda" formControlName="id_tienda">
+                            <option value="" disabled selected>{{ cargandoTiendas ? 'Cargando tiendas...' : '-- Selecciona Sucursal --' }}</option>
+                            <option *ngFor="let item of listaTiendas" [value]="item.id">{{ item.nombre }}</option>
+                        </select>
+                        <span class="campo-error-text" *ngIf="esCampoInvalido('id_tienda')">Este campo es obligatorio</span>
+                    </div>
+
+                    <div class="form-group" [class.campo-invalid]="esCampoInvalido('correo_electronico')">
+                        <label>Correo Electrónico:</label>
+                        <input type="email" formControlName="correo_electronico" placeholder="cliente@correo.com">
+                        <span class="campo-error-text" *ngIf="esCampoInvalido('correo_electronico')">Correo obligatorio y válido</span>
+                    </div>
+
+                    <div class="form-group" [class.campo-invalid]="esCampoInvalido('fecha_venta')">
+                        <label>Fecha del Ticket:</label>
+                        <input type="date" formControlName="fecha_venta">
+                        <span class="campo-error-text" *ngIf="esCampoInvalido('fecha_venta')">Este campo es obligatorio</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DETALLES BICICLETA -->
+            <div class="detalle-card">
+                <div class="card-title"><i class="fas fa-bicycle"></i> Detalles de la Bicicleta</div>
+                <div class="campos-grid">
+
+                    <div class="form-group" [class.campo-invalid]="esCampoInvalido('modelo_bicicleta')">
+                        <label>Modelo:</label>
+                        <input type="text" formControlName="modelo_bicicleta" placeholder="Ej. Marlin 7">
+                        <span class="campo-error-text" *ngIf="esCampoInvalido('modelo_bicicleta')">Este campo es obligatorio</span>
+                    </div>
+
+                    <div class="form-group" [class.campo-invalid]="esCampoInvalido('numero_serie')">
+                        <label>Número de Serie:</label>
+                        <input type="text" formControlName="numero_serie" placeholder="WTU123456789">
+                        <span class="campo-error-text" *ngIf="esCampoInvalido('numero_serie')">Este campo es obligatorio</span>
+                    </div>
+
+                    <div class="form-group" [class.campo-invalid]="esCampoInvalido('precio_publico')">
+                        <label>Precio:</label>
+                        <input type="text" formControlName="precio_publico" placeholder="$0.00" (input)="validarCantidad($event)">
+                        <span class="campo-error-text" *ngIf="esCampoInvalido('precio_publico')">Este campo es obligatorio</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ARCHIVOS ADJUNTOS -->
+            <div class="detalle-card">
+                <div class="card-title"><i class="fas fa-paperclip"></i> Archivos Adjuntos</div>
+
+                <p class="nota-reenvio" *ngIf="editandoId !== null">
+                    <i class="fas fa-circle-info"></i> Solo se piden los archivos que fueron rechazados. Los demás se quedan como los enviaste antes.
+                </p>
+
+                <div class="campos-grid">
+                    <!-- AQUI ESTÁ LA CORRECCIÓN: Se agrega la validación para no pintar de rojo los archivos opcionales -->
+                    <div class="form-group form-group-file" *ngFor="let campo of camposArchivosVisibles" 
+                         [class.campo-invalid]="!archivos[campo.key] && mensajeError && campo.key !== 'factura_xml'">
+                        
+                        <label class="tooltip-informacion">
+                            {{ campo.label }}
+                            <span *ngIf="campo.key === 'factura_xml'" style="font-weight: normal; font-size: 0.9em;">(Opcional)</span>:
+                            
+                            <ng-container *ngIf="campo.tooltip">
+                                <i class="fa fa-question-circle" aria-hidden="true"></i>
+                                <div class="tooltip-informacion-recuadro">
+                                    {{ campo.tooltip }}
+                                </div>
+                            </ng-container>
+                        </label>
+                        
+                        <label class="upload-label">
+                            <i class="fas fa-cloud-arrow-up"></i>
+                            <span>{{ archivos[campo.key] ? 'Cambiar archivo' : 'Seleccionar archivo' }}</span>
+                            <input type="file" [accept]="campo.accept" [attr.data-file-key]="campo.key" (change)="onFileSelect($event, campo.key)">
+                        </label>
+                        <div class="file-row" *ngIf="archivos[campo.key]">
+                            <span class="file-name"><i class="fas fa-check"></i> {{ archivos[campo.key].name }}</span>
+                            <button type="button" class="btn-remove-file" (click)="removeArchivo(campo.key)" aria-label="Eliminar archivo adjunto">
+                                <i class="fas fa-trash"></i> Quitar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ALERTAS Y BOTÓN -->
+            <div class="alert error" *ngIf="mensajeError"><i class="fas fa-circle-exclamation"></i> {{ mensajeError }}</div>
+            <div class="alert success" *ngIf="mensajeExito"><i class="fas fa-circle-check"></i> {{ mensajeExito }}</div>
+
+            <button type="submit" class="btn-submit" [disabled]="enviando">
+                <i class="fas" [ngClass]="enviando ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+                {{ enviando ? 'Enviando...' : (editandoId !== null ? 'Reenviar Solicitud' : 'Registrar Venta') }}
+            </button>
+        </form>
+    </div>
+</div>
