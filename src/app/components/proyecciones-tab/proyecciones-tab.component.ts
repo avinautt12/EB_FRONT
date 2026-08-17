@@ -723,6 +723,41 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   }
 
   // ─────────────────────────────────────────
+  // Data export (Excel)
+  // ─────────────────────────────────────────
+
+  exportarDatos(): void {
+    import('xlsx').then(XLSX => {
+      const rows = this.rowsFiltrados;
+      const data: any[][] = [];
+
+      // Header
+      data.push([
+        'SKU', 'Producto', 'Marca', 'Modelo', 'Color', 'Talla',
+        ...MESES_LABELS,
+        'Total Uds', 'Precio Dist', 'Precio Público', 'Total $'
+      ]);
+
+      for (const r of rows) {
+        const totalUds = this.calcTotal(r);
+        const precio   = Number(r.precio) || 0;
+        const pp       = Number(r.precio_publico) || 0;
+        data.push([
+          r.sku, r.producto, r.marca, r.modelo, r.color, r.talla,
+          ...MESES.map(m => Number(r[m]) || 0),
+          totalUds, precio, pp, totalUds * precio
+        ]);
+      }
+
+      const ws   = XLSX.utils.aoa_to_sheet(data);
+      const wb   = XLSX.utils.book_new();
+      const ident = this.clienteClave || `grupo_${this.idGrupoOdoo}`;
+      XLSX.utils.book_append_sheet(wb, ws, 'Proyecciones');
+      XLSX.writeFile(wb, `Proyecciones_${ident}_${this.periodoSeleccionado}.xlsx`);
+    });
+  }
+
+  // ─────────────────────────────────────────
   // Template export
   // ─────────────────────────────────────────
 
@@ -865,25 +900,35 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
     this._cargarAvance();
   }
 
-  private _cargarAvance(): void {
+  avanceRefrescando = false;
+
+  refrescarAvance(): void {
+    this.avanceRefrescando = true;
+    this._cargarAvance(true);
+  }
+
+  private _cargarAvance(refresh = false): void {
     if (!this.clienteClave || !this.periodoSeleccionado) return;
     this.avanceCargando = true;
     this.avanceError = null;
     this.cdr.markForCheck();
 
-    const params = new HttpParams()
+    let params = new HttpParams()
       .set('clave', this.clienteClave)
       .set('periodo', this.periodoSeleccionado);
+    if (refresh) params = params.set('refresh', '1');
 
     this.http.get<AvanceRow[]>(`${this.apiUrl}/forecast/avance`, { params }).subscribe({
       next: data => {
         this.avanceRows = data;
         this.avanceCargando = false;
+        this.avanceRefrescando = false;
         this.cdr.markForCheck();
       },
       error: err => {
         this.avanceError = err?.error?.error || 'Error al cargar avance';
         this.avanceCargando = false;
+        this.avanceRefrescando = false;
         this.cdr.markForCheck();
       }
     });

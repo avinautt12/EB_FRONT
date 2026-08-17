@@ -121,7 +121,7 @@ export class ImportacionesComponent implements OnInit, AfterViewInit, OnDestroy 
         || (est === 'pendiente' && this.progresoPct(e) === 0);
       const matchEtapa = !etapa || this.estadoActual(e) === etapa;
       const matchTemp  = this.temporadaSel === 'todas' || this.temporadaDe(e) === this.temporadaSel;
-      const eta    = e.log_eta_puerto || '';
+      const eta    = e.imp_llegada_contenedor_puerto || '';
       const matchF = (!desde && !hasta) || ((!desde || eta >= desde) && (!hasta || eta <= hasta));
       return matchQ && matchO && matchV && matchE && matchEtapa && matchTemp && matchF;
     });
@@ -182,10 +182,10 @@ export class ImportacionesComponent implements OnInit, AfterViewInit, OnDestroy 
 
   estadoActual(e: Importacion): string {
     if (e.rec_liberacion_final)  return 'Liberado';
-    if (e.alm_envio_info_uva)    return 'Verificación';
+    if (e.alm_liberacion_uva)    return 'Verificación';
     if (e.des_llegada_almacen)   return 'En Almacén';
     if (e.des_fecha_cruce_real)  return 'Tránsito Destino';
-    if (e.log_eta_puerto)        return 'En Aduana';
+    if (e.imp_llegada_contenedor_puerto) return 'En Aduana';
     if (e.log_fecha_booking)     return 'Tránsito Mar/Aér';
     if (e.log_fecha_entrega)     return 'Booking';
     return 'Pendiente';

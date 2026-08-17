@@ -30,6 +30,7 @@ export interface Importacion {
   progreso?: ProgresoEmbarque;
 
   // Logística
+  log_numero_contenedores?: number;
   log_fecha_notificacion?: string;
   log_fecha_entrega_prog?: string | null;
   log_fecha_entrega?: string;
@@ -44,8 +45,6 @@ export interface Importacion {
   log_confirmacion_booking?: string;
   log_fecha_booking_prog?: string | null;
   log_fecha_booking?: string;
-  log_eta_puerto_prog?: string | null;
-  log_eta_puerto?: string;
   log_buque?: string;
   log_no_viaje?: string;
   log_puerto_salida?: string;
@@ -133,9 +132,11 @@ export interface Importacion {
   alm_liberacion_etiquetado_uva?: string;
   alm_envio_info_uva_prog?: string | null;
   alm_envio_info_uva?: string;
+  alm_liberacion_uva_prog?: string | null;
   alm_liberacion_uva?: string;
   alm_proyectado_dias_etiquetado?: number;
   alm_inicio_etiquetado?: string;
+  alm_terminacion_etiquetado_prog?: string | null;
   alm_terminacion_etiquetado?: string;
   alm_real_dias_etiquetado?: number;
 

@@ -17,17 +17,40 @@
       </p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-outline" (click)="cargar(true)">
+      <button class="btn btn-outline" (click)="actualizar()">
         <i class="fas fa-sync-alt"></i> Actualizar
       </button>
-      <button class="btn btn-primary" (click)="exportar()">
-        <i class="fas fa-file-excel"></i> Exportar Excel
+      <ng-container *ngIf="activeTab === 'monitor'">
+        <button class="btn btn-primary" (click)="exportar()">
+          <i class="fas fa-file-excel"></i> Exportar Excel
+        </button>
+        <button class="btn btn-megamo" (click)="exportarMegamo()">
+          <i class="fas fa-file-excel"></i> Exportar Megamo
+        </button>
+      </ng-container>
+      <button *ngIf="activeTab === 'inventario' && coberturaMegamo.length > 0"
+              class="btn btn-primary" (click)="exportarCobertura()">
+        <i class="fas fa-file-excel"></i> Exportar Inventario
       </button>
-      <button class="btn btn-megamo" (click)="exportarMegamo()">
-        <i class="fas fa-file-excel"></i> Exportar Megamo
+      <button *ngIf="activeTab === 'inventario' && productosParaReserva.length > 0"
+              class="btn btn-reserva" (click)="abrirReserva()">
+        <i class="fas fa-shopping-cart"></i> Generar Reserva
       </button>
     </div>
   </div>
+
+  <!-- Tabs -->
+  <div class="my27-tabs">
+    <button class="my27-tab" [class.active]="activeTab === 'monitor'" (click)="setTab('monitor')">
+      <i class="fas fa-chart-bar"></i> Monitor de Proyecciones
+    </button>
+    <button class="my27-tab" [class.active]="activeTab === 'inventario'" (click)="setTab('inventario')">
+      <i class="fas fa-boxes"></i> Inventario Entrante
+    </button>
+  </div>
+
+  <!-- Tab: Monitor (contenido existente) -->
+  <div *ngIf="activeTab === 'monitor'">
 
   <!-- ── CARGANDO ── -->
   <div class="state-box" *ngIf="cargando">
@@ -228,6 +251,490 @@
     </div>
 
   </ng-container>
+
+  </div><!-- /tab monitor -->
+
+  <!-- Tab: Inventario Entrante (NUEVO) -->
+  <div *ngIf="activeTab === 'inventario'" class="inventario-tab">
+
+    <!-- Sección de carga de archivo -->
+    <div class="inv-upload-card">
+      <h2><i class="fas fa-file-excel"></i> Cargar inventario entrante</h2>
+      <p class="inv-upload-desc">
+        Sube un archivo Excel con las columnas <strong>SKU</strong> y <strong>CANTIDAD</strong>
+        para calcular la cobertura contra las proyecciones de todos los distribuidores.
+      </p>
+      <div class="inv-upload-row">
+        <label class="inv-file-label">
+          <i class="fas fa-upload"></i>
+          {{ archivoInventario ? archivoInventario.name : 'Seleccionar archivo (.xlsx)' }}
+          <input type="file" accept=".xlsx,.xls" (change)="onArchivoSeleccionado($event)" hidden />
+        </label>
+        <button class="inv-btn-upload"
+                [class.success]="uploadEstado === 'ok'"
+                [class.error]="uploadEstado === 'error'"
+                [disabled]="!archivoInventario || uploadEstado === 'cargando'"
+                (click)="subirInventario()">
+          <i class="fas"
+             [class.fa-spinner]="uploadEstado === 'cargando'"
+             [class.fa-spin]="uploadEstado === 'cargando'"
+             [class.fa-check-circle]="uploadEstado === 'ok'"
+             [class.fa-exclamation-circle]="uploadEstado === 'error'"
+             [class.fa-cloud-upload-alt]="uploadEstado === 'idle'"></i>
+          {{ uploadEstado === 'cargando' ? 'Subiendo...'
+           : uploadEstado === 'ok'      ? '¡Cargado!'
+           : uploadEstado === 'error'   ? 'Error'
+           :                             'Subir' }}
+        </button>
+      </div>
+
+      <!-- Resultado del upload -->
+      <div *ngIf="uploadEstado === 'ok' && uploadResultado" class="inv-upload-result success">
+        <i class="fas fa-check-circle"></i>
+        <strong>Inventario cargado correctamente.</strong>
+        &nbsp;{{ uploadResultado.total }} SKUs procesados
+        ({{ uploadResultado.insertados }} nuevos, {{ uploadResultado.actualizados }} actualizados).
+        <span *ngIf="$any(uploadResultado).errores?.length > 0" class="inv-result-warn">
+          &nbsp;{{ $any(uploadResultado).errores.length }} filas ignoradas.
+        </span>
+      </div>
+      <div *ngIf="uploadEstado === 'error' && uploadResultado" class="inv-upload-result error">
+        <i class="fas fa-exclamation-circle"></i>
+        <strong>No se pudo subir el archivo.</strong>
+        &nbsp;{{ uploadResultado.errores[0] || 'Error desconocido.' }}
+      </div>
+    </div>
+
+    <!-- ── KPI Cards (Inventario) ─────────────────────────────── -->
+    <div class="ikpi-grid" *ngIf="kpisData && !cargandoCobertura">
+
+      <div class="ikpi-card ikpi-neutral">
+        <div class="ikpi-hdr">
+          <span class="ikpi-card-label">SKUs analizados</span>
+          <div class="ikpi-card-ico"><i class="fas fa-boxes"></i></div>
+        </div>
+        <div class="ikpi-card-num">{{ kpisData.totalSKUs }}</div>
+        <div class="ikpi-card-sub">{{ kpisData.conProyeccion }} con demanda · {{ kpisData.sinDemanda }} sin pedidos</div>
+      </div>
+
+      <div class="ikpi-card ikpi-green" role="button" (click)="abrirModalKpi('cubiertos')">
+        <div class="ikpi-hdr">
+          <span class="ikpi-card-label">Cubiertos</span>
+          <div class="ikpi-card-ico"><i class="fas fa-check-double"></i></div>
+        </div>
+        <div class="ikpi-card-num">{{ kpisData.cubiertos.length }}</div>
+        <div class="ikpi-card-sub">demanda 100% satisfecha</div>
+      </div>
+
+      <div class="ikpi-card ikpi-red" role="button" (click)="abrirModalKpi('faltantes')">
+        <div class="ikpi-hdr">
+          <span class="ikpi-card-label">Con faltante</span>
+          <div class="ikpi-card-ico"><i class="fas fa-exclamation-triangle"></i></div>
+        </div>
+        <div class="ikpi-card-num">{{ kpisData.faltantes.length }}</div>
+        <div class="ikpi-card-sub">{{ kpisData.totalFaltante }} unidades por cubrir</div>
+      </div>
+
+      <div class="ikpi-card ikpi-blue" role="button" (click)="abrirModalKpi('sobrantes')">
+        <div class="ikpi-hdr">
+          <span class="ikpi-card-label">Sobrantes</span>
+          <div class="ikpi-card-ico"><i class="fas fa-layer-group"></i></div>
+        </div>
+        <div class="ikpi-card-num">{{ kpisData.totalSobrante }}</div>
+        <div class="ikpi-card-sub">en {{ kpisData.sobrantes.length }} SKUs</div>
+      </div>
+
+      <div class="ikpi-card ikpi-orange" role="button" (click)="abrirModalKpi('meses')">
+        <div class="ikpi-hdr">
+          <span class="ikpi-card-label">Mes pico</span>
+          <div class="ikpi-card-ico"><i class="fas fa-calendar-alt"></i></div>
+        </div>
+        <div class="ikpi-card-num">{{ kpisData.mesPico?.label || '—' }}</div>
+        <div class="ikpi-card-sub">{{ kpisData.mesPico?.total || 0 }} unidades proyectadas</div>
+      </div>
+
+    </div>
+
+    <!-- ── Modal KPI ─────────────────────────────────────────────── -->
+    <div class="ikpi-overlay" *ngIf="modalKpi && kpisData" (click)="cerrarModalKpi()">
+      <div class="ikpi-modal" (click)="$event.stopPropagation()">
+
+        <!-- CUBIERTOS -->
+        <ng-container *ngIf="modalKpi === 'cubiertos'">
+          <div class="ikpi-modal-hdr ikpi-modal-green">
+            <span><i class="fas fa-check-double"></i> SKUs completamente cubiertos</span>
+            <span class="ikpi-modal-badge">{{ kpisData.cubiertos.length }}</span>
+            <button class="ikpi-modal-close" (click)="cerrarModalKpi()"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="ikpi-modal-body">
+            <div class="ikpi-modal-item" *ngFor="let s of kpisData.cubiertos">
+              <span class="ikpi-m-sku">{{ s.sku }}</span>
+              <span class="ikpi-m-prod">{{ s.producto }}</span>
+              <div class="ikpi-m-pills">
+                <span class="ikpi-pill ikpi-pill-green">{{ s.cantidad_entrante }} entrantes</span>
+                <span class="ikpi-pill ikpi-pill-muted">{{ s.total_proyectado }} proyectados</span>
+                <span class="ikpi-pill ikpi-pill-purple" *ngIf="s.sobrante > 0">+{{ s.sobrante }} sobrante</span>
+              </div>
+            </div>
+            <div class="ikpi-modal-empty" *ngIf="kpisData.cubiertos.length === 0">Ningún SKU cubierto aún.</div>
+          </div>
+        </ng-container>
+
+        <!-- FALTANTES -->
+        <ng-container *ngIf="modalKpi === 'faltantes'">
+          <div class="ikpi-modal-hdr ikpi-modal-red">
+            <span><i class="fas fa-exclamation-triangle"></i> SKUs con faltante · mayor déficit primero</span>
+            <span class="ikpi-modal-badge">{{ kpisData.totalFaltante }} uds.</span>
+            <button class="ikpi-modal-close" (click)="cerrarModalKpi()"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="ikpi-modal-body">
+            <div class="ikpi-modal-item" *ngFor="let s of kpisData.faltantes">
+              <span class="ikpi-m-sku">{{ s.sku }}</span>
+              <span class="ikpi-m-prod">{{ s.producto }}</span>
+              <div class="ikpi-m-pills">
+                <span class="ikpi-pill ikpi-pill-red">−{{ s.total_deficit }} faltan</span>
+                <ng-container *ngFor="let mc of s.cobertura">
+                  <span class="ikpi-pill ikpi-pill-red-light"
+                        *ngIf="mc.estado === 'sin_cobertura'">
+                    {{ (mc.mes + '').slice(0,3).toUpperCase() }} −{{ mc.deficit }}
+                  </span>
+                  <span class="ikpi-pill ikpi-pill-amber"
+                        *ngIf="mc.estado === 'parcial'">
+                    {{ (mc.mes + '').slice(0,3).toUpperCase() }} {{ mc.cubierto }}/{{ mc.proyectado }}
+                  </span>
+                </ng-container>
+              </div>
+            </div>
+            <div class="ikpi-modal-empty" *ngIf="kpisData.faltantes.length === 0">¡Todo cubierto! Sin faltantes.</div>
+          </div>
+        </ng-container>
+
+        <!-- SOBRANTES -->
+        <ng-container *ngIf="modalKpi === 'sobrantes'">
+          <div class="ikpi-modal-hdr ikpi-modal-purple">
+            <span><i class="fas fa-layer-group"></i> SKUs con excedente · mayor sobrante primero</span>
+            <span class="ikpi-modal-badge">{{ kpisData.totalSobrante }} uds.</span>
+            <button class="ikpi-modal-close" (click)="cerrarModalKpi()"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="ikpi-modal-body">
+            <div class="ikpi-modal-item" *ngFor="let s of kpisData.sobrantes">
+              <span class="ikpi-m-sku">{{ s.sku }}</span>
+              <span class="ikpi-m-prod">{{ s.producto }}</span>
+              <div class="ikpi-m-pills">
+                <span class="ikpi-pill ikpi-pill-purple">+{{ s.sobrante }} sobrantes</span>
+                <span class="ikpi-pill ikpi-pill-muted">{{ s.cantidad_entrante }} entrantes</span>
+                <span class="ikpi-pill ikpi-pill-muted">{{ s.total_proyectado }} proyectados</span>
+              </div>
+            </div>
+            <div class="ikpi-modal-empty" *ngIf="kpisData.sobrantes.length === 0">Sin sobrantes.</div>
+          </div>
+        </ng-container>
+
+        <!-- MESES -->
+        <ng-container *ngIf="modalKpi === 'meses'">
+          <div class="ikpi-modal-hdr ikpi-modal-amber">
+            <span><i class="fas fa-chart-bar"></i> Demanda proyectada por mes</span>
+            <button class="ikpi-modal-close" (click)="cerrarModalKpi()"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="ikpi-modal-body">
+            <div class="ikpi-bar-row" *ngFor="let m of kpisData.mesTotales">
+              <span class="ikpi-bar-label">{{ m.label }}</span>
+              <div class="ikpi-bar-track">
+                <div class="ikpi-bar-fill"
+                     [class.ikpi-bar-pico]="m.total === kpisData.maxMes && kpisData.maxMes > 0"
+                     [style.width.%]="barWidth(m.total, kpisData.maxMes)"></div>
+              </div>
+              <span class="ikpi-bar-val" [class.ikpi-bar-pico-val]="m.total === kpisData.maxMes && kpisData.maxMes > 0">{{ m.total }}</span>
+            </div>
+          </div>
+        </ng-container>
+
+      </div>
+    </div>
+
+    <!-- Buscador -->
+    <div class="inv-search-row" *ngIf="coberturaMegamo.length > 0">
+      <input type="text" class="inv-search"
+             placeholder="Buscar por SKU o producto..."
+             [(ngModel)]="filtroBusqueda"
+             (input)="filtrarCobertura()" />
+      <span class="inv-count">{{ coberturaFiltrada.length }} SKUs</span>
+    </div>
+
+    <!-- Spinner -->
+    <div *ngIf="cargandoCobertura" class="inv-spinner">
+      <div class="spinner"></div>
+      <p>Calculando cobertura...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="errorCobertura && !cargandoCobertura" class="inv-error">
+      <i class="fas fa-exclamation-triangle"></i> {{ errorCobertura }}
+    </div>
+
+    <!-- Sin inventario cargado (pero pueden existir SKUs con stock Odoo) -->
+    <div *ngIf="!cargandoCobertura && !errorCobertura && coberturaMegamo.length === 0 && uploadEstado !== 'cargando'"
+         class="inv-empty">
+      <i class="fas fa-inbox"></i>
+      <p>Sin SKUs con proyección ni stock disponible para este periodo.
+         Sube un Excel para agregar inventario entrante.
+      </p>
+    </div>
+
+    <!-- Tabla de cobertura -->
+    <div *ngIf="!cargandoCobertura && coberturaFiltrada.length > 0" class="inv-table-wrapper">
+      <table class="inv-table">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Producto</th>
+            <th class="num" title="Stock a la mano en Odoo menos reservado">Odoo disp.</th>
+            <th class="num" title="Stock subido desde Excel">Entrante</th>
+            <th class="num inv-th-total" title="Odoo disponible + Entrante">Total</th>
+            <th class="num">Proyectado</th>
+            <th class="num">Cubierto</th>
+            <th class="num">Faltante</th>
+            <th class="num">Sobrante</th>
+            <th>Cobertura por mes</th>
+            <th class="num">Dist.</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of coberturaFiltrada" [class.sin-demanda]="item.total_proyectado === 0">
+            <td class="sku-cell">{{ item.sku }}</td>
+            <td>{{ item.producto }}</td>
+            <td class="num inv-odoo" [class.inv-has-stock]="item.odoo_disponible > 0">
+              {{ item.odoo_disponible || '—' }}
+            </td>
+            <td class="num inv-entrante" [class.inv-has-stock]="item.cantidad_entrante > 0">
+              {{ item.cantidad_entrante || '—' }}
+            </td>
+            <td class="num inv-total" [class.inv-total-cero]="item.total_disponible === 0">
+              {{ item.total_disponible }}
+            </td>
+            <td class="num">{{ item.total_proyectado }}</td>
+            <td class="num covered">{{ item.total_cubierto }}</td>
+            <td class="num deficit" [class.zero]="item.total_deficit === 0">{{ item.total_deficit }}</td>
+            <td class="num sobrante" [class.zero]="item.sobrante === 0">{{ item.sobrante }}</td>
+            <td class="meses-cell">
+              <div class="meses-grid">
+                <div *ngFor="let mc of item.cobertura" class="mes-bloque"
+                     [style.background-color]="getCoberturaColor(mc.estado)"
+                     [title]="mc.mes + ': proyectado=' + mc.proyectado + ', cubierto=' + mc.cubierto">
+                  <span class="mes-label">{{ mc.mes | slice:0:3 }}</span>
+                  <span class="mes-num">{{ mc.cubierto }}/{{ mc.proyectado }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="num">
+              <button class="btn-dist-icon" (click)="abrirDistribucion(item)"
+                      *ngIf="item.total_proyectado > 0"
+                      [disabled]="cargandoDistribucion"
+                      title="Ver distribución por cliente">
+                <i class="fas fa-users"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ═══ MODAL: DISTRIBUCIÓN PRIORITARIA ═══ -->
+    <div class="dist-overlay" *ngIf="distribucionModal" (click)="cerrarDistribucion()">
+      <div class="dist-modal" (click)="$event.stopPropagation()">
+        <div class="dist-modal-hdr">
+          <div class="dist-modal-hdr-left">
+            <span class="dist-modal-sku">{{ distribucionModal.sku }}</span>
+            <span class="dist-modal-prod">{{ distribucionModal.producto }}</span>
+          </div>
+          <div class="dist-modal-stocks">
+            <div class="dist-stock-chip dist-stock-odoo">
+              <i class="fas fa-database"></i>
+              Odoo: <strong>{{ distribucionModal.odoo_disponible }}</strong>
+            </div>
+            <div class="dist-stock-chip dist-stock-entrante">
+              <i class="fas fa-truck"></i>
+              Entrante: <strong>{{ distribucionModal.cantidad_entrante }}</strong>
+            </div>
+            <div class="dist-stock-chip dist-stock-total">
+              <i class="fas fa-layer-group"></i>
+              Total: <strong>{{ distribucionModal.total_disponible }}</strong>
+            </div>
+            <div class="dist-stock-chip dist-stock-restante"
+                 [class.dist-stock-ok]="distribucionModal.stock_restante === 0">
+              <i class="fas fa-box-open"></i>
+              Restante: <strong>{{ distribucionModal.stock_restante }}</strong>
+            </div>
+          </div>
+          <button class="dist-modal-close" (click)="cerrarDistribucion()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="dist-modal-body">
+          <div *ngIf="(distribucionModal.distribuciones?.length ?? 0) === 0" class="dist-empty">
+            <i class="fas fa-users-slash"></i> Sin clientes con proyección para este SKU.
+          </div>
+          <div class="dist-cliente" *ngFor="let d of distribucionModal.distribuciones"
+               [class.dist-cubierto]="d.pendiente === 0"
+               [class.dist-parcial]="d.pendiente > 0 && d.asignado > 0"
+               [class.dist-sin-stock]="d.asignado === 0">
+            <div class="dist-cliente-hdr">
+              <span [class]="'dist-prio-badge ' + getPrioridadClass(d.prioridad)">
+                {{ getPrioridadLabel(d.prioridad) }}
+              </span>
+              <span class="dist-nombre">{{ d.nombre_cliente }}</span>
+              <span class="dist-clave">{{ d.clave_cliente }}</span>
+              <div class="dist-resumen">
+                <span class="dist-asig" title="Asignado">{{ d.asignado }}/{{ d.total_demanda }}</span>
+                <span class="dist-pct">{{ getPorcentajeCubierto(d.asignado, d.total_demanda) }}%</span>
+              </div>
+            </div>
+            <div class="dist-bar-track">
+              <div class="dist-bar-fill"
+                   [style.width.%]="getPorcentajeCubierto(d.asignado, d.total_demanda)">
+              </div>
+            </div>
+            <div class="dist-meses" *ngIf="d.detalle_meses.length > 0">
+              <div class="dist-mes-item" *ngFor="let dm of d.detalle_meses"
+                   [class.dist-mes-pasado]="dm.pasado"
+                   [class.dist-mes-ok]="dm.pendiente === 0 && !dm.pasado"
+                   [class.dist-mes-parcial]="dm.pendiente > 0 && dm.asignado > 0 && !dm.pasado"
+                   [class.dist-mes-sin]="dm.asignado === 0 && !dm.pasado">
+                <span class="dist-mes-lbl">{{ dm.mes | slice:0:3 | uppercase }}</span>
+                <span class="dist-mes-val">{{ dm.pasado ? '—' : (dm.asignado + '/' + dm.demanda) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab inventario -->
+
+</div>
+
+<!-- ═══ MODAL GENERAR RESERVA ODOO ═══ -->
+<div class="reserva-overlay" *ngIf="reservaOpen" (click)="cerrarReserva()">
+  <div class="reserva-modal" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="reserva-modal-hdr">
+      <div class="reserva-modal-title">
+        <i class="fas fa-shopping-cart"></i>
+        <span>Generar Reserva en Odoo</span>
+      </div>
+      <button class="reserva-close" (click)="cerrarReserva()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Resultado / Error -->
+    <div *ngIf="reservaResultado" class="reserva-resultado-ok">
+      <i class="fas fa-check-circle"></i>
+      <div>
+        <strong>Orden creada: {{ reservaResultado.order_name }}</strong><br>
+        Cliente: {{ reservaResultado.partner_name }} &nbsp;·&nbsp;
+        {{ reservaResultado.lineas_creadas }} línea(s) en Odoo.
+        <span *ngIf="reservaResultado.skus_no_encontrados.length > 0" class="reserva-warn">
+          &nbsp;·&nbsp; {{ reservaResultado.skus_no_encontrados.length }} SKU(s) no encontrados en Odoo.
+        </span>
+      </div>
+    </div>
+    <div *ngIf="reservaError" class="reserva-resultado-err">
+      <i class="fas fa-exclamation-circle"></i> {{ reservaError }}
+    </div>
+
+    <!-- Formulario: Cliente + Mes -->
+    <div class="reserva-form-row" *ngIf="!reservaResultado">
+      <div class="reserva-field">
+        <label class="reserva-label">Cliente (prioridad)</label>
+        <select class="reserva-select" [(ngModel)]="reservaCliente">
+          <option *ngFor="let c of CLIENTES_PRIORITARIOS" [value]="c.clave">
+            #{{ c.prioridad }} — {{ c.clave }} · {{ c.nombre }}
+          </option>
+        </select>
+      </div>
+      <div class="reserva-field reserva-field-mes">
+        <label class="reserva-label">Mes de reserva</label>
+        <select class="reserva-select" [(ngModel)]="reservaMes">
+          <option *ngFor="let m of MESES_RESERVA" [value]="m.key">{{ m.label }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Tabla de productos -->
+    <div class="reserva-table-wrap" *ngIf="!reservaResultado">
+      <div class="reserva-table-hdr-row">
+        <span class="reserva-table-title">Productos disponibles</span>
+        <span class="reserva-sel-count" *ngIf="reservaSeleccion.size > 0">
+          <i class="fas fa-check"></i> {{ reservaSeleccion.size }} seleccionado(s)
+        </span>
+      </div>
+      <table class="reserva-table">
+        <thead>
+          <tr>
+            <th class="rth-check"></th>
+            <th class="rth-sku">SKU</th>
+            <th class="rth-prod">Producto</th>
+            <th class="rth-num" title="Odoo disponible">Odoo</th>
+            <th class="rth-num" title="Inventario entrante (Excel)">Entr.</th>
+            <th class="rth-num rth-total" title="Total disponible">Total</th>
+            <th class="rth-qty">Cantidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of productosParaReserva"
+              [class.reserva-row-sel]="isSkuSeleccionado(item.sku)">
+            <td class="rtd-check">
+              <input type="checkbox"
+                     class="reserva-chk"
+                     [checked]="isSkuSeleccionado(item.sku)"
+                     (change)="toggleReservaSku(item.sku, $any($event.target).checked, item.total_disponible)" />
+            </td>
+            <td class="rtd-sku">{{ item.sku }}</td>
+            <td class="rtd-prod">{{ item.producto }}</td>
+            <td class="rtd-num" [class.rtd-has]="item.odoo_disponible > 0">
+              {{ item.odoo_disponible || '—' }}
+            </td>
+            <td class="rtd-num" [class.rtd-has]="item.cantidad_entrante > 0">
+              {{ item.cantidad_entrante || '—' }}
+            </td>
+            <td class="rtd-num rtd-total">{{ item.total_disponible }}</td>
+            <td class="rtd-qty">
+              <input *ngIf="isSkuSeleccionado(item.sku)"
+                     type="number" min="1" [max]="item.total_disponible"
+                     class="reserva-qty-input"
+                     [value]="getReservaCantidad(item.sku)"
+                     (change)="setReservaCantidad(item.sku, $any($event.target).value, item.total_disponible)" />
+              <span *ngIf="!isSkuSeleccionado(item.sku)" class="rtd-qty-dash">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="reserva-footer" *ngIf="!reservaResultado">
+      <span class="reserva-footer-note" *ngIf="reservaSeleccion.size === 0">
+        <i class="fas fa-info-circle"></i> Selecciona al menos un producto.
+      </span>
+      <button class="btn btn-reserva-gen"
+              [disabled]="reservaSeleccion.size === 0 || reservaGenerando"
+              (click)="generarReservaOdoo()">
+        <i class="fas"
+           [class.fa-spinner]="reservaGenerando"
+           [class.fa-spin]="reservaGenerando"
+           [class.fa-check]="!reservaGenerando"></i>
+        {{ reservaGenerando ? 'Creando orden...' : 'Generar en Odoo' }}
+      </button>
+    </div>
+
+    <!-- Footer post-resultado -->
+    <div class="reserva-footer" *ngIf="reservaResultado">
+      <button class="btn btn-outline" (click)="cerrarReserva()">Cerrar</button>
+    </div>
+
+  </div>
 </div>
 
 <!-- ═══ MODAL DESGLOSE ═══ -->

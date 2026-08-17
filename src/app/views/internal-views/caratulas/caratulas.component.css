@@ -318,15 +318,80 @@ body {
 }
 
 /* Periodos */
+.periodo-card {
+  border: 1px solid rgba(235, 94, 40, 0.25);
+  border-radius: var(--border-radius);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
 .periodo-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
   padding: 1rem;
   background-color: #555;
-  border-radius: var(--border-radius);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+  margin-bottom: 0;
+  border-radius: 0;
 }
+
+.periodo-header:hover {
+  background-color: #666;
+}
+
+.periodo-icon {
+  transition: transform 0.2s ease;
+  margin-right: 8px;
+  font-size: 0.75rem;
+  color: #EB5E28;
+}
+
+.periodo-icon.rotated {
+  transform: rotate(90deg);
+}
+
+.periodo-detalle {
+  padding: 12px 16px;
+  background-color: #3a3a3a;
+  border-top: 1px solid rgba(235, 94, 40, 0.3);
+}
+
+.table-periodo {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  color: #d0cec6;
+}
+
+.table-periodo th {
+  padding: 8px 12px;
+  background-color: rgba(235, 94, 40, 0.25);
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #EB5E28;
+}
+
+.table-periodo th:first-child { text-align: left; }
+
+.table-periodo td {
+  padding: 7px 12px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.table-periodo td:first-child {
+  text-align: left;
+  font-weight: 500;
+  color: #FFFCF2;
+}
+
+.table-periodo tr:last-child td { border-bottom: none; }
 
 .periodo-title {
   font-weight: 600;

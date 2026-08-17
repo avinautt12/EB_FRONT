@@ -121,7 +121,7 @@
           <tr>
             <th class="col-ref">Referencia / Nombre</th>
             <th class="col-orig">Origen</th>
-            <th class="col-fecha">ETA Puerto</th>
+            <th class="col-fecha">Lleg. Puerto</th>
             <th class="col-fecha">Llegada Almacén</th>
             <th *ngFor="let s of secciones" class="col-sec">
               <i class="fas" [ngClass]="s.icon" [style.color]="s.color"></i>
@@ -154,10 +154,10 @@
               <span class="sin-dato" *ngIf="!e.log_origen">—</span>
             </td>
 
-            <!-- ETA Puerto -->
+            <!-- Llegada de contenedor a puerto -->
             <td class="col-fecha">
-              <span *ngIf="e.log_eta_puerto">{{ e.log_eta_puerto | date:'dd/MM/yy' }}</span>
-              <span class="sin-dato" *ngIf="!e.log_eta_puerto">—</span>
+              <span *ngIf="e.imp_llegada_contenedor_puerto">{{ e.imp_llegada_contenedor_puerto | date:'dd/MM/yy' }}</span>
+              <span class="sin-dato" *ngIf="!e.imp_llegada_contenedor_puerto">—</span>
             </td>
 
             <!-- Llegada Almacén -->

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { RetroactivosService } from '../../../services/retroactivos.service';
+import { CaratulasService } from '../../../services/caratulas.service';
 import { AuthService } from '../../../services/auth.service';
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
 import { TemporadaSelectorComponent } from '../../../components/temporada-selector/temporada-selector.component';
@@ -90,10 +91,13 @@ export class CaratulaRetroactivosComponent implements OnInit {
   temporadasDisponibles: string[] = [];
   modoHistorico = false;
   temporadaHistoricaSeleccionada: string | null = null;
+  /** Etiqueta de la temporada actualmente abierta (ej. "2026-2027"), para el título "Retroactivos MYxx". */
+  temporadaActualEtiqueta: string | null = null;
   private datosHistorico: DatosRetroactivo[] = [];
 
   constructor(
     private retroactivosService: RetroactivosService,
+    private caratulasService: CaratulasService,
     private authService: AuthService
   ) { }
 
@@ -102,6 +106,7 @@ export class CaratulaRetroactivosComponent implements OnInit {
     this.cargarCacheClientes();
     this.configurarBuscador();
     this.cargarTemporadasDisponibles();
+    this.cargarTemporadaActual();
   }
 
   cargarTemporadasDisponibles(): void {
@@ -109,6 +114,24 @@ export class CaratulaRetroactivosComponent implements OnInit {
       next: (temporadas) => this.temporadasDisponibles = temporadas,
       error: (err) => console.error('Error cargando temporadas disponibles:', err)
     });
+  }
+
+  cargarTemporadaActual(): void {
+    this.caratulasService.getTemporadas().subscribe({
+      next: (temporadas) => {
+        const abierta = temporadas.find(t => t.estado === 'abierta');
+        this.temporadaActualEtiqueta = abierta?.etiqueta ?? null;
+      },
+      error: (err) => console.error('Error cargando temporada actual:', err)
+    });
+  }
+
+  /** Convierte una etiqueta de temporada ("2026-2027") a su nombre corto ("MY27"). */
+  etiquetaAMY(etiqueta: string | null): string {
+    if (!etiqueta) return '';
+    const partes = etiqueta.split('-');
+    if (partes.length === 2) return 'MY' + partes[1].slice(-2);
+    return etiqueta;
   }
 
   verTemporadaPasada(temporada: string): void {

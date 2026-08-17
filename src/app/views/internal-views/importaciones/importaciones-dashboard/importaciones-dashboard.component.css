@@ -377,6 +377,27 @@
 }
 .table-search-clear:hover { color: #94a3b8; }
 
+.table-fecha-filtro {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 20px; border-bottom: 1px solid #1e2535;
+  background: #0d1220;
+  transition: opacity 150ms ease;
+}
+.table-fecha-filtro.disabled { opacity: .5; pointer-events: none; }
+.table-fecha-lbl {
+  font-size: .72rem; color: #94a3b8; white-space: nowrap;
+  display: flex; align-items: center; gap: 6px;
+}
+.table-fecha-lbl i { color: #4b5563; font-size: .7rem; }
+.table-fecha-lbl strong { color: #cbd5e1; font-weight: 600; }
+.table-fecha-clear {
+  background: none; border: 1px solid #2d3748; color: #94a3b8; cursor: pointer;
+  font-size: .7rem; padding: 5px 9px; border-radius: 6px;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+.table-fecha-clear:hover { color: #f87171; border-color: #f87171; }
+.table-fecha-hint { font-size: .68rem; color: #64748b; font-style: italic; }
+
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; min-width: 900px; }
 thead tr { background: #0f1523; }
@@ -1203,6 +1224,9 @@ td { padding: 10px 14px; vertical-align: middle; }
 .ec-stage:last-child { border-right: none; }
 /* Solo verde cuando la etapa tiene fecha real registrada */
 .ec-stage.stage-real { background: rgba(34,197,94,.08); }
+/* Cada etapa es clickeable: lleva al campo exacto en el detalle */
+.ec-stage-click { cursor: pointer; }
+.ec-stage-click:hover { background: rgba(56,189,248,.14); }
 .ec-stage-lbl {
   font-size: .55rem;
   font-weight: 700;

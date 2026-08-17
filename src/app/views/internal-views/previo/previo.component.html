@@ -18,6 +18,15 @@
       [seleccionada]="temporadaHistoricaSeleccionada"
       (cambio)="verTemporadaPasada($event)">
     </app-temporada-selector>
+
+    <app-date-range-picker
+      placeholder="Ver montos entre fechas"
+      [fechaDesde]="fechaDesdeSeleccionada"
+      [fechaHasta]="fechaHastaSeleccionada"
+      [disabled]="modoHistorico"
+      (rangoCompleto)="aplicarRangoFechas($event)"
+      (limpiar)="limpiarRangoFechas()">
+    </app-date-range-picker>
   </div>
 
   <app-aviso-historico [temporada]="temporadaHistoricaSeleccionada" (volver)="volverATemporadaActual()"></app-aviso-historico>

@@ -56,6 +56,69 @@ export interface ProyeccionesMY27Response {
   generado_en: string;
 }
 
+// --- Tipos para inventario entrante y cobertura FIFO ---
+export interface InventarioMegamoItem {
+  sku: string;
+  cantidad: number;
+  descripcion: string | null;
+  subido_en: string;
+}
+
+export interface CoberturaItem {
+  mes: string;
+  proyectado: number;
+  cubierto: number;
+  deficit: number;
+  estado: 'completo' | 'parcial' | 'sin_cobertura' | 'sin_demanda';
+}
+
+export interface CoberturaSku {
+  sku: string;
+  producto: string;
+  cantidad_entrante: number;
+  odoo_disponible: number;
+  total_disponible: number;
+  total_proyectado: number;
+  total_cubierto: number;
+  total_deficit: number;
+  sobrante: number;
+  cobertura: CoberturaItem[];
+}
+
+export interface DetalleDistMes {
+  mes: string;
+  demanda: number;
+  asignado: number;
+  pendiente: number;
+  pasado?: boolean;
+}
+
+export interface DistribucionCliente {
+  clave_cliente: string;
+  nombre_cliente: string;
+  prioridad: number;
+  total_demanda: number;
+  asignado: number;
+  pendiente: number;
+  detalle_meses: DetalleDistMes[];
+}
+
+export interface DistribucionSku {
+  sku: string;
+  producto: string;
+  odoo_disponible: number;
+  cantidad_entrante: number;
+  total_disponible: number;
+  total_proyectado: number;
+  stock_restante: number;
+  distribuciones: DistribucionCliente[];
+}
+
+export interface DistribucionResponse {
+  periodo: string;
+  distribuciones: DistribucionSku[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProyeccionesMY27Service {
   private api = environment.apiUrl;
@@ -71,5 +134,49 @@ export class ProyeccionesMY27Service {
   getExportUrl(periodo = '2026-2027', marca = ''): string {
     const m = marca ? `&marca=${marca}` : '';
     return `${this.api}/proyecciones-my27/exportar?periodo=${periodo}${m}`;
+  }
+
+  subirInventarioMegamo(file: File, periodo: string = '2026-2027'): Observable<any> {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('periodo', periodo);
+    return this.http.post(`${this.api}/proyecciones-my27/inventario-megamo`, form);
+  }
+
+  getInventarioMegamo(periodo: string = '2026-2027'): Observable<{ periodo: string; inventario: InventarioMegamoItem[] }> {
+    return this.http.get<any>(`${this.api}/proyecciones-my27/inventario-megamo`, {
+      params: { periodo }
+    });
+  }
+
+  getCoberturaMegamo(periodo: string = '2026-2027', refresh = false): Observable<{ periodo: string; cobertura: CoberturaSku[] }> {
+    let params: any = { periodo };
+    if (refresh) params['refresh'] = '1';
+    return this.http.get<any>(`${this.api}/proyecciones-my27/cobertura-megamo`, { params });
+  }
+
+  getExportCoberturaUrl(periodo = '2026-2027'): string {
+    return `${this.api}/proyecciones-my27/exportar-cobertura?periodo=${periodo}`;
+  }
+
+  getDistribucionPrioritaria(periodo = '2026-2027'): Observable<DistribucionResponse> {
+    return this.http.get<DistribucionResponse>(
+      `${this.api}/proyecciones-my27/distribucion-prioritaria`,
+      { params: { periodo } }
+    );
+  }
+
+  generarOrdenOdoo(body: {
+    clave_cliente: string;
+    mes: string;
+    lineas: { sku: string; cantidad: number }[];
+  }): Observable<{
+    order_id: number;
+    order_name: string;
+    partner_name: string;
+    lineas_creadas: number;
+    skus_no_encontrados: string[];
+  }> {
+    return this.http.post<any>(`${this.api}/proyecciones-my27/generar-orden-odoo`, body);
   }
 }
