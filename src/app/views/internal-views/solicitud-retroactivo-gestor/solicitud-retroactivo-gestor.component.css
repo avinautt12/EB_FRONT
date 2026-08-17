@@ -154,6 +154,16 @@
 .chip-pendiente.active { background: #f59e0b; border-color: #f59e0b; }
 .chip-validado.active { background: #4caf50; border-color: #4caf50; }
 .chip-rechazado.active { background: #e53935; border-color: #e53935; }
+.chip-nc-sin-capturar.active { background: #7a7168; border-color: #7a7168; }
+
+.chips-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--t3);
+  margin-top: 4px;
+}
 
 .result-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .result-count { font-size: 0.76rem; color: var(--t3); }
@@ -290,11 +300,16 @@
   background: var(--surface3);
   flex-shrink: 0;
 }
-.timeline-item[data-tipo="creacion"] .tl-dot { border-color: var(--orange); color: var(--orange); }
-.timeline-item[data-tipo="validacion"] .tl-dot { border-color: #4caf50; color: #4caf50; }
-.timeline-item[data-tipo="precio"] .tl-dot { border-color: #5c9bd6; color: #5c9bd6; }
-.timeline-item[data-tipo="nota_credito"] .tl-dot { border-color: #8f5ae6; color: #8f5ae6; }
-.timeline-item[data-tipo="reenvio"] .tl-dot { border-color: #f59e0b; color: #f59e0b; }
+/* GUÍA: clases explícitas en vez de [data-tipo] -- 'validacion' cubre
+   validar/rechazar/deshacer, necesitaba distinguirse por resultado real
+   (ver iconoHistorial en el componente), no solo por tipo. */
+.tl-dot.tl-naranja { border-color: var(--orange); color: var(--orange); }
+.tl-dot.tl-verde   { border-color: #4caf50; color: #4caf50; }
+.tl-dot.tl-rojo    { border-color: #e53935; color: #e53935; }
+.tl-dot.tl-gris    { border-color: var(--t3); color: var(--t3); }
+.tl-dot.tl-azul    { border-color: #5c9bd6; color: #5c9bd6; }
+.tl-dot.tl-morado  { border-color: #8f5ae6; color: #8f5ae6; }
+.tl-dot.tl-ambar   { border-color: #f59e0b; color: #f59e0b; }
 
 .tl-content { display: flex; flex-direction: column; gap: 2px; }
 .tl-desc { font-size: 0.85rem; color: var(--t1); font-weight: 700; }
@@ -498,6 +513,17 @@
 
 .val-sep { width: 1px; background: var(--border2); margin: 5px 0; }
 
+.doc-action-bar-disabled {
+  justify-content: center;
+  padding: 8px 12px;
+}
+.doc-sin-archivo-msg {
+  font-size: 0.76rem;
+  font-style: italic;
+  color: var(--t3);
+  opacity: 0.7;
+}
+
 .nota-rechazo {
   margin: 14px 0 0 0;
   font-size: 0.78rem;
@@ -519,4 +545,123 @@
 @media (max-width: 900px) {
   .gestor-layout { grid-template-columns: 1fr; }
   .list-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: 40vh; }
+}
+
+/* ── Estatus de Nota de Crédito -- separado del estatus general del ticket:
+   BCYP la captura ('pendiente'), Auditoría la valida con código
+   ('validada'). Visible tanto en la tarjeta de la lista como en el panel
+   de detalle, para no tener que abrir cada ticket para saberlo. ── */
+.dp-section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.dp-section-title-row .dp-section-title { margin-bottom: 0; }
+
+.badge-nc {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+.badge-nc-pendiente { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.badge-nc-validada { background: rgba(76,175,80,0.15); color: #4caf50; }
+
+.dp-nc-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.dp-nc-actions .btn-editar-precio { margin-left: 0; }
+
+.btn-validar-nc {
+  background: transparent;
+  border: 1px solid rgba(76,175,80,0.4);
+  color: #4caf50;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all .2s;
+}
+.btn-validar-nc:hover { background: rgba(76,175,80,0.12); border-color: #4caf50; }
+
+/* Mini badge de NC dentro de la tarjeta de la lista */
+.sc-nc-row { margin-top: 2px; }
+.badge-nc-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+  width: fit-content;
+}
+
+/* ── Diálogo del código de Auditoría ── */
+.nc-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1300;
+  padding: 1rem;
+}
+.nc-dialog-card {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 360px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 32px 80px rgba(0,0,0,.75);
+}
+.nc-dialog-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 14px auto;
+  border-radius: 12px;
+  background: var(--orange-g);
+  border: 1px solid rgba(235,94,40,.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--orange);
+  font-size: 1.2rem;
+}
+.nc-dialog-card h3 { margin: 0 0 6px 0; color: var(--t1); font-size: 1.05rem; }
+.nc-dialog-card p { margin: 0 0 16px 0; color: var(--t3); font-size: 0.82rem; }
+.nc-dialog-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--t1);
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.2em;
+  outline: none;
+  transition: border-color .2s;
+}
+.nc-dialog-input:focus { border-color: var(--orange); }
+.nc-dialog-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
 }

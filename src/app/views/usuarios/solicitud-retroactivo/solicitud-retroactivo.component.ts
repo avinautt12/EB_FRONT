@@ -3,34 +3,32 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 
 import { TopBarUsuariosComponent } from '../../../components/top-bar-usuarios/top-bar-usuarios.component';
+import { DatePickerComponent } from '../../../components/date-picker/date-picker.component';
 import { environment } from '../../../../environments/environment';
 import {
   SolicitudRetroactivoService,
-  SolicitudRetroactivo
+  SolicitudRetroactivo,
+  MarcaCampania,
+  ProductoCampania
 } from '../../../services/solicitud-retroactivo.service';
-
-interface Marca {
-  id: number;
-  nombre: string;
-}
 
 interface Msi {
   id: number;
   plazo_meses: number;
+  // GUÍA: el % ya no es fijo por plazo -- depende de la campaña elegida
+  // (ver solicitud_retroactivo_campania_msi en el backend), por eso viene
+  // en la misma respuesta de /campania/<id>/msi.
+  porcentaje?: number;
 }
 
 interface Formulario {
   id: number;
   nombre: string;
 }
-
-const marcaVacia = (): Marca => ({
-  id: -1,
-  nombre: ""
-});
 
 const msiVacio = (): Msi => ({
   id: -1,
@@ -58,20 +56,56 @@ const ETIQUETAS_CAMPOS: Record<string, string> = {
   precio_publico: 'Precio'
 };
 
+// GUÍA: mismo patrón de agrupación del buscador de productos de Forecast
+// (proyecciones-tab: producto -> colores -> tallas), pero client-side sobre
+// la lista ya cargada de la campaña -- no hace falta buscar en el backend
+// porque una campaña trae, cuando mucho, unas cuantas decenas de SKUs.
+interface VarianteTalla {
+  talla: string;
+  producto: ProductoCampania;
+}
+interface VarianteColor {
+  color: string;
+  tallas: VarianteTalla[];
+}
+interface ProductoGrupo {
+  nombre: string;
+  marca: string | null;
+  colores: VarianteColor[];
+  soloUna?: ProductoCampania;
+}
+
 @Component({
   selector: 'app-solicitud-retroactivo',
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, TopBarUsuariosComponent],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, TopBarUsuariosComponent, DatePickerComponent],
   templateUrl: './solicitud-retroactivo.component.html',
   styleUrl: './solicitud-retroactivo.component.css'
 })
 export class SolicitudRetroactivoComponent implements OnInit {
-  listaMarca: Marca[] = [marcaVacia()];
+  // GUÍA: ya no es un catálogo global fijo -- se llena por campaña, y solo
+  // se muestra si la campaña realmente liga 2+ marcas (ver valueChanges de
+  // id_formulario). Con 0 o 1 marca no tiene sentido preguntarla.
+  listaMarca: MarcaCampania[] = [];
   listaMsi: Msi[] = [msiVacio()];
   listaFormulario: Formulario[] = [tipoFormularioVacio()];
   listaRazonSocial: any[] = [];
   listaTiendas: any[] = [];
   cargandoTiendas = false;
-  
+
+  // GUÍA: productos ligados a la campaña elegida -- de aquí sale el
+  // selector de "Modelo" (ver productosModal más abajo). Se recarga cada
+  // vez que cambia id_formulario.
+  productosDisponibles: ProductoCampania[] = [];
+  productoSeleccionado: ProductoCampania | null = null;
+
+  productosModal = {
+    abierto: false,
+    query: '',
+    grupos: [] as ProductoGrupo[],
+    grupoActivo: null as ProductoGrupo | null,
+    colorActivo: null as string | null,
+  };
+
   ventaForm: FormGroup;
   archivos: { [key: string]: File } = {};
   enviando = false;
@@ -234,9 +268,13 @@ export class SolicitudRetroactivoComponent implements OnInit {
   }
 
   // GUÍA: revisa a mano los campos requeridos que pueden estar disabled
-  // (id_msi siempre, id_marca_bicicleta solo si id_formulario == 1). Angular
+  // (id_msi siempre, id_tienda mientras no haya cliente elegido). Angular
   // excluye los controles disabled de ventaForm.invalid, así que sin este
   // chequeo el formulario "pasa" localmente aunque vayan vacíos al backend.
+  // id_marca_bicicleta NO necesita este chequeo: se habilita+requiere
+  // exactamente cuando la campaña elegida tiene 2+ marcas (ver
+  // valueChanges de id_formulario), así que "disabled" y "no requerido"
+  // siempre coinciden para ese control.
   private camposCondicionalesFaltantes(): string[] {
     const valores = this.ventaForm.getRawValue();
     const faltantes: string[] = [];
@@ -246,9 +284,6 @@ export class SolicitudRetroactivoComponent implements OnInit {
     }
     if (this.listaTiendas.length > 0 && !valores.id_tienda) {
       faltantes.push('id_tienda');
-    }
-    if (valores.id_formulario == 1 && !valores.id_marca_bicicleta) {
-      faltantes.push('id_marca_bicicleta');
     }
     return faltantes;
   }
@@ -275,9 +310,9 @@ export class SolicitudRetroactivoComponent implements OnInit {
       return;
     }
 
-    // Se filtran los archivos faltantes excluyendo los opcionales (PDF y XML)
+    // Se filtran los archivos faltantes excluyendo los opcionales (XML)
     const archivosFaltantes = this.camposArchivosVisibles.filter(item => 
-      !this.archivos[item.key] && item.key !== 'factura_pdf' && item.key !== 'factura_xml'
+      !this.archivos[item.key] && item.key !== 'factura_xml'
     );
     if (archivosFaltantes.length > 0) {
       this.mensajeError = `Falta adjuntar los siguientes archivos: ${archivosFaltantes.map(f => f.label).join(', ')}`;
@@ -329,6 +364,11 @@ export class SolicitudRetroactivoComponent implements OnInit {
       this.ventaForm.get('id_marca_bicicleta')?.disable();
       this.ventaForm.get('id_msi')?.disable();
       this.ventaForm.get('id_tienda')?.disable();
+
+      this.listaMarca = [];
+      this.listaMsi = [];
+      this.productosDisponibles = [];
+      this.productoSeleccionado = null;
     };
 
     const manejarError = (err: any) => {
@@ -379,6 +419,14 @@ export class SolicitudRetroactivoComponent implements OnInit {
       this.cargarYPrecargarEdicion(idEditar);
     }
 
+    // GUÍA: si el usuario cambia de Marca, el producto ya elegido en
+    // "Modelo" puede ya no corresponder (era de otra marca) -- se limpia
+    // para forzar una nueva selección coherente con la marca actual.
+    this.ventaForm.get('id_marca_bicicleta')?.valueChanges.subscribe(() => {
+      this.productoSeleccionado = null;
+      this.ventaForm.get('modelo_bicicleta')?.setValue('');
+    });
+
     this.ventaForm.get('id_cliente')?.valueChanges.subscribe((clienteId) => {
       const controlTienda = this.ventaForm.get('id_tienda');
       controlTienda?.setValue('');
@@ -407,35 +455,62 @@ export class SolicitudRetroactivoComponent implements OnInit {
         });
 
         this.ventaForm.get('id_formulario')?.valueChanges.subscribe(async (valor) => {
-          if (!valor) {
-            this.listaMarca = [];
-            this.listaMsi = [];
-            return;
-          }
-
           const controlMarca = this.ventaForm.get('id_marca_bicicleta');
           const controlMsi = this.ventaForm.get('id_msi');
 
-          if (valor == 1) {
-            controlMarca?.setValidators([Validators.required]);
-            try {
-              this.listaMarca = await this.buscarMarca();
-              this.listaMarca.length ? controlMarca?.enable() : controlMarca?.disable();
-            } catch (err) {
-              console.error("Error al obtener marcas:", err);
-              controlMarca?.disable();
-            }
-          } else {
+          // La campaña cambió: el producto/modelo elegido (si había uno) ya
+          // no necesariamente pertenece a la nueva campaña.
+          this.productosDisponibles = [];
+          this.productoSeleccionado = null;
+          this.ventaForm.get('modelo_bicicleta')?.setValue('');
+
+          if (!valor) {
+            this.listaMarca = [];
+            this.listaMsi = [];
             controlMarca?.clearValidators();
             controlMarca?.setValue('');
             controlMarca?.disable();
-            this.listaMarca = [];
+            controlMarca?.updateValueAndValidity();
+            return;
           }
 
-          controlMarca?.updateValueAndValidity();
-          
+          const idCampania = Number(valor);
+
+          // GUÍA: la Marca ya no depende de un id de campaña fijo (antes
+          // solo se mostraba para id_formulario==1, hardcodeado a SCOTT).
+          // Ahora se activa dinámicamente según lo que la campaña
+          // REALMENTE tenga ligado: 2+ marcas -> se pregunta; 1 sola ->
+          // se guarda sola, sin molestar al usuario; 0 -> se deja vacía.
           try {
-            this.listaMsi = await this.buscarMsi();
+            const marcas = await this.buscarMarcasCampania(idCampania);
+            if (marcas.length >= 2) {
+              this.listaMarca = marcas;
+              controlMarca?.setValidators([Validators.required]);
+              controlMarca?.setValue('');
+              controlMarca?.enable();
+            } else {
+              this.listaMarca = [];
+              controlMarca?.clearValidators();
+              controlMarca?.setValue(marcas.length === 1 ? marcas[0].id : '');
+              controlMarca?.disable();
+            }
+          } catch (err) {
+            console.error("Error al obtener marcas de la campaña:", err);
+            this.listaMarca = [];
+            controlMarca?.disable();
+          }
+          controlMarca?.updateValueAndValidity();
+
+          // Productos ligados a la campaña, para el selector de "Modelo".
+          try {
+            this.productosDisponibles = await this.buscarProductosCampania(idCampania);
+          } catch (err) {
+            console.error("Error al obtener productos de la campaña:", err);
+            this.productosDisponibles = [];
+          }
+
+          try {
+            this.listaMsi = await this.buscarMsi(idCampania);
             this.listaMsi.length ? controlMsi?.enable() : controlMsi?.disable();
           } catch (err) {
             console.error("Error al obtener catálogos:", err);
@@ -471,15 +546,143 @@ export class SolicitudRetroactivoComponent implements OnInit {
     return res.json();
   }
 
-  async buscarMarca(): Promise<Marca[]> {
-    const res = await fetch(`${environment.apiUrl}/api/solicitud-retroactivo/marca`);
+  // GUÍA: los plazos MSI disponibles (y su %) dependen de la campaña
+  // elegida -- ya no es un catálogo global fijo, cada campaña liga los
+  // suyos con su propio porcentaje (ver módulo de Campañas).
+  async buscarMsi(idFormulario: number): Promise<Msi[]> {
+    const res = await fetch(`${environment.apiUrl}/api/solicitud-retroactivo/campania/${idFormulario}/msi`);
     if (!res.ok) throw new Error("Error API");
     return res.json();
   }
 
-  async buscarMsi(): Promise<Msi[]> {
-    const res = await fetch(`${environment.apiUrl}/api/solicitud-retroactivo/msi`);
-    if (!res.ok) throw new Error("Error API");
-    return res.json();
+  async buscarMarcasCampania(idCampania: number): Promise<MarcaCampania[]> {
+    return firstValueFrom(this.solicitudService.marcasPorCampania(idCampania));
+  }
+
+  async buscarProductosCampania(idCampania: number): Promise<ProductoCampania[]> {
+    return firstValueFrom(this.solicitudService.productosPorCampania(idCampania));
+  }
+
+  // ─────────────────────────────────────────
+  // Selector de "Modelo": agrupa los productos de la campaña por nombre ->
+  // color -> talla (mismo patrón que el buscador de Forecast), pero
+  // client-side, ya que la lista completa de la campaña ya está cargada.
+  // ─────────────────────────────────────────
+
+  private agruparProductos(lista: ProductoCampania[]): ProductoGrupo[] {
+    const map = new Map<string, ProductoCampania[]>();
+    for (const p of lista) {
+      const key = (p.modelo || p.codigo || p.sku).trim().replace(/\s+/g, ' ').toUpperCase();
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(p);
+    }
+
+    const grupos: ProductoGrupo[] = [];
+    for (const [, variantes] of map.entries()) {
+      const primero = variantes[0];
+      const colorMap = new Map<string, VarianteTalla[]>();
+      for (const v of variantes) {
+        const c = v.color || 'N/A';
+        if (!colorMap.has(c)) colorMap.set(c, []);
+        colorMap.get(c)!.push({ talla: v.talla || 'N/A', producto: v });
+      }
+      const colores: VarianteColor[] = [...colorMap.entries()].map(([color, tallas]) => ({ color, tallas }));
+
+      grupos.push({
+        nombre: primero.modelo || primero.codigo || primero.sku,
+        marca: primero.marca,
+        colores,
+        soloUna: variantes.length === 1 ? primero : undefined
+      });
+    }
+    return grupos.sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+
+  // GUÍA: si la campaña tiene selector de Marca activo, el "Modelo" solo
+  // debe ofrecer productos DE ESA marca -- así no se puede, por accidente,
+  // registrar una venta MEGAMO con un producto SCOTT de la misma campaña
+  // multimarca. Sin marca elegida (o campaña de una sola marca), no filtra.
+  get productosParaSeleccion(): ProductoCampania[] {
+    const marcaId = this.ventaForm.get('id_marca_bicicleta')?.value;
+    if (this.listaMarca.length > 0 && marcaId) {
+      return this.productosDisponibles.filter((p) => p.marca_id === Number(marcaId));
+    }
+    return this.productosDisponibles;
+  }
+
+  get faltaElegirMarcaParaModelo(): boolean {
+    return this.listaMarca.length > 0 && !this.ventaForm.get('id_marca_bicicleta')?.value;
+  }
+
+  get nombreMarcaSeleccionada(): string | null {
+    const id = this.ventaForm.get('id_marca_bicicleta')?.value;
+    if (!id || this.listaMarca.length === 0) return null;
+    return this.listaMarca.find((m) => m.id === Number(id))?.nombre ?? null;
+  }
+
+  abrirProductosModal(): void {
+    if (this.productosDisponibles.length === 0) {
+      this.mensajeError = 'Primero selecciona una Campaña para ver sus productos disponibles.';
+      return;
+    }
+    if (this.faltaElegirMarcaParaModelo) {
+      this.mensajeError = 'Primero selecciona una Marca para filtrar los productos disponibles.';
+      return;
+    }
+    this.productosModal.query = '';
+    this.productosModal.grupoActivo = null;
+    this.productosModal.colorActivo = null;
+    this.productosModal.grupos = this.agruparProductos(this.productosParaSeleccion);
+    this.productosModal.abierto = true;
+  }
+
+  cerrarProductosModal(): void {
+    this.productosModal.abierto = false;
+    this.productosModal.grupoActivo = null;
+    this.productosModal.colorActivo = null;
+  }
+
+  buscarEnProductosModal(q: string): void {
+    this.productosModal.query = q;
+    const texto = q.trim().toLowerCase();
+    const base = this.productosParaSeleccion;
+    const filtrados = texto
+      ? base.filter((p) =>
+          [p.modelo, p.sku, p.color, p.talla, p.marca].filter(Boolean)
+            .some((campo) => campo!.toLowerCase().includes(texto))
+        )
+      : base;
+    this.productosModal.grupos = this.agruparProductos(filtrados);
+  }
+
+  seleccionarGrupoModelo(grupo: ProductoGrupo): void {
+    if (grupo.soloUna) {
+      this.confirmarProducto(grupo.soloUna);
+      return;
+    }
+    this.productosModal.grupoActivo = grupo;
+    this.productosModal.colorActivo = grupo.colores.length === 1 ? grupo.colores[0].color : null;
+  }
+
+  seleccionarColorModelo(color: string): void {
+    this.productosModal.colorActivo = color;
+  }
+
+  getTallasParaColorModelo(grupo: ProductoGrupo, color: string): VarianteTalla[] {
+    return grupo.colores.find((c) => c.color === color)?.tallas ?? [];
+  }
+
+  confirmarProducto(producto: ProductoCampania): void {
+    this.productoSeleccionado = producto;
+    const partes = [producto.modelo || producto.codigo];
+    if (producto.color && producto.color !== 'N/A') partes.push(`Color: ${producto.color}`);
+    if (producto.talla && producto.talla !== 'N/A') partes.push(`Talla: ${producto.talla}`);
+    this.ventaForm.get('modelo_bicicleta')?.setValue(partes.join(' — '));
+    this.cerrarProductosModal();
+  }
+
+  quitarProductoSeleccionado(): void {
+    this.productoSeleccionado = null;
+    this.ventaForm.get('modelo_bicicleta')?.setValue('');
   }
 }

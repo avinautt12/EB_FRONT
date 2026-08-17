@@ -198,11 +198,6 @@
   margin: auto 0;
 }
 
-/* Bento: Gestor y Dashboard arriba lado a lado, Formulario abajo a todo lo
-   ancho -- mismo espíritu del moodboard sin forzar un 2x2 parejo para 3
-   tarjetas. */
-.card-wide { grid-column: 1 / -1; }
-
 .landing-card {
   position: relative;
   min-height: 220px;
@@ -244,6 +239,7 @@
 .landing-card:nth-child(1) { animation-delay: 0ms; }
 .landing-card:nth-child(2) { animation-delay: 60ms; }
 .landing-card:nth-child(3) { animation-delay: 120ms; }
+.landing-card:nth-child(4) { animation-delay: 180ms; }
 
 @keyframes card-in {
   from { opacity: 0; transform: translateY(10px); }
@@ -347,8 +343,12 @@
 .card-formulario .card-blob { background: radial-gradient(circle, #EB5E28, transparent 70%); }
 .card-formulario:hover { border-color: rgba(235, 94, 40, 0.35); }
 
+.card-campanias .card-link { color: #9b59b6; }
+.card-campanias .card-icon-wrap { background: linear-gradient(135deg, #9b59b6, color-mix(in srgb, #9b59b6 55%, white)); }
+.card-campanias .card-blob { background: radial-gradient(circle, #9b59b6, transparent 70%); }
+.card-campanias:hover { border-color: rgba(155, 89, 182, 0.35); }
+
 @media (max-width: 900px) {
   .landing-grid { grid-template-columns: 1fr; }
-  .card-wide { grid-column: auto; }
   .landing-card { min-height: 200px; }
 }

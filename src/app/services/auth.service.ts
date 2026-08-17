@@ -120,6 +120,18 @@ export class AuthService {
     }
   }
 
+  getUserName(): string | null {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.nombre || payload.usuario || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   isAdmin(): boolean {
     const token = localStorage.getItem('token');
     if (!token) return false;

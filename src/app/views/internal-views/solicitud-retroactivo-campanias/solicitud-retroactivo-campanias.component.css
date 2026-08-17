@@ -1,0 +1,900 @@
+/* ========================================================
+   PALETA BASE (Familia garantias-usuario)
+   ======================================================== */
+:host {
+  --bg: #121212;
+  --card: #1e1e1e;
+  --card2: #252525;
+  --border: #2a2a2a;
+  --border2: #3a3a3a;
+  --orange: #EB5E28;
+  --orange-g: rgba(235, 94, 40, .12);
+  --t1: #FFFCF2;
+  --t2: #CCC5B9;
+  --t3: #8a8077;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.retroactivos-layout {
+  background-color: var(--bg);
+  color: var(--t2);
+  font-size: 0.88rem;
+  padding: 1.5rem 1rem 3rem;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.retroactivos-layout * {
+  box-sizing: border-box;
+}
+
+/* --- HEADER PRINCIPAL --- */
+.page-header, .form-header {
+  max-width: 900px;
+  margin: 0 auto 1.2rem auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-header h2, .form-header h2 {
+  margin: 0;
+  color: var(--t1);
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+/* --- BOTONES BASE --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 180ms var(--ease-out), transform 160ms var(--ease-out), border-color 200ms;
+  text-decoration: none;
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn-primary {
+  background-color: var(--card2);
+  color: var(--orange);
+  border: 1px solid var(--border2);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--orange);
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(235, 94, 40, 0.4);
+}
+
+.btn-primary:disabled {
+  background-color: #222;
+  color: #555;
+  border-color: #333;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #666;
+  color: #bbb;
+}
+
+.btn-secondary:hover {
+  background-color: #333;
+  color: #fff;
+  border-color: #fff;
+}
+
+.btn-back {
+  background-color: transparent;
+  border: 1px solid #666;
+  color: #bbb;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 160ms var(--ease-out), background-color 200ms, color 200ms, border-color 200ms;
+}
+
+.btn-back:hover {
+  background-color: #333;
+  color: #fff;
+  border-color: #fff;
+}
+
+.btn-back:active {
+  transform: scale(0.96);
+}
+
+/* --- BARRA DE FILTROS --- */
+.filtros-bar {
+  max-width: 900px;
+  margin: 0 auto 1.2rem auto;
+  display: flex;
+  gap: 14px;
+  align-items: flex-end;
+  background: var(--card);
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 220px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-box input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--t1);
+  padding: 8px 12px;
+  border-radius: 6px;
+  outline: none;
+  font-size: 0.85rem;
+}
+
+.search-box input:focus {
+  border-color: var(--orange);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-group label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #888;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.filter-group select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: var(--bg);
+  border: 1px solid var(--border2);
+  color: #ffffff;
+  padding: 8px 30px 8px 12px !important;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M12 18l-12-12h24z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+}
+
+/* --- OPCIONES DEL DESPLEGABLE --- */
+select option {
+  background-color: #121212 !important;
+  color: #ffffff !important;
+  padding: 12px 16px !important;
+  font-size: 0.85rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #ffffff !important;
+}
+
+select option:checked {
+  background-color: #242424 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+select option:hover {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+}
+
+/* --- BARRA DE DESPLAZAMIENTO NARANJA --- */
+select::-webkit-scrollbar,
+::-webkit-scrollbar {
+  width: 10px;
+  background-color: #181818;
+}
+
+select::-webkit-scrollbar-track,
+::-webkit-scrollbar-track {
+  background: #181818;
+}
+
+select::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
+  background-color: var(--orange);
+  border-radius: 8px;
+  border: 2px solid #181818;
+}
+
+/* --- TARJETAS DE SECCIÓN --- */
+.card-section, .table-wrap {
+  max-width: 900px;
+  margin: 0 auto 1.2rem auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  opacity: 1;
+  transition: opacity 420ms var(--ease-out);
+  overflow: visible !important;
+}
+
+/* Nota: se usa @starting-style + transition (no animation con
+   fill-mode: forwards) a propósito. Un "forwards" fill queda "en efecto"
+   indefinidamente para el navegador, así que la tarjeta se queda promovida
+   a su propio stacking context aun después de terminar -- eso atrapa el
+   z-index del calendario (app-date-picker) dentro de ella en vez de
+   dejarlo pintarse encima de las tarjetas siguientes. Una transition ya
+   terminada no arrastra ese problema. */
+@starting-style {
+  .card-section, .table-wrap {
+    opacity: 0;
+  }
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--t1);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.title-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title i {
+  color: var(--orange);
+  font-size: 0.9rem;
+}
+
+.badge-count {
+  font-size: 0.75rem;
+  background: var(--orange-g);
+  color: var(--orange);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+/* --- FORMULARIOS (TARJETAS CON BARRA LATERAL NARANJA) --- */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.form-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8px 14px 8px 18px;
+  gap: 2px;
+  border-radius: 10px;
+  background-color: #181818;
+  border: 1px solid #2d2d2d;
+  box-sizing: border-box;
+  transition: border-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out);
+}
+
+.form-group::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  background-color: var(--orange);
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+.form-group:hover,
+.form-group:focus-within {
+  border-color: rgba(235, 94, 40, 0.5);
+  box-shadow: 0 0 10px rgba(235, 94, 40, 0.15);
+}
+
+.form-group label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #888888;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  transition: color 220ms var(--ease-out);
+}
+
+.form-group:focus-within label {
+  color: #a0a0a0;
+}
+
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group input[type="number"],
+.form-group select {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: #ffffff !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  width: 100%;
+  padding: 2px 4px 2px 0 !important;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+/* --- LIMPIEZA DE ARTEFACTOS NATIVOS EN INPUT DATE --- */
+.form-group input[type="date"]::-webkit-inner-spin-button,
+.form-group input[type="date"]::-webkit-outer-spin-button,
+.form-group input[type="date"]::-webkit-clear-button {
+  -webkit-appearance: none;
+  display: none;
+  margin: 0;
+}
+
+.form-group input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.9);
+  opacity: 0.85;
+  transition: opacity 180ms var(--ease-out);
+}
+
+.form-group input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+.form-group select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M12 18l-12-12h24z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 4px center !important;
+}
+
+.form-group input::placeholder {
+  color: #666666;
+  font-weight: 500;
+}
+
+.form-group.has-error {
+  border-color: #e11d48;
+  box-shadow: 0 0 12px rgba(225, 29, 72, 0.3);
+}
+
+.form-group.has-error::before {
+  background: #e11d48;
+}
+
+.error-text {
+  color: #ff6b81;
+  font-weight: 700;
+  font-size: 0.72rem;
+  margin-top: 2px;
+}
+
+/* --- CAMPOS ESTILO GARANTÍAS (usados para las fechas de la campaña) --- */
+.field-group { display: flex; flex-direction: column; gap: 6px; }
+.field-label {
+  font-size: 0.88rem; font-weight: 600; color: var(--t2);
+}
+.field-label.required::after {
+  content: ' *'; color: var(--orange);
+}
+.field-input {
+  background: #1a1a1a; border: 1px solid var(--border2);
+  border-radius: 8px; padding: 10px 14px;
+  color: var(--t1); font-size: 0.95rem;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none; width: 100%; box-sizing: border-box;
+}
+.field-input:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(235,94,40,0.12);
+}
+
+/* --- TABLAS --- */
+.table-wrap {
+  padding: 0;
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.data-table thead th {
+  background: #1a1a1a;
+  color: var(--t3);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: none;
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #1f1f1f;
+  color: var(--t2);
+}
+
+.data-table tbody tr:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+.data-table .text-center {
+  text-align: center;
+}
+
+/* --- TABLA DE PRODUCTOS DE LA CAMPAÑA: scroll interno + header pegajoso.
+   Con carga masiva por SKU la lista puede llegar a cientos de filas; sin
+   esto la página crece indefinidamente y el botón de guardar termina
+   inalcanzable. --- */
+.productos-table-wrap {
+  max-height: 420px;
+  overflow: auto !important;
+}
+
+.productos-table-wrap thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* BADGES (Estados) */
+.badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  text-transform: capitalize;
+}
+
+.badge-active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+.badge-inactive {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--t3);
+}
+
+/* Activa=1 en BD pero fuera de rango de fechas -- para no mostrarla como
+   "Activa" cuando ya no aparece en el formulario de venta (que sí filtra
+   por vigencia). */
+.badge-vencida {
+  background: rgba(225, 29, 72, 0.12);
+  color: #ff6b81;
+}
+
+.badge-proxima {
+  background: rgba(92, 155, 214, 0.15);
+  color: #7ab8ec;
+}
+
+/* ACCIONES EN TABLA */
+.td-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.btn-action-icon {
+  background: transparent;
+  border: none;
+  color: var(--t2);
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: opacity 160ms var(--ease-out);
+}
+
+.btn-action-icon:hover {
+  opacity: 0.8;
+}
+
+.btn-action-icon.delete {
+  color: #eb5e28;
+}
+
+.btn-action {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border2);
+  color: var(--t2);
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 180ms var(--ease-out);
+}
+
+.btn-action:hover {
+  background: var(--border2);
+  color: #fff;
+}
+
+.btn-action.delete {
+  background: rgba(229,57,53,0.12);
+  border-color: rgba(229,57,53,0.3);
+  color: #e57373;
+}
+
+.btn-action.delete:hover {
+  background: #e53935;
+  color: #fff;
+}
+
+/* --- ESTADOS VACÍOS --- */
+.empty-state, .empty-products {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--t3);
+  background: rgba(255,255,255,0.02);
+  border-radius: 8px;
+  border: 1px dashed var(--border2);
+  margin-bottom: 1rem;
+}
+
+.empty-state h3, .empty-products p {
+  margin: 10px 0;
+  color: var(--t2);
+}
+
+.empty-icon {
+  font-size: 2rem;
+  color: var(--border2);
+  margin-bottom: 10px;
+}
+
+/* --- MENSAJES DE NOTIFICACIÓN INLINE --- */
+.inline-alert {
+  max-width: 900px;
+  margin: 0 auto 1.2rem auto;
+  padding: 12px 16px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.inline-alert.success {
+  background-color: rgba(34, 197, 94, 0.1);
+  border: 1px solid #15803d;
+  color: #4ade80;
+}
+
+.inline-alert.error {
+  background-color: rgba(225, 29, 72, 0.12);
+  border: 1px solid #e11d48;
+  color: #ff6b81;
+}
+
+.inline-alert .close-btn {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+/* --- FOOTER FORMULARIO ---
+   Fijo al fondo del viewport a propósito: con carga masiva de SKUs o
+   varios plazos MSI el formulario puede volverse muy largo, y sin esto
+   "Crear Campaña" quedaba al final físico de la página, inalcanzable sin
+   scrollear todo. Se queda visible sin importar cuánto crezca el contenido
+   de arriba. */
+.form-footer {
+  position: sticky;
+  bottom: 0;
+  max-width: 900px;
+  margin: 1.2rem auto 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 22px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.4);
+  z-index: 20;
+}
+
+.saving-indicator {
+  color: var(--orange);
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-buttons {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.text-right { text-align: right; }
+.margin-0 { margin: 0; }
+
+/* --- CHIPS DE MSI EN LA TABLA DE LISTADO --- */
+.msi-chip {
+  display: inline-block;
+  background: var(--orange-g);
+  border: 1px solid rgba(235, 94, 40, 0.3);
+  color: var(--orange);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  margin: 2px 4px 2px 0;
+  white-space: nowrap;
+}
+
+/* --- CHECKLIST DE PLAZOS MSI EN EL FORMULARIO DE CAMPAÑA --- */
+.msi-ayuda {
+  font-size: 0.8rem;
+  color: var(--t3);
+  margin: -6px 0 14px;
+}
+
+.msi-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.msi-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 14px;
+  background: #181818;
+  border: 1px solid #2d2d2d;
+  border-radius: 10px;
+  transition: border-color 200ms var(--ease-out), background-color 200ms var(--ease-out);
+}
+
+.msi-item.activo {
+  border-color: rgba(235, 94, 40, 0.5);
+  background: var(--orange-g);
+}
+
+.msi-item-vacio {
+  color: var(--t3);
+  font-size: 0.85rem;
+  justify-content: center;
+  border-style: dashed;
+}
+
+.msi-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+
+.msi-toggle input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.msi-toggle-visual {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid var(--border2);
+  background: transparent;
+  position: relative;
+  transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+
+.msi-toggle input[type="checkbox"]:checked + .msi-toggle-visual {
+  background: var(--orange);
+  border-color: var(--orange);
+}
+
+.msi-toggle input[type="checkbox"]:checked + .msi-toggle-visual::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid #181818;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.msi-toggle:active .msi-toggle-visual {
+  transform: scale(0.9);
+}
+
+.msi-toggle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.msi-toggle-info strong {
+  color: var(--t1);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.msi-toggle-info small {
+  color: var(--t3);
+  font-size: 0.72rem;
+}
+
+.msi-porcentaje-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #101010;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 10px;
+  flex-shrink: 0;
+  animation: msi-porcentaje-in 200ms var(--ease-out);
+}
+
+@keyframes msi-porcentaje-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.msi-porcentaje-input input {
+  width: 56px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.msi-porcentaje-input input::-webkit-inner-spin-button,
+.msi-porcentaje-input input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.msi-porcentaje-input span {
+  color: var(--t3);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.btn-link-nuevo-plazo {
+  background: none;
+  border: none;
+  color: var(--orange);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+  padding: 0;
+  transition: color 180ms var(--ease-out);
+}
+.btn-link-nuevo-plazo:hover { color: var(--t1); }
+
+.msi-nuevo-plazo-box {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 14px;
+  background: var(--card2);
+  border: 1px dashed var(--border2);
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+.msi-nuevo-plazo-box .form-group {
+  flex: 1;
+  min-width: 160px;
+  margin: 0;
+}
+
+/* --- CARGA MASIVA DE PRODUCTOS POR SKU --- */
+.section-title-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sku-masivo-box {
+  margin-bottom: 14px;
+}
+
+.sku-masivo-campo {
+  flex: 1;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sku-masivo-textarea {
+  resize: vertical;
+  font-family: inherit;
+  min-height: 90px;
+}
+
+.sku-no-encontrados {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(225, 29, 72, 0.1);
+  border: 1px solid rgba(225, 29, 72, 0.3);
+  color: #ff9eae;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  margin-bottom: 14px;
+}
+
+.sku-no-encontrados i {
+  margin-top: 2px;
+  flex-shrink: 0;
+}

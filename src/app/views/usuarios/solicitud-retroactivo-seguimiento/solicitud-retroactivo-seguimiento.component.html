@@ -5,16 +5,31 @@
   <div class="page-header">
     <div class="header-left">
       <a *ngIf="vista === 'lista'" routerLink="/usuarios/solicitud-retroactivo" class="back-link"><i class="fas fa-arrow-left"></i> Solicitud de Retroactivos</a>
-      <button *ngIf="vista === 'detalle'" type="button" class="back-link back-link-btn" (click)="volverALista()"><i class="fas fa-arrow-left"></i> Mis Solicitudes</button>
+      <button *ngIf="vista === 'detalle' || vista === 'productos'" type="button" class="back-link" (click)="volverALista()"><i class="fas fa-arrow-left"></i> Mis Solicitudes</button>
+
       <h1 class="page-title" *ngIf="vista === 'lista'"><span class="title-icon"><i class="fas fa-list-check"></i></span>Seguimiento de mis Solicitudes</h1>
+      <h1 class="page-title" *ngIf="vista === 'productos'"><span class="title-icon"><i class="fas fa-boxes-stacked"></i></span>Resumen de mis Productos</h1>
       <h1 class="page-title" *ngIf="vista === 'detalle' && seleccionada">
         <span class="title-icon"><i class="fas fa-file-invoice-dollar"></i></span>
         {{ seleccionada.modelo_bicicleta }} · {{ seleccionada.numero_serie }}
       </h1>
     </div>
-    <a *ngIf="vista === 'lista'" routerLink="/usuarios/solicitud-retroactivo/formulario" class="btn-nueva">
-      <i class="fas fa-plus"></i> Registrar nueva venta
-    </a>
+
+    <div class="header-count-center" *ngIf="vista === 'lista' && !cargando && solicitudes.length">
+      <span class="header-count-num">{{ solicitudes.length }}</span>
+      <span class="header-count-label">Solicitud{{ solicitudes.length !== 1 ? 'es' : '' }}</span>
+    </div>
+
+    <!-- Botones de Acción en el Encabezado -->
+    <div class="header-actions" *ngIf="vista === 'lista'">
+      <button type="button" class="btn-mis-productos" (click)="verMisProductos()">
+        <i class="fas fa-boxes-stacked"></i> Ver Mis Productos
+      </button>
+      <a routerLink="/usuarios/solicitud-retroactivo" class="btn-nueva">
+        <i class="fas fa-plus"></i> Registrar nueva venta
+      </a>
+    </div>
+
     <span *ngIf="vista === 'detalle' && seleccionada" class="badge-estatus badge-grande" [ngClass]="'badge-' + seleccionada.estatus">{{ seleccionada.estatus }}</span>
   </div>
 
@@ -31,7 +46,7 @@
     <div class="empty-state" *ngIf="!cargando && !solicitudes.length">
       <i class="fas fa-inbox fa-2x"></i>
       <p>Aún no has registrado ninguna solicitud.</p>
-      <a routerLink="/usuarios/solicitud-retroactivo/formulario" class="btn-nueva btn-nueva-inline">
+      <a routerLink="/usuarios/solicitud-retroactivo" class="btn-nueva btn-nueva-inline">
         <i class="fas fa-plus"></i> Registrar la primera
       </a>
     </div>
@@ -62,14 +77,15 @@
         <span class="filtro-count">{{ solicitudesFiltradas.length }} solicitud{{ solicitudesFiltradas.length !== 1 ? 'es' : '' }}</span>
       </div>
 
-      <!-- Tabla compacta -->
+      <!-- Tabla compacta general -->
       <div class="tabla-wrap">
         <table class="solicitudes-tabla">
           <thead>
             <tr>
-              <th>Modelo · Serie</th>
+              <th>Modelo</th>
               <th>Campaña</th>
               <th>Estatus</th>
+              <th>Nota de Crédito</th>
               <th>Precio</th>
               <th>Monto</th>
               <th>Fecha</th>
@@ -78,13 +94,23 @@
           </thead>
           <tbody>
             <tr *ngFor="let s of solicitudesPaginadas" class="tabla-row" (click)="verDetalle(s)">
-              <td class="col-principal">{{ s.modelo_bicicleta }} · {{ s.numero_serie }}</td>
+              <td class="col-principal">
+                <div class="modelo-serie-cell">
+                  <span class="ms-modelo">{{ s.modelo_bicicleta }}</span>
+                  <span class="ms-serie">Serie: {{ s.numero_serie }}</span>
+                </div>
+              </td>
               <td class="col-secundario">{{ s.nombre_formulario }}</td>
               <td class="col-estatus">
                 <span class="tc-badge"
                       [style.background]="colorEstatus(s.estatus) + '22'"
                       [style.color]="colorEstatus(s.estatus)"
                       [style.border-color]="colorEstatus(s.estatus) + '55'">{{ s.estatus }}</span>
+              </td>
+              <td class="col-estatus">
+                <span class="tc-badge" [ngClass]="estatusNotaCredito(s.nota_credito, s.nota_credito_estatus).clase">
+                  {{ estatusNotaCredito(s.nota_credito, s.nota_credito_estatus).texto }}
+                </span>
               </td>
               <td class="col-secundario">{{ s.precio_publico | currency:'USD':'$':'1.0-0' }}</td>
               <td class="col-monto">{{ s.monto_pagar | currency:'USD':'$':'1.2-2' }}</td>
@@ -115,7 +141,49 @@
     </ng-container>
   </ng-container>
 
-  <!-- ══════════════ VISTA DETALLE (igual que garantias-usuario) ══════════════ -->
+  <!-- ══════════════ VISTA PRODUCTOS (TABLA 3 COLUMNAS) ══════════════ -->
+  <ng-container *ngIf="vista === 'productos'">
+
+    <div *ngIf="cargando" class="cargando-spinner">
+      <div class="spinner"></div>
+      <p>Cargando tus productos...</p>
+    </div>
+
+    <div *ngIf="error" class="alert-error">{{ error }}</div>
+
+    <div class="empty-state" *ngIf="!cargando && !solicitudes.length">
+      <i class="fas fa-inbox fa-2x"></i>
+      <p>Aún no tienes productos asociados a tus solicitudes.</p>
+    </div>
+
+    <ng-container *ngIf="!cargando && solicitudes.length">
+      <div class="tabla-wrap">
+        <table class="solicitudes-tabla">
+          <thead>
+            <tr>
+              <th>Modelo</th>
+              <th>Número de Serie</th>
+              <th>Estatus Nota de Crédito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of solicitudes" class="tabla-row-static">
+              <td class="col-principal">{{ s.modelo_bicicleta }}</td>
+              <td class="col-secundario">{{ s.numero_serie }}</td>
+              <td class="col-estatus">
+                <span class="tc-badge" [ngClass]="estatusNotaCredito(s.nota_credito, s.nota_credito_estatus).clase">
+                  {{ estatusNotaCredito(s.nota_credito, s.nota_credito_estatus).texto }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+
+  </ng-container>
+
+  <!-- ══════════════ VISTA DETALLE ══════════════ -->
   <ng-container *ngIf="vista === 'detalle' && seleccionada as s">
 
     <!-- INFORMACIÓN DE LA VENTA -->
@@ -133,6 +201,7 @@
         <div><span class="ig-label">Meses Sin Intereses</span><span class="ig-value">{{ s.plazo_meses }} meses</span></div>
         <div><span class="ig-label">Precio Público</span><span class="ig-value">{{ s.precio_publico | currency:'USD':'$':'1.2-2' }}</span></div>
         <div><span class="ig-label">Monto de Retroactivo</span><span class="ig-value ig-value-accent">{{ s.monto_pagar | currency:'USD':'$':'1.2-2' }}</span></div>
+        <div><span class="ig-label">Nota de Crédito</span><span class="ig-value">{{ estatusNotaCredito(s.nota_credito, s.nota_credito_estatus).texto }}</span></div>
         <div><span class="ig-label">Registrada</span><span class="ig-value">{{ s.fecha_registro | date:'dd/MM/yyyy HH:mm' }}</span></div>
       </div>
     </div>
@@ -157,7 +226,7 @@
             <span class="val-status-chip pending" *ngIf="doc.estatus === 'pendiente'"><i class="fas fa-clock"></i> Pendiente</span>
           </a>
 
-          <!-- Reenvío inline: solo si este documento está rechazado -->
+          <!-- Reenvío inline -->
           <div class="doc-reenvio" *ngIf="doc.estatus === 'rechazado'">
             <label class="upload-label">
               <i class="fas fa-cloud-arrow-up"></i>
@@ -183,13 +252,10 @@
     <div class="detalle-card">
       <div class="card-title"><i class="fas fa-clock-rotate-left"></i> Historial de Cambios</div>
       <div class="timeline" *ngIf="s.historial?.length">
-        <div class="timeline-item" *ngFor="let item of s.historial" [attr.data-tipo]="item.tipo">
-          <div class="tl-dot"><i class="fas" [ngClass]="{
-            'fa-plus': item.tipo === 'creacion',
-            'fa-check-double': item.tipo === 'validacion',
-            'fa-dollar-sign': item.tipo === 'precio',
-            'fa-redo': item.tipo === 'reenvio'
-          }"></i></div>
+        <div class="timeline-item" *ngFor="let item of historialOrdenado(s.historial)">
+          <div class="tl-dot" [ngClass]="iconoHistorial(item).clase">
+            <i class="fas" [ngClass]="iconoHistorial(item).icono"></i>
+          </div>
           <div class="tl-content">
             <span class="tl-desc">{{ item.descripcion }}</span>
             <span class="tl-fecha">{{ item.fecha | date:'dd/MM/yyyy HH:mm' }}</span>

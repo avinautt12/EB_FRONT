@@ -6,23 +6,20 @@ import { RouterModule } from '@angular/router';
 import { TopBarUsuariosComponent } from '../../../components/top-bar-usuarios/top-bar-usuarios.component';
 import {
   SolicitudRetroactivoService,
-  SolicitudRetroactivo
+  SolicitudRetroactivo,
+  EstatusNotaCredito,
+  ItemHistorial
 } from '../../../services/solicitud-retroactivo.service';
 
-// GUÍA: colores de badge por estatus -- mismo patrón que COLOR_ESTATUS en
-// garantias-usuario.component.ts.
 const COLOR_ESTATUS: Record<string, string> = {
   pendiente: '#f0ad4e',
   validado:  '#4caf50',
   rechazado: '#e53935',
 };
 
-// GUÍA: mismo patrón de 2 estados que la vista de garantias-usuario (lista
-// <-> detalle), pero DENTRO de esta página en vez de navegar al formulario
-// -- info completa, estatus por archivo con preview, historial de cambios,
-// y reenvío inline de los archivos rechazados sin salir de aquí.
 @Component({
   selector: 'app-solicitud-retroactivo-seguimiento',
+  standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, TopBarUsuariosComponent],
   templateUrl: './solicitud-retroactivo-seguimiento.component.html',
   styleUrl: './solicitud-retroactivo-seguimiento.component.css'
@@ -32,7 +29,8 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
   error = '';
   solicitudes: SolicitudRetroactivo[] = [];
 
-  vista: 'lista' | 'detalle' = 'lista';
+  // Ampliamos el control de vistas para incluir la tabla de mis productos
+  vista: 'lista' | 'detalle' | 'productos' = 'lista';
   seleccionada: SolicitudRetroactivo | null = null;
 
   archivosNuevos: { [key: string]: File } = {};
@@ -40,7 +38,7 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
   errorReenvio = '';
   mensajeReenvioExito = '';
 
-  // ── Filtros y paginación de lista (mismo patrón que garantias-usuario) ──
+  // ── Filtros y paginación de lista ──
   busqueda = '';
   filtroEstatus = '';
   filtroCampana = '';
@@ -84,7 +82,62 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
     return COLOR_ESTATUS[estatus?.toLowerCase()] ?? '#888';
   }
 
-  // ── Filtrado y paginación de lista ───────────────────────────────────────────
+  // GUÍA: mismo fix que en el Gestor -- 'validacion' cubre validar,
+  // rechazar Y deshacer, antes salían las 3 idénticas (mismo check verde).
+  iconoHistorial(item: ItemHistorial): { icono: string; clase: string } {
+    const desc = (item.descripcion || '').toLowerCase();
+
+    if (item.tipo === 'creacion') return { icono: 'fa-plus', clase: 'tl-naranja' };
+    if (item.tipo === 'reenvio') return { icono: 'fa-redo', clase: 'tl-ambar' };
+    if (item.tipo === 'precio') return { icono: 'fa-dollar-sign', clase: 'tl-azul' };
+
+    if (item.tipo === 'nota_credito') {
+      if (desc.includes('validada')) return { icono: 'fa-shield-halved', clase: 'tl-verde' };
+      return { icono: 'fa-file-invoice-dollar', clase: 'tl-morado' };
+    }
+
+    if (item.tipo === 'validacion') {
+      if (desc.includes('deshecho')) return { icono: 'fa-rotate-left', clase: 'tl-gris' };
+      if (desc.includes('rechazado')) return { icono: 'fa-times', clase: 'tl-rojo' };
+      return { icono: 'fa-check', clase: 'tl-verde' };
+    }
+
+    return { icono: 'fa-circle', clase: 'tl-gris' };
+  }
+
+  // GUÍA: se guarda en orden cronológico (cada mutación hace .append en el
+  // backend), pero se muestra más reciente arriba -- mismo criterio que en
+  // el Gestor, para no ver primero lo más viejo al abrir el historial.
+  historialOrdenado(historial: ItemHistorial[] | undefined): ItemHistorial[] {
+    return historial ? [...historial].reverse() : [];
+  }
+
+  // GUÍA: BCYP captura la nota de crédito, pero Auditoría es quien la
+  // valida -- mostrar "Emitida" apenas se captura (antes de que Auditoría
+  // la revise) le hacía creer al cliente que ya estaba lista de verdad.
+  // "Emitida" ahora solo aparece cuando nota_credito_estatus === 'validada'.
+  estatusNotaCredito(nota: string | undefined, notaEstatus?: EstatusNotaCredito): { texto: string; clase: string } {
+    if (!nota || nota.trim() === '' || nota.trim() === '0') {
+      return { texto: 'En proceso', clase: 'badge-pendiente' };
+    }
+    if (notaEstatus === 'validada') {
+      return { texto: `Emitida (#${nota})`, clase: 'badge-validado' };
+    }
+    return { texto: `En validación (#${nota})`, clase: 'badge-pendiente' };
+  }
+
+  // ── Navegación de Vistas ───────────────────────────────────────────
+
+  verMisProductos(): void {
+    this.vista = 'productos';
+  }
+
+  volverALista(): void {
+    this.vista = 'lista';
+    this.seleccionada = null;
+  }
+
+  // ── Filtrado y paginación ───────────────────────────────────────────
 
   get campanasDisponibles(): string[] {
     const set = new Set(this.solicitudes.map(s => s.nombre_formulario).filter(Boolean));
@@ -135,7 +188,7 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
     this.paginaActual = 1;
   }
 
-  // ═══════════════ Vista de detalle ═══════════════
+  // ── Vista de detalle ──────────────────────────────────────────────────
 
   verDetalle(s: SolicitudRetroactivo): void {
     this.seleccionada = s;
@@ -143,11 +196,6 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
     this.archivosNuevos = {};
     this.errorReenvio = '';
     this.mensajeReenvioExito = '';
-  }
-
-  volverALista(): void {
-    this.vista = 'lista';
-    this.seleccionada = null;
   }
 
   documentos(s: SolicitudRetroactivo) {
@@ -158,8 +206,6 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
     }));
   }
 
-  // GUÍA: el backend regresa fecha_venta como string RFC ("Sat, 01 Aug 2026
-  // 00:00:00 GMT"), no ISO -- ver el mismo fix en solicitud-retroactivo.component.ts.
   private formatFechaISO(fecha: string): string {
     const d = new Date(fecha);
     return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
@@ -176,9 +222,6 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
     return this.docsRechazados(s).some(key => !this.archivosNuevos[key]);
   }
 
-  // GUÍA: el backend exige TODOS los archivos rechazados en un solo PUT (ver
-  // editar_venta en el backend) -- no se puede reenviar uno a la vez si hay
-  // más de uno marcado rechazado.
   reenviar(s: SolicitudRetroactivo): void {
     this.errorReenvio = '';
     if (this.faltanArchivosPorSeleccionar(s)) {

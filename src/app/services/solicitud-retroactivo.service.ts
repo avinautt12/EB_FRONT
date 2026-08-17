@@ -5,6 +5,10 @@ import { environment } from '../../environments/environment';
 
 export type EstatusSolicitud = 'pendiente' | 'validado' | 'rechazado';
 export type EstatusDocumento = 'pendiente' | 'valido' | 'rechazado';
+// GUÍA: estatus de la nota de crédito, separado del estatus general del
+// ticket -- BCYP la captura (queda 'pendiente'), Auditoría la valida con un
+// código (ver POST /nota-credito/<id>/validar). null = todavía no capturada.
+export type EstatusNotaCredito = 'pendiente' | 'validada' | null;
 
 export interface ArchivoSolicitud {
   key: string;
@@ -47,6 +51,7 @@ export interface SolicitudRetroactivo {
   archivos?: Record<string, ArchivoSolicitud>;
   historial?: ItemHistorial[];
   nota_credito: string
+  nota_credito_estatus?: EstatusNotaCredito;
   fecha_registro: string;
 }
 
@@ -87,6 +92,25 @@ export interface Tienda {
   cliente_id: number;
 }
 
+export interface MarcaCampania {
+  id: number;
+  nombre: string;
+}
+
+// GUÍA: producto detalle (variante/SKU) ligado a una campaña -- lo que
+// puede elegirse como "Modelo" en el formulario de venta una vez elegida
+// la campaña. Mismo shape que ProductoDetalle del catálogo de campañas.
+export interface ProductoCampania {
+  id: number;
+  sku: string;
+  modelo: string;
+  codigo: string;
+  talla: string;
+  color: string;
+  marca: string | null;
+  marca_id: number | null;
+}
+
 // GUÍA: HttpClient ya manda el JWT solo (interceptors/auth.interceptor.ts),
 // no hace falta armar headers de Authorization a mano aquí.
 @Injectable({ providedIn: 'root' })
@@ -115,6 +139,10 @@ export class SolicitudRetroactivoService {
     return this.http.post(`${this.base}/nota-credito/${id}`, { nota_credito: notaCredito });
   }
 
+  validarNotaCredito(id: number, codigo: string): Observable<any> {
+    return this.http.post(`${this.base}/nota-credito/${id}/validar`, { codigo });
+  }
+
   misSolicitudes(): Observable<SolicitudRetroactivo[]> {
     return this.http.get<SolicitudRetroactivo[]>(`${this.base}/mis-solicitudes`);
   }
@@ -129,5 +157,13 @@ export class SolicitudRetroactivoService {
 
   buscarTiendas(clienteId: number): Observable<Tienda[]> {
     return this.http.get<Tienda[]>(`${this.base}/tiendas/${clienteId}`);
+  }
+
+  marcasPorCampania(idCampania: number): Observable<MarcaCampania[]> {
+    return this.http.get<MarcaCampania[]>(`${this.base}/campania/${idCampania}/marcas`);
+  }
+
+  productosPorCampania(idCampania: number): Observable<ProductoCampania[]> {
+    return this.http.get<ProductoCampania[]>(`${this.base}/campania/${idCampania}/productos`);
   }
 }
