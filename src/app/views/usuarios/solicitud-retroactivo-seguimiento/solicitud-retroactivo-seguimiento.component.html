@@ -15,6 +15,11 @@
       </h1>
     </div>
 
+    <div class="header-count-center" *ngIf="vista === 'lista' && !cargando && solicitudes.length">
+      <span class="header-count-num">{{ solicitudes.length }}</span>
+      <span class="header-count-label">Solicitud{{ solicitudes.length !== 1 ? 'es' : '' }}</span>
+    </div>
+
     <!-- Botones de Acción en el Encabezado -->
     <div class="header-actions" *ngIf="vista === 'lista'">
       <button type="button" class="btn-mis-productos" (click)="verMisProductos()">
@@ -77,7 +82,7 @@
         <table class="solicitudes-tabla">
           <thead>
             <tr>
-              <th>Modelo · Serie</th>
+              <th>Modelo</th>
               <th>Campaña</th>
               <th>Estatus</th>
               <th>Nota de Crédito</th>
@@ -89,7 +94,12 @@
           </thead>
           <tbody>
             <tr *ngFor="let s of solicitudesPaginadas" class="tabla-row" (click)="verDetalle(s)">
-              <td class="col-principal">{{ s.modelo_bicicleta }} · {{ s.numero_serie }}</td>
+              <td class="col-principal">
+                <div class="modelo-serie-cell">
+                  <span class="ms-modelo">{{ s.modelo_bicicleta }}</span>
+                  <span class="ms-serie">Serie: {{ s.numero_serie }}</span>
+                </div>
+              </td>
               <td class="col-secundario">{{ s.nombre_formulario }}</td>
               <td class="col-estatus">
                 <span class="tc-badge"
@@ -98,8 +108,8 @@
                       [style.border-color]="colorEstatus(s.estatus) + '55'">{{ s.estatus }}</span>
               </td>
               <td class="col-estatus">
-                <span class="tc-badge" [ngClass]="estatusNotaCredito(s.nota_credito).clase">
-                  {{ estatusNotaCredito(s.nota_credito).texto }}
+                <span class="tc-badge" [ngClass]="estatusNotaCredito(s.nota_credito, s.nota_credito_estatus).clase">
+                  {{ estatusNotaCredito(s.nota_credito, s.nota_credito_estatus).texto }}
                 </span>
               </td>
               <td class="col-secundario">{{ s.precio_publico | currency:'USD':'$':'1.0-0' }}</td>
@@ -161,8 +171,8 @@
               <td class="col-principal">{{ s.modelo_bicicleta }}</td>
               <td class="col-secundario">{{ s.numero_serie }}</td>
               <td class="col-estatus">
-                <span class="tc-badge" [ngClass]="estatusNotaCredito(s.nota_credito).clase">
-                  {{ estatusNotaCredito(s.nota_credito).texto }}
+                <span class="tc-badge" [ngClass]="estatusNotaCredito(s.nota_credito, s.nota_credito_estatus).clase">
+                  {{ estatusNotaCredito(s.nota_credito, s.nota_credito_estatus).texto }}
                 </span>
               </td>
             </tr>
@@ -191,7 +201,7 @@
         <div><span class="ig-label">Meses Sin Intereses</span><span class="ig-value">{{ s.plazo_meses }} meses</span></div>
         <div><span class="ig-label">Precio Público</span><span class="ig-value">{{ s.precio_publico | currency:'USD':'$':'1.2-2' }}</span></div>
         <div><span class="ig-label">Monto de Retroactivo</span><span class="ig-value ig-value-accent">{{ s.monto_pagar | currency:'USD':'$':'1.2-2' }}</span></div>
-        <div><span class="ig-label">Nota de Crédito</span><span class="ig-value">{{ s.nota_credito ? ('#' + s.nota_credito) : 'En proceso' }}</span></div>
+        <div><span class="ig-label">Nota de Crédito</span><span class="ig-value">{{ estatusNotaCredito(s.nota_credito, s.nota_credito_estatus).texto }}</span></div>
         <div><span class="ig-label">Registrada</span><span class="ig-value">{{ s.fecha_registro | date:'dd/MM/yyyy HH:mm' }}</span></div>
       </div>
     </div>
@@ -242,15 +252,9 @@
     <div class="detalle-card">
       <div class="card-title"><i class="fas fa-clock-rotate-left"></i> Historial de Cambios</div>
       <div class="timeline" *ngIf="s.historial?.length">
-        <div class="timeline-item" *ngFor="let item of s.historial" [attr.data-tipo]="item.tipo">
-          <div class="tl-dot">
-            <i class="fas" [ngClass]="{
-              'fa-plus': item.tipo === 'creacion',
-              'fa-check-double': item.tipo === 'validacion',
-              'fa-dollar-sign': item.tipo === 'precio',
-              'fa-file-invoice': item.tipo === 'nota_credito',
-              'fa-redo': item.tipo === 'reenvio'
-            }"></i>
+        <div class="timeline-item" *ngFor="let item of historialOrdenado(s.historial)">
+          <div class="tl-dot" [ngClass]="iconoHistorial(item).clase">
+            <i class="fas" [ngClass]="iconoHistorial(item).icono"></i>
           </div>
           <div class="tl-content">
             <span class="tl-desc">{{ item.descripcion }}</span>

@@ -39,6 +39,12 @@
   gap: 14px;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
 .page-header h2, .form-header h2 {
   margin: 0;
   color: var(--t1);
@@ -241,15 +247,22 @@ select::-webkit-scrollbar-thumb,
   border-radius: 14px;
   padding: 20px 22px;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
-  opacity: 0;
-  transform: translateY(10px);
-  animation: card-in 420ms var(--ease-out) forwards;
+  opacity: 1;
+  transition: opacity 420ms var(--ease-out);
   overflow: visible !important;
 }
 
-@keyframes card-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* Nota: se usa @starting-style + transition (no animation con
+   fill-mode: forwards) a propósito. Un "forwards" fill queda "en efecto"
+   indefinidamente para el navegador, así que la tarjeta se queda promovida
+   a su propio stacking context aun después de terminar -- eso atrapa el
+   z-index del calendario (app-date-picker) dentro de ella en vez de
+   dejarlo pintarse encima de las tarjetas siguientes. Una transition ya
+   terminada no arrastra ese problema. */
+@starting-style {
+  .card-section, .table-wrap {
+    opacity: 0;
+  }
 }
 
 .section-title {
@@ -339,6 +352,7 @@ select::-webkit-scrollbar-thumb,
 
 .form-group input[type="text"],
 .form-group input[type="date"],
+.form-group input[type="number"],
 .form-group select {
   background: transparent !important;
   border: none !important;
@@ -402,6 +416,26 @@ select::-webkit-scrollbar-thumb,
   margin-top: 2px;
 }
 
+/* --- CAMPOS ESTILO GARANTÍAS (usados para las fechas de la campaña) --- */
+.field-group { display: flex; flex-direction: column; gap: 6px; }
+.field-label {
+  font-size: 0.88rem; font-weight: 600; color: var(--t2);
+}
+.field-label.required::after {
+  content: ' *'; color: var(--orange);
+}
+.field-input {
+  background: #1a1a1a; border: 1px solid var(--border2);
+  border-radius: 8px; padding: 10px 14px;
+  color: var(--t1); font-size: 0.95rem;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none; width: 100%; box-sizing: border-box;
+}
+.field-input:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(235,94,40,0.12);
+}
+
 /* --- TABLAS --- */
 .table-wrap {
   padding: 0;
@@ -439,6 +473,21 @@ select::-webkit-scrollbar-thumb,
   text-align: center;
 }
 
+/* --- TABLA DE PRODUCTOS DE LA CAMPAÑA: scroll interno + header pegajoso.
+   Con carga masiva por SKU la lista puede llegar a cientos de filas; sin
+   esto la página crece indefinidamente y el botón de guardar termina
+   inalcanzable. --- */
+.productos-table-wrap {
+  max-height: 420px;
+  overflow: auto !important;
+}
+
+.productos-table-wrap thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
 /* BADGES (Estados) */
 .badge {
   font-size: 0.75rem;
@@ -456,6 +505,19 @@ select::-webkit-scrollbar-thumb,
 .badge-inactive {
   background: rgba(255, 255, 255, 0.08);
   color: var(--t3);
+}
+
+/* Activa=1 en BD pero fuera de rango de fechas -- para no mostrarla como
+   "Activa" cuando ya no aparece en el formulario de venta (que sí filtra
+   por vigencia). */
+.badge-vencida {
+  background: rgba(225, 29, 72, 0.12);
+  color: #ff6b81;
+}
+
+.badge-proxima {
+  background: rgba(92, 155, 214, 0.15);
+  color: #7ab8ec;
 }
 
 /* ACCIONES EN TABLA */
@@ -566,14 +628,26 @@ select::-webkit-scrollbar-thumb,
   cursor: pointer;
 }
 
-/* --- FOOTER FORMULARIO --- */
+/* --- FOOTER FORMULARIO ---
+   Fijo al fondo del viewport a propósito: con carga masiva de SKUs o
+   varios plazos MSI el formulario puede volverse muy largo, y sin esto
+   "Crear Campaña" quedaba al final físico de la página, inalcanzable sin
+   scrollear todo. Se queda visible sin importar cuánto crezca el contenido
+   de arriba. */
 .form-footer {
+  position: sticky;
+  bottom: 0;
   max-width: 900px;
-  margin: 0 auto;
+  margin: 1.2rem auto 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 16px;
+  padding: 16px 22px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.4);
+  z-index: 20;
 }
 
 .saving-indicator {
@@ -593,3 +667,234 @@ select::-webkit-scrollbar-thumb,
 
 .text-right { text-align: right; }
 .margin-0 { margin: 0; }
+
+/* --- CHIPS DE MSI EN LA TABLA DE LISTADO --- */
+.msi-chip {
+  display: inline-block;
+  background: var(--orange-g);
+  border: 1px solid rgba(235, 94, 40, 0.3);
+  color: var(--orange);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  margin: 2px 4px 2px 0;
+  white-space: nowrap;
+}
+
+/* --- CHECKLIST DE PLAZOS MSI EN EL FORMULARIO DE CAMPAÑA --- */
+.msi-ayuda {
+  font-size: 0.8rem;
+  color: var(--t3);
+  margin: -6px 0 14px;
+}
+
+.msi-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.msi-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 14px;
+  background: #181818;
+  border: 1px solid #2d2d2d;
+  border-radius: 10px;
+  transition: border-color 200ms var(--ease-out), background-color 200ms var(--ease-out);
+}
+
+.msi-item.activo {
+  border-color: rgba(235, 94, 40, 0.5);
+  background: var(--orange-g);
+}
+
+.msi-item-vacio {
+  color: var(--t3);
+  font-size: 0.85rem;
+  justify-content: center;
+  border-style: dashed;
+}
+
+.msi-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+
+.msi-toggle input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.msi-toggle-visual {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid var(--border2);
+  background: transparent;
+  position: relative;
+  transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+
+.msi-toggle input[type="checkbox"]:checked + .msi-toggle-visual {
+  background: var(--orange);
+  border-color: var(--orange);
+}
+
+.msi-toggle input[type="checkbox"]:checked + .msi-toggle-visual::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid #181818;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.msi-toggle:active .msi-toggle-visual {
+  transform: scale(0.9);
+}
+
+.msi-toggle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.msi-toggle-info strong {
+  color: var(--t1);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.msi-toggle-info small {
+  color: var(--t3);
+  font-size: 0.72rem;
+}
+
+.msi-porcentaje-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #101010;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 10px;
+  flex-shrink: 0;
+  animation: msi-porcentaje-in 200ms var(--ease-out);
+}
+
+@keyframes msi-porcentaje-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.msi-porcentaje-input input {
+  width: 56px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.msi-porcentaje-input input::-webkit-inner-spin-button,
+.msi-porcentaje-input input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.msi-porcentaje-input span {
+  color: var(--t3);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.btn-link-nuevo-plazo {
+  background: none;
+  border: none;
+  color: var(--orange);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+  padding: 0;
+  transition: color 180ms var(--ease-out);
+}
+.btn-link-nuevo-plazo:hover { color: var(--t1); }
+
+.msi-nuevo-plazo-box {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 14px;
+  background: var(--card2);
+  border: 1px dashed var(--border2);
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+.msi-nuevo-plazo-box .form-group {
+  flex: 1;
+  min-width: 160px;
+  margin: 0;
+}
+
+/* --- CARGA MASIVA DE PRODUCTOS POR SKU --- */
+.section-title-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sku-masivo-box {
+  margin-bottom: 14px;
+}
+
+.sku-masivo-campo {
+  flex: 1;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sku-masivo-textarea {
+  resize: vertical;
+  font-family: inherit;
+  min-height: 90px;
+}
+
+.sku-no-encontrados {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(225, 29, 72, 0.1);
+  border: 1px solid rgba(225, 29, 72, 0.3);
+  color: #ff9eae;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  margin-bottom: 14px;
+}
+
+.sku-no-encontrados i {
+  margin-top: 2px;
+  flex-shrink: 0;
+}

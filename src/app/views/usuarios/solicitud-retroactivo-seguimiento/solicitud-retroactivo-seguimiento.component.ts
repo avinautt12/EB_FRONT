@@ -6,7 +6,9 @@ import { RouterModule } from '@angular/router';
 import { TopBarUsuariosComponent } from '../../../components/top-bar-usuarios/top-bar-usuarios.component';
 import {
   SolicitudRetroactivoService,
-  SolicitudRetroactivo
+  SolicitudRetroactivo,
+  EstatusNotaCredito,
+  ItemHistorial
 } from '../../../services/solicitud-retroactivo.service';
 
 const COLOR_ESTATUS: Record<string, string> = {
@@ -80,12 +82,48 @@ export class SolicitudRetroactivoSeguimientoComponent implements OnInit {
     return COLOR_ESTATUS[estatus?.toLowerCase()] ?? '#888';
   }
 
-  // Helper para evaluar y estructurar el estatus de la Nota de Crédito
-  estatusNotaCredito(nota: string | undefined): { texto: string; clase: string } {
-    if (nota && nota.trim() !== '' && nota.trim() !== '0') {
+  // GUÍA: mismo fix que en el Gestor -- 'validacion' cubre validar,
+  // rechazar Y deshacer, antes salían las 3 idénticas (mismo check verde).
+  iconoHistorial(item: ItemHistorial): { icono: string; clase: string } {
+    const desc = (item.descripcion || '').toLowerCase();
+
+    if (item.tipo === 'creacion') return { icono: 'fa-plus', clase: 'tl-naranja' };
+    if (item.tipo === 'reenvio') return { icono: 'fa-redo', clase: 'tl-ambar' };
+    if (item.tipo === 'precio') return { icono: 'fa-dollar-sign', clase: 'tl-azul' };
+
+    if (item.tipo === 'nota_credito') {
+      if (desc.includes('validada')) return { icono: 'fa-shield-halved', clase: 'tl-verde' };
+      return { icono: 'fa-file-invoice-dollar', clase: 'tl-morado' };
+    }
+
+    if (item.tipo === 'validacion') {
+      if (desc.includes('deshecho')) return { icono: 'fa-rotate-left', clase: 'tl-gris' };
+      if (desc.includes('rechazado')) return { icono: 'fa-times', clase: 'tl-rojo' };
+      return { icono: 'fa-check', clase: 'tl-verde' };
+    }
+
+    return { icono: 'fa-circle', clase: 'tl-gris' };
+  }
+
+  // GUÍA: se guarda en orden cronológico (cada mutación hace .append en el
+  // backend), pero se muestra más reciente arriba -- mismo criterio que en
+  // el Gestor, para no ver primero lo más viejo al abrir el historial.
+  historialOrdenado(historial: ItemHistorial[] | undefined): ItemHistorial[] {
+    return historial ? [...historial].reverse() : [];
+  }
+
+  // GUÍA: BCYP captura la nota de crédito, pero Auditoría es quien la
+  // valida -- mostrar "Emitida" apenas se captura (antes de que Auditoría
+  // la revise) le hacía creer al cliente que ya estaba lista de verdad.
+  // "Emitida" ahora solo aparece cuando nota_credito_estatus === 'validada'.
+  estatusNotaCredito(nota: string | undefined, notaEstatus?: EstatusNotaCredito): { texto: string; clase: string } {
+    if (!nota || nota.trim() === '' || nota.trim() === '0') {
+      return { texto: 'En proceso', clase: 'badge-pendiente' };
+    }
+    if (notaEstatus === 'validada') {
       return { texto: `Emitida (#${nota})`, clase: 'badge-validado' };
     }
-    return { texto: 'En proceso', clase: 'badge-pendiente' };
+    return { texto: `En validación (#${nota})`, clase: 'badge-pendiente' };
   }
 
   // ── Navegación de Vistas ───────────────────────────────────────────

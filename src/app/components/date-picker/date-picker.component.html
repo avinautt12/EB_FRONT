@@ -5,7 +5,7 @@
        class="dr-trigger"
        [class.dr-active]="mostrarCalendario"
        [class.dr-filled]="tieneValor">
-    <button type="button" class="dr-cal-btn" (click)="toggleCalendario($event)">
+    <button type="button" class="dr-cal-btn" (click)="toggleCalendario()">
       <i class="fas fa-calendar-alt"></i>
     </button>
     <input class="dr-text-input"
@@ -26,7 +26,7 @@
           class="dr-trigger"
           [class.dr-active]="mostrarCalendario"
           [class.dr-filled]="tieneValor"
-          (click)="toggleCalendario($event)">
+          (click)="toggleCalendario()">
     <i class="fas fa-calendar-alt dr-cal-icon"></i>
     <span class="dr-placeholder" *ngIf="!fechaDesde && !fechaHasta">{{ placeholder }}</span>
     <ng-container *ngIf="fechaDesde || fechaHasta">

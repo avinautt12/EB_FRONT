@@ -11,7 +11,12 @@
   <!-- VISTA 1: LISTADO DE CAMPAÑAS -->
   <div *ngIf="!modoFormulario">
     <div class="page-header">
-      <h2>Campañas de Retroactivos</h2>
+      <div class="header-left">
+        <button type="button" class="btn-back" routerLink="/usuarios/solicitud-retroactivo">
+          &larr; Volver
+        </button>
+        <h2>Campañas de Retroactivos</h2>
+      </div>
       <button type="button" class="btn btn-primary" (click)="nuevaCampania()">
         + Nueva Campaña
       </button>
@@ -54,12 +59,13 @@
           <tr *ngFor="let c of campaniasFiltradas">
             <td><strong>{{ c.nombre }}</strong></td>
             <td>{{ c.fecha_inicio | date:'dd/MM/yyyy' }} - {{ c.fecha_fin | date:'dd/MM/yyyy' }}</td>
-            <td>{{ c.plazo_meses }} Meses ({{ c.porcentaje }}%)</td>
-            <td><span class="badge-count">{{ c.productos?.length || 0 }} SKUs</span></td>
-            <td class="text-center">
-              <span class="badge" [ngClass]="c.activa ? 'badge-active' : 'badge-inactive'">
-                {{ c.activa ? 'Activa' : 'Inactiva' }}
-              </span>
+            <td>
+              <span class="msi-chip" *ngFor="let m of c.msi">{{ m.plazo_meses }}m ({{ m.porcentaje }}%)</span>
+              <span *ngIf="!c.msi.length">—</span>
+            </td>
+            <td><span class="badge-count">{{ c.productos.length || 0 }} SKUs</span></td>
+            <td class="text-center" *ngIf="estadoCampania(c) as estado">
+              <span class="badge" [ngClass]="estado.clase">{{ estado.texto }}</span>
             </td>
             <td class="td-actions">
               <button type="button" class="btn-action" (click)="editarCampania(c)" title="Editar">✏️</button>
@@ -103,25 +109,82 @@
           <input id="formNombre" type="text" [(ngModel)]="formNombre" placeholder="Ej. Buen Fin 2026" />
         </div>
 
-        <div class="form-group">
-          <label for="formFechaInicio">Fecha Inicio *</label>
-          <input id="formFechaInicio" type="date" [(ngModel)]="formFechaInicio" />
+        <div class="field-group">
+          <label class="field-label required">Fecha Inicio</label>
+          <app-date-picker mode="single" placeholder="dd/mm/aaaa" [value]="formFechaInicio" (dateChange)="formFechaInicio = $event"></app-date-picker>
         </div>
 
-        <div class="form-group">
-          <label for="formFechaFin">Fecha Fin *</label>
-          <input id="formFechaFin" type="date" [(ngModel)]="formFechaFin" />
+        <div class="field-group">
+          <label class="field-label required">Fecha Fin</label>
+          <app-date-picker mode="single" placeholder="dd/mm/aaaa" [value]="formFechaFin" (dateChange)="formFechaFin = $event"></app-date-picker>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección Plazos MSI de la Campaña -->
+    <div class="card-section">
+      <div class="section-title">
+        <div class="title-left">
+          <i class="fas fa-percent"></i>
+          <span>Plazos MSI y % retroactivo *</span>
+          <span class="badge-count">{{ formMsiSeleccionados.length }} ligados</span>
+        </div>
+      </div>
+
+      <p class="msi-ayuda">Activa cada plazo que aplique a esta campaña y captura el % retroactivo correspondiente.</p>
+
+      <div class="msi-lista">
+        <div class="msi-item" *ngFor="let m of msiList" [class.activo]="estaMsiSeleccionado(m.id)">
+          <label class="msi-toggle">
+            <input
+              type="checkbox"
+              [checked]="estaMsiSeleccionado(m.id)"
+              (change)="toggleMsiSeleccionado(m, $any($event.target).checked)"
+            />
+            <span class="msi-toggle-visual"></span>
+            <span class="msi-toggle-info">
+              <strong>{{ m.plazo_meses }} Meses</strong>
+              <small>Catálogo: {{ m.porcentaje }}% base</small>
+            </span>
+          </label>
+
+          <div class="msi-porcentaje-input" *ngIf="estaMsiSeleccionado(m.id)">
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              [ngModel]="obtenerPorcentajeSeleccionado(m.id)"
+              (ngModelChange)="actualizarPorcentajeSeleccionado(m.id, $event)"
+              placeholder="%"
+            />
+            <span>%</span>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label for="formMsi">Plan MSI *</label>
-          <select id="formMsi" [(ngModel)]="formMsiId">
-            <option [ngValue]="null" disabled selected>Selecciona MSI...</option>
-            <option *ngFor="let m of msiList" [value]="m.id">
-              {{ m.plazo_meses }} Meses ({{ m.porcentaje }}%)
-            </option>
-          </select>
+        <div class="msi-item msi-item-vacio" *ngIf="msiList.length === 0">
+          <span>No hay plazos MSI en el catálogo todavía. Crea el primero abajo.</span>
         </div>
+      </div>
+
+      <!-- Crear un plazo nuevo si no existe en el catálogo -->
+      <button type="button" class="btn-link-nuevo-plazo" (click)="mostrarNuevoPlazo = !mostrarNuevoPlazo">
+        {{ mostrarNuevoPlazo ? '– Cancelar' : '+ ¿No está el plazo que necesitas? Crear uno nuevo' }}
+      </button>
+
+      <div class="msi-nuevo-plazo-box" *ngIf="mostrarNuevoPlazo">
+        <div class="form-group">
+          <label for="nuevoPlazoMeses">Meses</label>
+          <input id="nuevoPlazoMeses" type="number" min="1" [(ngModel)]="nuevoPlazoMeses" placeholder="Ej. 24" />
+        </div>
+        <div class="form-group">
+          <label for="nuevoPlazoPorcentajeBase">% base (catálogo)</label>
+          <input id="nuevoPlazoPorcentajeBase" type="number" min="0" max="100" step="0.01"
+                 [(ngModel)]="nuevoPlazoPorcentajeBase" placeholder="Ej. 20" />
+        </div>
+        <button type="button" class="btn btn-primary" [disabled]="creandoPlazo" (click)="crearNuevoPlazo()">
+          {{ creandoPlazo ? 'Creando...' : 'Crear plazo' }}
+        </button>
       </div>
     </div>
 
@@ -133,13 +196,40 @@
           <span>Productos asociados</span>
           <span class="badge-count">{{ selectedProductos.length }} SKUs</span>
         </div>
-        <button type="button" class="btn btn-secondary" (click)="abrirModalCatalogo()">
-          🔍 Seleccionar del catálogo
+        <div class="section-title-actions">
+          <button type="button" class="btn btn-secondary" (click)="mostrarCargaSku = !mostrarCargaSku">
+            📋 Cargar por SKU
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="abrirModalCatalogo()">
+            🔍 Seleccionar del catálogo
+          </button>
+        </div>
+      </div>
+
+      <!-- Carga masiva de productos pegando una lista de SKUs -->
+      <div class="msi-nuevo-plazo-box sku-masivo-box" *ngIf="mostrarCargaSku">
+        <div class="sku-masivo-campo">
+          <label for="textoSkusMasivos" class="field-label">Pega los SKUs (separados por salto de línea, coma o espacio)</label>
+          <textarea
+            id="textoSkusMasivos"
+            class="field-input sku-masivo-textarea"
+            rows="4"
+            [(ngModel)]="textoSkusMasivos"
+            placeholder="Ej.&#10;SCT-12345&#10;SCT-12346, SCT-12347"
+          ></textarea>
+        </div>
+        <button type="button" class="btn btn-primary" [disabled]="cargandoSkus" (click)="cargarProductosPorSku()">
+          {{ cargandoSkus ? 'Buscando...' : 'Buscar y agregar' }}
         </button>
       </div>
 
+      <div class="sku-no-encontrados" *ngIf="skusNoEncontrados.length > 0">
+        <i class="fas fa-triangle-exclamation"></i>
+        <span>No se encontraron estos SKUs en el catálogo: {{ skusNoEncontrados.join(', ') }}</span>
+      </div>
+
       <!-- Tabla de Productos Seleccionados -->
-      <div class="table-wrap" *ngIf="selectedProductos.length > 0; else emptyProductos">
+      <div class="table-wrap productos-table-wrap" *ngIf="selectedProductos.length > 0; else emptyProductos">
         <table class="data-table">
           <thead>
             <tr>

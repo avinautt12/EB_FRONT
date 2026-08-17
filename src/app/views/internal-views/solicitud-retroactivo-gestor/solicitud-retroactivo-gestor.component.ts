@@ -39,6 +39,19 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
   filtroCampana = '';
   ordenFecha: 'asc' | 'desc' = 'desc';
 
+  // GUÍA: la Nota de Crédito es un flujo de 2 roles separados del estatus
+  // general del ticket -- BCYP captura el texto ('sin_capturar' ->
+  // 'pendiente'), Auditoría la valida ('pendiente' -> 'validada'). Este
+  // filtro deja que cada quien encuentre rápido lo que le toca hacer sin
+  // tener que abrir cada solicitud a revisar.
+  filtroNotaCredito: 'todos' | 'sin_capturar' | 'pendiente' | 'validada' = 'todos';
+
+  private readonly colorPorNotaCredito: Record<string, string> = {
+    sin_capturar: '#7a7168',
+    pendiente: '#f59e0b',
+    validada: '#4caf50'
+  };
+
   private readonly colorPorEstatus: Record<string, string> = {
     pendiente: '#f59e0b',
     validado: '#4caf50',
@@ -60,6 +73,13 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
   errorNotaCredito = '';
   usuarioActual = 'Usuario';
 
+  // GUÍA: BCYP captura la nota de crédito (arriba), pero solo Auditoría
+  // puede validarla -- por eso requiere un código numérico aparte, no basta
+  // con estar logueado como admin. Mismo patrón visual que el diálogo OTP
+  // de proyecciones-tab, pero self-contained (no usa el sistema de OTP por
+  // usuario/expiración de ese módulo, que es para otro caso de uso).
+  codigoAuditoriaDialog = { abierto: false, codigo: '', error: '', verificando: false };
+
   etiquetasDoc: Record<string, string> = {
     ticket_compra: 'Ticket de compra',
     voucher: 'Voucher de pago',
@@ -72,6 +92,39 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
     private authService: AuthService,
     private route: ActivatedRoute
   ) {}
+
+  // GUÍA: antes el ícono/color del timeline dependía solo de item.tipo, y
+  // 'validacion' cubre validar, rechazar Y deshacer -- las 3 acciones salían
+  // idénticas (mismo check verde), imposible distinguir a simple vista.
+  // Ahora también mira la descripción para diferenciar el resultado real.
+  iconoHistorial(item: ItemHistorial): { icono: string; clase: string } {
+    const desc = (item.descripcion || '').toLowerCase();
+
+    if (item.tipo === 'creacion') return { icono: 'fa-plus', clase: 'tl-naranja' };
+    if (item.tipo === 'reenvio') return { icono: 'fa-redo', clase: 'tl-ambar' };
+    if (item.tipo === 'precio') return { icono: 'fa-dollar-sign', clase: 'tl-azul' };
+
+    if (item.tipo === 'nota_credito') {
+      if (desc.includes('validada')) return { icono: 'fa-shield-halved', clase: 'tl-verde' };
+      return { icono: 'fa-file-invoice-dollar', clase: 'tl-morado' };
+    }
+
+    if (item.tipo === 'validacion') {
+      if (desc.includes('deshecho')) return { icono: 'fa-rotate-left', clase: 'tl-gris' };
+      if (desc.includes('rechazado')) return { icono: 'fa-times', clase: 'tl-rojo' };
+      return { icono: 'fa-check', clase: 'tl-verde' };
+    }
+
+    return { icono: 'fa-circle', clase: 'tl-gris' };
+  }
+
+  // GUÍA: se guarda en orden cronológico (cada mutación hace .append en el
+  // backend), pero se muestra más reciente arriba -- es lo que se espera
+  // ver primero al abrir el historial de un ticket. No se toca el arreglo
+  // original ni cómo se guarda, solo el orden de despliegue.
+  historialOrdenado(historial: ItemHistorial[] | undefined): ItemHistorial[] {
+    return historial ? [...historial].reverse() : [];
+  }
 
   ngOnInit(): void {
     this.usuarioActual = this.authService.getUserName() || 'Usuario';
@@ -131,6 +184,7 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
     const resultado = this.solicitudes.filter(s => {
       if (this.filtroEstatus !== 'todos' && s.estatus !== this.filtroEstatus) return false;
       if (this.filtroCampana && s.nombre_formulario !== this.filtroCampana) return false;
+      if (this.filtroNotaCredito !== 'todos' && this.estadoNotaCredito(s) !== this.filtroNotaCredito) return false;
       if (!termino) return true;
       return s.nombre_completo.toLowerCase().includes(termino)
         || s.numero_serie.toLowerCase().includes(termino)
@@ -143,6 +197,33 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
 
   toggleOrdenFecha(): void {
     this.ordenFecha = this.ordenFecha === 'desc' ? 'asc' : 'desc';
+  }
+
+  estadoNotaCredito(s: SolicitudRetroactivo): 'sin_capturar' | 'pendiente' | 'validada' {
+    if (!s.nota_credito) return 'sin_capturar';
+    return s.nota_credito_estatus === 'validada' ? 'validada' : 'pendiente';
+  }
+
+  /** Conteo GLOBAL de Nota de Crédito -- a propósito NO depende de los
+   * filtros activos (a diferencia de conteoPorEstatus), para que BCYP/
+   * Auditoría siempre vean de un vistazo cuánto falta sin importar qué
+   * filtro tengan puesto en ese momento. */
+  get conteoNotaCredito(): { estado: 'sin_capturar' | 'pendiente' | 'validada'; label: string; count: number; color: string }[] {
+    const conteo = { sin_capturar: 0, pendiente: 0, validada: 0 };
+    for (const s of this.solicitudes) {
+      conteo[this.estadoNotaCredito(s)]++;
+    }
+    const etiquetas: Record<'sin_capturar' | 'pendiente' | 'validada', string> = {
+      sin_capturar: 'Sin capturar (BCYP)',
+      pendiente: 'Por validar (Auditoría)',
+      validada: 'Validadas'
+    };
+    return (['sin_capturar', 'pendiente', 'validada'] as const).map(estado => ({
+      estado,
+      label: etiquetas[estado],
+      count: conteo[estado],
+      color: this.colorPorNotaCredito[estado]
+    }));
   }
 
   /** Conteo por estatus de las solicitudes actualmente filtradas/buscadas (no del total sin filtrar). */
@@ -203,8 +284,14 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
 
     this.service.validarDocumento(solicitud.id, doc, estatus as 'valido' | 'rechazado').subscribe({
       next: (res) => {
+        // GUÍA: NO asumir que el resultado es siempre `estatus` -- el
+        // backend hace toggle (click sobre el mismo estatus ya puesto lo
+        // deshace, vuelve a 'pendiente'). El estatus real por documento es
+        // el que regresa res.validacion_docs, no el que se pidió. Asumirlo
+        // era el bug: la UI se quedaba mostrando "validado" después de un
+        // click que en realidad lo había deshecho, hasta recargar la página.
         if (solicitud.archivos?.[doc]) {
-          solicitud.archivos[doc].estatus = estatus;
+          solicitud.archivos[doc].estatus = res.validacion_docs?.[doc] ?? 'pendiente';
         }
         solicitud.validacion_docs = res.validacion_docs;
         solicitud.estatus = res.estatus;
@@ -265,6 +352,9 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
     this.service.corregirNotaCredito(solicitud.id, valor).subscribe({
       next: (res) => {
         solicitud.nota_credito = this.normalizarNotaCredito(String(res.nota_credito));
+        // GUÍA: capturar/editar la NC siempre la deja 'pendiente' de
+        // validación de Auditoría, aunque ya hubiera estado validada antes.
+        solicitud.nota_credito_estatus = 'pendiente';
         if (res.historial) {
           solicitud.historial = this.normalizarHistorial(res.historial);
         } else {
@@ -281,6 +371,62 @@ export class SolicitudRetroactivoGestorComponent implements OnInit {
       error: () => {
         this.guardandoNotaCredito = false;
         this.errorNotaCredito = 'No se pudo guardar la nota de crédito.';
+      }
+    });
+  }
+
+  tituloBotonNotaCredito(s: SolicitudRetroactivo): string {
+    return s.nota_credito ? 'Corregir nota de credito' : 'Agregar nota de credito';
+  }
+
+  abrirValidarNotaCredito(): void {
+    this.codigoAuditoriaDialog = { abierto: true, codigo: '', error: '', verificando: false };
+  }
+
+  // GUÍA: el código de Auditoría debe ser solo numérico -- se filtra
+  // cualquier otro carácter tanto en el modelo como en el input visible.
+  onCodigoAuditoriaInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const soloDigitos = input.value.replace(/\D/g, '');
+    this.codigoAuditoriaDialog.codigo = soloDigitos;
+    if (input.value !== soloDigitos) input.value = soloDigitos;
+  }
+
+  cancelarValidarNotaCredito(): void {
+    this.codigoAuditoriaDialog.abierto = false;
+  }
+
+  confirmarValidarNotaCredito(): void {
+    if (!this.seleccionada) return;
+    const codigo = this.codigoAuditoriaDialog.codigo.trim();
+    if (!codigo) {
+      this.codigoAuditoriaDialog.error = 'Ingresa el código de Auditoría.';
+      return;
+    }
+
+    const solicitud = this.seleccionada;
+    this.codigoAuditoriaDialog.verificando = true;
+    this.codigoAuditoriaDialog.error = '';
+
+    this.service.validarNotaCredito(solicitud.id, codigo).subscribe({
+      next: (res) => {
+        solicitud.nota_credito_estatus = 'validada';
+        if (res.historial) {
+          solicitud.historial = this.normalizarHistorial(res.historial);
+        } else {
+          this.agregarHistorial(solicitud, {
+            fecha: new Date().toISOString(),
+            tipo: 'nota_credito',
+            descripcion: `Nota de crédito #${solicitud.nota_credito} validada por Auditoría`,
+            usuario: this.obtenerUsuarioActual()
+          });
+        }
+        this.codigoAuditoriaDialog.verificando = false;
+        this.codigoAuditoriaDialog.abierto = false;
+      },
+      error: (err) => {
+        this.codigoAuditoriaDialog.verificando = false;
+        this.codigoAuditoriaDialog.error = err?.error?.error ?? 'Código inválido.';
       }
     });
   }

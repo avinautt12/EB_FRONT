@@ -1,16 +1,18 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { SolicitudRetroactivoCampaniasService } from '../../../services/solicitud-retroactivo-campanias.service';
-import { CampaniaItem, MsiOption, CrearCampaniaPayload } from './models/solicitud-campania.model';
+import { CampaniaItem, CampaniaMsiItem, MsiOption, CrearCampaniaPayload } from './models/solicitud-campania.model';
 import { ProductoDetalle } from '../../../components/producto-catalogo-modal/models/producto-catalogo.model';
 import { ProductoCatalogoModalComponent } from '../../../components/producto-catalogo-modal/producto-catalogo-modal/producto-catalogo-modal.component';
 import { TopBarUsuariosComponent } from '../../../components/top-bar-usuarios/top-bar-usuarios.component';
+import { DatePickerComponent } from '../../../components/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-solicitud-retroactivo-campanias',
   standalone: true,
-  imports: [CommonModule, FormsModule, TopBarUsuariosComponent, ProductoCatalogoModalComponent],
+  imports: [CommonModule, RouterLink, FormsModule, TopBarUsuariosComponent, ProductoCatalogoModalComponent, DatePickerComponent],
   templateUrl: './solicitud-retroactivo-campanias.component.html',
   styleUrl: './solicitud-retroactivo-campanias.component.css'
 })
@@ -34,6 +36,13 @@ export class SolicitudRetroactivoCampaniasComponent implements OnInit {
   // Control del Modal de Catálogo
   modalCatalogoVisible: boolean = false;
 
+  // Carga masiva de productos por SKU (para cuando MKT ya tiene la lista de
+  // SKUs de la campaña y no quiere buscarlos uno por uno en el catálogo).
+  mostrarCargaSku: boolean = false;
+  textoSkusMasivos: string = '';
+  cargandoSkus: boolean = false;
+  skusNoEncontrados: string[] = [];
+
   // Filtros del Listado
   filtroTexto: string = '';
   filtroEstado: string = 'TODOS';
@@ -42,8 +51,18 @@ export class SolicitudRetroactivoCampaniasComponent implements OnInit {
   formNombre: string = '';
   formFechaInicio: string = '';
   formFechaFin: string = '';
-  formMsiId: number | null = null;
   formActiva: boolean = true;
+
+  // GUÍA: una campaña liga VARIOS plazos MSI, cada uno con su propio % --
+  // ya no es un msi_id único con el % fijo del catálogo global.
+  formMsiSeleccionados: CampaniaMsiItem[] = [];
+
+  // Alta de un plazo nuevo al catálogo global (cuando MKT necesita uno que
+  // no existe, ej. 24 meses), sin salir del formulario de campaña.
+  mostrarNuevoPlazo: boolean = false;
+  nuevoPlazoMeses: number | null = null;
+  nuevoPlazoPorcentajeBase: number | null = null;
+  creandoPlazo: boolean = false;
 
   ngOnInit(): void {
     this.cargarMsi();
@@ -95,9 +114,15 @@ export class SolicitudRetroactivoCampaniasComponent implements OnInit {
     this.formNombre = '';
     this.formFechaInicio = '';
     this.formFechaFin = '';
-    this.formMsiId = null;
     this.formActiva = true;
+    this.formMsiSeleccionados = [];
+    this.mostrarNuevoPlazo = false;
+    this.nuevoPlazoMeses = null;
+    this.nuevoPlazoPorcentajeBase = null;
     this.selectedProductos = [];
+    this.mostrarCargaSku = false;
+    this.textoSkusMasivos = '';
+    this.skusNoEncontrados = [];
     this.editandoId = null;
   }
 
@@ -106,7 +131,7 @@ export class SolicitudRetroactivoCampaniasComponent implements OnInit {
     this.formNombre = c.nombre;
     this.formFechaInicio = this.normalizarFecha(c.fecha_inicio);
     this.formFechaFin = this.normalizarFecha(c.fecha_fin);
-    this.formMsiId = c.msi_id;
+    this.formMsiSeleccionados = Array.isArray(c.msi) ? [...c.msi] : [];
     this.formActiva = !!c.activa;
 
     // Procesar la lista de productos asociando los datos completos desde la API
@@ -139,8 +164,15 @@ export class SolicitudRetroactivoCampaniasComponent implements OnInit {
       this.mostrarAlerta('Las fechas de inicio y fin son obligatorias.', 'error');
       return;
     }
-    if (!this.formMsiId) {
-      this.mostrarAlerta('Debe seleccionar una opción de MSI.', 'error');
+    if (this.formMsiSeleccionados.length === 0) {
+      this.mostrarAlerta('Debe ligar al menos un plazo MSI con su % a la campaña.', 'error');
+      return;
+    }
+    const porcentajeInvalido = this.formMsiSeleccionados.some(
+      (m) => m.porcentaje === null || m.porcentaje === undefined || m.porcentaje < 0 || m.porcentaje > 100
+    );
+    if (porcentajeInvalido) {
+      this.mostrarAlerta('Revisa los % capturados: deben ser un número entre 0 y 100.', 'error');
       return;
     }
 
@@ -150,8 +182,8 @@ export class SolicitudRetroactivoCampaniasComponent implements OnInit {
       nombre: this.formNombre.trim(),
       fecha_inicio: this.formFechaInicio,
       fecha_fin: this.formFechaFin,
-      msi_id: this.formMsiId,
       activa: this.formActiva ? 1 : 0,
+      msi: this.formMsiSeleccionados.map((m) => ({ msi_id: m.msi_id, porcentaje: m.porcentaje })),
       productos: this.selectedProductos.map((p) => p.id)
     };
 
@@ -172,6 +204,76 @@ export class SolicitudRetroactivoCampaniasComponent implements OnInit {
       error: (err) => {
         this.guardando = false;
         this.mostrarAlerta(err.error?.error || 'Error al guardar la campaña.', 'error');
+      }
+    });
+  }
+
+  // --- GESTIÓN DE MSI LIGADOS A LA CAMPAÑA (cada uno con su % propio) ---
+  // Cada plazo del catálogo se activa/desactiva con un check; al activarse se
+  // liga de inmediato con el % base del catálogo como punto de partida
+  // editable, sin pasos ni botones intermedios.
+  estaMsiSeleccionado(msiId: number): boolean {
+    return this.formMsiSeleccionados.some((m) => m.msi_id === msiId);
+  }
+
+  obtenerPorcentajeSeleccionado(msiId: number): number | null {
+    const item = this.formMsiSeleccionados.find((m) => m.msi_id === msiId);
+    return item ? item.porcentaje : null;
+  }
+
+  toggleMsiSeleccionado(msi: MsiOption, activo: boolean): void {
+    if (activo) {
+      if (this.estaMsiSeleccionado(msi.id)) return;
+      this.formMsiSeleccionados = [
+        ...this.formMsiSeleccionados,
+        { msi_id: msi.id, plazo_meses: msi.plazo_meses, porcentaje: msi.porcentaje }
+      ];
+    } else {
+      this.quitarMsiSeleccionado(msi.id);
+    }
+  }
+
+  actualizarPorcentajeSeleccionado(msiId: number, porcentaje: number | null): void {
+    this.formMsiSeleccionados = this.formMsiSeleccionados.map((m) =>
+      m.msi_id === msiId ? { ...m, porcentaje: porcentaje as number } : m
+    );
+  }
+
+  quitarMsiSeleccionado(msiId: number): void {
+    this.formMsiSeleccionados = this.formMsiSeleccionados.filter((m) => m.msi_id !== msiId);
+  }
+
+  // --- ALTA DE UN PLAZO NUEVO AL CATÁLOGO GLOBAL (cuando MKT necesita uno
+  // que no existe todavía, ej. 24 meses) ---
+  crearNuevoPlazo(): void {
+    if (!this.nuevoPlazoMeses || this.nuevoPlazoMeses <= 0) {
+      this.mostrarAlerta('El plazo en meses debe ser un entero positivo.', 'error');
+      return;
+    }
+    if (
+      this.nuevoPlazoPorcentajeBase === null ||
+      this.nuevoPlazoPorcentajeBase < 0 ||
+      this.nuevoPlazoPorcentajeBase > 100
+    ) {
+      this.mostrarAlerta('El % base debe ser un número entre 0 y 100.', 'error');
+      return;
+    }
+
+    this.creandoPlazo = true;
+    this.campaniasService.crearMsi(this.nuevoPlazoMeses, this.nuevoPlazoPorcentajeBase).subscribe({
+      next: (res) => {
+        this.creandoPlazo = false;
+        const nuevo = res.datos as MsiOption;
+        this.msiList = [...this.msiList, nuevo].sort((a, b) => a.plazo_meses - b.plazo_meses);
+        this.toggleMsiSeleccionado(nuevo, true);
+        this.mostrarNuevoPlazo = false;
+        this.nuevoPlazoMeses = null;
+        this.nuevoPlazoPorcentajeBase = null;
+        this.mostrarAlerta(`Plazo de ${nuevo.plazo_meses} meses creado y ligado a la campaña.`, 'success');
+      },
+      error: (err) => {
+        this.creandoPlazo = false;
+        this.mostrarAlerta(err.error?.error || 'Error al crear el plazo MSI.', 'error');
       }
     });
   }
@@ -206,6 +308,59 @@ export class SolicitudRetroactivoCampaniasComponent implements OnInit {
 
   quitarProducto(id: number): void {
     this.selectedProductos = this.selectedProductos.filter((p) => p.id !== id);
+  }
+
+  // --- CARGA MASIVA DE PRODUCTOS POR SKU ---
+  cargarProductosPorSku(): void {
+    // Acepta SKUs separados por salto de línea, coma o espacio.
+    const skus = Array.from(
+      new Set(
+        this.textoSkusMasivos
+          .split(/[\n,\s]+/)
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0)
+      )
+    );
+
+    if (skus.length === 0) {
+      this.mostrarAlerta('Pega al menos un SKU.', 'error');
+      return;
+    }
+
+    this.cargandoSkus = true;
+    this.skusNoEncontrados = [];
+
+    this.campaniasService.buscarProductosPorSku(skus).subscribe({
+      next: (res) => {
+        this.cargandoSkus = false;
+        this.skusNoEncontrados = res.no_encontrados || [];
+
+        const idsExistentes = new Set(this.selectedProductos.map((p) => p.id));
+        const encontrados = res.encontrados || [];
+        const nuevosUnicos = encontrados.filter((p) => !idsExistentes.has(p.id));
+        const yaExistian = encontrados.length - nuevosUnicos.length;
+
+        this.selectedProductos = [...this.selectedProductos, ...nuevosUnicos];
+
+        const partes: string[] = [];
+        if (nuevosUnicos.length > 0) partes.push(`${nuevosUnicos.length} agregado(s)`);
+        if (yaExistian > 0) partes.push(`${yaExistian} ya estaba(n) en la lista`);
+        if (this.skusNoEncontrados.length > 0) partes.push(`${this.skusNoEncontrados.length} no encontrado(s)`);
+
+        this.mostrarAlerta(
+          partes.length > 0 ? partes.join(', ') + '.' : 'No se encontró ningún producto con esos SKUs.',
+          this.skusNoEncontrados.length > 0 ? 'error' : 'success'
+        );
+
+        if (this.skusNoEncontrados.length === 0) {
+          this.textoSkusMasivos = '';
+        }
+      },
+      error: (err) => {
+        this.cargandoSkus = false;
+        this.mostrarAlerta(err.error?.error || 'Error al buscar los productos por SKU.', 'error');
+      }
+    });
   }
 
   // --- HELPERS DE RENDERIZADO Y FECHAS ---
@@ -252,6 +407,24 @@ export class SolicitudRetroactivoCampaniasComponent implements OnInit {
     }
 
     return '';
+  }
+
+  // GUÍA: el flag `activa` en BD es un interruptor administrativo aparte de
+  // las fechas -- una campaña puede seguir "activa=1" mucho después de que
+  // fecha_fin ya pasó. El formulario de venta ya filtra por vigencia real
+  // (ver listar_campanias_activas en el backend), así que el badge de este
+  // listado tiene que reflejar lo mismo o parece un error ("dice Activa
+  // pero ya no aparece para vender").
+  estadoCampania(c: CampaniaItem): { texto: string; clase: string } {
+    if (!c.activa) return { texto: 'Inactiva', clase: 'badge-inactive' };
+
+    const hoy = this.normalizarFecha(new Date().toISOString());
+    const inicio = this.normalizarFecha(c.fecha_inicio);
+    const fin = this.normalizarFecha(c.fecha_fin);
+
+    if (fin && hoy > fin) return { texto: 'Vencida', clase: 'badge-vencida' };
+    if (inicio && hoy < inicio) return { texto: 'Próxima', clase: 'badge-proxima' };
+    return { texto: 'Activa', clase: 'badge-active' };
   }
 
   mostrarAlerta(msj: string, tipo: 'success' | 'error'): void {

@@ -54,8 +54,8 @@
                         <span class="campo-error-text" *ngIf="esCampoInvalido('id_formulario')">Este campo es obligatorio</span>
                     </div>
 
-                    <!-- MARCA (Condicionado a Tipo de Venta == 1) -->
-                    <div class="form-group" *ngIf="ventaForm.get('id_formulario')?.value == 1" [class.campo-invalid]="esCampoInvalido('id_marca_bicicleta')">
+                    <!-- MARCA: dinámica -- solo se pregunta si la campaña elegida liga 2+ marcas -->
+                    <div class="form-group" *ngIf="listaMarca.length > 0" [class.campo-invalid]="esCampoInvalido('id_marca_bicicleta')">
                         <label for="id_marca_bicicleta">Marca:</label>
                         <select id="id_marca_bicicleta" formControlName="id_marca_bicicleta">
                             <option value="" disabled selected>-- Selecciona --</option>
@@ -68,7 +68,7 @@
                         <label for="id_msi">Venta a MSI:</label>
                         <select id="id_msi" formControlName="id_msi">
                             <option value="" disabled selected>-- Selecciona --</option>
-                            <option *ngFor="let item of listaMsi" [value]="item.id">{{ item.plazo_meses }} Meses</option>
+                            <option *ngFor="let item of listaMsi" [value]="item.id">{{ item.plazo_meses }} Meses ({{ item.porcentaje }}%)</option>
                         </select>
                         <span class="campo-error-text" *ngIf="esCampoInvalido('id_msi')">Este campo es obligatorio</span>
                     </div>
@@ -97,9 +97,14 @@
                         <span class="campo-error-text" *ngIf="esCampoInvalido('correo_electronico')">Correo obligatorio y válido</span>
                     </div>
 
-                    <div class="form-group" [class.campo-invalid]="esCampoInvalido('fecha_venta')">
-                        <label>Fecha del Ticket:</label>
-                        <input type="date" formControlName="fecha_venta">
+                    <div class="field-group" [class.campo-invalid]="esCampoInvalido('fecha_venta')">
+                        <label class="field-label">Fecha del Ticket</label>
+                        <app-date-picker
+                            mode="single"
+                            placeholder="dd/mm/aaaa"
+                            [value]="ventaForm.get('fecha_venta')?.value"
+                            (dateChange)="ventaForm.get('fecha_venta')?.setValue($event); ventaForm.get('fecha_venta')?.markAsTouched()">
+                        </app-date-picker>
                         <span class="campo-error-text" *ngIf="esCampoInvalido('fecha_venta')">Este campo es obligatorio</span>
                     </div>
                 </div>
@@ -110,9 +115,40 @@
                 <div class="card-title"><i class="fas fa-bicycle"></i> Detalles de la Bicicleta</div>
                 <div class="campos-grid">
 
-                    <div class="form-group" [class.campo-invalid]="esCampoInvalido('modelo_bicicleta')">
+                    <div class="form-group form-group-modelo" [class.campo-invalid]="esCampoInvalido('modelo_bicicleta')">
                         <label>Modelo:</label>
-                        <input type="text" formControlName="modelo_bicicleta" placeholder="Ej. Marlin 7">
+
+                        <button type="button" class="btn-elegir-modelo" *ngIf="!ventaForm.get('modelo_bicicleta')?.value"
+                                [disabled]="faltaElegirMarcaParaModelo"
+                                [title]="faltaElegirMarcaParaModelo ? 'Selecciona primero una Marca' : ''"
+                                (click)="abrirProductosModal()">
+                            <i class="fas" [class.fa-search]="!faltaElegirMarcaParaModelo" [class.fa-arrow-up]="faltaElegirMarcaParaModelo"></i>
+                            {{ faltaElegirMarcaParaModelo ? 'Selecciona primero una Marca' : 'Seleccionar producto de la campaña' }}
+                        </button>
+
+                        <div class="modelo-seleccionado" *ngIf="productoSeleccionado">
+                            <div class="modelo-seleccionado-info">
+                                <div class="modelo-seleccionado-top">
+                                    <span class="modelo-seleccionado-marca" *ngIf="productoSeleccionado.marca">{{ productoSeleccionado.marca }}</span>
+                                    <strong>{{ productoSeleccionado.modelo || productoSeleccionado.codigo }}</strong>
+                                </div>
+                                <div class="modelo-seleccionado-tags">
+                                    <span *ngIf="productoSeleccionado.color && productoSeleccionado.color !== 'N/A'" class="modelo-tag">{{ productoSeleccionado.color }}</span>
+                                    <span *ngIf="productoSeleccionado.talla && productoSeleccionado.talla !== 'N/A'" class="modelo-tag">Talla {{ productoSeleccionado.talla }}</span>
+                                    <span class="modelo-tag modelo-tag-sku">SKU {{ productoSeleccionado.sku }}</span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-cambiar-modelo" (click)="abrirProductosModal()">Cambiar</button>
+                        </div>
+
+                        <!-- Fallback: valor guardado sin objeto asociado (ej. al reeditar una solicitud rechazada) -->
+                        <div class="modelo-seleccionado" *ngIf="!productoSeleccionado && ventaForm.get('modelo_bicicleta')?.value">
+                            <div class="modelo-seleccionado-info">
+                                <strong>{{ ventaForm.get('modelo_bicicleta')?.value }}</strong>
+                            </div>
+                            <button type="button" class="btn-cambiar-modelo" (click)="abrirProductosModal()">Cambiar</button>
+                        </div>
+
                         <span class="campo-error-text" *ngIf="esCampoInvalido('modelo_bicicleta')">Este campo es obligatorio</span>
                     </div>
 
@@ -180,4 +216,117 @@
             </button>
         </form>
     </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     Modal selector de producto (Modelo) -- mismo patrón visual
+     que el buscador de productos de Forecast, pero client-side
+     sobre los productos ya ligados a la campaña elegida.
+     ════════════════════════════════════════════════════ -->
+<div class="pm-backdrop" *ngIf="productosModal.abierto" (click)="cerrarProductosModal()">
+  <div class="pm-card" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="pm-hdr">
+      <div class="pm-hdr-left">
+        <div class="pm-hdr-icon">
+          <i class="fas" [class.fa-search]="!productosModal.grupoActivo" [class.fa-box-open]="!!productosModal.grupoActivo"></i>
+        </div>
+        <div class="pm-hdr-titles">
+          <span class="pm-hdr-sup">{{ productosModal.grupoActivo ? (productosModal.grupoActivo.marca || 'Producto') : (nombreMarcaSeleccionada ? 'Filtrado por ' + nombreMarcaSeleccionada : 'Productos de la campaña') }}</span>
+          <span class="pm-hdr-titulo">{{ productosModal.grupoActivo ? productosModal.grupoActivo.nombre : 'Buscar producto' }}</span>
+        </div>
+      </div>
+      <div class="pm-hdr-right">
+        <button type="button" class="pm-btn-volver" *ngIf="productosModal.grupoActivo"
+                (click)="productosModal.grupoActivo = null; productosModal.colorActivo = null">
+          <i class="fas fa-arrow-left"></i> Volver
+        </button>
+        <button type="button" class="pm-btn-cerrar" (click)="cerrarProductosModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- PASO 1: búsqueda -->
+    <ng-container *ngIf="!productosModal.grupoActivo">
+
+      <div class="pm-search-bar">
+        <i class="fas fa-search pm-search-ico"></i>
+        <input class="pm-search-input"
+               [value]="productosModal.query"
+               (input)="buscarEnProductosModal($any($event.target).value)"
+               placeholder="Nombre, modelo, SKU, color..."
+               autofocus
+               autocomplete="off" />
+        <span class="pm-search-count">{{ productosModal.grupos.length }}</span>
+      </div>
+
+      <div class="pm-lista" *ngIf="productosModal.grupos.length > 0; else pmSinResultados">
+        <div *ngFor="let g of productosModal.grupos" class="pm-item" (click)="seleccionarGrupoModelo(g)">
+          <div class="pm-item-body">
+            <div class="pm-item-top">
+              <span class="pm-item-nombre">{{ g.nombre }}</span>
+              <span class="pm-item-marca-badge" *ngIf="g.marca">{{ g.marca }}</span>
+            </div>
+            <div class="pm-item-bot">
+              <span *ngFor="let c of g.colores.slice(0,5)" class="pm-ctag">{{ c.color }}</span>
+              <span *ngIf="g.colores.length > 5" class="pm-ctag pm-ctag-mas">+{{ g.colores.length - 5 }}</span>
+            </div>
+          </div>
+          <div class="pm-item-arrow"><i class="fas fa-chevron-right"></i></div>
+        </div>
+      </div>
+
+      <ng-template #pmSinResultados>
+        <div class="pm-estado">
+          <div class="pm-estado-icono"><i class="fas fa-search-minus"></i></div>
+          <p class="pm-estado-txt">Sin resultados<span *ngIf="productosModal.query"> para "{{ productosModal.query }}"</span></p>
+        </div>
+      </ng-template>
+
+    </ng-container>
+
+    <!-- PASO 2: color / talla -->
+    <ng-container *ngIf="productosModal.grupoActivo as grupo">
+      <div class="pm-variante-wrap">
+
+        <!-- Selector de color -->
+        <div class="pm-variante-sec">
+          <div class="pm-variante-lbl-row">
+            <span class="pm-variante-lbl"><i class="fas fa-palette"></i> Color</span>
+            <span class="pm-variante-hint-inline" *ngIf="!productosModal.colorActivo">Selecciona un color</span>
+          </div>
+          <div class="pm-chips-grid">
+            <button *ngFor="let vc of grupo.colores"
+                    type="button"
+                    class="pm-chip"
+                    [class.pm-chip-activo]="productosModal.colorActivo === vc.color"
+                    (click)="seleccionarColorModelo(vc.color)">
+              <span class="pm-chip-dot"></span>
+              {{ vc.color }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Selector de talla -->
+        <div *ngIf="productosModal.colorActivo as colorActivo" class="pm-variante-sec pm-variante-sec-talla">
+          <div class="pm-variante-lbl-row">
+            <span class="pm-variante-lbl"><i class="fas fa-ruler-horizontal"></i> Talla</span>
+            <span class="pm-variante-hint-inline">Selecciona para confirmar</span>
+          </div>
+          <div class="pm-tallas-grid">
+            <button *ngFor="let t of getTallasParaColorModelo(grupo, colorActivo)"
+                    type="button"
+                    class="pm-talla-btn"
+                    (click)="confirmarProducto(t.producto)">
+              {{ t.talla }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </ng-container>
+
+  </div>
 </div>

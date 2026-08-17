@@ -25,10 +25,43 @@
 }
 
 .page-header {
+  position: relative;
   display: flex; align-items: flex-start; justify-content: space-between;
   margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
 }
 .header-left { display: flex; flex-direction: column; gap: 4px; }
+
+/* GUÍA: centrado absoluto respecto a .page-header (no flex/grid) a
+   propósito -- así queda exactamente al centro del header sin importar
+   cuánto midan el título de la izquierda o los botones de la derecha. */
+.header-count-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  pointer-events: none;
+}
+.header-count-num {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--orange, #EB5E28);
+}
+.header-count-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--t3, #7a7168);
+  margin-top: 2px;
+}
+
+@media (max-width: 900px) {
+  .header-count-center { position: static; transform: none; margin: 4px 0; }
+}
 
 /* ── Botón Volver / Regresar (Estilo Outline) ── */
 .back-link {
@@ -221,6 +254,14 @@
 .solicitudes-tabla td { padding: 13px 14px; font-size: 0.88rem; vertical-align: middle; }
 
 .col-principal { font-weight: 700; color: var(--t1); white-space: nowrap; }
+
+/* GUÍA: antes "Modelo · Serie" salía como un solo texto pegado y se
+   confundía con el nombre completo del modelo -- ahora el número de serie
+   va en su propia línea, más chico, gris y con la etiqueta "Serie:" para
+   que no haya duda de que es un dato distinto. */
+.modelo-serie-cell { display: flex; flex-direction: column; gap: 2px; }
+.ms-modelo { font-weight: 700; color: var(--t1); white-space: nowrap; }
+.ms-serie { font-size: 0.72rem; font-weight: 500; color: var(--t3); white-space: nowrap; }
 .col-secundario { color: var(--t2); white-space: nowrap; }
 .col-monto { color: var(--orange); font-weight: 700; white-space: nowrap; }
 .col-estatus { white-space: nowrap; }
@@ -380,11 +421,16 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 0.6rem; color: var(--t3);
 }
-.timeline-item[data-tipo="creacion"] .tl-dot      { border-color: var(--orange); color: var(--orange); }
-.timeline-item[data-tipo="validacion"] .tl-dot    { border-color: #4caf50; color: #4caf50; }
-.timeline-item[data-tipo="precio"] .tl-dot        { border-color: #5c9bd6; color: #5c9bd6; }
-.timeline-item[data-tipo="nota_credito"] .tl-dot  { border-color: #a855f7; color: #a855f7; }
-.timeline-item[data-tipo="reenvio"] .tl-dot       { border-color: #f59e0b; color: #f59e0b; }
+/* GUÍA: clases explícitas en vez de [data-tipo] -- 'validacion' cubre
+   validar/rechazar/deshacer, necesitaba distinguirse por resultado real
+   (ver iconoHistorial en el componente), no solo por tipo. */
+.tl-dot.tl-naranja { border-color: var(--orange); color: var(--orange); }
+.tl-dot.tl-verde   { border-color: #4caf50; color: #4caf50; }
+.tl-dot.tl-rojo    { border-color: #e53935; color: #e53935; }
+.tl-dot.tl-gris    { border-color: var(--t3); color: var(--t3); }
+.tl-dot.tl-azul    { border-color: #5c9bd6; color: #5c9bd6; }
+.tl-dot.tl-morado  { border-color: #a855f7; color: #a855f7; }
+.tl-dot.tl-ambar   { border-color: #f59e0b; color: #f59e0b; }
 
 .tl-content { display: flex; flex-direction: column; gap: 2px; }
 .tl-desc { font-size: 0.85rem; color: var(--t1); font-weight: 600; }

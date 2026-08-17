@@ -6,14 +6,15 @@ import { CampaniaItem, MsiOption } from '../views/internal-views/solicitud-retro
 import { environment } from '../../environments/environment';
 
 /**
- * Payload JSON para creación y actualización de campañas.
+ * Payload JSON para creación y actualización de campañas. msi trae cada
+ * plazo con SU PROPIO % para esta campaña (no el % fijo del catálogo).
  */
 export interface CampaniaPayload {
   nombre: string;
   fecha_inicio: string;
   fecha_fin: string;
-  msi_id: number;
   activa: number;
+  msi: { msi_id: number; porcentaje: number }[];
   productos: number[]; // IDs de producto_detalle (variantes/SKUs)
 }
 
@@ -102,6 +103,15 @@ export class SolicitudRetroactivoCampaniasService {
   }
 
   /**
+   * Agrega un plazo nuevo al catálogo global de MSI, para cuando MKT
+   * necesita uno que todavía no existe (ej. 24 meses).
+   * POST /api/solicitud-retroactivo-campanias/msi
+   */
+  crearMsi(plazo_meses: number, porcentaje: number): Observable<ApiResponse<MsiOption>> {
+    return this.http.post<ApiResponse<MsiOption>>(`${this.apiUrl}/msi`, { plazo_meses, porcentaje });
+  }
+
+  /**
    * Obtiene las marcas registradas para filtrado.
    * GET /api/solicitud-retroactivo-campanias/marcas
    */
@@ -123,6 +133,18 @@ export class SolicitudRetroactivoCampaniasService {
    */
   getProductoDetalles(productoId: number): Observable<ProductoDetalle[]> {
     return this.http.get<ProductoDetalle[]>(`${this.apiUrl}/productos/${productoId}/detalles`);
+  }
+
+  /**
+   * Resuelve una lista de SKUs a sus productos detalle, para la carga masiva
+   * de productos en el formulario de campaña.
+   * POST /api/solicitud-retroactivo-campanias/productos/buscar-por-sku
+   */
+  buscarProductosPorSku(skus: string[]): Observable<{ respuesta: boolean; encontrados: ProductoDetalle[]; no_encontrados: string[] }> {
+    return this.http.post<{ respuesta: boolean; encontrados: ProductoDetalle[]; no_encontrados: string[] }>(
+      `${this.apiUrl}/productos/buscar-por-sku`,
+      { skus }
+    );
   }
 
   /**
