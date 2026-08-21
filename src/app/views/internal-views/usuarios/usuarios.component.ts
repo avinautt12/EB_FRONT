@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router'; // <--- Importante para routerLink
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
 import { UsuariosService } from '../../../services/usuarios.service';
 import { AlertaService } from '../../../services/alerta.service';
@@ -37,7 +38,7 @@ interface FiltroOpciones {
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, FormsModule, HomeBarComponent, AlertaComponent, FiltroComponent],
+  imports: [CommonModule, FormsModule, RouterModule, HomeBarComponent, AlertaComponent, FiltroComponent],
   templateUrl: './usuarios.component.html',
   styleUrls: ['./usuarios.component.css']
 })
