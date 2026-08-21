@@ -1,9 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, Subject, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, Subject, BehaviorSubject, of } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { jwtDecode } from 'jwt-decode';
+
+export interface PermisoItem {
+  modulo: string;
+  accion: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +23,105 @@ export class AuthService {
 
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) { }
+  // Matriz de rutas permitidas cargadas en memoria (ej. '/garantias/ver')
+  private rutasPermitidas = new Set<string>();
+
+  constructor(private http: HttpClient) {
+    this.restaurarPermisosLocales();
+  }
+
+  // ==========================================
+  // GESTIÓN DE PERMISOS Y MATRIZ
+  // ==========================================
+
+  /**
+   * Carga los permisos del usuario desde la API sin interrumpir el flujo si falla
+   */
+  cargarPermisos(hijoId: number, padreId: number): Observable<any> {
+    return this.http.get<{ permisos: PermisoItem[] }>(
+      `${this.apiUrl}/permisos/usuario/${hijoId}?padre_id=${padreId}`
+    ).pipe(
+      tap(response => {
+        const setRutas = new Set<string>();
+        if (response && response.permisos && Array.isArray(response.permisos)) {
+          response.permisos.forEach(p => {
+            setRutas.add(`/${p.modulo}/${p.accion}`.toLowerCase());
+          });
+        }
+        this.rutasPermitidas = setRutas;
+        localStorage.setItem('rutas_permitidas', JSON.stringify(Array.from(setRutas)));
+      }),
+      catchError(err => {
+        console.warn('Error al obtener la matriz de permisos:', err);
+        this.rutasPermitidas = new Set();
+        return of({ permisos: [] });
+      })
+    );
+  }
+
+  /**
+   * Consulta in-situ si una ruta o acción está permitida.
+   * Retorna true si es Admin del Sistema (rol === 1) o si existe en la matriz.
+   */
+  hasPermission(pathOAccion: string): boolean {
+    if (this.isAdmin()) return true; // Bypass total para Administrador del Sistema
+
+    const rutaLimpia = pathOAccion.startsWith('/')
+      ? pathOAccion.toLowerCase()
+      : `/${pathOAccion}`.toLowerCase();
+
+    return this.rutasPermitidas.has(rutaLimpia);
+  }
+
+  private restaurarPermisosLocales(): void {
+    const raw = localStorage.getItem('rutas_permitidas');
+    if (raw) {
+      try {
+        const arreglo: string[] = JSON.parse(raw);
+        this.rutasPermitidas = new Set(arreglo);
+      } catch (e) {
+        this.rutasPermitidas = new Set();
+      }
+    }
+  }
+
+  // ==========================================
+  // HELPER MÉTODOS DE ROLES Y TOKEN
+  // ==========================================
+
+  getRol(): number {
+    const token = localStorage.getItem('token');
+    if (!token) return 0;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.rol || 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  isAdmin(): boolean {
+    return this.getRol() === 1;
+  }
+
+  isUsuarioHijo(): boolean {
+    return this.getRol() === 3;
+  }
+
+  getPadreId(): number | null {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.padre_id || null;
+    } catch {
+      return null;
+    }
+  }
+
+  // ==========================================
+  // MÉTODOS EXISTENTES DE AUTENTICACIÓN
+  // ==========================================
 
   register(user: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/registro`, user);
@@ -29,7 +132,7 @@ export class AuthService {
       tap(response => {
         if (response.token) {
           this.setToken(response.token);
-          this.authState.next(true); // ← Emitir nuevo estado
+          this.authState.next(true);
         }
       })
     );
@@ -40,7 +143,7 @@ export class AuthService {
       tap(() => {
         this.clearToken();
         this.logoutSubject.next();
-        this.authState.next(false); // ← Emitir nuevo estado
+        this.authState.next(false);
       })
     );
   }
@@ -95,7 +198,6 @@ export class AuthService {
     localStorage.setItem('token', token);
   }
 
-  // En tu AuthService
   getToken(): string {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -106,6 +208,8 @@ export class AuthService {
 
   clearToken(): void {
     localStorage.removeItem('token');
+    localStorage.removeItem('rutas_permitidas');
+    this.rutasPermitidas.clear();
   }
 
   getUserId(): number | null {
@@ -132,22 +236,12 @@ export class AuthService {
     }
   }
 
-  isAdmin(): boolean {
-    const token = localStorage.getItem('token');
-    if (!token) return false;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.rol === 1;
-    } catch { return false; }
-  }
-
   getFlujoPermiso(): number {
     const token = localStorage.getItem('token');
     if (!token) return 0;
 
     try {
       const decoded: any = jwtDecode(token);
-      // Extraemos el campo 'flujo' que definimos en el Python
       return decoded.flujo || 0;
     } catch (error) {
       return 0;

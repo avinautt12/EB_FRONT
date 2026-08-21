@@ -1,0 +1,241 @@
+<app-top-bar-usuarios></app-top-bar-usuarios>
+
+<div class="retroactivos-layout">
+  <!-- ALERTA INLINE -->
+  <div *ngIf="alertMsj" [ngClass]="alertTipo === 'success' ? 'inline-alert success' : 'inline-alert error'">
+    <span>{{ alertMsj }}</span>
+    <button class="close-btn" (click)="alertMsj = null">&times;</button>
+  </div>
+
+  <!-- HEADER PRINCIPAL -->
+  <div class="page-header">
+    <h2>Catálogo General (Módulos y Acciones)</h2>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="cargarCatalogo()" [disabled]="cargando">Refrescar</button>
+      <button *ngIf="pestanaActiva === 'modulos'" class="btn btn-primary" (click)="abrirModalNuevoModulo()">+ Nuevo Módulo</button>
+      <button *ngIf="pestanaActiva === 'acciones'" class="btn btn-primary" (click)="abrirModalNuevaAccion()">+ Nueva Acción Base</button>
+    </div>
+  </div>
+
+  <!-- PESTAÑAS -->
+  <div class="tabs-container">
+    <button class="tab-btn" [class.active]="pestanaActiva === 'modulos'" (click)="pestanaActiva = 'modulos'">
+      Módulos y Submódulos
+    </button>
+    <button class="tab-btn" [class.active]="pestanaActiva === 'acciones'" (click)="pestanaActiva = 'acciones'">
+      Acciones Base
+    </button>
+  </div>
+
+  <!-- ESTADO CARGANDO -->
+  <div *ngIf="cargando" class="empty-state">
+    <p>Cargando información del catálogo...</p>
+  </div>
+
+  <!-- TABLA MÓDULOS CON ESTRUCTURA EN ÁRBOL VERTICAL -->
+  <div *ngIf="!cargando && pestanaActiva === 'modulos'" class="table-wrap tab-fade-in">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width: 38px;"></th>
+          <th>ID</th>
+          <th>Nombre Módulo / Acciones</th>
+          <th>Identificador</th>
+          <th>Jerarquía</th>
+          <th>Estado</th>
+          <th style="text-align: right;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let m of modulosRaiz">
+          
+          <!-- MÓDULO RAÍZ -->
+          <tr class="tr-root">
+            <td>
+              <button 
+                *ngIf="getSubmodulos(m.id).length > 0" 
+                type="button" 
+                class="btn-expand" 
+                (click)="toggleExpandir(m.id)">
+                {{ isExpandido(m.id) ? '▼' : '▶' }}
+              </button>
+            </td>
+            <td>{{ m.id }}</td>
+            <td>
+              <div class="module-title"><strong>{{ m.nombre }}</strong></div>
+              <div class="vertical-actions-tree" *ngIf="m.acciones && m.acciones.length > 0">
+                <div *ngFor="let acc of m.acciones" class="action-tree-item">
+                  <span class="chip-accion-vertical">{{ acc.nombre }}</span>
+                </div>
+              </div>
+              <div *ngIf="!m.acciones || m.acciones.length === 0" class="text-muted small-text">Sin acciones</div>
+            </td>
+            <td><code>{{ m.identificador }}</code></td>
+            <td><span class="badge badge-root">Módulo Raíz</span></td>
+            <td>
+              <span [class]="m.activo ? 'badge badge-active' : 'badge badge-inactive'">
+                {{ m.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="td-actions">
+              <button class="btn-action" (click)="abrirModalModulo(m)">Editar</button>
+              <button class="btn-action" (click)="toggleEstadoModulo(m)">
+                {{ m.activo ? 'Desactivar' : 'Activar' }}
+              </button>
+              <button class="btn-action delete" (click)="eliminarModulo(m)">Eliminar</button>
+            </td>
+          </tr>
+
+          <!-- SUBMÓDULOS (EXPANDIBLES) -->
+          <ng-container *ngIf="isExpandido(m.id)">
+            <tr *ngFor="let sub of getSubmodulos(m.id)" class="tr-submodule">
+              <td></td>
+              <td>{{ sub.id }}</td>
+              <td class="td-sub-indent">
+                <div class="module-title"><strong>{{ sub.nombre }}</strong></div>
+                <div class="vertical-actions-tree" *ngIf="sub.acciones && sub.acciones.length > 0">
+                  <div *ngFor="let acc of sub.acciones" class="action-tree-item">
+                    <span class="chip-accion-vertical">{{ acc.nombre }}</span>
+                  </div>
+                </div>
+                <div *ngIf="!sub.acciones || sub.acciones.length === 0" class="text-muted small-text">Sin acciones</div>
+              </td>
+              <td><code>{{ sub.identificador }}</code></td>
+              <td><span class="badge badge-sub">Submódulo</span></td>
+              <td>
+                <span [class]="sub.activo ? 'badge badge-active' : 'badge badge-inactive'">
+                  {{ sub.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="td-actions">
+                <button class="btn-action" (click)="abrirModalModulo(sub)">Editar</button>
+                <button class="btn-action" (click)="toggleEstadoModulo(sub)">
+                  {{ sub.activo ? 'Desactivar' : 'Activar' }}
+                </button>
+                <button class="btn-action delete" (click)="eliminarModulo(sub)">Eliminar</button>
+              </td>
+            </tr>
+          </ng-container>
+
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TABLA ACCIONES BASE -->
+   <div *ngIf="!cargando && pestanaActiva === 'acciones'" class="table-wrap tab-fade-in">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre Acción</th>
+          <th>Identificador</th>
+          <th>Estado</th>
+          <th style="text-align: right;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let a of accionesGlobales">
+          <td>{{ a.id }}</td>
+          <td><strong>{{ a.nombre }}</strong></td>
+          <td><code>{{ a.identificador }}</code></td>
+          <td>
+            <span *ngIf="a.activo === 1" class="badge badge-active">Activa</span>
+            <span *ngIf="a.activo === 0" class="badge badge-inactive">Inactiva</span>
+          </td>
+          <td>
+            <div class="td-actions">
+              <button *ngIf="a.activo === 1" class="btn btn-action" (click)="cambiarEstadoAccion(a, 0)">Desactivar</button>
+              <button *ngIf="a.activo === 0" class="btn btn-action" (click)="cambiarEstadoAccion(a, 1)">Activar</button>
+              <button class="btn btn-action delete" (click)="eliminarAccion(a)">Eliminar</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- MODAL MÓDULO -->
+  <div *ngIf="modalModuloVisible" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header-custom">
+        <h3>{{ editandoModuloId ? 'Editar Módulo' : 'Nuevo Módulo / Submódulo' }}</h3>
+        <button type="button" class="close-btn" (click)="cerrarModalModulo()">&times;</button>
+      </div>
+      <div class="modal-body-custom">
+        <div class="form-group">
+          <label>Nombre del Módulo</label>
+          <input type="text" [(ngModel)]="formNombreModulo" placeholder="Ej. Solicitudes">
+        </div>
+        <div class="form-group">
+          <label>Identificador Único</label>
+          <input type="text" [(ngModel)]="formIdentificadorModulo" placeholder="Ej. garantias_solicitudes">
+        </div>
+        <div class="form-group">
+          <label>Módulo Padre (Opcional)</label>
+          <select [(ngModel)]="formPadreIdModulo">
+            <option [ngValue]="null">-- Es Módulo Raíz --</option>
+            <option *ngFor="let m of modulos" [ngValue]="m.id">{{ m.nombre }} (ID: {{ m.id }})</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size: 0.7rem; font-weight: 800; color: #888; text-transform: uppercase;">
+            Acciones Permitidas
+          </label>
+          <div class="checkbox-grid">
+            <label *ngFor="let a of accionesGlobales" class="checkbox-item">
+              <input type="checkbox" [checked]="estaAccionSeleccionada(a.id)" (change)="toggleAccionEnModulo(a.id)">
+              <span>{{ a.nombre }}</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- VISTA PREVIA DE PERMISOS PARA EL PROGRAMADOR -->
+        <div class="dev-helper-box" *ngIf="formIdentificadorModulo && formAccionesSeleccionadas.length > 0">
+          <div class="dev-helper-title">
+            <span>💻 Estructura de Validación (Dev Helper)</span>
+          </div>
+
+          <div class="permisos-code-list">
+            <div *ngFor="let accionId of formAccionesSeleccionadas" class="permiso-code-item">
+              <code>{{ getClavePermiso(accionId) }}</code>
+              <button type="button" class="btn-copy-code" (click)="copiarTexto(getClavePermiso(accionId))">
+                Copiar
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer-custom">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalModulo()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="guardarModulo()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ACCIÓN BASE -->
+  <div *ngIf="modalAccionVisible" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header-custom">
+        <h3>Nueva Acción Base Global</h3>
+        <button type="button" class="close-btn" (click)="cerrarModalAccion()">&times;</button>
+      </div>
+      <div class="modal-body-custom">
+        <div class="form-group">
+          <label>Nombre de la Acción</label>
+          <input type="text" [(ngModel)]="formNombreAccion" placeholder="Ej. Aprobar">
+        </div>
+        <div class="form-group">
+          <label>Identificador</label>
+          <input type="text" [(ngModel)]="formIdentificadorAccion" placeholder="Ej. aprobar">
+        </div>
+      </div>
+      <div class="modal-footer-custom">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalAccion()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="guardarAccion()">Guardar Acción</button>
+      </div>
+    </div>
+  </div>
+</div>

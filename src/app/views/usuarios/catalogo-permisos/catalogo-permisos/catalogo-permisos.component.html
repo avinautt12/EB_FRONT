@@ -1,0 +1,111 @@
+<app-top-bar-usuarios></app-top-bar-usuarios>
+<div class="retroactivos-layout">
+  <!-- ALERTA INLINE -->
+  <div *ngIf="alertMsj" [ngClass]="alertTipo === 'success' ? 'inline-alert success' : 'inline-alert error'">
+    <span>{{ alertMsj }}</span>
+    <button class="close-btn" (click)="alertMsj = null">&times;</button>
+  </div>
+
+  <!-- HEADER PRINCIPAL -->
+  <div class="page-header">
+    <h2>Matriz de Permisos para Usuarios Hijos</h2>
+  </div>
+
+  <!-- TARJETA SELECTOR DE USUARIO -->
+  <div class="selector-card">
+    <div class="form-group-select">
+      <label>SELECCIONA UN USUARIO HIJO</label>
+      <select [(ngModel)]="hijoSeleccionadoId" (change)="onSeleccionarHijo()" [disabled]="cargando">
+        <option [ngValue]="null">-- Seleccionar Usuario --</option>
+        <option *ngFor="let u of usuariosHijos" [ngValue]="u.id">
+          {{ u.nombre }} ({{ u.usuario }}) — {{ u.activo === 1 ? 'Activo' : 'Inactivo' }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ESTADOS -->
+  <div *ngIf="cargandoPermisos" class="empty-state">
+    <p>Cargando matriz de permisos del usuario...</p>
+  </div>
+
+  <div *ngIf="!hijoSeleccionadoId && !cargandoPermisos" class="empty-state">
+    <p>Selecciona un usuario hijo en la parte superior para consultar y editar sus accesos.</p>
+  </div>
+
+  <!-- TABLA ÁRBOL DE PERMISOS -->
+  <div *ngIf="hijoSeleccionadoId && !cargandoPermisos" class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width: 38px;"></th>
+          <th style="width: 50px;">ID</th>
+          <th>Nombre Módulo / Acciones</th>
+          <th>Identificador</th>
+          <th>Jerarquía</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let m of modulosRaiz">
+          <!-- MÓDULO RAÍZ -->
+          <tr class="tr-root">
+            <td>
+              <button 
+                *ngIf="getSubmodulos(m.modulo_id).length > 0" 
+                type="button" 
+                class="btn-expand" 
+                (click)="toggleExpandir(m.modulo_id)">
+                {{ isExpandido(m.modulo_id) ? '▼' : '►' }}
+              </button>
+            </td>
+            <td>{{ m.modulo_id }}</td>
+            <td>
+              <div class="module-title"><strong>{{ m.nombre }}</strong></div>
+              <div class="vertical-actions-tree" *ngIf="m.acciones.length > 0">
+                <label *ngFor="let acc of m.acciones" class="custom-checkbox-wrapper">
+                  <input type="checkbox" [(ngModel)]="acc.asignado">
+                  <span class="chip-accion-vertical">{{ acc.nombre }}</span>
+                </label>
+              </div>
+              <div *ngIf="m.acciones.length === 0" class="text-muted small-text">Sin acciones</div>
+            </td>
+            <td><code>{{ m.identificador }}</code></td>
+            <td><span class="badge badge-root">Módulo Raíz</span></td>
+          </tr>
+
+          <!-- SUBMÓDULOS DEL MÓDULO RAÍZ -->
+          <ng-container *ngIf="isExpandido(m.modulo_id)">
+            <tr *ngFor="let sub of getSubmodulos(m.modulo_id)" class="tr-submodule">
+              <td></td>
+              <td>{{ sub.modulo_id }}</td>
+              <td class="td-sub-indent">
+                <div class="module-title"><strong>{{ sub.nombre }}</strong></div>
+                <div class="vertical-actions-tree" *ngIf="sub.acciones.length > 0">
+                  <label *ngFor="let acc of sub.acciones" class="custom-checkbox-wrapper">
+                    <input type="checkbox" [(ngModel)]="acc.asignado">
+                    <span class="chip-accion-vertical">{{ acc.nombre }}</span>
+                  </label>
+                </div>
+                <div *ngIf="sub.acciones.length === 0" class="text-muted small-text">Sin acciones</div>
+              </td>
+              <td><code>{{ sub.identificador }}</code></td>
+              <td><span class="badge badge-sub">Submódulo</span></td>
+            </tr>
+          </ng-container>
+        </ng-container>
+
+        <tr *ngIf="treePermisos.length === 0">
+          <td colspan="5" class="empty-state">
+            No tienes permisos asignados en tu bolsa delegable para otorgar.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="table-footer-custom">
+      <button type="button" class="btn btn-primary" (click)="guardarPermisos()" [disabled]="guardandoPermisos">
+        {{ guardandoPermisos ? 'Guardando...' : 'Guardar Permisos' }}
+      </button>
+    </div>
+  </div>
+</div>
