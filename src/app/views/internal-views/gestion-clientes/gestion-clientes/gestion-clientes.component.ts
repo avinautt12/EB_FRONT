@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, Observable } from 'rxjs';
 import { AdminSistemaService, AdminClienteItem, AccionBase, ModuloItem } from '../../../../services/admin-sistema.service';
-import { TopBarUsuariosComponent } from '../../../../components/top-bar-usuarios/top-bar-usuarios.component';
 
 export interface PermisoDelegableFila {
   modulo_id: number;
@@ -16,7 +15,7 @@ export interface PermisoDelegableFila {
 @Component({
   selector: 'app-gestion-clientes',
   standalone: true,
-  imports: [CommonModule, FormsModule, TopBarUsuariosComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './gestion-clientes.component.html',
   styleUrl: './gestion-clientes.component.css'
 })
@@ -42,6 +41,11 @@ export class GestionClientesComponent implements OnInit {
 
   modulosExpandidos = new Set<number>();
 
+  // ── ESTADO Y CONFIGURACIÓN DE PAGINACIÓN ─────────────────────────────────
+  paginaActual: number = 1;
+  elementosPorPagina: number = 25;
+  opcionesPorPagina: number[] = [10, 25, 50, 100];
+
   ngOnInit(): void {
     this.cargarAdministradores();
   }
@@ -56,12 +60,76 @@ export class GestionClientesComponent implements OnInit {
     );
   }
 
+  // ── LÓGICA DE PAGINACIÓN ─────────────────────────────────────────────────
+  get totalPaginas(): number {
+    return Math.ceil(this.administradoresFiltrados.length / this.elementosPorPagina) || 1;
+  }
+
+  administradoresPaginados(): AdminClienteItem[] {
+    const inicio = (this.paginaActual - 1) * this.elementosPorPagina;
+    return this.administradoresFiltrados.slice(inicio, inicio + this.elementosPorPagina);
+  }
+
+  cambiarElementosPorPagina(cant: number): void {
+    this.elementosPorPagina = cant;
+    this.paginaActual = 1;
+  }
+
+  obtenerRangoPaginas(): number[] {
+    const totalPages = this.totalPaginas;
+    const currentPage = this.paginaActual;
+    const delta = 2;
+    const range: number[] = [];
+
+    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+      if (i > 0 && i <= totalPages) {
+        range.push(i);
+      }
+    }
+
+    if (currentPage - delta > 2) {
+      range.unshift(-1);
+    }
+    if (currentPage + delta < totalPages - 1) {
+      range.push(-1);
+    }
+
+    range.unshift(1);
+    if (totalPages > 1) {
+      range.push(totalPages);
+    }
+
+    return range.filter((page, index, array) =>
+      page !== -1 || array[index - 1] !== -1
+    );
+  }
+
+  cambiarPagina(pagina: number): void {
+    if (pagina > 0 && pagina <= this.totalPaginas) {
+      this.paginaActual = pagina;
+    }
+  }
+
+  paginaAnterior(): void {
+    if (this.paginaActual > 1) {
+      this.paginaActual--;
+    }
+  }
+
+  paginaSiguiente(): void {
+    if (this.paginaActual < this.totalPaginas) {
+      this.paginaActual++;
+    }
+  }
+
+  // ── PIDE Y MANEJA DATOS DE ADMINISTRADORES ────────────────────────────────
   cargarAdministradores(): void {
     this.cargando = true;
     this.adminService.getAdministradores().subscribe({
       next: (res) => {
         this.administradores = res.administradores || [];
         this.cargando = false;
+        this.paginaActual = 1;
       },
       error: () => {
         this.cargando = false;
@@ -188,7 +256,6 @@ export class GestionClientesComponent implements OnInit {
     });
   }
 
-  // Cambia el estado localmente sin peticiones instantáneas
   togglePermiso(moduloId: number, accionId: number): void {
     const item = this.catalogoModulosAcciones.find(
       p => p.modulo_id === moduloId && p.accion_id === accionId
@@ -198,7 +265,6 @@ export class GestionClientesComponent implements OnInit {
     }
   }
 
-  // Guarda únicamente los permisos modificados
   guardarPermisos(): void {
     if (!this.clienteSeleccionado) return;
     this.guardandoPermisos = true;

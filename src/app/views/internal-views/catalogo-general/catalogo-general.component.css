@@ -131,7 +131,7 @@
   color: #fff;
 }
 
-/* --- PESTAÑAS (TABS) SIN DESTELLOS BLANCOS --- */
+/* --- PESTAÑAS (TABS) --- */
 .tabs-container {
   max-width: 1000px;
   margin: 0 auto 1.2rem auto;
@@ -183,7 +183,7 @@
   box-shadow: 0 2px 10px rgba(235, 94, 40, 0.15);
 }
 
-/* --- TRANSICIÓN SUAVE DE CONTENIDO AL CAMBIAR DE PESTAÑA --- */
+/* --- TRANSICIÓN SUAVE DE CONTENIDO --- */
 .tab-fade-in {
   animation: tabFadeIn 280ms var(--ease-out) forwards;
 }
@@ -231,7 +231,7 @@
   padding: 14px 16px;
   border-bottom: 1px solid #1f1f1f;
   color: var(--t2);
-  vertical-align: top; /* Mantiene alineados todos los elementos al inicio superior de la fila */
+  vertical-align: top;
 }
 
 .data-table tbody tr {
@@ -266,7 +266,7 @@
   font-weight: 700;
   padding: 4px 10px;
   border-radius: 12px;
-  white-space: nowrap; /* Impide el salto de línea interno */
+  white-space: nowrap;
   text-align: center;
   line-height: 1.2;
 }
@@ -373,7 +373,6 @@
 }
 
 /* --- MODAL Y FORMULARIO --- */
-
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -681,4 +680,80 @@
   gap: 6px;
   align-items: center;
   justify-content: flex-end;
+}
+
+/* --- ESTILOS DE AGRUPACIÓN Y COPIADO EN ESCÁNER --- */
+.rutas-sections-wrap {
+  max-width: 1000px;
+  margin: 0 auto 1.2rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.route-section-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--t1);
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.2px;
+}
+
+.code-copy-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-group-disabled {
+  opacity: 0.65;
+  background-color: #121212;
+  cursor: not-allowed;
+}
+
+.form-group-disabled input {
+  cursor: not-allowed;
+  color: #888;
+}
+
+/* --- PAGINACIÓN --- */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #1a1a1a;
+  border-top: 1px solid var(--border);
+}
+
+.page-info {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--t3);
+}
+
+.btn-page {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border2);
+  color: var(--t2);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 180ms ease;
+  outline: none;
+}
+
+.btn-page:hover:not(:disabled) {
+  background: var(--border2);
+  color: #fff;
+}
+
+.btn-page:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }

@@ -1,4 +1,9 @@
-import { Routes } from '@angular/router';
+import { Routes, CanActivateFn } from '@angular/router';
+import { inject } from '@angular/core';
+import { map } from 'rxjs/operators';
+import { Router } from '@angular/router';
+import { AuthService } from './services/auth.service';
+
 import { InicioComponent } from './views/inicio/inicio.component';
 import { LoginComponent } from './views/login/login.component';
 import { HomeComponent } from './views/home/home.component';
@@ -24,7 +29,6 @@ import { ProyeccionControlComponent } from './views/internal-views/proyeccion-co
 import { DistribuidoresMultimarcasComponent } from './views/internal-views/distribuidores-multimarcas/distribuidores-multimarcas.component';
 import { InicioCaratulasComponent } from './views/internal-views/inicio-caratulas/inicio-caratulas.component';
 import { CaratulaGlobalComponent } from './views/internal-views/caratula-global/caratula-global.component';
-// import { PrevioPruebaComponent } from './views/internal-views/previo-prueba/previo-prueba.component';
 import { CaratulaUsuariosComponent } from './views/usuarios/caratula-usuarios/caratula-usuarios.component';
 import { CaratulaEvacsComponent } from './views/internal-views/caratula-evacs/caratula-evacs.component';
 import { IntegralesComponent } from './views/internal-views/integrales/integrales.component';
@@ -78,13 +82,33 @@ import { CatalogoGeneralComponent } from './views/internal-views/catalogo-genera
 import { CreacionUsuariosComponent } from './views/usuarios/creacion-usuarios/creacion-usuarios/creacion-usuarios.component';
 import { CatalogoPermisosComponent } from './views/usuarios/catalogo-permisos/catalogo-permisos/catalogo-permisos.component';
 
+/** Sincroniza permisos en vivo desde BD */
+export const refrescarPermisosGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  return authService.obtenerPermisosEnVivo().pipe(map(() => true));
+};
+
+/** Valida que el usuario tenga la clave de permiso específica */
+export const permisoGuard = (clavePermiso: string): CanActivateFn => {
+  return () => {
+    const authService = inject(AuthService);
+    const router = inject(Router);
+
+    if (authService.tienePermiso(clavePermiso)) {
+      return true;
+    }
+
+    router.navigate(['/usuarios/dashboard']);
+    return false;
+  };
+};
+
 export const routes: Routes = [
   { path: '', component: InicioComponent, canActivate: [authGuard] },
   { path: 'login', component: LoginComponent, canActivate: [authGuard] },
   { path: 'home', component: HomeComponent, canActivate: [authGuard] },
   { path: 'monitor', component: MonitorComponent, canActivate: [authGuard] },
   { path: 'previo', component: PrevioComponent, canActivate: [authGuard] },
-  // { path: 'previo-prueba', component: PrevioPruebaComponent, canActivate: [authGuard] },
   { path: 'multimarcas', component: MultimarcasComponent, canActivate: [authGuard] },
   { path: 'metas', component: MetasComponent, canActivate: [authGuard] },
   { path: 'integrales', component: IntegralesComponent, canActivate: [authGuard] },
@@ -105,27 +129,29 @@ export const routes: Routes = [
   { path: 'recuperacion/verificar-codigo', component: VerificarCodigoComponent },
   { path: 'recuperacion/restablecer-contrasena', component: RestablecerContrasenaComponent },
 
-  // --- RUTAS DE GESTIÓN Y PERMISOS ---
-  { path: 'gestion-clientes', component: GestionClientesComponent, canActivate: [authGuard] },
-  { path: 'catalogo-general', component: CatalogoGeneralComponent, canActivate: [authGuard] },
-  { path: 'usuarios/creacion-usuarios', component: CreacionUsuariosComponent, canActivate: [usuarioGuard] },
-  { path: 'usuarios/catalogo-permisos', component: CatalogoPermisosComponent, canActivate: [usuarioGuard] },
+  // --- GESTIÓN Y PERMISOS ---
+  { path: 'gestion-clientes', component: GestionClientesComponent, canActivate: [authGuard, refrescarPermisosGuard] },
+  { path: 'catalogo-general', component: CatalogoGeneralComponent, canActivate: [authGuard, refrescarPermisosGuard] },
+  { path: 'usuarios/creacion-usuarios', component: CreacionUsuariosComponent, canActivate: [usuarioGuard, refrescarPermisosGuard] },
+  { path: 'usuarios/catalogo-permisos', component: CatalogoPermisosComponent, canActivate: [usuarioGuard, refrescarPermisosGuard] },
 
-  // --- RUTAS DE USUARIOS ---
-  { path: 'usuarios/dashboard', component: DashboardComponent, canActivate: [usuarioGuard] },
-  { path: 'usuarios/proyeccion-compras', component: ProyeccionUsuariosComponent, canActivate: [usuarioGuard] },
-  { path: 'usuarios/crear-proyeccion', component: CrearProyeccionUsuariosComponent, canActivate: [usuarioGuard] },
-  { path: 'usuarios/proyeccion-historial', component: ProyeccionHistorialComponent, canActivate: [usuarioGuard] },
+  // --- RUTAS PROTEGIDAS DE USUARIO / CLIENTE ---
+  { path: 'usuarios/dashboard', component: DashboardComponent, canActivate: [usuarioGuard,refrescarPermisosGuard] },
+  { path: 'usuarios/proyeccion-compras', component: ProyeccionUsuariosComponent, canActivate: [usuarioGuard, refrescarPermisosGuard] },
+  { path: 'usuarios/crear-proyeccion', component: CrearProyeccionUsuariosComponent, canActivate: [usuarioGuard, refrescarPermisosGuard] },
+  { path: 'usuarios/proyeccion-historial', component: ProyeccionHistorialComponent, canActivate: [usuarioGuard, refrescarPermisosGuard] },
   { path: 'usuarios/caratula-retroactivos', component: CaratulaRetroactivosUsuarioComponent, canActivate: [usuarioGuard] },
-  { path: 'usuarios/caratula', component: CaratulaUsuariosComponent, canActivate: [usuarioGuard] },
-  { path: 'usuarios/garantias', component: GarantiasUsuarioComponent, canActivate: [usuarioGuard] },
-  { path: 'usuarios/solicitud-retroactivo', component: SolicitudRetroactivoLandingComponent, canActivate: [usuarioGuard] },
-  { path: 'usuarios/solicitud-retroactivo/formulario', component: SolicitudRetroactivoComponent, canActivate: [usuarioGuard] },
-  { path: 'usuarios/solicitud-retroactivo/seguimiento', component: SolicitudRetroactivoSeguimientoComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/caratula', component: CaratulaUsuariosComponent, canActivate: [usuarioGuard, refrescarPermisosGuard, refrescarPermisosGuard] },
+  { path: 'usuarios/garantias', component: GarantiasUsuarioComponent, canActivate: [usuarioGuard, refrescarPermisosGuard, refrescarPermisosGuard] },
+  { path: 'usuarios/solicitud-retroactivo', component: SolicitudRetroactivoLandingComponent, canActivate: [usuarioGuard, ] },
+  { path: 'usuarios/solicitud-retroactivo/formulario', component: SolicitudRetroactivoComponent, canActivate: [usuarioGuard, ] },
+  { path: 'usuarios/solicitud-retroactivo/seguimiento', component: SolicitudRetroactivoSeguimientoComponent, canActivate: [usuarioGuard, refrescarPermisosGuard] },
+  { path: 'usuarios/calculadora-retroactivos', component: CalculadoraRetroactivosComponent, canActivate: [usuarioGuard, refrescarPermisosGuard] },
+
+  // --- RUTAS INTERNAS ADMINISTRATIVAS ---
   { path: 'usuarios/solicitud-retroactivo/gestor', component: SolicitudRetroactivoGestorComponent, canActivate: [adminGuard] },
   { path: 'usuarios/solicitud-retroactivo/dashboard', component: SolicitudRetroactivoDashboardComponent, canActivate: [adminGuard] },
   { path: 'solicitud-retroactivo-campanias', component: SolicitudRetroactivoCampaniasComponent, canActivate: [adminGuard] },
-  { path: 'usuarios/calculadora-retroactivos', component: CalculadoraRetroactivosComponent, canActivate: [usuarioGuard] },
   { path: 'flujo-dashboard', component: FlujoDashboardComponent, canActivate: [adminGuard] },
   { path: 'ordenes-compra', component: OrdenesCompraComponent, canActivate: [adminGuard] },
   { path: 'logistica', component: LogisticaComponent, canActivate: [adminGuard] },

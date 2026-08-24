@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject, BehaviorSubject, of } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { jwtDecode } from 'jwt-decode';
 
@@ -15,6 +15,7 @@ export interface PermisoItem {
 })
 export class AuthService {
 
+  private readonly http = inject(HttpClient);
   private logoutSubject = new Subject<void>();
   public onLogout$ = this.logoutSubject.asObservable();
 
@@ -23,29 +24,96 @@ export class AuthService {
 
   private apiUrl = environment.apiUrl;
 
-  // Matriz de rutas permitidas cargadas en memoria (ej. '/garantias/ver')
+  // Matriz de rutas permitidas cargadas en memoria
   private rutasPermitidas = new Set<string>();
 
-  constructor(private http: HttpClient) {
+  constructor() {
     this.restaurarPermisosLocales();
   }
 
   // ==========================================
-  // GESTIÓN DE PERMISOS Y MATRIZ
+  // GESTIÓN DE PERMISOS EN VIVO Y MATRIZ
   // ==========================================
 
   /**
-   * Carga los permisos del usuario desde la API sin interrumpir el flujo si falla
+   * Consulta a la BD en tiempo real la matriz de permisos según el Rol activo[cite: 2]
+   */
+  obtenerPermisosEnVivo(): Observable<Set<string>> {
+    const rol = this.getRol();
+    const userId = this.getUserId();
+
+    // Rol 1: Bypass total SuperAdmin[cite: 1]
+    if (rol === 1) {
+      this.rutasPermitidas = new Set(['*']);
+      return of(this.rutasPermitidas);
+    }
+
+    // Rol 2: Administrador Cliente / Distribuidor (Se agrega /api)
+    if (rol === 2 && userId) {
+      return this.http.get<any>(`${this.apiUrl}/api/permisos/delegables?padre_id=${userId}`).pipe(
+        map(res => this.normalizarPermisos(res.permisos_delegables || [])),
+        tap(set => {
+          this.rutasPermitidas = set;
+          localStorage.setItem('rutas_permitidas', JSON.stringify(Array.from(set)));
+        }),
+        catchError(err => {
+          console.warn('Error al obtener bolsa delegable:', err);
+          return of(new Set<string>());
+        })
+      );
+    }
+
+    // Rol 3: Usuario Hijo (Se agrega /api)[cite: 2, 4]
+    if (rol === 3 && userId) {
+      const padreId = this.getPadreId();
+      return this.http.get<any>(`${this.apiUrl}/api/permisos/usuario/${userId}?padre_id=${padreId}`).pipe(
+        map(res => this.normalizarPermisos(res.permisos || [])),
+        tap(set => {
+          this.rutasPermitidas = set;
+          localStorage.setItem('rutas_permitidas', JSON.stringify(Array.from(set)));
+        }),
+        catchError(err => {
+          console.warn('Error al obtener matriz de permisos del hijo:', err);
+          return of(new Set<string>());
+        })
+      );
+    }
+
+    return of(new Set<string>());
+  }
+
+  /**
+   * Estandariza módulos y acciones a rutas "modulo/accion" y "/modulo/accion"[cite: 1]
+   */
+  private normalizarPermisos(lista: any[]): Set<string> {
+    const set = new Set<string>();
+    lista.forEach(item => {
+      const mod = (item.identificador || item.modulo || '').toLowerCase().trim();
+      const acc = (item.accion_id_texto || item.accion || 'ver').toLowerCase().trim();
+
+      if (mod) {
+        set.add(`${mod}/${acc}`);
+        set.add(`/${mod}/${acc}`);
+        set.add(`${mod}/ver`);
+        set.add(`/${mod}/ver`);
+      }
+    });
+    return set;
+  }
+
+  /**
+   * Carga manual específica para hijo (Se agrega /api)[cite: 2, 4]
    */
   cargarPermisos(hijoId: number, padreId: number): Observable<any> {
     return this.http.get<{ permisos: PermisoItem[] }>(
-      `${this.apiUrl}/permisos/usuario/${hijoId}?padre_id=${padreId}`
+      `${this.apiUrl}/api/permisos/usuario/${hijoId}?padre_id=${padreId}`
     ).pipe(
       tap(response => {
         const setRutas = new Set<string>();
         if (response && response.permisos && Array.isArray(response.permisos)) {
           response.permisos.forEach(p => {
             setRutas.add(`/${p.modulo}/${p.accion}`.toLowerCase());
+            setRutas.add(`${p.modulo}/${p.accion}`.toLowerCase());
           });
         }
         this.rutasPermitidas = setRutas;
@@ -53,24 +121,24 @@ export class AuthService {
       }),
       catchError(err => {
         console.warn('Error al obtener la matriz de permisos:', err);
-        this.rutasPermitidas = new Set();
         return of({ permisos: [] });
       })
     );
   }
 
   /**
-   * Consulta in-situ si una ruta o acción está permitida.
-   * Retorna true si es Admin del Sistema (rol === 1) o si existe en la matriz.
+   * Consulta sincrónica in-situ para directivas *ngIf y getters[cite: 1]
    */
-  hasPermission(pathOAccion: string): boolean {
-    if (this.isAdmin()) return true; // Bypass total para Administrador del Sistema
+  tienePermiso(pathOAccion: string): boolean {
+    if (this.isAdmin()) return true;
 
     const rutaLimpia = pathOAccion.startsWith('/')
       ? pathOAccion.toLowerCase()
       : `/${pathOAccion}`.toLowerCase();
 
-    return this.rutasPermitidas.has(rutaLimpia);
+    const sinDiagonal = rutaLimpia.substring(1);
+
+    return this.rutasPermitidas.has(rutaLimpia) || this.rutasPermitidas.has(sinDiagonal);
   }
 
   private restaurarPermisosLocales(): void {
@@ -94,7 +162,7 @@ export class AuthService {
     if (!token) return 0;
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.rol || 0;
+      return payload.rol || payload.rol_id || 0;
     } catch {
       return 0;
     }
@@ -247,5 +315,4 @@ export class AuthService {
       return 0;
     }
   }
-
 }

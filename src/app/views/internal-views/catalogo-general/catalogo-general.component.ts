@@ -3,6 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminSistemaService, ModuloItem, AccionBase, ModuloPayload } from '../../../services/admin-sistema.service';
 import { TopBarUsuariosComponent } from '../../../components/top-bar-usuarios/top-bar-usuarios.component';
+import { routes } from '../../../app.routes';
+
+export interface RutaDetectada {
+  path: string;
+  nombreSugerido: string;
+  identificador: string;
+  registrado: boolean;
+  moduloExistente?: ModuloItem;
+}
 
 @Component({
   selector: 'app-catalogo-general',
@@ -20,14 +29,22 @@ export class CatalogoGeneralComponent implements OnInit {
 
   modulos: ModuloItem[] = [];
   accionesGlobales: AccionBase[] = [];
+  rutasDetectadasLista: RutaDetectada[] = [];
 
-  // Cambio de variable sin eñe (pestanaActiva)
-  pestanaActiva: 'modulos' | 'acciones' = 'modulos';
+  pestanaActiva: 'modulos' | 'acciones' | 'rutas' = 'modulos';
+
+  // --- VARIABLES DE PAGINACIÓN ---
+  itemsPerPage: number = 10;
+  pageModulos: number = 1;
+  pageAcciones: number = 1;
+  pageRutasUser: number = 1;
+  pageRutasAdmin: number = 1;
 
   // Formulario Módulo
   modalModuloVisible: boolean = false;
   editandoModuloId: number | null = null;
   formNombreModulo: string = '';
+  formNombreBloqueado: boolean = false;
   formIdentificadorModulo: string = '';
   formPadreIdModulo: number | null = null;
   formAccionesSeleccionadas: number[] = [];
@@ -37,7 +54,6 @@ export class CatalogoGeneralComponent implements OnInit {
   formNombreAccion: string = '';
   formIdentificadorAccion: string = '';
 
-  // Variable para controlar qué módulos raíz están expandidos
   modulosExpandidos = new Set<number>();
 
   ngOnInit(): void {
@@ -53,6 +69,16 @@ export class CatalogoGeneralComponent implements OnInit {
         this.adminService.getModulos().subscribe({
           next: (resModulos) => {
             this.modulos = resModulos.modulos || [];
+            
+            // Generar y cachear las rutas una vez cargados los módulos
+            this.generarListaRutas();
+            
+            // Reiniciar páginas al refrescar
+            this.pageModulos = 1;
+            this.pageAcciones = 1;
+            this.pageRutasUser = 1;
+            this.pageRutasAdmin = 1;
+
             this.cargando = false;
           },
           error: () => {
@@ -68,15 +94,107 @@ export class CatalogoGeneralComponent implements OnInit {
     });
   }
 
-  /**
-   * Genera la clave de permiso jerárquica (padre/submodulo/accion o modulo/accion)
-   */
+  // --- LÓGICA DEL ESCÁNER (Optimizada) ---
+
+  generarListaRutas(): void {
+    const rutasIgnoradas = [
+      '', 'login', 'home', '**', 
+      'recuperacion/enviar-correo', 
+      'recuperacion/verificar-codigo', 
+      'recuperacion/restablecer-contrasena'
+    ];
+
+    const resultado: RutaDetectada[] = [];
+
+    const procesarRuta = (path: string) => {
+      if (!path || rutasIgnoradas.includes(path) || path.includes(':')) return;
+
+      const identificador = path.toLowerCase().replace(/\//g, '_').replace(/-/g, '_');
+      const existe = this.modulos.find(m => 
+        m.identificador === identificador || 
+        m.identificador === path || 
+        m.identificador === path.replace(/^usuarios\//, '')
+      );
+
+      const partes = path.split('/');
+      const ultimaParte = partes[partes.length - 1];
+      const nombreSugerido = ultimaParte
+        .replace(/-/g, ' ')
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, letra => letra.toUpperCase());
+
+      resultado.push({
+        path, nombreSugerido, identificador, registrado: !!existe, moduloExistente: existe
+      });
+    };
+
+    routes.forEach(r => {
+      if (r.path !== undefined) procesarRuta(r.path);
+    });
+
+    this.rutasDetectadasLista = resultado;
+  }
+
+  // --- GETTERS DE PAGINACIÓN ---
+
+  // 1. Módulos
+  get modulosRaizTotales(): ModuloItem[] { return this.modulos.filter(m => !m.padre_id); }
+  get modulosRaizPaginados(): ModuloItem[] {
+    const s = (this.pageModulos - 1) * this.itemsPerPage;
+    return this.modulosRaizTotales.slice(s, s + this.itemsPerPage);
+  }
+  get totalPagesModulos(): number { return Math.ceil(this.modulosRaizTotales.length / this.itemsPerPage) || 1; }
+
+  // 2. Acciones
+  get accionesPaginadas(): AccionBase[] {
+    const s = (this.pageAcciones - 1) * this.itemsPerPage;
+    return this.accionesGlobales.slice(s, s + this.itemsPerPage);
+  }
+  get totalPagesAcciones(): number { return Math.ceil(this.accionesGlobales.length / this.itemsPerPage) || 1; }
+
+  // 3. Rutas de Usuario
+  get rutasUsuariosTotales(): RutaDetectada[] { return this.rutasDetectadasLista.filter(r => r.path.toLowerCase().startsWith('usuario')); }
+  get rutasUsuariosPaginadas(): RutaDetectada[] {
+    const s = (this.pageRutasUser - 1) * this.itemsPerPage;
+    return this.rutasUsuariosTotales.slice(s, s + this.itemsPerPage);
+  }
+  get totalPagesRutasUser(): number { return Math.ceil(this.rutasUsuariosTotales.length / this.itemsPerPage) || 1; }
+
+  // 4. Rutas Admin
+  get rutasAdminTotales(): RutaDetectada[] { return this.rutasDetectadasLista.filter(r => !r.path.toLowerCase().startsWith('usuario')); }
+  get rutasAdminPaginadas(): RutaDetectada[] {
+    const s = (this.pageRutasAdmin - 1) * this.itemsPerPage;
+    return this.rutasAdminTotales.slice(s, s + this.itemsPerPage);
+  }
+  get totalPagesRutasAdmin(): number { return Math.ceil(this.rutasAdminTotales.length / this.itemsPerPage) || 1; }
+
+  // Controlador universal de paginación
+  cambiarPagina(tipo: 'modulos' | 'acciones' | 'rutasUser' | 'rutasAdmin', delta: number): void {
+    if (tipo === 'modulos') this.pageModulos += delta;
+    if (tipo === 'acciones') this.pageAcciones += delta;
+    if (tipo === 'rutasUser') this.pageRutasUser += delta;
+    if (tipo === 'rutasAdmin') this.pageRutasAdmin += delta;
+  }
+
+  // --- RESTO DE FUNCIONES (Sin cambios) ---
+  registrarModuloDesdeRuta(ruta: RutaDetectada): void {
+    this.editandoModuloId = null;
+    this.formNombreModulo = ruta.nombreSugerido;
+    this.formNombreBloqueado = true;
+    this.formIdentificadorModulo = ruta.identificador;
+    this.formPadreIdModulo = null;
+    this.formAccionesSeleccionadas = [];
+
+    const accionVer = this.accionesGlobales.find(a => a.identificador === 'ver');
+    if (accionVer) this.formAccionesSeleccionadas.push(accionVer.id);
+    this.modalModuloVisible = true;
+  }
+
   getClavePermiso(accionId: number): string {
     const accion = this.accionesGlobales.find(a => a.id === accionId);
     const identAccion = accion ? accion.identificador : '';
     const identModulo = (this.formIdentificadorModulo || '').trim().toLowerCase();
 
-    // Si hay un módulo padre seleccionado, anteponemos su identificador
     if (this.formPadreIdModulo) {
       const padre = this.modulos.find(m => m.id === this.formPadreIdModulo);
       if (padre && padre.identificador) {
@@ -84,69 +202,35 @@ export class CatalogoGeneralComponent implements OnInit {
         return `${identPadre}/${identModulo}/${identAccion}`.toLowerCase();
       }
     }
-
     return `${identModulo}/${identAccion}`.toLowerCase();
   }
 
-  /**
-   * Copia el texto al portapapeles y emite notificación
-   */
   copiarTexto(texto: string): void {
     navigator.clipboard.writeText(texto).then(() => {
       this.alertTipo = 'success';
-      this.alertMsj = `Clave copiada al portapapeles: "${texto}"`;
+      this.alertMsj = `Texto copiado al portapapeles: "${texto}"`;
       setTimeout(() => (this.alertMsj = null), 2500);
     });
   }
 
-  /**
-   * Alterna la expansión/colapso de un módulo raíz
-   */
   toggleExpandir(id: number): void {
-    if (this.modulosExpandidos.has(id)) {
-      this.modulosExpandidos.delete(id);
-    } else {
-      this.modulosExpandidos.add(id);
-    }
+    if (this.modulosExpandidos.has(id)) this.modulosExpandidos.delete(id);
+    else this.modulosExpandidos.add(id);
   }
 
-  /**
-   * Verifica si un módulo está expandido
-   */
-  isExpandido(id: number): boolean {
-    return this.modulosExpandidos.has(id);
-  }
+  isExpandido(id: number): boolean { return this.modulosExpandidos.has(id); }
 
-  /**
-   * Retorna únicamente los Módulos Raíz (padre_id es null/undefined)
-   */
-  get modulosRaiz(): any[] {
-    return (this.modulos || []).filter(m => !m.padre_id);
-  }
+  getSubmodulos(padreId: number): any[] { return (this.modulos || []).filter(m => m.padre_id === padreId); }
 
-  /**
-   * Retorna los submódulos pertenecientes a un Módulo Raíz específico
-   */
-  getSubmodulos(padreId: number): any[] {
-    return (this.modulos || []).filter(m => m.padre_id === padreId);
-  }
-
-  // --- GESTIÓN DE MÓDULOS ---
-
-  /**
-   * Método adaptador para abrir el modal desde las llamadas de la plantilla
-   */
   abrirModalModulo(m?: ModuloItem): void {
-    if (m) {
-      this.abrirModalEditarModulo(m);
-    } else {
-      this.abrirModalNuevoModulo();
-    }
+    if (m) this.abrirModalEditarModulo(m);
+    else this.abrirModalNuevoModulo();
   }
 
   abrirModalNuevoModulo(): void {
     this.editandoModuloId = null;
     this.formNombreModulo = '';
+    this.formNombreBloqueado = false;
     this.formIdentificadorModulo = '';
     this.formPadreIdModulo = null;
     this.formAccionesSeleccionadas = [];
@@ -156,28 +240,22 @@ export class CatalogoGeneralComponent implements OnInit {
   abrirModalEditarModulo(m: ModuloItem): void {
     this.editandoModuloId = m.id;
     this.formNombreModulo = m.nombre;
+    this.formNombreBloqueado = false;
     this.formIdentificadorModulo = m.identificador;
     this.formPadreIdModulo = m.padre_id || null;
     this.formAccionesSeleccionadas = (m.acciones || []).map(a => a.id);
     this.modalModuloVisible = true;
   }
 
-  cerrarModalModulo(): void {
-    this.modalModuloVisible = false;
-  }
+  cerrarModalModulo(): void { this.modalModuloVisible = false; }
 
   toggleAccionEnModulo(accionId: number): void {
     const index = this.formAccionesSeleccionadas.indexOf(accionId);
-    if (index > -1) {
-      this.formAccionesSeleccionadas.splice(index, 1);
-    } else {
-      this.formAccionesSeleccionadas.push(accionId);
-    }
+    if (index > -1) this.formAccionesSeleccionadas.splice(index, 1);
+    else this.formAccionesSeleccionadas.push(accionId);
   }
 
-  estaAccionSeleccionada(accionId: number): boolean {
-    return this.formAccionesSeleccionadas.includes(accionId);
-  }
+  estaAccionSeleccionada(accionId: number): boolean { return this.formAccionesSeleccionadas.includes(accionId); }
 
   guardarModulo(): void {
     if (!this.formNombreModulo.trim() || !this.formIdentificadorModulo.trim()) {
@@ -206,12 +284,8 @@ export class CatalogoGeneralComponent implements OnInit {
     });
   }
 
-  /**
-   * Alterna el estado activo/inactivo del módulo tolerando booleanos o números
-  */
   toggleEstadoModulo(m: ModuloItem): void {
     if (!m) return;
-    // Evalúa si m.activo es 1 o true
     const estaActivo = m.activo === 1 || (m as any).activo === true;
     const nuevoEstado = estaActivo ? 0 : 1;
     this.cambiarEstadoModulo(m, nuevoEstado);
@@ -230,16 +304,9 @@ export class CatalogoGeneralComponent implements OnInit {
     });
   }
 
-  /**
-   * Acepta tanto el objeto ModuloItem completo como únicamente su ID numérico
-   */
   eliminarModulo(target: ModuloItem | number): void {
-    const m = typeof target === 'number' 
-      ? this.modulos.find(item => item.id === target) 
-      : target;
-
+    const m = typeof target === 'number' ? this.modulos.find(item => item.id === target) : target;
     if (!m) return;
-
     if (!confirm(`¿Eliminar permanentemente el módulo "${m.nombre}" y sus relaciones?`)) return;
 
     this.adminService.eliminarModulo(m.id).subscribe({
@@ -251,16 +318,13 @@ export class CatalogoGeneralComponent implements OnInit {
     });
   }
 
-  // --- GESTIÓN DE ACCIONES BASE ---
   abrirModalNuevaAccion(): void {
     this.formNombreAccion = '';
     this.formIdentificadorAccion = '';
     this.modalAccionVisible = true;
   }
 
-  cerrarModalAccion(): void {
-    this.modalAccionVisible = false;
-  }
+  cerrarModalAccion(): void { this.modalAccionVisible = false; }
 
   guardarAccion(): void {
     if (!this.formNombreAccion.trim() || !this.formIdentificadorAccion.trim()) {

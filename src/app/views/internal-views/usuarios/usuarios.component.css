@@ -1,3 +1,6 @@
+/* ========================================================
+   PALETA BASE Y LAYOUT
+   ======================================================== */
 :host {
   --bg: #121212;
   --card: #1e1e1e;
@@ -21,36 +24,49 @@
   box-sizing: border-box;
 }
 
-/* ENCABEZADO PRINCIPAL */
-.page-header {
-  max-width: 1000px;
-  margin: 0 auto 1.2rem auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 14px;
+.retroactivos-layout * {
+  box-sizing: border-box;
 }
 
-.page-header h2 {
+/* --- ENCABEZADO CENTRADO Y ALINEADO EN COLUMNA --- */
+.header-section {
+  max-width: 1000px;
+  margin: 0 auto 1.5rem auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.main-title {
   margin: 0;
   color: var(--t1);
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.3px;
 }
 
-/* NAVEGACIÓN EN PESTAÑAS */
-.nav-buttons-container {
+/* NAVEGACIÓN EN PESTAÑAS Y CONTENEDOR UNIFICADO */
+.nav-buttons-container,
+.tabs-container {
   display: flex;
   justify-content: center;
   gap: 10px;
   max-width: 1000px;
-  margin: 0 auto 1.5rem auto;
+  margin: 0;
   flex-wrap: wrap;
 }
 
-.nav-btn {
+.header-action-below {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.nav-btn,
+.tab-btn {
   background-color: var(--card2);
   color: var(--t2);
   border: 1px solid var(--border2);
@@ -60,21 +76,28 @@
   border-radius: 8px;
   text-decoration: none;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   transition: all 180ms var(--ease-out);
+  outline: none;
 }
 
-.nav-btn:hover {
+.nav-btn:hover,
+.tab-btn:hover {
   background-color: var(--border2);
   color: var(--t1);
 }
 
-.nav-btn.active {
+.nav-btn.active,
+.tab-btn.active {
   background-color: var(--orange-g);
   color: var(--orange);
   border-color: rgba(235, 94, 40, 0.4);
+  box-shadow: 0 2px 10px rgba(235, 94, 40, 0.15);
 }
 
-/* TABLA Y CONTENEDOR */
+/* --- TABLA Y CONTENEDOR CON SCROLL FIJO --- */
 .table-wrap {
   max-width: 1000px;
   margin: 0 auto 1.2rem auto;
@@ -83,6 +106,32 @@
   border-radius: 14px;
   box-shadow: 0 10px 25px 5px rgba(0, 0, 0, 0.4);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-responsive {
+  max-height: 520px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.table-responsive::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: var(--card);
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: var(--border2);
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: var(--orange);
 }
 
 .data-table {
@@ -92,6 +141,9 @@
 }
 
 .data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   background: #1a1a1a;
   color: var(--t3);
   font-size: 0.8rem;
@@ -99,6 +151,7 @@
   padding: 14px 16px;
   text-align: left;
   border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 var(--border);
 }
 
 .th-content {
@@ -342,7 +395,7 @@
   background: #161616;
 }
 
-/* PAGINACIÓN */
+/* --- PAGINACIÓN ESTANDARIZADA CON SELECTOR DE CANTIDAD --- */
 .paginacion-container {
   padding: 12px 16px;
   display: flex;
@@ -350,6 +403,55 @@
   justify-content: space-between;
   border-top: 1px solid var(--border);
   background: #161616;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.paginador-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.selector-label {
+  font-size: 0.78rem;
+  color: var(--t3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.selector-pills {
+  display: flex;
+  gap: 4px;
+  background: #121212;
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+}
+
+.btn-pill {
+  background: transparent;
+  border: none;
+  color: var(--t2);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 180ms var(--ease-out);
+}
+
+.btn-pill:hover {
+  color: var(--t1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-pill.activa {
+  background: var(--orange);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(235, 94, 40, 0.35);
 }
 
 .paginador-info {
@@ -372,18 +474,35 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border2);
   color: var(--t2);
-  width: 28px;
+  min-width: 28px;
   height: 28px;
+  padding: 0 6px;
   border-radius: 6px;
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 180ms var(--ease-out);
+}
+
+.btn-page:hover:not([disabled]) {
+  background: var(--border2);
+  color: #fff;
 }
 
 .btn-page.activa {
   background: var(--orange);
   color: #fff;
   border-color: var(--orange);
+}
+
+.btn-page[disabled] {
+  cursor: default;
+  opacity: 0.6;
+  background: transparent;
+  border-color: transparent;
 }
 
 /* MODAL MODULAR */
@@ -460,7 +579,6 @@
 /* ESTANDARIZACIÓN DEL COMPONENTE DE FILTROS (app-filtro)
 /* =================================================== */
 
-/* Botón disparador del filtro en el encabezado de la tabla */
 :host ::ng-deep app-filtro .filter-btn,
 :host ::ng-deep app-filtro .sort-btn,
 :host ::ng-deep app-filtro button {
@@ -482,7 +600,6 @@
   border-color: var(--orange, #EB5E28) !important;
 }
 
-/* Tarjeta / Menú Desplegable */
 :host ::ng-deep .filtro-menu,
 :host ::ng-deep .filter-dropdown,
 :host ::ng-deep .dropdown-menu {
@@ -495,7 +612,6 @@
   color: var(--t2, #CCC5B9) !important;
 }
 
-/* Campo de búsqueda dentro del filtro */
 :host ::ng-deep .filtro-menu input[type="text"],
 :host ::ng-deep .filter-dropdown input[type="text"] {
   background-color: #121212 !important;
@@ -515,7 +631,6 @@
   box-shadow: 0 0 0 2px rgba(235, 94, 40, 0.2) !important;
 }
 
-/* Lista de opciones / Checkboxes */
 :host ::ng-deep .filtro-opciones,
 :host ::ng-deep .options-list {
   max-height: 180px !important;
@@ -552,7 +667,6 @@
   cursor: pointer !important;
 }
 
-/* Acciones / Botones Limpiar y Aplicar */
 :host ::ng-deep .filtro-acciones,
 :host ::ng-deep .dropdown-actions,
 :host ::ng-deep .filter-buttons {
@@ -564,7 +678,6 @@
   margin-top: 8px !important;
 }
 
-/* Botón Limpiar */
 :host ::ng-deep .btn-limpiar,
 :host ::ng-deep .btn-clear,
 :host ::ng-deep .filter-buttons button:first-child {
@@ -586,7 +699,6 @@
   color: #ffffff !important;
 }
 
-/* Botón Aplicar */
 :host ::ng-deep .btn-aplicar,
 :host ::ng-deep .btn-apply,
 :host ::ng-deep .filter-buttons button:last-child {

@@ -25,14 +25,16 @@
     <button class="tab-btn" [class.active]="pestanaActiva === 'acciones'" (click)="pestanaActiva = 'acciones'">
       Acciones Base
     </button>
+    <button class="tab-btn" [class.active]="pestanaActiva === 'rutas'" (click)="pestanaActiva = 'rutas'">
+      Escáner de Rutas (Angular)
+    </button>
   </div>
 
-  <!-- ESTADO CARGANDO -->
   <div *ngIf="cargando" class="empty-state">
     <p>Cargando información del catálogo...</p>
   </div>
 
-  <!-- TABLA MÓDULOS CON ESTRUCTURA EN ÁRBOL VERTICAL -->
+  <!-- TABLA MÓDULOS -->
   <div *ngIf="!cargando && pestanaActiva === 'modulos'" class="table-wrap tab-fade-in">
     <table class="data-table">
       <thead>
@@ -47,16 +49,11 @@
         </tr>
       </thead>
       <tbody>
-        <ng-container *ngFor="let m of modulosRaiz">
-          
+        <ng-container *ngFor="let m of modulosRaizPaginados">
           <!-- MÓDULO RAÍZ -->
           <tr class="tr-root">
             <td>
-              <button 
-                *ngIf="getSubmodulos(m.id).length > 0" 
-                type="button" 
-                class="btn-expand" 
-                (click)="toggleExpandir(m.id)">
+              <button *ngIf="getSubmodulos(m.id).length > 0" type="button" class="btn-expand" (click)="toggleExpandir(m.id)">
                 {{ isExpandido(m.id) ? '▼' : '▶' }}
               </button>
             </td>
@@ -116,14 +113,19 @@
               </td>
             </tr>
           </ng-container>
-
         </ng-container>
       </tbody>
     </table>
+    <!-- PAGINACIÓN MÓDULOS -->
+    <div class="pagination-bar" *ngIf="totalPagesModulos > 1">
+      <button class="btn-page" [disabled]="pageModulos === 1" (click)="cambiarPagina('modulos', -1)">Anterior</button>
+      <span class="page-info">Página {{ pageModulos }} de {{ totalPagesModulos }}</span>
+      <button class="btn-page" [disabled]="pageModulos === totalPagesModulos" (click)="cambiarPagina('modulos', 1)">Siguiente</button>
+    </div>
   </div>
 
   <!-- TABLA ACCIONES BASE -->
-   <div *ngIf="!cargando && pestanaActiva === 'acciones'" class="table-wrap tab-fade-in">
+  <div *ngIf="!cargando && pestanaActiva === 'acciones'" class="table-wrap tab-fade-in">
     <table class="data-table">
       <thead>
         <tr>
@@ -135,7 +137,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let a of accionesGlobales">
+        <tr *ngFor="let a of accionesPaginadas">
           <td>{{ a.id }}</td>
           <td><strong>{{ a.nombre }}</strong></td>
           <td><code>{{ a.identificador }}</code></td>
@@ -153,9 +155,122 @@
         </tr>
       </tbody>
     </table>
+    <!-- PAGINACIÓN ACCIONES -->
+    <div class="pagination-bar" *ngIf="totalPagesAcciones > 1">
+      <button class="btn-page" [disabled]="pageAcciones === 1" (click)="cambiarPagina('acciones', -1)">Anterior</button>
+      <span class="page-info">Página {{ pageAcciones }} de {{ totalPagesAcciones }}</span>
+      <button class="btn-page" [disabled]="pageAcciones === totalPagesAcciones" (click)="cambiarPagina('acciones', 1)">Siguiente</button>
+    </div>
   </div>
 
-  <!-- MODAL MÓDULO -->
+  <!-- VISTA DIVIDIDA ESCÁNER DE RUTAS -->
+  <div *ngIf="!cargando && pestanaActiva === 'rutas'" class="rutas-sections-wrap tab-fade-in">
+    
+    <!-- RUTAS DE USUARIOS / CLIENTES -->
+    <div class="route-section">
+      <div class="route-section-title">
+        <span>Rutas de Usuarios / Clientes</span>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Ruta Angular (Path)</th>
+              <th>Nombre Sugerido</th>
+              <th>Identificador Generado</th>
+              <th>Estado en Catálogo</th>
+              <th style="text-align: right;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of rutasUsuariosPaginadas">
+              <td><code>/{{ r.path }}</code></td>
+              <td><strong>{{ r.nombreSugerido }}</strong></td>
+              <td>
+                <div *ngIf="r.registrado; else sinIdentificadorUser" class="code-copy-wrap">
+                  <code>{{ r.identificador }}</code>
+                  <button type="button" class="btn-copy-code" (click)="copiarTexto(r.identificador)">Copiar</button>
+                </div>
+                <ng-template #sinIdentificadorUser><span class="text-muted">No asignado</span></ng-template>
+              </td>
+              <td>
+                <span *ngIf="r.registrado" class="badge badge-active">Registrado (ID: {{ r.moduloExistente?.id }})</span>
+                <span *ngIf="!r.registrado" class="badge badge-inactive">No Registrado</span>
+              </td>
+              <td>
+                <div class="td-actions">
+                  <button *ngIf="!r.registrado" class="btn-action" (click)="registrarModuloDesdeRuta(r)">+ Dar de Alta</button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="rutasUsuariosTotales.length === 0">
+              <td colspan="5" class="empty-state">No se detectaron rutas de usuarios.</td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- PAGINACIÓN RUTAS USUARIOS -->
+        <div class="pagination-bar" *ngIf="totalPagesRutasUser > 1">
+          <button class="btn-page" [disabled]="pageRutasUser === 1" (click)="cambiarPagina('rutasUser', -1)">Anterior</button>
+          <span class="page-info">Página {{ pageRutasUser }} de {{ totalPagesRutasUser }}</span>
+          <button class="btn-page" [disabled]="pageRutasUser === totalPagesRutasUser" (click)="cambiarPagina('rutasUser', 1)">Siguiente</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RUTAS ADMINISTRATIVAS / SISTEMA -->
+    <div class="route-section">
+      <div class="route-section-title">
+        <span>Rutas Administrativas / Sistema</span>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Ruta Angular (Path)</th>
+              <th>Nombre Sugerido</th>
+              <th>Identificador Generado</th>
+              <th>Estado en Catálogo</th>
+              <th style="text-align: right;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of rutasAdminPaginadas">
+              <td><code>/{{ r.path }}</code></td>
+              <td><strong>{{ r.nombreSugerido }}</strong></td>
+              <td>
+                <div *ngIf="r.registrado; else sinIdentificadorAdmin" class="code-copy-wrap">
+                  <code>{{ r.identificador }}</code>
+                  <button type="button" class="btn-copy-code" (click)="copiarTexto(r.identificador)">Copiar</button>
+                </div>
+                <ng-template #sinIdentificadorAdmin><span class="text-muted">No asignado</span></ng-template>
+              </td>
+              <td>
+                <span *ngIf="r.registrado" class="badge badge-active">Registrado (ID: {{ r.moduloExistente?.id }})</span>
+                <span *ngIf="!r.registrado" class="badge badge-inactive">No Registrado</span>
+              </td>
+              <td>
+                <div class="td-actions">
+                  <button *ngIf="!r.registrado" class="btn-action" (click)="registrarModuloDesdeRuta(r)">+ Dar de Alta</button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="rutasAdminTotales.length === 0">
+              <td colspan="5" class="empty-state">No se detectaron rutas administrativas.</td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- PAGINACIÓN RUTAS ADMIN -->
+        <div class="pagination-bar" *ngIf="totalPagesRutasAdmin > 1">
+          <button class="btn-page" [disabled]="pageRutasAdmin === 1" (click)="cambiarPagina('rutasAdmin', -1)">Anterior</button>
+          <span class="page-info">Página {{ pageRutasAdmin }} de {{ totalPagesRutasAdmin }}</span>
+          <button class="btn-page" [disabled]="pageRutasAdmin === totalPagesRutasAdmin" (click)="cambiarPagina('rutasAdmin', 1)">Siguiente</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ... (Modales se mantienen iguales) ... -->
   <div *ngIf="modalModuloVisible" class="modal-backdrop">
     <div class="modal-card">
       <div class="modal-header-custom">
@@ -163,9 +278,9 @@
         <button type="button" class="close-btn" (click)="cerrarModalModulo()">&times;</button>
       </div>
       <div class="modal-body-custom">
-        <div class="form-group">
+        <div class="form-group" [class.form-group-disabled]="formNombreBloqueado">
           <label>Nombre del Módulo</label>
-          <input type="text" [(ngModel)]="formNombreModulo" placeholder="Ej. Solicitudes">
+          <input type="text" [(ngModel)]="formNombreModulo" [disabled]="formNombreBloqueado" placeholder="Ej. Solicitudes">
         </div>
         <div class="form-group">
           <label>Identificador Único</label>
@@ -191,7 +306,6 @@
           </div>
         </div>
 
-        <!-- VISTA PREVIA DE PERMISOS PARA EL PROGRAMADOR -->
         <div class="dev-helper-box" *ngIf="formIdentificadorModulo && formAccionesSeleccionadas.length > 0">
           <div class="dev-helper-title">
             <span>💻 Estructura de Validación (Dev Helper)</span>
@@ -215,7 +329,6 @@
     </div>
   </div>
 
-  <!-- MODAL ACCIÓN BASE -->
   <div *ngIf="modalAccionVisible" class="modal-backdrop">
     <div class="modal-card">
       <div class="modal-header-custom">
