@@ -71,15 +71,16 @@ export class GestionClientesComponent implements OnInit {
   }
 
   actualizarCupo(admin: AdminClienteItem, nuevoLimite: number): void {
-    if (nuevoLimite < 0) {
+    const limiteNum = Number(nuevoLimite);
+    if (isNaN(limiteNum) || limiteNum < 0) {
       this.mostrarAlerta('El límite de cupo no puede ser negativo.', 'error');
       return;
     }
 
-    this.adminService.actualizarCupoAdmin(admin.id, nuevoLimite).subscribe({
+    this.adminService.actualizarCupoAdmin(admin.id, limiteNum).subscribe({
       next: () => {
-        admin.max_hijos = nuevoLimite;
-        this.mostrarAlerta(`Cupo actualizado a ${nuevoLimite} para ${admin.nombre}.`, 'success');
+        admin.max_hijos = limiteNum;
+        this.mostrarAlerta(`Cupo actualizado a ${limiteNum} para ${admin.nombre}.`, 'success');
       },
       error: () => this.mostrarAlerta('Error al actualizar el límite de cupo.', 'error')
     });

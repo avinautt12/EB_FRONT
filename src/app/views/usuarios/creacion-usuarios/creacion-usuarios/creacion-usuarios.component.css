@@ -196,6 +196,14 @@
   justify-content: flex-end;
 }
 
+.td-sub-indent {
+  padding-left: 2.2rem !important;
+}
+
+.data-table tbody tr.submodulo-row {
+  background-color: rgba(0, 0, 0, 0.25) !important;
+}
+
 /* BADGES */
 .badge {
   font-size: 0.75rem;
@@ -287,6 +295,11 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
 }
 
+.modal-card.modal-large {
+  max-width: 1000px;
+  width: 95%;
+}
+
 /* --- HEADER DEL MODAL --- */
 .modal-header-custom {
   padding: 16px 20px;
@@ -343,6 +356,12 @@
   gap: 14px;
 }
 
+.modal-desc {
+  color: var(--t3);
+  font-size: 0.82rem;
+  margin: 0 0 4px 0;
+}
+
 .modal-footer-custom {
   padding: 14px 20px;
   border-top: 1px solid var(--border);
@@ -396,4 +415,151 @@
   text-align: center;
   padding: 2.5rem 1rem;
   color: var(--t3);
+}
+
+/* ========================================================
+   ÁRBOL DE PERMISOS EN MODAL
+   ======================================================== */
+.modal-table-wrap {
+  max-height: 60vh;
+  overflow-y: auto;
+  margin-bottom: 0;
+  width: 100%;
+}
+
+.data-table tbody tr.submodulo-row {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+.col-arrow {
+  width: 40px;
+  text-align: center;
+}
+
+.col-id {
+  width: 50px;
+  color: var(--t2);
+  font-size: 0.85rem;
+}
+
+/* --- BOTÓN DE EXPANDIR / ROTAR --- */
+.btn-expand {
+  background: transparent;
+  border: none;
+  color: var(--orange);
+  cursor: pointer;
+  outline: none;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-expand .arrow {
+  font-size: 0.7rem;
+  display: inline-block;
+  transition: transform 180ms var(--ease-out);
+}
+
+.btn-expand .arrow.rotated {
+  transform: rotate(90deg);
+}
+
+/* --- INFORMACIÓN DE MÓDULO Y ACCIONES --- */
+.modulo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modulo-nombre {
+  font-weight: 800;
+  color: var(--t1);
+  font-size: 0.92rem;
+}
+
+.sin-acciones {
+  font-size: 0.75rem;
+  color: var(--t3);
+  font-style: italic;
+}
+
+.acciones-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+/* --- CHECKBOXES PERSONALIZADOS --- */
+.custom-checkbox-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.custom-checkbox-wrapper input {
+  display: none;
+}
+
+.checkmark {
+  width: 16px;
+  height: 16px;
+  background: var(--bg);
+  border: 1px solid #555;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.checkmark svg {
+  width: 11px;
+  height: 11px;
+  color: white;
+}
+
+.custom-checkbox-wrapper input:checked + .checkmark {
+  background: var(--orange);
+  border-color: var(--orange);
+}
+
+.accion-label {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #333;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #bbb;
+  transition: all 0.2s ease;
+}
+
+.custom-checkbox-wrapper input:checked ~ .accion-label {
+  color: var(--t1);
+  border-color: #555;
+}
+
+/* --- BADGES JERARQUÍA --- */
+.badge-jerarquia {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.badge-jerarquia.raiz {
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.badge-jerarquia.sub {
+  background: rgba(255, 255, 255, 0.05);
+  color: #aaa;
+  border: 1px solid #333;
 }

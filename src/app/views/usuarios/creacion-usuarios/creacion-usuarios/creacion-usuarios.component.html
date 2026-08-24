@@ -21,7 +21,7 @@
     </div>
     <div class="header-actions">
       <button class="btn btn-secondary" (click)="cargarDatos()" [disabled]="cargando">Refrescar</button>
-      <button class="btn btn-primary" (click)="abrirModalCrear()" [disabled]="cupo && !cupo.tiene_cupo">
+      <button class="btn btn-primary" (click)="abrirModalCrear()" [disabled]="!puedeCrear || cargando">
         + Crear Usuario Hijo
       </button>
     </div>
@@ -60,10 +60,13 @@
               <button class="btn btn-action" (click)="abrirModalContrasena(h.id)">
                 Cambiar Clave
               </button>
+              <button class="btn btn-action" (click)="abrirModalPermisos(h)">
+                Permisos
+              </button>
               <button *ngIf="h.activo === 1" class="btn btn-action delete" (click)="cambiarEstado(h, 0)">
                 Desactivar
               </button>
-              <button *ngIf="h.activo === 0" class="btn btn-action" (click)="cambiarEstado(h, 1)">
+              <button *ngIf="h.activo === 0" class="btn btn-action" (click)="cambiarEstado(h, 1)" [disabled]="!puedeCrear">
                 Activar
               </button>
             </div>
@@ -103,7 +106,7 @@
       </div>
       <div class="modal-footer-custom">
         <button type="button" class="btn btn-secondary" (click)="modalCrearVisible = false">Cancelar</button>
-        <button type="button" class="btn btn-primary" (click)="guardarNuevoUsuario()">Guardar Usuario</button>
+        <button type="button" class="btn btn-primary" (click)="guardarNuevoUsuario()" [disabled]="!puedeCrear">Guardar Usuario</button>
       </div>
     </div>
   </div>
@@ -124,6 +127,110 @@
       <div class="modal-footer-custom">
         <button type="button" class="btn btn-secondary" (click)="cerrarModalContrasena()">Cancelar</button>
         <button type="button" class="btn btn-primary" (click)="guardarNuevaContrasena()">Actualizar Contraseña</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ASIGNACIÓN DE PERMISOS (ÁRBOL CON ANIDACIÓN EN RAMA) -->
+  <div *ngIf="modalPermisosVisible" class="modal-backdrop">
+    <div class="modal-card modal-large">
+      <div class="modal-header-custom">
+        <h3>Permisos - {{ hijoSeleccionado?.nombre }}</h3>
+        <button type="button" class="btn-close" (click)="cerrarModalPermisos()" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="modal-body-custom">
+        <p class="modal-desc">
+          Marca o desmarca las acciones que este usuario tendrá autorizadas dentro de tu bolsa delegable.
+        </p>
+
+        <div *ngIf="cargandoPermisos" class="empty-state">
+          <p>Cargando matriz de permisos...</p>
+        </div>
+
+        <div *ngIf="!cargandoPermisos" class="table-wrap modal-table-wrap">
+          <table class="data-table tree-table">
+            <thead>
+              <tr>
+                <th class="col-arrow"></th>
+                <th class="col-id">ID</th>
+                <th>Nombre Módulo / Acciones</th>
+                <th>Identificador</th>
+                <th>Jerarquía</th>
+              </tr>
+            </thead>
+            <tbody>
+              <ng-container *ngFor="let m of modulosRaiz">
+                <!-- MÓDULO RAÍZ -->
+                <tr class="tr-root">
+                  <td class="col-arrow">
+                    <button *ngIf="getSubmodulos(m.modulo_id).length > 0" type="button" class="btn-expand" (click)="toggleExpandir(m.modulo_id)">
+                      <span class="arrow" [class.rotated]="isExpandido(m.modulo_id)">&#9654;</span>
+                    </button>
+                  </td>
+                  <td class="col-id">{{ m.modulo_id }}</td>
+                  <td>
+                    <div class="modulo-info">
+                      <span class="modulo-nombre">{{ m.nombre }}</span>
+                      <div *ngIf="m.acciones.length > 0" class="acciones-list">
+                        <label *ngFor="let a of m.acciones" class="custom-checkbox-wrapper">
+                          <input type="checkbox" [(ngModel)]="a.asignado">
+                          <div class="checkmark">
+                            <svg *ngIf="a.asignado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                          </div>
+                          <span class="accion-label">{{ a.nombre }}</span>
+                        </label>
+                      </div>
+                      <span *ngIf="m.acciones.length === 0" class="sin-acciones">Sin acciones</span>
+                    </div>
+                  </td>
+                  <td><code>{{ m.identificador }}</code></td>
+                  <td><span class="badge-jerarquia raiz">Módulo Raíz</span></td>
+                </tr>
+
+                <!-- SUBMÓDULOS EN RAMA (EXPANDIBLES) -->
+                <ng-container *ngIf="isExpandido(m.modulo_id)">
+                  <tr *ngFor="let sub of getSubmodulos(m.modulo_id)" class="submodulo-row">
+                    <td class="col-arrow"></td>
+                    <td class="col-id">{{ sub.modulo_id }}</td>
+                    <td class="td-sub-indent">
+                      <div class="modulo-info">
+                        <span class="modulo-nombre">{{ sub.nombre }}</span>
+                        <div *ngIf="sub.acciones.length > 0" class="acciones-list">
+                          <label *ngFor="let a of sub.acciones" class="custom-checkbox-wrapper">
+                            <input type="checkbox" [(ngModel)]="a.asignado">
+                            <div class="checkmark">
+                              <svg *ngIf="a.asignado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                              </svg>
+                            </div>
+                            <span class="accion-label">{{ a.nombre }}</span>
+                          </label>
+                        </div>
+                        <span *ngIf="sub.acciones.length === 0" class="sin-acciones">Sin acciones</span>
+                      </div>
+                    </td>
+                    <td><code>{{ sub.identificador }}</code></td>
+                    <td><span class="badge-jerarquia sub">Submódulo</span></td>
+                  </tr>
+                </ng-container>
+              </ng-container>
+
+              <tr *ngIf="treePermisos.length === 0">
+                <td colspan="5" class="empty-state">
+                  No tienes permisos asignados en tu bolsa delegable para otorgar a este usuario.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer-custom">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalPermisos()" [disabled]="guardandoPermisos">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="guardarPermisos()" [disabled]="guardandoPermisos">
+          {{ guardandoPermisos ? 'Guardando...' : 'Guardar Permisos' }}
+        </button>
       </div>
     </div>
   </div>
