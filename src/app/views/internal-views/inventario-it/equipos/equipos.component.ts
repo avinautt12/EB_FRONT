@@ -79,6 +79,12 @@ export class EquiposComponent implements OnInit {
     'No funciona'
   ];
 
+  ubicacionesFisicas: string[] = [
+    'Almacen',
+    'Oficina',
+    'Tienda'
+  ];
+
   estadosRegistro: EstadoEquipo[] = [
     'Disponible',
     'Baja'
@@ -261,6 +267,24 @@ export class EquiposComponent implements OnInit {
       .replace(/\s+/g, '-');
   }
 
+  normalizarCampoTexto(
+    campo: 'nombre' | 'marca'
+  ): void {
+    if (campo === 'nombre') {
+      this.nuevoEquipo.nombre =
+        this.normalizarTextoTitulo(
+          this.nuevoEquipo.nombre
+        );
+
+      return;
+    }
+
+    this.nuevoEquipo.marca =
+      this.normalizarTextoTitulo(
+        this.nuevoEquipo.marca
+      );
+  }
+
   abrirFormulario(): void {
     this.equipoEditandoId = null;
     this.estadoOriginalEdicion = null;
@@ -301,7 +325,9 @@ export class EquiposComponent implements OnInit {
       serie: equipo.serie ?? '',
       funcionamiento: equipo.funcionamiento ?? 'Bueno',
       estado: equipo.estado ?? 'Disponible',
-      ubicacion: equipo.ubicacion ?? '',
+      ubicacion: this.normalizarUbicacion(
+        equipo.ubicacion
+      ),
       imagenUrl: equipo.imagenUrl ?? '',
       comentariosSistemas:
         equipo.comentariosSistemas ?? '',
@@ -379,7 +405,19 @@ export class EquiposComponent implements OnInit {
       this.nuevoEquipo.categoria?.trim();
 
     const nombre =
-      this.nuevoEquipo.nombre?.trim();
+      this.normalizarTextoTitulo(
+        this.nuevoEquipo.nombre
+      );
+
+    const marca =
+      this.normalizarTextoTitulo(
+        this.nuevoEquipo.marca
+      );
+
+    const ubicacion =
+      this.normalizarUbicacion(
+        this.nuevoEquipo.ubicacion
+      );
 
     if (!inventario || !categoria || !nombre) {
       this.errorFormulario =
@@ -397,6 +435,8 @@ export class EquiposComponent implements OnInit {
       inventario,
       categoria,
       nombre,
+      marca,
+      ubicacion,
       fechaRegistro:
         this.nuevoEquipo.fechaRegistro ||
         this.obtenerFechaActual()
@@ -496,6 +536,80 @@ export class EquiposComponent implements OnInit {
     ) {
       this.filtroEmpresa = empresa;
     }
+  }
+
+  private normalizarTextoTitulo(
+    valor?: string | null
+  ): string {
+    const texto = (valor || '')
+      .trim()
+      .replace(/\s+/g, ' ');
+
+    if (!texto) {
+      return '';
+    }
+
+    const acronimos: Record<string, string> = {
+      ti: 'TI',
+      it: 'IT',
+      pc: 'PC',
+      usb: 'USB',
+      ssd: 'SSD',
+      hdd: 'HDD',
+      ram: 'RAM',
+      cpu: 'CPU',
+      ups: 'UPS',
+      hp: 'HP',
+      led: 'LED',
+      lcd: 'LCD',
+      hdmi: 'HDMI',
+      vga: 'VGA',
+      wifi: 'WiFi'
+    };
+
+    return texto
+      .split(' ')
+      .map(palabra => {
+        const clave = palabra.toLowerCase();
+
+        if (acronimos[clave]) {
+          return acronimos[clave];
+        }
+
+        return (
+          clave.charAt(0).toUpperCase() +
+          clave.slice(1)
+        );
+      })
+      .join(' ');
+  }
+
+  private normalizarUbicacion(
+    valor?: string | null
+  ): string {
+    const clave = (valor || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
+
+    if (!clave) {
+      return '';
+    }
+
+    if (clave.includes('almacen')) {
+      return 'Almacen';
+    }
+
+    if (clave.includes('oficina')) {
+      return 'Oficina';
+    }
+
+    if (clave.includes('tienda')) {
+      return 'Tienda';
+    }
+
+    return '';
   }
 
   private crearEquipoVacio(): NuevoEquipo {

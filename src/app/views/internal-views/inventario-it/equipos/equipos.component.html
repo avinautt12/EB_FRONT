@@ -281,6 +281,7 @@
               type="text"
               name="nombre"
               [(ngModel)]="nuevoEquipo.nombre"
+              (blur)="normalizarCampoTexto('nombre')"
               placeholder="Ej. Laptop Dell Latitude, monitor, impresora, teléfono..."
               maxlength="255"
               required
@@ -304,6 +305,7 @@
               type="text"
               name="marca"
               [(ngModel)]="nuevoEquipo.marca"
+              (blur)="normalizarCampoTexto('marca')"
               placeholder="Ej. Dell, HP, Asus..."
               maxlength="100"
             />
@@ -404,16 +406,26 @@
               Ubicación física
             </span>
 
-            <input
-              type="text"
+            <select
               name="ubicacion"
-              [(ngModel)]="nuevoEquipo.ubicacion"
-              placeholder="Ej. Almacén TI, oficina principal, tienda..."
-              maxlength="255"
-            />
+              [(ngModel)]="nuevoEquipo.ubicacion">
+
+              <option value="">
+                Selecciona una ubicación
+              </option>
+
+              <option
+                *ngFor="
+                  let ubicacion of ubicacionesFisicas
+                "
+                [value]="ubicacion">
+
+                {{ ubicacion }}
+              </option>
+            </select>
 
             <small class="field-help">
-              Lugar donde se encuentra físicamente el equipo.
+              Selecciona Almacen, Oficina o Tienda.
             </small>
           </label>
         </div>
