@@ -28,15 +28,14 @@
   box-sizing: border-box;
 }
 
-/* --- ENCABEZADO CENTRADO Y ALINEADO EN COLUMNA --- */
+/* --- ENCABEZADO Y TOOLBAR UNIFICADA EN UNA SOLA LÍNEA --- */
 .header-section {
   max-width: 1000px;
   margin: 0 auto 1.5rem auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  text-align: center;
+  gap: 16px;
 }
 
 .main-title {
@@ -45,27 +44,33 @@
   font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.3px;
+  text-align: center;
 }
 
-/* NAVEGACIÓN EN PESTAÑAS Y CONTENEDOR UNIFICADO */
-.nav-buttons-container,
+.header-toolbar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .tabs-container {
   display: flex;
-  justify-content: center;
+  align-items: center;
   gap: 10px;
-  max-width: 1000px;
   margin: 0;
   flex-wrap: wrap;
 }
 
-.header-action-below {
+.header-actions {
   display: flex;
-  justify-content: center;
-  margin-top: 4px;
-  margin-bottom: 0.5rem;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.nav-btn,
 .tab-btn {
   background-color: var(--card2);
   color: var(--t2);
@@ -83,13 +88,11 @@
   outline: none;
 }
 
-.nav-btn:hover,
 .tab-btn:hover {
   background-color: var(--border2);
   color: var(--t1);
 }
 
-.nav-btn.active,
 .tab-btn.active {
   background-color: var(--orange-g);
   color: var(--orange);

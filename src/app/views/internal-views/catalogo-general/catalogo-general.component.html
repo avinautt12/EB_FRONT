@@ -1,276 +1,361 @@
 <app-top-bar-usuarios></app-top-bar-usuarios>
 
 <div class="retroactivos-layout">
-  <!-- ALERTA INLINE -->
+  <!-- ALERTA INLINE LOCAL -->
   <div *ngIf="alertMsj" [ngClass]="alertTipo === 'success' ? 'inline-alert success' : 'inline-alert error'">
     <span>{{ alertMsj }}</span>
     <button class="close-btn" (click)="alertMsj = null">&times;</button>
   </div>
 
-  <!-- HEADER PRINCIPAL -->
-  <div class="page-header">
-    <h2>Catálogo General (Módulos y Acciones)</h2>
-    <div class="header-actions">
-      <button class="btn btn-secondary" (click)="cargarCatalogo()" [disabled]="cargando">Refrescar</button>
-      <button *ngIf="pestanaActiva === 'modulos'" class="btn btn-primary" (click)="abrirModalNuevoModulo()">+ Nuevo Módulo</button>
-      <button *ngIf="pestanaActiva === 'acciones'" class="btn btn-primary" (click)="abrirModalNuevaAccion()">+ Nueva Acción Base</button>
+  <!-- ENCABEZADO Y TOOLBAR UNIFICADA -->
+  <div class="header-section">
+    <h2 class="main-title">Catálogo General (Módulos y Acciones)</h2>
+
+    <!-- BARRA EN UNA SOLA LÍNEA (PESTAÑAS IZQUIERDA / ACCIONES DERECHA) -->
+    <div class="header-toolbar">
+      <!-- PESTAÑAS (IZQUIERDA) -->
+      <div class="tabs-container">
+        <button class="tab-btn" [class.active]="pestanaActiva === 'modulos'" (click)="pestanaActiva = 'modulos'">
+          <i class="fas fa-sitemap"></i> Módulos y Submódulos
+        </button>
+        <button class="tab-btn" [class.active]="pestanaActiva === 'acciones'" (click)="pestanaActiva = 'acciones'">
+          <i class="fas fa-bolt"></i> Acciones Base
+        </button>
+        <button class="tab-btn" [class.active]="pestanaActiva === 'rutas'" (click)="pestanaActiva = 'rutas'">
+          <i class="fas fa-shield-alt"></i> Permisos Generales
+        </button>
+      </div>
+
+      <!-- ACCIONES (DERECHA) -->
+      <div class="header-actions">
+        <button class="btn btn-info" (click)="cargarCatalogo()" [disabled]="cargando">
+          <i class="fas fa-sync-alt"></i> Actualizar
+        </button>
+        <button *ngIf="pestanaActiva === 'modulos'" class="btn btn-primary" (click)="abrirModalNuevoModulo()">
+          <i class="fas fa-plus"></i> Nuevo Módulo
+        </button>
+        <button *ngIf="pestanaActiva === 'acciones'" class="btn btn-primary" (click)="abrirModalNuevaAccion()">
+          <i class="fas fa-plus"></i> Nueva Acción Base
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- PESTAÑAS -->
-  <div class="tabs-container">
-    <button class="tab-btn" [class.active]="pestanaActiva === 'modulos'" (click)="pestanaActiva = 'modulos'">
-      Módulos y Submódulos
-    </button>
-    <button class="tab-btn" [class.active]="pestanaActiva === 'acciones'" (click)="pestanaActiva = 'acciones'">
-      Acciones Base
-    </button>
-    <button class="tab-btn" [class.active]="pestanaActiva === 'rutas'" (click)="pestanaActiva = 'rutas'">
-      Escáner de Rutas (Angular)
-    </button>
-  </div>
-
+  <!-- ESTADO CARGANDO -->
   <div *ngIf="cargando" class="empty-state">
     <p>Cargando información del catálogo...</p>
   </div>
 
-  <!-- TABLA MÓDULOS -->
+  <!-- TABLA MÓDULOS Y SUBMÓDULOS -->
   <div *ngIf="!cargando && pestanaActiva === 'modulos'" class="table-wrap tab-fade-in">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th style="width: 38px;"></th>
-          <th>ID</th>
-          <th>Nombre Módulo / Acciones</th>
-          <th>Identificador</th>
-          <th>Jerarquía</th>
-          <th>Estado</th>
-          <th style="text-align: right;">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <ng-container *ngFor="let m of modulosRaizPaginados">
-          <!-- MÓDULO RAÍZ -->
-          <tr class="tr-root">
-            <td>
-              <button *ngIf="getSubmodulos(m.id).length > 0" type="button" class="btn-expand" (click)="toggleExpandir(m.id)">
-                {{ isExpandido(m.id) ? '▼' : '▶' }}
-              </button>
-            </td>
-            <td>{{ m.id }}</td>
-            <td>
-              <div class="module-title"><strong>{{ m.nombre }}</strong></div>
-              <div class="vertical-actions-tree" *ngIf="m.acciones && m.acciones.length > 0">
-                <div *ngFor="let acc of m.acciones" class="action-tree-item">
-                  <span class="chip-accion-vertical">{{ acc.nombre }}</span>
-                </div>
-              </div>
-              <div *ngIf="!m.acciones || m.acciones.length === 0" class="text-muted small-text">Sin acciones</div>
-            </td>
-            <td><code>{{ m.identificador }}</code></td>
-            <td><span class="badge badge-root">Módulo Raíz</span></td>
-            <td>
-              <span [class]="m.activo ? 'badge badge-active' : 'badge badge-inactive'">
-                {{ m.activo ? 'Activo' : 'Inactivo' }}
-              </span>
-            </td>
-            <td class="td-actions">
-              <button class="btn-action" (click)="abrirModalModulo(m)">Editar</button>
-              <button class="btn-action" (click)="toggleEstadoModulo(m)">
-                {{ m.activo ? 'Desactivar' : 'Activar' }}
-              </button>
-              <button class="btn-action delete" (click)="eliminarModulo(m)">Eliminar</button>
-            </td>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 38px;"></th>
+            <th>ID</th>
+            <th>Nombre Módulo / Acciones</th>
+            <th>Identificador</th>
+            <th>Jerarquía</th>
+            <th>Estado</th>
+            <th style="text-align: right;">Acciones</th>
           </tr>
-
-          <!-- SUBMÓDULOS (EXPANDIBLES) -->
-          <ng-container *ngIf="isExpandido(m.id)">
-            <tr *ngFor="let sub of getSubmodulos(m.id)" class="tr-submodule">
-              <td></td>
-              <td>{{ sub.id }}</td>
-              <td class="td-sub-indent">
-                <div class="module-title"><strong>{{ sub.nombre }}</strong></div>
-                <div class="vertical-actions-tree" *ngIf="sub.acciones && sub.acciones.length > 0">
-                  <div *ngFor="let acc of sub.acciones" class="action-tree-item">
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let m of modulosRaizPaginados">
+            <!-- MÓDULO RAÍZ -->
+            <tr class="tr-root">
+              <td>
+                <button *ngIf="getSubmodulos(m.id).length > 0" type="button" class="btn-expand" (click)="toggleExpandir(m.id)">
+                  {{ isExpandido(m.id) ? '▼' : '▶' }}
+                </button>
+              </td>
+              <td>{{ m.id }}</td>
+              <td>
+                <div class="module-title"><strong>{{ m.nombre }}</strong></div>
+                <div class="vertical-actions-tree" *ngIf="m.acciones && m.acciones.length > 0">
+                  <div *ngFor="let acc of m.acciones" class="action-tree-item">
                     <span class="chip-accion-vertical">{{ acc.nombre }}</span>
                   </div>
                 </div>
-                <div *ngIf="!sub.acciones || sub.acciones.length === 0" class="text-muted small-text">Sin acciones</div>
+                <div *ngIf="!m.acciones || m.acciones.length === 0" class="text-muted small-text">Sin acciones</div>
               </td>
-              <td><code>{{ sub.identificador }}</code></td>
-              <td><span class="badge badge-sub">Submódulo</span></td>
+              <td><code>{{ m.identificador }}</code></td>
+              <td><span class="badge badge-root">Módulo Raíz</span></td>
               <td>
-                <span [class]="sub.activo ? 'badge badge-active' : 'badge badge-inactive'">
-                  {{ sub.activo ? 'Activo' : 'Inactivo' }}
+                <span [class]="m.activo ? 'badge badge-active' : 'badge badge-inactive'">
+                  {{ m.activo ? 'Activo' : 'Inactivo' }}
                 </span>
               </td>
               <td class="td-actions">
-                <button class="btn-action" (click)="abrirModalModulo(sub)">Editar</button>
-                <button class="btn-action" (click)="toggleEstadoModulo(sub)">
-                  {{ sub.activo ? 'Desactivar' : 'Activar' }}
+                <button class="btn-action" (click)="abrirModalModulo(m)">Editar</button>
+                <button class="btn-action" (click)="toggleEstadoModulo(m)">
+                  {{ m.activo ? 'Desactivar' : 'Activar' }}
                 </button>
-                <button class="btn-action delete" (click)="eliminarModulo(sub)">Eliminar</button>
+                <button class="btn-action delete" (click)="eliminarModulo(m)">Eliminar</button>
               </td>
             </tr>
+
+            <!-- SUBMÓDULOS (EXPANDIBLES) -->
+            <ng-container *ngIf="isExpandido(m.id)">
+              <tr *ngFor="let sub of getSubmodulos(m.id)" class="tr-submodule">
+                <td></td>
+                <td>{{ sub.id }}</td>
+                <td class="td-sub-indent">
+                  <div class="module-title"><strong>{{ sub.nombre }}</strong></div>
+                  <div class="vertical-actions-tree" *ngIf="sub.acciones && sub.acciones.length > 0">
+                    <div *ngFor="let acc of sub.acciones" class="action-tree-item">
+                      <span class="chip-accion-vertical">{{ acc.nombre }}</span>
+                    </div>
+                  </div>
+                  <div *ngIf="!sub.acciones || sub.acciones.length === 0" class="text-muted small-text">Sin acciones</div>
+                </td>
+                <td><code>{{ sub.identificador }}</code></td>
+                <td><span class="badge badge-sub">Submódulo</span></td>
+                <td>
+                  <span [class]="sub.activo ? 'badge badge-active' : 'badge badge-inactive'">
+                    {{ sub.activo ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="td-actions">
+                  <button class="btn-action" (click)="abrirModalModulo(sub)">Editar</button>
+                  <button class="btn-action" (click)="toggleEstadoModulo(sub)">
+                    {{ sub.activo ? 'Desactivar' : 'Activar' }}
+                  </button>
+                  <button class="btn-action delete" (click)="eliminarModulo(sub)">Eliminar</button>
+                </td>
+              </tr>
+            </ng-container>
           </ng-container>
-        </ng-container>
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
+
     <!-- PAGINACIÓN MÓDULOS -->
-    <div class="pagination-bar" *ngIf="totalPagesModulos > 1">
-      <button class="btn-page" [disabled]="pageModulos === 1" (click)="cambiarPagina('modulos', -1)">Anterior</button>
-      <span class="page-info">Página {{ pageModulos }} de {{ totalPagesModulos }}</span>
-      <button class="btn-page" [disabled]="pageModulos === totalPagesModulos" (click)="cambiarPagina('modulos', 1)">Siguiente</button>
+    <div class="paginacion-container" *ngIf="modulosRaizTotales.length > 0">
+      <div class="paginador-selector-wrap">
+        <span class="selector-label">Mostrar:</span>
+        <div class="selector-pills">
+          <button 
+            *ngFor="let cant of opcionesPorPagina" 
+            class="btn-pill" 
+            [class.activa]="itemsPerPage === cant" 
+            (click)="cambiarItemsPorPagina(cant)">
+            {{ cant }}
+          </button>
+        </div>
+        <span class="paginador-info">
+          Mostrando {{ modulosRaizPaginados.length }} de {{ modulosRaizTotales.length }} registros
+        </span>
+      </div>
+
+      <div class="paginador-controles">
+        <button class="btn btn-action" (click)="cambiarPagina('modulos', -1)" [disabled]="pageModulos === 1">
+          Anterior
+        </button>
+
+        <div class="paginas-numeros">
+          <button 
+            *ngFor="let pagina of obtenerRangoPaginas(pageModulos, totalPagesModulos)" 
+            class="btn-page" 
+            [class.activa]="pagina === pageModulos" 
+            [disabled]="pagina === -1"
+            (click)="cambiarPaginaDirecta('modulos', pagina)">
+            {{ pagina === -1 ? '...' : pagina }}
+          </button>
+        </div>
+
+        <button class="btn btn-action" (click)="cambiarPagina('modulos', 1)" [disabled]="pageModulos === totalPagesModulos">
+          Siguiente
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- TABLA ACCIONES BASE -->
+  <!-- TABLA ACCIONES -->
   <div *ngIf="!cargando && pestanaActiva === 'acciones'" class="table-wrap tab-fade-in">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombre Acción</th>
-          <th>Identificador</th>
-          <th>Estado</th>
-          <th style="text-align: right;">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let a of accionesPaginadas">
-          <td>{{ a.id }}</td>
-          <td><strong>{{ a.nombre }}</strong></td>
-          <td><code>{{ a.identificador }}</code></td>
-          <td>
-            <span *ngIf="a.activo === 1" class="badge badge-active">Activa</span>
-            <span *ngIf="a.activo === 0" class="badge badge-inactive">Inactiva</span>
-          </td>
-          <td>
-            <div class="td-actions">
-              <button *ngIf="a.activo === 1" class="btn btn-action" (click)="cambiarEstadoAccion(a, 0)">Desactivar</button>
-              <button *ngIf="a.activo === 0" class="btn btn-action" (click)="cambiarEstadoAccion(a, 1)">Activar</button>
-              <button class="btn btn-action delete" (click)="eliminarAccion(a)">Eliminar</button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre Acción</th>
+            <th>Identificador</th>
+            <th>Estado</th>
+            <th style="text-align: right;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of accionesPaginadas">
+            <td>{{ a.id }}</td>
+            <td><strong>{{ a.nombre }}</strong></td>
+            <td><code>{{ a.identificador }}</code></td>
+            <td>
+              <span *ngIf="a.activo === 1" class="badge badge-active">Activa</span>
+              <span *ngIf="a.activo === 0" class="badge badge-inactive">Inactiva</span>
+            </td>
+            <td>
+              <div class="td-actions">
+                <button *ngIf="a.activo === 1" class="btn btn-action" (click)="cambiarEstadoAccion(a, 0)">Desactivar</button>
+                <button *ngIf="a.activo === 0" class="btn btn-action" (click)="cambiarEstadoAccion(a, 1)">Activar</button>
+                <button class="btn btn-action delete" (click)="eliminarAccion(a)">Eliminar</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <!-- PAGINACIÓN ACCIONES -->
-    <div class="pagination-bar" *ngIf="totalPagesAcciones > 1">
-      <button class="btn-page" [disabled]="pageAcciones === 1" (click)="cambiarPagina('acciones', -1)">Anterior</button>
-      <span class="page-info">Página {{ pageAcciones }} de {{ totalPagesAcciones }}</span>
-      <button class="btn-page" [disabled]="pageAcciones === totalPagesAcciones" (click)="cambiarPagina('acciones', 1)">Siguiente</button>
+    <div class="paginacion-container" *ngIf="accionesGlobales.length > 0">
+      <div class="paginador-selector-wrap">
+        <span class="selector-label">Mostrar:</span>
+        <div class="selector-pills">
+          <button 
+            *ngFor="let cant of opcionesPorPagina" 
+            class="btn-pill" 
+            [class.activa]="itemsPerPage === cant" 
+            (click)="cambiarItemsPorPagina(cant)">
+            {{ cant }}
+          </button>
+        </div>
+        <span class="paginador-info">
+          Mostrando {{ accionesPaginadas.length }} de {{ accionesGlobales.length }} registros
+        </span>
+      </div>
+
+      <div class="paginador-controles">
+        <button class="btn btn-action" (click)="cambiarPagina('acciones', -1)" [disabled]="pageAcciones === 1">
+          Anterior
+        </button>
+
+        <div class="paginas-numeros">
+          <button 
+            *ngFor="let pagina of obtenerRangoPaginas(pageAcciones, totalPagesAcciones)" 
+            class="btn-page" 
+            [class.activa]="pagina === pageAcciones" 
+            [disabled]="pagina === -1"
+            (click)="cambiarPaginaDirecta('acciones', pagina)">
+            {{ pagina === -1 ? '...' : pagina }}
+          </button>
+        </div>
+
+        <button class="btn btn-action" (click)="cambiarPagina('acciones', 1)" [disabled]="pageAcciones === totalPagesAcciones">
+          Siguiente
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- VISTA DIVIDIDA ESCÁNER DE RUTAS -->
-  <div *ngIf="!cargando && pestanaActiva === 'rutas'" class="rutas-sections-wrap tab-fade-in">
+  <!-- TABLA UNIFICADA DE PERMISOS GENERALES CON SUBFILTROS -->
+  <div *ngIf="!cargando && pestanaActiva === 'rutas'" class="table-wrap tab-fade-in">
     
-    <!-- RUTAS DE USUARIOS / CLIENTES -->
-    <div class="route-section">
-      <div class="route-section-title">
-        <span>Rutas de Usuarios / Clientes</span>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Ruta Angular (Path)</th>
-              <th>Nombre Sugerido</th>
-              <th>Identificador Generado</th>
-              <th>Estado en Catálogo</th>
-              <th style="text-align: right;">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let r of rutasUsuariosPaginadas">
-              <td><code>/{{ r.path }}</code></td>
-              <td><strong>{{ r.nombreSugerido }}</strong></td>
-              <td>
-                <div *ngIf="r.registrado; else sinIdentificadorUser" class="code-copy-wrap">
-                  <code>{{ r.identificador }}</code>
-                  <button type="button" class="btn-copy-code" (click)="copiarTexto(r.identificador)">Copiar</button>
-                </div>
-                <ng-template #sinIdentificadorUser><span class="text-muted">No asignado</span></ng-template>
-              </td>
-              <td>
-                <span *ngIf="r.registrado" class="badge badge-active">Registrado (ID: {{ r.moduloExistente?.id }})</span>
-                <span *ngIf="!r.registrado" class="badge badge-inactive">No Registrado</span>
-              </td>
-              <td>
-                <div class="td-actions">
-                  <button *ngIf="!r.registrado" class="btn-action" (click)="registrarModuloDesdeRuta(r)">+ Dar de Alta</button>
-                </div>
-              </td>
-            </tr>
-            <tr *ngIf="rutasUsuariosTotales.length === 0">
-              <td colspan="5" class="empty-state">No se detectaron rutas de usuarios.</td>
-            </tr>
-          </tbody>
-        </table>
-        <!-- PAGINACIÓN RUTAS USUARIOS -->
-        <div class="pagination-bar" *ngIf="totalPagesRutasUser > 1">
-          <button class="btn-page" [disabled]="pageRutasUser === 1" (click)="cambiarPagina('rutasUser', -1)">Anterior</button>
-          <span class="page-info">Página {{ pageRutasUser }} de {{ totalPagesRutasUser }}</span>
-          <button class="btn-page" [disabled]="pageRutasUser === totalPagesRutasUser" (click)="cambiarPagina('rutasUser', 1)">Siguiente</button>
-        </div>
+    <!-- SUBFILTROS DE ÁMBITO -->
+    <div class="table-subfilters-bar">
+      <span class="subfilter-label">Filtrar por ámbito:</span>
+      <div class="selector-pills">
+        <button class="btn-pill" [class.activa]="filtroTipoRuta === 'todas'" (click)="setFiltroTipoRuta('todas')">
+          Todas ({{ rutasDetectadasLista.length }})
+        </button>
+        <button class="btn-pill" [class.activa]="filtroTipoRuta === 'usuario'" (click)="setFiltroTipoRuta('usuario')">
+          Usuarios / Clientes ({{ rutasUsuariosTotales.length }})
+        </button>
+        <button class="btn-pill" [class.activa]="filtroTipoRuta === 'sistema'" (click)="setFiltroTipoRuta('sistema')">
+          Administrativas / Sistema ({{ rutasAdminTotales.length }})
+        </button>
       </div>
     </div>
 
-    <!-- RUTAS ADMINISTRATIVAS / SISTEMA -->
-    <div class="route-section">
-      <div class="route-section-title">
-        <span>Rutas Administrativas / Sistema</span>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Ruta Angular (Path)</th>
-              <th>Nombre Sugerido</th>
-              <th>Identificador Generado</th>
-              <th>Estado en Catálogo</th>
-              <th style="text-align: right;">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let r of rutasAdminPaginadas">
-              <td><code>/{{ r.path }}</code></td>
-              <td><strong>{{ r.nombreSugerido }}</strong></td>
-              <td>
-                <div *ngIf="r.registrado; else sinIdentificadorAdmin" class="code-copy-wrap">
-                  <code>{{ r.identificador }}</code>
-                  <button type="button" class="btn-copy-code" (click)="copiarTexto(r.identificador)">Copiar</button>
-                </div>
-                <ng-template #sinIdentificadorAdmin><span class="text-muted">No asignado</span></ng-template>
-              </td>
-              <td>
-                <span *ngIf="r.registrado" class="badge badge-active">Registrado (ID: {{ r.moduloExistente?.id }})</span>
-                <span *ngIf="!r.registrado" class="badge badge-inactive">No Registrado</span>
-              </td>
-              <td>
-                <div class="td-actions">
-                  <button *ngIf="!r.registrado" class="btn-action" (click)="registrarModuloDesdeRuta(r)">+ Dar de Alta</button>
-                </div>
-              </td>
-            </tr>
-            <tr *ngIf="rutasAdminTotales.length === 0">
-              <td colspan="5" class="empty-state">No se detectaron rutas administrativas.</td>
-            </tr>
-          </tbody>
-        </table>
-        <!-- PAGINACIÓN RUTAS ADMIN -->
-        <div class="pagination-bar" *ngIf="totalPagesRutasAdmin > 1">
-          <button class="btn-page" [disabled]="pageRutasAdmin === 1" (click)="cambiarPagina('rutasAdmin', -1)">Anterior</button>
-          <span class="page-info">Página {{ pageRutasAdmin }} de {{ totalPagesRutasAdmin }}</span>
-          <button class="btn-page" [disabled]="pageRutasAdmin === totalPagesRutasAdmin" (click)="cambiarPagina('rutasAdmin', 1)">Siguiente</button>
-        </div>
-      </div>
+    <!-- CONTENEDOR CON SCROLL FIJO -->
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Ruta Angular (Path)</th>
+            <th>Nombre Sugerido</th>
+            <th>Ámbito / Categoría</th>
+            <th>Identificador Generado</th>
+            <th>Estado en Catálogo</th>
+            <th style="text-align: right;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of rutasPaginadas">
+            <td><code>/{{ r.path }}</code></td>
+            <td><strong>{{ r.nombreSugerido }}</strong></td>
+            <td>
+              <span class="badge" [ngClass]="r.tipo === 'Usuario' ? 'badge-sub' : 'badge-root'">
+                {{ r.tipo === 'Usuario' ? 'Usuarios / Clientes' : 'Sistema / Admin' }}
+              </span>
+            </td>
+            <td>
+              <div *ngIf="r.registrado; else sinIdentificador" class="code-copy-wrap">
+                <code>{{ r.identificador }}</code>
+                <button type="button" class="btn-copy-code" (click)="copiarTexto(r.identificador)">Copiar</button>
+              </div>
+              <ng-template #sinIdentificador><span class="text-muted">No asignado</span></ng-template>
+            </td>
+            <td>
+              <span *ngIf="r.registrado" class="badge badge-active">Registrado (ID: {{ r.moduloExistente?.id }})</span>
+              <span *ngIf="!r.registrado" class="badge badge-inactive">No Registrado</span>
+            </td>
+            <td>
+              <div class="td-actions">
+                <button *ngIf="!r.registrado" class="btn-action" (click)="registrarModuloDesdeRuta(r)">
+                  Registrar
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="rutasFiltradasTotales.length === 0">
+            <td colspan="6" class="empty-state">No se encontraron rutas con el filtro seleccionado.</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
+    <!-- PAGINACIÓN UNIFICADA DE RUTAS -->
+    <div class="paginacion-container" *ngIf="rutasFiltradasTotales.length > 0">
+      <div class="paginador-selector-wrap">
+        <span class="selector-label">Mostrar:</span>
+        <div class="selector-pills">
+          <button 
+            *ngFor="let cant of opcionesPorPagina" 
+            class="btn-pill" 
+            [class.activa]="itemsPerPage === cant" 
+            (click)="cambiarItemsPorPagina(cant)">
+            {{ cant }}
+          </button>
+        </div>
+        <span class="paginador-info">
+          Mostrando {{ rutasPaginadas.length }} de {{ rutasFiltradasTotales.length }} registros
+        </span>
+      </div>
+
+      <div class="paginador-controles">
+        <button class="btn btn-action" (click)="cambiarPagina('rutas', -1)" [disabled]="pageRutas === 1">
+          Anterior
+        </button>
+
+        <div class="paginas-numeros">
+          <button 
+            *ngFor="let pagina of obtenerRangoPaginas(pageRutas, totalPagesRutas)" 
+            class="btn-page" 
+            [class.activa]="pagina === pageRutas" 
+            [disabled]="pagina === -1"
+            (click)="cambiarPaginaDirecta('rutas', pagina)">
+            {{ pagina === -1 ? '...' : pagina }}
+          </button>
+        </div>
+
+        <button class="btn btn-action" (click)="cambiarPagina('rutas', 1)" [disabled]="pageRutas === totalPagesRutas">
+          Siguiente
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- ... (Modales se mantienen iguales) ... -->
+  <!-- MODAL DE MÓDULO -->
   <div *ngIf="modalModuloVisible" class="modal-backdrop">
     <div class="modal-card">
       <div class="modal-header-custom">
@@ -329,10 +414,11 @@
     </div>
   </div>
 
+  <!-- MODAL DE ACCIÓN -->
   <div *ngIf="modalAccionVisible" class="modal-backdrop">
     <div class="modal-card">
       <div class="modal-header-custom">
-        <h3>Nueva Acción Base Global</h3>
+        <h3>Nueva Acción Global</h3>
         <button type="button" class="close-btn" (click)="cerrarModalAccion()">&times;</button>
       </div>
       <div class="modal-body-custom">

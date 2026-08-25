@@ -10,6 +10,7 @@ export interface RutaDetectada {
   nombreSugerido: string;
   identificador: string;
   registrado: boolean;
+  tipo: 'Usuario' | 'Sistema';
   moduloExistente?: ModuloItem;
 }
 
@@ -33,12 +34,16 @@ export class CatalogoGeneralComponent implements OnInit {
 
   pestanaActiva: 'modulos' | 'acciones' | 'rutas' = 'modulos';
 
-  // --- VARIABLES DE PAGINACIÓN ---
+  // ── VARIABLES Y CONFIGURACIÓN DE PAGINACIÓN ──────────────────────────────
   itemsPerPage: number = 10;
+  opcionesPorPagina: number[] = [10, 25, 50, 100];
+
   pageModulos: number = 1;
   pageAcciones: number = 1;
-  pageRutasUser: number = 1;
-  pageRutasAdmin: number = 1;
+
+  // Paginación Unificada para Permisos Generales / Rutas
+  pageRutas: number = 1;
+  filtroTipoRuta: 'todas' | 'usuario' | 'sistema' = 'todas';
 
   // Formulario Módulo
   modalModuloVisible: boolean = false;
@@ -69,15 +74,11 @@ export class CatalogoGeneralComponent implements OnInit {
         this.adminService.getModulos().subscribe({
           next: (resModulos) => {
             this.modulos = resModulos.modulos || [];
-            
-            // Generar y cachear las rutas una vez cargados los módulos
             this.generarListaRutas();
             
-            // Reiniciar páginas al refrescar
             this.pageModulos = 1;
             this.pageAcciones = 1;
-            this.pageRutasUser = 1;
-            this.pageRutasAdmin = 1;
+            this.pageRutas = 1;
 
             this.cargando = false;
           },
@@ -93,8 +94,6 @@ export class CatalogoGeneralComponent implements OnInit {
       }
     });
   }
-
-  // --- LÓGICA DEL ESCÁNER (Optimizada) ---
 
   generarListaRutas(): void {
     const rutasIgnoradas = [
@@ -123,8 +122,15 @@ export class CatalogoGeneralComponent implements OnInit {
         .replace(/_/g, ' ')
         .replace(/\b\w/g, letra => letra.toUpperCase());
 
+      const tipo: 'Usuario' | 'Sistema' = path.toLowerCase().startsWith('usuario') ? 'Usuario' : 'Sistema';
+
       resultado.push({
-        path, nombreSugerido, identificador, registrado: !!existe, moduloExistente: existe
+        path,
+        nombreSugerido,
+        identificador,
+        registrado: !!existe,
+        tipo,
+        moduloExistente: existe
       });
     };
 
@@ -135,7 +141,42 @@ export class CatalogoGeneralComponent implements OnInit {
     this.rutasDetectadasLista = resultado;
   }
 
-  // --- GETTERS DE PAGINACIÓN ---
+  // ── GETTERS Y MÉTODOS DE PAGINACIÓN UNIFICADA ─────────────────────────────
+
+  cambiarItemsPorPagina(cant: number): void {
+    this.itemsPerPage = cant;
+    this.pageModulos = 1;
+    this.pageAcciones = 1;
+    this.pageRutas = 1;
+  }
+
+  setFiltroTipoRuta(tipo: 'todas' | 'usuario' | 'sistema'): void {
+    this.filtroTipoRuta = tipo;
+    this.pageRutas = 1;
+  }
+
+  get rutasUsuariosTotales(): RutaDetectada[] {
+    return this.rutasDetectadasLista.filter(r => r.tipo === 'Usuario');
+  }
+
+  get rutasAdminTotales(): RutaDetectada[] {
+    return this.rutasDetectadasLista.filter(r => r.tipo === 'Sistema');
+  }
+
+  get rutasFiltradasTotales(): RutaDetectada[] {
+    if (this.filtroTipoRuta === 'usuario') return this.rutasUsuariosTotales;
+    if (this.filtroTipoRuta === 'sistema') return this.rutasAdminTotales;
+    return this.rutasDetectadasLista;
+  }
+
+  get rutasPaginadas(): RutaDetectada[] {
+    const s = (this.pageRutas - 1) * this.itemsPerPage;
+    return this.rutasFiltradasTotales.slice(s, s + this.itemsPerPage);
+  }
+
+  get totalPagesRutas(): number {
+    return Math.ceil(this.rutasFiltradasTotales.length / this.itemsPerPage) || 1;
+  }
 
   // 1. Módulos
   get modulosRaizTotales(): ModuloItem[] { return this.modulos.filter(m => !m.padre_id); }
@@ -152,31 +193,48 @@ export class CatalogoGeneralComponent implements OnInit {
   }
   get totalPagesAcciones(): number { return Math.ceil(this.accionesGlobales.length / this.itemsPerPage) || 1; }
 
-  // 3. Rutas de Usuario
-  get rutasUsuariosTotales(): RutaDetectada[] { return this.rutasDetectadasLista.filter(r => r.path.toLowerCase().startsWith('usuario')); }
-  get rutasUsuariosPaginadas(): RutaDetectada[] {
-    const s = (this.pageRutasUser - 1) * this.itemsPerPage;
-    return this.rutasUsuariosTotales.slice(s, s + this.itemsPerPage);
-  }
-  get totalPagesRutasUser(): number { return Math.ceil(this.rutasUsuariosTotales.length / this.itemsPerPage) || 1; }
+  obtenerRangoPaginas(currentPage: number, totalPages: number): number[] {
+    const delta = 2;
+    const range: number[] = [];
 
-  // 4. Rutas Admin
-  get rutasAdminTotales(): RutaDetectada[] { return this.rutasDetectadasLista.filter(r => !r.path.toLowerCase().startsWith('usuario')); }
-  get rutasAdminPaginadas(): RutaDetectada[] {
-    const s = (this.pageRutasAdmin - 1) * this.itemsPerPage;
-    return this.rutasAdminTotales.slice(s, s + this.itemsPerPage);
-  }
-  get totalPagesRutasAdmin(): number { return Math.ceil(this.rutasAdminTotales.length / this.itemsPerPage) || 1; }
+    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+      if (i > 0 && i <= totalPages) {
+        range.push(i);
+      }
+    }
 
-  // Controlador universal de paginación
-  cambiarPagina(tipo: 'modulos' | 'acciones' | 'rutasUser' | 'rutasAdmin', delta: number): void {
+    if (currentPage - delta > 2) {
+      range.unshift(-1);
+    }
+    if (currentPage + delta < totalPages - 1) {
+      range.push(-1);
+    }
+
+    range.unshift(1);
+    if (totalPages > 1) {
+      range.push(totalPages);
+    }
+
+    return range.filter((page, index, array) =>
+      page !== -1 || array[index - 1] !== -1
+    );
+  }
+
+  cambiarPagina(tipo: 'modulos' | 'acciones' | 'rutas', delta: number): void {
     if (tipo === 'modulos') this.pageModulos += delta;
     if (tipo === 'acciones') this.pageAcciones += delta;
-    if (tipo === 'rutasUser') this.pageRutasUser += delta;
-    if (tipo === 'rutasAdmin') this.pageRutasAdmin += delta;
+    if (tipo === 'rutas') this.pageRutas += delta;
   }
 
-  // --- RESTO DE FUNCIONES (Sin cambios) ---
+  cambiarPaginaDirecta(tipo: 'modulos' | 'acciones' | 'rutas', pagina: number): void {
+    if (pagina === -1) return;
+    if (tipo === 'modulos' && pagina >= 1 && pagina <= this.totalPagesModulos) this.pageModulos = pagina;
+    if (tipo === 'acciones' && pagina >= 1 && pagina <= this.totalPagesAcciones) this.pageAcciones = pagina;
+    if (tipo === 'rutas' && pagina >= 1 && pagina <= this.totalPagesRutas) this.pageRutas = pagina;
+  }
+
+  // ── MÉTODOS DE NEGOCIO ──────────────────────────────────────────────────
+
   registrarModuloDesdeRuta(ruta: RutaDetectada): void {
     this.editandoModuloId = null;
     this.formNombreModulo = ruta.nombreSugerido;

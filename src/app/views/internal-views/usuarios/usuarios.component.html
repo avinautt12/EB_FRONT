@@ -4,25 +4,31 @@
   <!-- ALERTA INLINE -->
   <app-alerta *ngIf="mensajeAlerta" [mensaje]="mensajeAlerta" [tipo]="tipoAlerta"></app-alerta>
 
-  <!-- ENCABEZADO Y PESTAÑAS CENTRADOS -->
+  <!-- ENCABEZADO Y TOOLBAR UNIFICADA -->
   <div class="header-section">
     <h2 class="main-title">{{ tituloPantalla }}</h2>
 
-    <!-- PESTAÑAS -->
-    <div class="tabs-container">
-      <button class="tab-btn" [class.active]="pestanaActiva === 'usuarios'" (click)="cambiarPestana('usuarios')">
-        <i class="fas fa-users"></i> Usuarios del Sistema
-      </button>
-      <button class="tab-btn" [class.active]="pestanaActiva === 'clientes'" (click)="cambiarPestana('clientes')">
-        <i class="fas fa-user-shield"></i> Administradores Cliente
-      </button>
-    </div>
+    <!-- BARRA EN UNA SOLA LÍNEA (PESTAÑAS IZQUIERDA / ACCIONES DERECHA) -->
+    <div class="header-toolbar">
+      <!-- PESTAÑAS (IZQUIERDA) -->
+      <div class="tabs-container">
+        <button class="tab-btn" [class.active]="pestanaActiva === 'usuarios'" (click)="cambiarPestana('usuarios')">
+          <i class="fas fa-users"></i> Usuarios del Sistema
+        </button>
+        <button class="tab-btn" [class.active]="pestanaActiva === 'clientes'" (click)="cambiarPestana('clientes')">
+          <i class="fas fa-user-shield"></i> Administradores Cliente
+        </button>
+      </div>
 
-    <!-- BOTÓN + AGREGAR USUARIO -->
-    <div class="header-action-below" *ngIf="pestanaActiva === 'usuarios' && !mostrarFormularioRegistroVisible && !mostrarFormularioEdicion">
-      <button class="btn btn-primary" (click)="mostrarFormularioRegistro()">
-        <i class="fas fa-user-plus"></i> + Agregar Usuario
-      </button>
+      <!-- ACCIONES (DERECHA) -->
+      <div class="header-actions">
+        <button 
+          *ngIf="pestanaActiva === 'usuarios' && !mostrarFormularioRegistroVisible && !mostrarFormularioEdicion" 
+          class="btn btn-primary" 
+          (click)="mostrarFormularioRegistro()">
+          <i class="fas fa-user-plus"></i> Agregar Usuario
+        </button>
+      </div>
     </div>
   </div>
 

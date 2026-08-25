@@ -88,21 +88,6 @@ export const refrescarPermisosGuard: CanActivateFn = () => {
   return authService.obtenerPermisosEnVivo().pipe(map(() => true));
 };
 
-/** Valida que el usuario tenga la clave de permiso específica */
-export const permisoGuard = (clavePermiso: string): CanActivateFn => {
-  return () => {
-    const authService = inject(AuthService);
-    const router = inject(Router);
-
-    if (authService.tienePermiso(clavePermiso)) {
-      return true;
-    }
-
-    router.navigate(['/usuarios/dashboard']);
-    return false;
-  };
-};
-
 export const routes: Routes = [
   { path: '', component: InicioComponent, canActivate: [authGuard] },
   { path: 'login', component: LoginComponent, canActivate: [authGuard] },
