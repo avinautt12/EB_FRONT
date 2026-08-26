@@ -8,6 +8,8 @@ import { jwtDecode } from 'jwt-decode';
 export interface PermisoItem {
   modulo: string;
   accion: string;
+  modulo_padre?: string;
+  padre_identificador?: string;
 }
 
 @Injectable({
@@ -28,7 +30,13 @@ export class AuthService {
   private rutasPermitidas = new Set<string>();
 
   constructor() {
+    // 1. Restaura inmediatamente la caché local para el primer renderizado síncrono al presionar F5
     this.restaurarPermisosLocales();
+
+    // 2. Consulta en vivo a la BD en segundo plano para validar/actualizar permisos reales
+    if (this.isLoggedIn()) {
+      this.obtenerPermisosEnVivo().subscribe();
+    }
   }
 
   // ==========================================
@@ -36,88 +44,124 @@ export class AuthService {
   // ==========================================
 
   /**
-   * Consulta a la BD en tiempo real la matriz de permisos según el Rol activo[cite: 2]
+   * Consulta a la BD en tiempo real la matriz de permisos según el Rol activo
    */
   obtenerPermisosEnVivo(): Observable<Set<string>> {
     const rol = this.getRol();
     const userId = this.getUserId();
 
-    // Rol 1: Bypass total SuperAdmin[cite: 1]
+    // Rol 1: Bypass total SuperAdmin
     if (rol === 1) {
       this.rutasPermitidas = new Set(['*']);
+      this.guardarPermisosLocales(this.rutasPermitidas);
       return of(this.rutasPermitidas);
     }
 
-    // Rol 2: Administrador Cliente / Distribuidor (Se agrega /api)
+    // Rol 2: Administrador Cliente / Distribuidor
     if (rol === 2 && userId) {
       return this.http.get<any>(`${this.apiUrl}/api/permisos/delegables?padre_id=${userId}`).pipe(
         map(res => this.normalizarPermisos(res.permisos_delegables || [])),
         tap(set => {
           this.rutasPermitidas = set;
-          localStorage.setItem('rutas_permitidas', JSON.stringify(Array.from(set)));
+          this.guardarPermisosLocales(set);
         }),
         catchError(err => {
-          console.warn('Error al obtener bolsa delegable:', err);
-          return of(new Set<string>());
+          console.warn('Error al obtener bolsa delegable en vivo:', err);
+          return of(this.rutasPermitidas);
         })
       );
     }
 
-    // Rol 3: Usuario Hijo (Se agrega /api)[cite: 2, 4]
+    // Rol 3: Usuario Hijo
     if (rol === 3 && userId) {
       const padreId = this.getPadreId();
       return this.http.get<any>(`${this.apiUrl}/api/permisos/usuario/${userId}?padre_id=${padreId}`).pipe(
         map(res => this.normalizarPermisos(res.permisos || [])),
         tap(set => {
           this.rutasPermitidas = set;
-          localStorage.setItem('rutas_permitidas', JSON.stringify(Array.from(set)));
+          this.guardarPermisosLocales(set);
         }),
         catchError(err => {
-          console.warn('Error al obtener matriz de permisos del hijo:', err);
-          return of(new Set<string>());
+          console.warn('Error al obtener matriz de permisos del hijo en vivo:', err);
+          return of(this.rutasPermitidas);
         })
       );
     }
 
-    return of(new Set<string>());
+    return of(this.rutasPermitidas);
   }
 
   /**
-   * Estandariza módulos y acciones a rutas "modulo/accion" y "/modulo/accion"[cite: 1]
+   * Estandariza módulos y acciones construyendo todas las combinaciones posibles
    */
   private normalizarPermisos(lista: any[]): Set<string> {
     const set = new Set<string>();
+
     lista.forEach(item => {
-      const mod = (item.identificador || item.modulo || '').toLowerCase().trim();
-      const acc = (item.accion_id_texto || item.accion || 'ver').toLowerCase().trim();
+      if (!item) return;
+
+      if (typeof item === 'string') {
+        const limpia = item.toLowerCase().trim();
+        set.add(limpia);
+        set.add(limpia.startsWith('/') ? limpia.substring(1) : `/${limpia}`);
+        return;
+      }
+
+      const padre = (
+        item.padre_identificador ||
+        item.modulo_padre ||
+        item.padre ||
+        ''
+      ).toLowerCase().trim();
+
+      const mod = (
+        item.identificador ||
+        item.modulo ||
+        ''
+      ).toLowerCase().trim();
+
+      const acc = (
+        item.accion_id_texto ||
+        item.accion ||
+        'ver'
+      ).toLowerCase().trim();
 
       if (mod) {
+        // Clave de módulo solo
+        set.add(mod);
+        set.add(`/${mod}`);
+
+        // Clave individual simple: "submodulo/accion"
         set.add(`${mod}/${acc}`);
         set.add(`/${mod}/${acc}`);
-        set.add(`${mod}/ver`);
-        set.add(`/${mod}/ver`);
+
+        // Clave jerárquica completa: "padre/submodulo/accion" y "padre/submodulo"
+        if (padre) {
+          set.add(`${padre}/${mod}`);
+          set.add(`/${padre}/${mod}`);
+          set.add(`${padre}/${mod}/${acc}`);
+          set.add(`/${padre}/${mod}/${acc}`);
+        }
       }
     });
+
     return set;
   }
 
   /**
-   * Carga manual específica para hijo (Se agrega /api)[cite: 2, 4]
+   * Carga manual específica para usuario hijo
    */
   cargarPermisos(hijoId: number, padreId: number): Observable<any> {
     return this.http.get<{ permisos: PermisoItem[] }>(
       `${this.apiUrl}/api/permisos/usuario/${hijoId}?padre_id=${padreId}`
     ).pipe(
       tap(response => {
-        const setRutas = new Set<string>();
-        if (response && response.permisos && Array.isArray(response.permisos)) {
-          response.permisos.forEach(p => {
-            setRutas.add(`/${p.modulo}/${p.accion}`.toLowerCase());
-            setRutas.add(`${p.modulo}/${p.accion}`.toLowerCase());
-          });
-        }
-        this.rutasPermitidas = setRutas;
-        localStorage.setItem('rutas_permitidas', JSON.stringify(Array.from(setRutas)));
+        const permisosLista = (response && response.permisos && Array.isArray(response.permisos))
+          ? response.permisos
+          : [];
+
+        this.rutasPermitidas = this.normalizarPermisos(permisosLista);
+        this.guardarPermisosLocales(this.rutasPermitidas);
       }),
       catchError(err => {
         console.warn('Error al obtener la matriz de permisos:', err);
@@ -127,18 +171,64 @@ export class AuthService {
   }
 
   /**
-   * Consulta sincrónica in-situ para directivas *ngIf y getters[cite: 1]
+   * Consulta sincrónica in-situ para directivas *ngIf
    */
   tienePermiso(pathOAccion: string): boolean {
     if (this.isAdmin()) return true;
+    if (!pathOAccion) return false;
 
-    const rutaLimpia = pathOAccion.startsWith('/')
-      ? pathOAccion.toLowerCase()
-      : `/${pathOAccion}`.toLowerCase();
+    if (this.rutasPermitidas.has('*')) return true;
 
-    const sinDiagonal = rutaLimpia.substring(1);
+    const limpia = pathOAccion.toLowerCase().trim();
+    const sinDiagonal = limpia.startsWith('/') ? limpia.substring(1) : limpia;
+    const conDiagonal = limpia.startsWith('/') ? limpia : `/${limpia}`;
 
-    return this.rutasPermitidas.has(rutaLimpia) || this.rutasPermitidas.has(sinDiagonal);
+    // 1. Coincidencia directa
+    if (this.rutasPermitidas.has(sinDiagonal) || this.rutasPermitidas.has(conDiagonal)) {
+      return true;
+    }
+
+    const partes = sinDiagonal.split('/');
+
+    // 2. Si se consulta un módulo raíz (1 parte, ej: "retroactivos")
+    if (partes.length === 1) {
+      const moduloBuscado = partes[0];
+      for (const perm of this.rutasPermitidas) {
+        const pLimpio = perm.startsWith('/') ? perm.substring(1) : perm;
+        if (pLimpio === moduloBuscado || pLimpio.startsWith(`${moduloBuscado}/`)) {
+          return true;
+        }
+      }
+    }
+
+    // 3. Si se consulta "padre/submodulo/accion" (3 partes), pero se almacenó "submodulo/accion"
+    if (partes.length === 3) {
+      const submoduloAccion = `${partes[1]}/${partes[2]}`;
+      if (this.rutasPermitidas.has(submoduloAccion) || this.rutasPermitidas.has(`/${submoduloAccion}`)) {
+        return true;
+      }
+    }
+
+    // 4. Si se consulta "submodulo/accion" (2 partes), pero se almacenó "padre/submodulo/accion"
+    if (partes.length === 2) {
+      for (const perm of this.rutasPermitidas) {
+        const pLimpio = perm.startsWith('/') ? perm.substring(1) : perm;
+        const pPartes = pLimpio.split('/');
+        if (pPartes.length === 3 && pPartes[1] === partes[0] && pPartes[2] === partes[1]) {
+          return true;
+        }
+      }
+    }
+
+    // 5. Coincidencia por sub-cadena contenida
+    for (const perm of this.rutasPermitidas) {
+      const pLimpio = perm.startsWith('/') ? perm.substring(1) : perm;
+      if (pLimpio.includes(sinDiagonal)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private restaurarPermisosLocales(): void {
@@ -151,6 +241,10 @@ export class AuthService {
         this.rutasPermitidas = new Set();
       }
     }
+  }
+
+  private guardarPermisosLocales(set: Set<string>): void {
+    localStorage.setItem('rutas_permitidas', JSON.stringify(Array.from(set)));
   }
 
   // ==========================================
@@ -201,6 +295,7 @@ export class AuthService {
         if (response.token) {
           this.setToken(response.token);
           this.authState.next(true);
+          this.obtenerPermisosEnVivo().subscribe();
         }
       })
     );
