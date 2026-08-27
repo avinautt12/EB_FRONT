@@ -281,7 +281,17 @@ export class CreacionUsuariosComponent implements OnInit {
 
     this.adminService.getPermisosDelegables(this.padreId).subscribe({
       next: (resDelegables: any) => {
-        const delegables = resDelegables.permisos_delegables || [];
+        const rawDelegables = resDelegables.permisos_delegables || [];
+
+        // Filtro de seguridad: Excluir módulos de creación o administración de usuarios para los hijos (Rol 3)
+        const delegables = rawDelegables.filter((item: any) => {
+          const modIdentificador = (item.identificador || '').toLowerCase();
+          const modNombre = (item.modulo || item.nombre || '').toLowerCase();
+          return !modIdentificador.includes('creacion_usuarios') &&
+                 !modIdentificador.includes('usuarios_creacion_usuarios') &&
+                 !modNombre.includes('creacion usuarios') &&
+                 !modNombre.includes('gestión de usuarios');
+        });
 
         this.adminService.getPermisosUsuarioHijo(this.hijoSeleccionado!.id, this.padreId!).subscribe({
           next: (resHijo: any) => {
