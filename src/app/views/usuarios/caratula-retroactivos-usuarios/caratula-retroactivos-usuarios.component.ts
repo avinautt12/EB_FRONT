@@ -55,6 +55,7 @@ interface DatosRetroactivo {
 })
 export class CaratulaRetroactivosUsuarioComponent implements OnInit {
 
+  modulo = "Retroactivos";
   permisoNombre = "retroactivos/ver";
 
   isLoading = true;
@@ -72,7 +73,6 @@ export class CaratulaRetroactivosUsuarioComponent implements OnInit {
     private retroactivosService: RetroactivosService,
     private caratulasService: CaratulasService,
     public authService: AuthService,
-    private router: Router // <-- Inyectar Router
   ) { }
 
   ngOnInit(): void {

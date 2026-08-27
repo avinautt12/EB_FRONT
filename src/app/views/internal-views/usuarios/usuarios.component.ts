@@ -45,8 +45,7 @@ interface FiltroOpciones {
     RouterModule, 
     HomeBarComponent, 
     AlertaComponent, 
-    FiltroComponent,
-    GestionClientesComponent
+    FiltroComponent
   ],
   templateUrl: './usuarios.component.html',
   styleUrls: ['./usuarios.component.css']
@@ -56,7 +55,8 @@ export class UsuariosComponent implements OnInit {
   private alerta = inject(AlertaService);
   private clientesService = inject(ClientesService);
   private cdr = inject(ChangeDetectorRef);
-  private location = inject(Location);
+
+  constructor(private location: Location) {} goBack() { this.location.back(); }
 
   // Control de pestaña y título unificado
   pestanaActiva: 'usuarios' | 'clientes' = 'usuarios';

@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminSistemaService, ModuloItem, AccionBase, ModuloPayload } from '../../../services/admin-sistema.service';
 import { TopBarUsuariosComponent } from '../../../components/top-bar-usuarios/top-bar-usuarios.component';
@@ -23,6 +23,8 @@ export interface RutaDetectada {
 })
 export class CatalogoGeneralComponent implements OnInit {
   private readonly adminService = inject(AdminSistemaService);
+
+  constructor(private location: Location) {} goBack() { this.location.back(); }
 
   cargando: boolean = false;
   alertMsj: string | null = null;

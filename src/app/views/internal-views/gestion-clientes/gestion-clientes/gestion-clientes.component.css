@@ -28,9 +28,9 @@
   box-sizing: border-box;
 }
 
-/* --- ENCABEZADO Y PESTAÑAS CENTRADOS --- */
+/* --- ENCABEZADO Y PESTAÑAS CENTRADOS (AMPLIADO A 1320px) --- */
 .header-section {
-  max-width: 1000px;
+  max-width: 1320px !important;
   margin: 0 auto 1.5rem auto;
   display: flex;
   flex-direction: column;
@@ -168,9 +168,9 @@
   color: #fff;
 }
 
-/* --- BARRA DE FILTROS --- */
+/* --- BARRA DE FILTROS (AMPLIADA A 1320px) --- */
 .filtros-bar {
-  max-width: 1000px;
+  max-width: 1320px !important;
   margin: 0 auto 1.2rem auto;
   display: flex;
   gap: 14px;
@@ -203,9 +203,9 @@
   border-color: var(--orange);
 }
 
-/* --- TABLAS Y SCROLL INTERNO --- */
+/* --- TABLA PRINCIPAL Y SCROLL INTERNO (AMPLIADA A 1320px) --- */
 .table-wrap {
-  max-width: 1000px;
+  max-width: 1320px !important;
   margin: 0 auto 1.2rem auto;
   background: var(--card);
   border: 1px solid var(--border);
@@ -218,7 +218,6 @@
   flex-direction: column;
 }
 
-/* CONTENEDOR DE ALTURA FIJA Y SCROLL */
 .table-responsive {
   max-height: 520px;
   overflow-y: auto;
@@ -258,7 +257,6 @@
   padding: 14px 16px;
   text-align: left;
   border-bottom: 1px solid var(--border);
-  box-shadow: 0 1px 0 var(--border);
 }
 
 .data-table tbody td {
@@ -270,6 +268,16 @@
 
 .data-table tbody tr:hover {
   background: rgba(255, 255, 255, 0.02);
+}
+
+.data-table code {
+  background: #151515;
+  color: var(--orange);
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.82rem;
+  border: 1px solid #2d2d2d;
 }
 
 .td-actions {
@@ -335,9 +343,9 @@
   border: 1px solid var(--border2);
 }
 
-/* --- ALERTAS INLINE --- */
+/* --- ALERTAS INLINE (AMPLIADA A 1320px) --- */
 .inline-alert {
-  max-width: 1000px;
+  max-width: 1320px !important;
   margin: 0 auto 1.2rem auto;
   padding: 12px 16px;
   border-radius: 10px;
@@ -375,11 +383,7 @@
   line-height: 1;
   cursor: pointer;
   outline: none !important;
-  -webkit-tap-highlight-color: transparent;
-  transition: background-color 180ms var(--ease-out),
-              border-color 180ms var(--ease-out),
-              color 180ms var(--ease-out),
-              transform 120ms var(--ease-out);
+  transition: all 180ms var(--ease-out);
 }
 
 .close-btn:hover {
@@ -418,10 +422,9 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
 }
 
-/* --- EXTENSIÓN DE ANCHO DE MODAL --- */
 .modal-card.modal-large {
-  max-width: 1100px !important;
-  width: 95%;
+  max-width: 1320px !important;
+  width: 96%;
 }
 
 .modal-header-custom {
@@ -438,19 +441,114 @@
   font-size: 1.1rem;
 }
 
-.modal-body-custom .modal-table-wrap {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  max-height: 60vh;
+.modal-body-custom {
+  padding: 20px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .modal-desc {
   color: var(--t3);
   font-size: 0.82rem;
-  margin-top: 0;
-  margin-bottom: 16px;
+  margin: 0;
+}
+
+/* ========================================================
+   CONTENEDOR DE TABLA UNIFICADO PARA EL MODAL
+   ======================================================== */
+.modal-table-box {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.modal-table-box .table-subfilters-bar {
+  padding: 12px 16px;
+  background: #181818;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.subfilter-label {
+  font-size: 0.78rem;
+  color: var(--t3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modal-table-box .modal-table-wrap {
+  max-height: 480px;
+  overflow-y: auto;
+  overflow-x: auto;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  width: 100%;
+}
+
+.modal-table-box .paginacion-container {
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+/* --- TABLA DEL MODAL Y ANCHOS DE COLUMNAS REDISEÑADOS --- */
+.modal-data-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.modal-data-table th,
+.modal-data-table td {
+  padding: 10px 12px;
+  box-sizing: border-box;
+}
+
+.modal-data-table .col-expand {
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  text-align: center;
+  padding: 0;
+}
+
+.modal-data-table .col-id {
+  width: 70px;
+  min-width: 70px;
+  max-width: 70px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.modal-data-table .col-nombre {
+  width: 25%;
+  min-width: 200px;
+}
+
+.modal-data-table .col-ambito {
+  width: 160px;
+  min-width: 160px;
+}
+
+.modal-data-table .col-identificador {
+  width: 320px;
+  min-width: 280px;
+}
+
+.modal-data-table .col-estado {
+  width: 110px;
+  min-width: 110px;
+  text-align: center;
 }
 
 .modal-footer-custom {
@@ -458,15 +556,10 @@
   border-top: 1px solid var(--border);
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
 }
 
-/* --- ÁRBOL DE PERMISOS DENTRO DEL MODAL --- */
-.modal-table-wrap {
-  max-height: 55vh;
-  overflow-y: auto;
-  margin-bottom: 0;
-}
-
+/* --- ÁRBOL DE PERMISOS Y ALINEACIÓN DE ACCIONES --- */
 .btn-expand {
   background: transparent;
   border: none;
@@ -475,6 +568,7 @@
   cursor: pointer;
   width: 24px;
   height: 24px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -489,6 +583,16 @@
 
 .btn-expand:active {
   transform: scale(0.9);
+}
+
+.btn-expand .arrow {
+  font-size: 0.65rem;
+  display: inline-block;
+  transition: transform 180ms var(--ease-out);
+}
+
+.btn-expand .arrow.rotated {
+  transform: rotate(90deg);
 }
 
 .tr-root {
@@ -507,6 +611,9 @@
   font-size: 0.9rem;
   color: var(--t1);
   margin-bottom: 4px;
+  height: 22px;
+  display: flex;
+  align-items: center;
 }
 
 .vertical-actions-tree {
@@ -517,9 +624,13 @@
   margin-top: 6px;
 }
 
-.action-tree-item.checkbox-permiso {
+.action-tree-item {
+  height: 24px;
   display: inline-flex;
   align-items: center;
+}
+
+.action-tree-item.checkbox-permiso {
   gap: 8px;
   cursor: pointer;
   user-select: none;
@@ -554,7 +665,7 @@
   color: var(--t3);
 }
 
-/* --- PAGINACIÓN ESTANDARIZADA CON SELECTOR DE CANTIDAD --- */
+/* --- PAGINACIÓN CON SELECTOR DE PÍLDORAS --- */
 .paginacion-container {
   padding: 12px 16px;
   display: flex;
@@ -662,4 +773,48 @@
   opacity: 0.6;
   background: transparent;
   border-color: transparent;
+}
+
+.heder-section {
+  margin: 0 auto 1.5rem auto;
+  max-width: 1320px !important;
+  margin: 0 auto 1.5rem auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+}
+
+.btn-volver {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  background-color: transparent;
+  border-color: #666;
+  color: #bbb;
+  z-index: 1;
+  position: absolute;
+  left: 0;
+}
+
+.btn-volver:hover {
+  background-color: #333;
+  color: #fff;
+  border-color: #fff;
 }

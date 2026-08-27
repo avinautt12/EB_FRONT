@@ -5,6 +5,7 @@ import { forkJoin, Observable } from 'rxjs';
 import { AdminSistemaService, UsuarioHijoItem, CupoResponse } from '../../../../services/admin-sistema.service';
 import { AuthService } from '../../../../services/auth.service';
 import { TopBarUsuariosComponent } from '../../../../components/top-bar-usuarios/top-bar-usuarios.component';
+import { AccesoRestringidoComponent } from '../../../../components/acceso-restringido/acceso-restringido.component';
 
 export interface AccionNodo {
   accion_id: number;
@@ -24,13 +25,16 @@ export interface ModuloNodo {
 @Component({
   selector: 'app-creacion-usuarios',
   standalone: true,
-  imports: [CommonModule, FormsModule, TopBarUsuariosComponent],
+  imports: [CommonModule, FormsModule, AccesoRestringidoComponent, TopBarUsuariosComponent],
   templateUrl: './creacion-usuarios.component.html',
   styleUrl: './creacion-usuarios.component.css'
 })
 export class CreacionUsuariosComponent implements OnInit {
   private readonly adminService = inject(AdminSistemaService);
   private readonly authService = inject(AuthService);
+
+  modulo = "Gestión de usuarios";
+  permisoNombre = "usuarios_creacion_usuarios/ver";
 
   cargando: boolean = false;
   alertMsj: string | null = null;
@@ -52,6 +56,10 @@ export class CreacionUsuariosComponent implements OnInit {
   usuarioSeleccionadoId: number | null = null;
   formNuevaContrasena: string = '';
 
+  // Modal Confirmación de Eliminación
+  mostrarConfirmacion: boolean = false;
+  usuarioAEliminar: UsuarioHijoItem | null = null;
+
   // Modal Asignación de Permisos (Árbol)
   modalPermisosVisible: boolean = false;
   cargandoPermisos: boolean = false;
@@ -62,12 +70,18 @@ export class CreacionUsuariosComponent implements OnInit {
   private estadoInicial: Map<string, boolean> = new Map();
 
   ngOnInit(): void {
-    this.padreId = this.authService.getUserId();
-    if (this.padreId) {
-      this.cargarDatos();
-    } else {
-      this.mostrarAlerta('No se identificó el ID de la sesión actual.', 'error');
+     if (this.tieneAcceso) {
+      this.padreId = this.authService.getUserId();
+      if (this.padreId) {
+        this.cargarDatos();
+      } else {
+        this.mostrarAlerta('No se identificó el ID de la sesión actual.', 'error');
+      }
     }
+  }
+
+  get tieneAcceso(): boolean {
+    return this.authService.tienePermiso(this.permisoNombre);
   }
 
   get puedeCrear(): boolean {
@@ -121,17 +135,30 @@ export class CreacionUsuariosComponent implements OnInit {
     return this.treePermisos.filter(m => !m.es_raiz && (m.padre_id === padreId || (padreId === 7 && m.modulo_id === 8)));
   }
 
-  // --- MODAL CREAR USUARIO ---
   abrirModalCrear(): void {
     if (!this.puedeCrear) {
       this.mostrarAlerta('Has alcanzado el límite máximo de usuarios permitidos o no tienes cupos asignados.', 'error');
       return;
     }
+    
     this.formNombre = '';
-    this.formCorreo = '';
     this.formUsuario = '';
     this.formContrasena = '';
-    this.modalCrearVisible = true;
+    this.formCorreo = '';
+
+    if (!this.padreId) return;
+
+    // Consulta independiente para rellenar el correo al abrir el modal
+    this.adminService.getCorreoPadre(this.padreId).subscribe({
+      next: (res) => {
+        this.formCorreo = res.correo || '';
+        this.modalCrearVisible = true;
+      },
+      error: () => {
+        this.mostrarAlerta('No se pudo obtener el correo del titular.', 'error');
+        this.modalCrearVisible = true;
+      }
+    });
   }
 
   cerrarModal(): void {
@@ -178,6 +205,33 @@ export class CreacionUsuariosComponent implements OnInit {
     });
   }
 
+  // --- ELIMINACIÓN DE USUARIO HIJO ---
+  confirmarEliminacion(hijo: UsuarioHijoItem): void {
+    this.usuarioAEliminar = hijo;
+    this.mostrarConfirmacion = true;
+  }
+
+  cancelarEliminacion(): void {
+    this.usuarioAEliminar = null;
+    this.mostrarConfirmacion = false;
+  }
+
+  eliminarUsuarioHijo(): void {
+    if (!this.padreId || !this.usuarioAEliminar) return;
+
+    this.adminService.eliminarUsuarioHijo(this.usuarioAEliminar.id, this.padreId).subscribe({
+      next: () => {
+        this.mostrarAlerta('Usuario eliminado permanentemente.', 'success');
+        this.cancelarEliminacion();
+        this.cargarDatos();
+      },
+      error: (err) => {
+        this.mostrarAlerta(err.error?.error || 'Error al eliminar el usuario.', 'error');
+      }
+    });
+  }
+
+  // --- MODAL CAMBIAR CONTRASEÑA ---
   abrirModalContrasena(hijoId: number): void {
     this.usuarioSeleccionadoId = hijoId;
     this.formNuevaContrasena = '';

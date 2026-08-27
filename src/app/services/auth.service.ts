@@ -30,10 +30,8 @@ export class AuthService {
   private rutasPermitidas = new Set<string>();
 
   constructor() {
-    // 1. Restaura inmediatamente la caché local para el primer renderizado síncrono al presionar F5
     this.restaurarPermisosLocales();
 
-    // 2. Consulta en vivo a la BD en segundo plano para validar/actualizar permisos reales
     if (this.isLoggedIn()) {
       this.obtenerPermisosEnVivo().subscribe();
     }
@@ -75,7 +73,10 @@ export class AuthService {
     // Rol 3: Usuario Hijo
     if (rol === 3 && userId) {
       const padreId = this.getPadreId();
-      return this.http.get<any>(`${this.apiUrl}/api/permisos/usuario/${userId}?padre_id=${padreId}`).pipe(
+      // Solo adjuntamos padre_id si existe un valor válido
+      const urlParams = padreId ? `?padre_id=${padreId}` : '';
+      
+      return this.http.get<any>(`${this.apiUrl}/api/permisos/usuario/${userId}${urlParams}`).pipe(
         map(res => this.normalizarPermisos(res.permisos || [])),
         tap(set => {
           this.rutasPermitidas = set;
@@ -127,15 +128,12 @@ export class AuthService {
       ).toLowerCase().trim();
 
       if (mod) {
-        // Clave de módulo solo
         set.add(mod);
         set.add(`/${mod}`);
 
-        // Clave individual simple: "submodulo/accion"
         set.add(`${mod}/${acc}`);
         set.add(`/${mod}/${acc}`);
 
-        // Clave jerárquica completa: "padre/submodulo/accion" y "padre/submodulo"
         if (padre) {
           set.add(`${padre}/${mod}`);
           set.add(`/${padre}/${mod}`);
@@ -151,9 +149,10 @@ export class AuthService {
   /**
    * Carga manual específica para usuario hijo
    */
-  cargarPermisos(hijoId: number, padreId: number): Observable<any> {
+  cargarPermisos(hijoId: number, padreId?: number | null): Observable<any> {
+    const urlParams = padreId ? `?padre_id=${padreId}` : '';
     return this.http.get<{ permisos: PermisoItem[] }>(
-      `${this.apiUrl}/api/permisos/usuario/${hijoId}?padre_id=${padreId}`
+      `${this.apiUrl}/api/permisos/usuario/${hijoId}${urlParams}`
     ).pipe(
       tap(response => {
         const permisosLista = (response && response.permisos && Array.isArray(response.permisos))
@@ -183,14 +182,12 @@ export class AuthService {
     const sinDiagonal = limpia.startsWith('/') ? limpia.substring(1) : limpia;
     const conDiagonal = limpia.startsWith('/') ? limpia : `/${limpia}`;
 
-    // 1. Coincidencia directa
     if (this.rutasPermitidas.has(sinDiagonal) || this.rutasPermitidas.has(conDiagonal)) {
       return true;
     }
 
     const partes = sinDiagonal.split('/');
 
-    // 2. Si se consulta un módulo raíz (1 parte, ej: "retroactivos")
     if (partes.length === 1) {
       const moduloBuscado = partes[0];
       for (const perm of this.rutasPermitidas) {
@@ -201,7 +198,6 @@ export class AuthService {
       }
     }
 
-    // 3. Si se consulta "padre/submodulo/accion" (3 partes), pero se almacenó "submodulo/accion"
     if (partes.length === 3) {
       const submoduloAccion = `${partes[1]}/${partes[2]}`;
       if (this.rutasPermitidas.has(submoduloAccion) || this.rutasPermitidas.has(`/${submoduloAccion}`)) {
@@ -209,7 +205,6 @@ export class AuthService {
       }
     }
 
-    // 4. Si se consulta "submodulo/accion" (2 partes), pero se almacenó "padre/submodulo/accion"
     if (partes.length === 2) {
       for (const perm of this.rutasPermitidas) {
         const pLimpio = perm.startsWith('/') ? perm.substring(1) : perm;
@@ -220,7 +215,6 @@ export class AuthService {
       }
     }
 
-    // 5. Coincidencia por sub-cadena contenida
     for (const perm of this.rutasPermitidas) {
       const pLimpio = perm.startsWith('/') ? perm.substring(1) : perm;
       if (pLimpio.includes(sinDiagonal)) {
@@ -270,12 +264,16 @@ export class AuthService {
     return this.getRol() === 3;
   }
 
+  /**
+   * Obtiene el ID del padre tolerando diferentes nombres de propiedad en el JWT
+   */
   getPadreId(): number | null {
     const token = localStorage.getItem('token');
     if (!token) return null;
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.padre_id || null;
+      const pId = payload.padre_id ?? payload.id_padre ?? payload.padre ?? payload.parent_id;
+      return pId ? Number(pId) : null;
     } catch {
       return null;
     }
@@ -409,5 +407,27 @@ export class AuthService {
     } catch (error) {
       return 0;
     }
+  }
+
+    /**
+ * Obtiene el correo del usuario en sesión inspeccionando distintas llaves y estructuras
+ */
+  getUserEmail(): string | null {
+    const keys = ['usuario', 'user', 'currentUser', 'auth_user'];
+    
+    for (const key of keys) {
+      const data = localStorage.getItem(key) || sessionStorage.getItem(key);
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          const email = parsed.correo || parsed.email || parsed.user_email || parsed.usuario_correo;
+          if (email) return email;
+        } catch {
+          // Si no es un JSON, verificar si la cadena misma es un correo
+          if (data.includes('@')) return data;
+        }
+      }
+    }
+    return null;
   }
 }

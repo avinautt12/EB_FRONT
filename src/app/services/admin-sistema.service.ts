@@ -74,10 +74,11 @@ export interface PermisoUsuarioItem {
 }
 
 export interface CupoResponse {
+  tiene_cupo: boolean;
   max_hijos: number;
   hijos_activos: number;
   disponibles: number;
-  tiene_cupo: boolean;
+  correo?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -316,5 +317,19 @@ export class AdminSistemaService {
         accion_id: accionId
       }
     });
+  }
+
+  /**
+   * Elimina un usuario hijo (Rol 3)
+   */
+  eliminarUsuarioHijo(hijoId: number, padreId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/usuarios-hijos/${hijoId}?padre_id=${padreId}`);
+  }
+
+  /**
+   * Consulta el correo electrónico del administrador directamente desde la BD
+   */
+  getCorreoPadre(padreId: number): Observable<{ correo: string }> {
+    return this.http.get<{ correo: string }>(`${this.apiUrl}/usuarios-hijos/correo-padre/${padreId}`);
   }
 }

@@ -28,9 +28,9 @@
   box-sizing: border-box;
 }
 
-/* --- ENCABEZADO Y TOOLBAR UNIFICADA EN UNA SOLA LÍNEA --- */
+/* --- ENCABEZADO Y TOOLBAR UNIFICADA (ANCHO AMPLIADO A 1320px) --- */
 .header-section {
-  max-width: 1000px;
+  max-width: 1320px !important;
   margin: 0 auto 1.5rem auto;
   display: flex;
   flex-direction: column;
@@ -220,9 +220,9 @@
   }
 }
 
-/* --- TABLAS Y CONTENEDOR CON SCROLL FIJO --- */
+/* --- TABLAS Y CONTENEDOR CON SCROLL FIJO (ANCHO 1320px) --- */
 .table-wrap {
-  max-width: 1000px;
+  max-width: 1320px !important;
   margin: 0 auto 1.2rem auto;
   background: var(--card);
   border: 1px solid var(--border);
@@ -277,10 +277,12 @@
   background: var(--orange);
 }
 
+/* FORZAR LAYOUT FIJO DE TABLA Y ANCHOS ESPECÍFICOS */
 .data-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.88rem;
+  table-layout: fixed !important;
 }
 
 .data-table thead th {
@@ -291,17 +293,21 @@
   color: var(--t3);
   font-size: 0.8rem;
   font-weight: 600;
-  padding: 14px 16px;
+  padding: 12px 14px;
   text-align: left;
   border-bottom: 1px solid var(--border);
   box-shadow: 0 1px 0 var(--border);
+  box-sizing: border-box;
 }
 
 .data-table tbody td {
-  padding: 14px 16px;
+  padding: 10px 14px;
   border-bottom: 1px solid #1f1f1f;
   color: var(--t2);
   vertical-align: middle;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .data-table tbody tr {
@@ -320,6 +326,50 @@
   font-family: monospace;
   font-size: 0.82rem;
   border: 1px solid #2d2d2d;
+}
+
+/* CLASES DE COLUMNA ESPECÍFICAS PARA MANTENER ALINEACIÓN */
+.col-expand {
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  text-align: center !important;
+  padding: 0 !important;
+}
+
+.col-id {
+  width: 70px !important;
+  min-width: 70px !important;
+  max-width: 70px !important;
+  font-weight: 700 !important;
+  text-align: left !important;
+}
+
+.col-nombre {
+  width: 24% !important;
+  min-width: 200px !important;
+}
+
+.col-identificador {
+  width: 320px !important;
+  min-width: 280px !important;
+}
+
+.col-jerarquia {
+  width: 150px !important;
+  min-width: 140px !important;
+}
+
+.col-estado {
+  width: 110px !important;
+  min-width: 110px !important;
+  text-align: center !important;
+}
+
+.col-acciones-btns {
+  width: 220px !important;
+  min-width: 200px !important;
+  text-align: right !important;
 }
 
 .td-actions {
@@ -375,9 +425,9 @@
   margin: 2px;
 }
 
-/* --- ALERTAS INLINE --- */
+/* --- ALERTAS INLINE (ANCHO AMPLIADO A 1320px) --- */
 .inline-alert {
-  max-width: 1000px;
+  max-width: 1320px !important;
   margin: 0 auto 1.2rem auto;
   padding: 12px 16px;
   border-radius: 10px;
@@ -657,6 +707,7 @@
   cursor: pointer;
   width: 24px;
   height: 24px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -671,6 +722,16 @@
 
 .btn-expand:active {
   transform: scale(0.9);
+}
+
+.btn-expand .arrow {
+  font-size: 0.65rem;
+  display: inline-block;
+  transition: transform 180ms var(--ease-out);
+}
+
+.btn-expand .arrow.rotated {
+  transform: rotate(90deg);
 }
 
 .tr-root {
@@ -694,23 +755,27 @@
   font-style: italic;
 }
 
-/* --- ESTRUCTURA DE ACCIONES VERTICALES --- */
+/* --- ESTRUCTURA DE ACCIONES E IDENTIFICADORES VERTICALES SINCRONIZADOS --- */
 .module-title {
   font-size: 0.9rem;
   color: var(--t1);
   margin-bottom: 4px;
+  height: 22px;
+  display: flex;
+  align-items: center;
 }
 
 .vertical-actions-tree {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
-  margin-top: 4px;
+  gap: 6px;
+  margin-top: 6px;
 }
 
 .action-tree-item {
-  display: flex;
+  height: 24px;
+  display: inline-flex;
   align-items: center;
 }
 
@@ -859,4 +924,38 @@
   opacity: 0.6;
   background: transparent;
   border-color: transparent;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+}
+
+.btn-volver {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  background-color: transparent;
+  border-color: #666;
+  color: #bbb;
+  z-index: 1;
+  position: absolute;
+  left: 0;
+}
+
+.btn-volver:hover {
+  background-color: #333;
+  color: #fff;
+  border-color: #fff;
 }

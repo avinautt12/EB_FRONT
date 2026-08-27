@@ -9,7 +9,12 @@
 
   <!-- ENCABEZADO Y TOOLBAR UNIFICADA -->
   <div class="header-section">
-    <h2 class="main-title">Catálogo General (Módulos y Acciones)</h2>
+     <div class="header-title">
+        <button class="btn-volver" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i> Volver
+        </button>
+        <h2 class="main-title">Catálogo General (Módulos y Acciones)</h2>
+     </div>
 
     <!-- BARRA EN UNA SOLA LÍNEA (PESTAÑAS IZQUIERDA / ACCIONES DERECHA) -->
     <div class="header-toolbar">
@@ -52,26 +57,26 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th style="width: 38px;"></th>
-            <th>ID</th>
-            <th>Nombre Módulo / Acciones</th>
-            <th>Identificador</th>
-            <th>Jerarquía</th>
-            <th>Estado</th>
-            <th style="text-align: right;">Acciones</th>
+            <th class="col-expand"></th>
+            <th class="col-id">ID</th>
+            <th class="col-nombre">Nombre Módulo / Acciones</th>
+            <th class="col-identificador">Identificador</th>
+            <th class="col-jerarquia">Jerarquía</th>
+            <th class="col-estado">Estado</th>
+            <th class="col-acciones-btns" style="text-align: right;">Acciones</th>
           </tr>
         </thead>
         <tbody>
           <ng-container *ngFor="let m of modulosRaizPaginados">
             <!-- MÓDULO RAÍZ -->
             <tr class="tr-root">
-              <td>
+              <td class="col-expand">
                 <button *ngIf="getSubmodulos(m.id).length > 0" type="button" class="btn-expand" (click)="toggleExpandir(m.id)">
-                  {{ isExpandido(m.id) ? '▼' : '▶' }}
+                  <span class="arrow" [class.rotated]="isExpandido(m.id)">&#9654;</span>
                 </button>
               </td>
-              <td>{{ m.id }}</td>
-              <td>
+              <td class="col-id">{{ m.id }}</td>
+              <td class="col-nombre">
                 <div class="module-title"><strong>{{ m.nombre }}</strong></div>
                 <div class="vertical-actions-tree" *ngIf="m.acciones && m.acciones.length > 0">
                   <div *ngFor="let acc of m.acciones" class="action-tree-item">
@@ -80,14 +85,21 @@
                 </div>
                 <div *ngIf="!m.acciones || m.acciones.length === 0" class="text-muted small-text">Sin acciones</div>
               </td>
-              <td><code>{{ m.identificador }}</code></td>
-              <td><span class="badge badge-root">Módulo Raíz</span></td>
-              <td>
+              <td class="col-identificador">
+                <div class="module-title"><code>{{ m.identificador }}</code></div>
+                <div class="vertical-actions-tree" *ngIf="m.acciones && m.acciones.length > 0">
+                  <div *ngFor="let acc of m.acciones" class="action-tree-item">
+                    <code>{{ m.identificador }}/{{ (acc.identificador || acc.nombre) | lowercase }}</code>
+                  </div>
+                </div>
+              </td>
+              <td class="col-jerarquia"><span class="badge badge-root">Módulo Raíz</span></td>
+              <td class="col-estado">
                 <span [class]="m.activo ? 'badge badge-active' : 'badge badge-inactive'">
                   {{ m.activo ? 'Activo' : 'Inactivo' }}
                 </span>
               </td>
-              <td class="td-actions">
+              <td class="td-actions col-acciones-btns">
                 <button class="btn-action" (click)="abrirModalModulo(m)">Editar</button>
                 <button class="btn-action" (click)="toggleEstadoModulo(m)">
                   {{ m.activo ? 'Desactivar' : 'Activar' }}
@@ -99,9 +111,9 @@
             <!-- SUBMÓDULOS (EXPANDIBLES) -->
             <ng-container *ngIf="isExpandido(m.id)">
               <tr *ngFor="let sub of getSubmodulos(m.id)" class="tr-submodule">
-                <td></td>
-                <td>{{ sub.id }}</td>
-                <td class="td-sub-indent">
+                <td class="col-expand"></td>
+                <td class="col-id">{{ sub.id }}</td>
+                <td class="col-nombre td-sub-indent">
                   <div class="module-title"><strong>{{ sub.nombre }}</strong></div>
                   <div class="vertical-actions-tree" *ngIf="sub.acciones && sub.acciones.length > 0">
                     <div *ngFor="let acc of sub.acciones" class="action-tree-item">
@@ -110,14 +122,21 @@
                   </div>
                   <div *ngIf="!sub.acciones || sub.acciones.length === 0" class="text-muted small-text">Sin acciones</div>
                 </td>
-                <td><code>{{ sub.identificador }}</code></td>
-                <td><span class="badge badge-sub">Submódulo</span></td>
-                <td>
+                <td class="col-identificador">
+                  <div class="module-title"><code>{{ sub.identificador }}</code></div>
+                  <div class="vertical-actions-tree" *ngIf="sub.acciones && sub.acciones.length > 0">
+                    <div *ngFor="let acc of sub.acciones" class="action-tree-item">
+                      <code>{{ sub.identificador }}/{{ (acc.identificador || acc.nombre) | lowercase }}</code>
+                    </div>
+                  </div>
+                </td>
+                <td class="col-jerarquia"><span class="badge badge-sub">Submódulo</span></td>
+                <td class="col-estado">
                   <span [class]="sub.activo ? 'badge badge-active' : 'badge badge-inactive'">
                     {{ sub.activo ? 'Activo' : 'Inactivo' }}
                   </span>
                 </td>
-                <td class="td-actions">
+                <td class="td-actions col-acciones-btns">
                   <button class="btn-action" (click)="abrirModalModulo(sub)">Editar</button>
                   <button class="btn-action" (click)="toggleEstadoModulo(sub)">
                     {{ sub.activo ? 'Desactivar' : 'Activar' }}

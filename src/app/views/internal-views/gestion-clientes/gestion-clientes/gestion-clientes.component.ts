@@ -1,12 +1,16 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, Observable } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AdminSistemaService, AdminClienteItem, AccionBase, ModuloItem } from '../../../../services/admin-sistema.service';
+import { HomeBarComponent } from '../../../../components/home-bar/home-bar.component';
 
 export interface PermisoDelegableFila {
   modulo_id: number;
   modulo: string;
+  identificador: string;
+  tipo: 'Usuario' | 'Sistema';
   accion_id: number;
   accion: string;
   asignado: boolean;
@@ -15,12 +19,14 @@ export interface PermisoDelegableFila {
 @Component({
   selector: 'app-gestion-clientes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HomeBarComponent],
   templateUrl: './gestion-clientes.component.html',
   styleUrl: './gestion-clientes.component.css'
 })
 export class GestionClientesComponent implements OnInit {
   private readonly adminService = inject(AdminSistemaService);
+
+  constructor(private location: Location) {} goBack() { this.location.back(); }
 
   cargando: boolean = false;
   cargandoModal: boolean = false;
@@ -32,7 +38,6 @@ export class GestionClientesComponent implements OnInit {
   modulos: ModuloItem[] = [];
   catalogoModulosAcciones: PermisoDelegableFila[] = [];
   
-  // Guardado de estado inicial para detectar cambios
   estadoInicial: { [key: string]: boolean } = {};
 
   modalBolsaVisible: boolean = false;
@@ -41,10 +46,17 @@ export class GestionClientesComponent implements OnInit {
 
   modulosExpandidos = new Set<number>();
 
-  // ── ESTADO Y CONFIGURACIÓN DE PAGINACIÓN ─────────────────────────────────
+  // ── PAGINACIÓN TABLA PRINCIPAL ──────────────────────────────────────────
   paginaActual: number = 1;
   elementosPorPagina: number = 25;
   opcionesPorPagina: number[] = [10, 25, 50, 100];
+
+  // ── PAGINACIÓN Y FILTROS DEL MODAL ──────────────────────────────────────
+  filtroAmbitoModal: 'todas' | 'usuario' | 'sistema' = 'todas';
+  filtroBusquedaModal: string = '';
+  paginaModal: number = 1;
+  itemsPorPaginaModal: number = 10;
+  opcionesPorPaginaModal: number[] = [10, 25, 50, 100];
 
   ngOnInit(): void {
     this.cargarAdministradores();
@@ -60,7 +72,7 @@ export class GestionClientesComponent implements OnInit {
     );
   }
 
-  // ── LÓGICA DE PAGINACIÓN ─────────────────────────────────────────────────
+  // ── LÓGICA DE PAGINACIÓN TABLA PRINCIPAL ──────────────────────────────
   get totalPaginas(): number {
     return Math.ceil(this.administradoresFiltrados.length / this.elementosPorPagina) || 1;
   }
@@ -82,47 +94,130 @@ export class GestionClientesComponent implements OnInit {
     const range: number[] = [];
 
     for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
-      if (i > 0 && i <= totalPages) {
-        range.push(i);
-      }
+      if (i > 0 && i <= totalPages) range.push(i);
     }
 
-    if (currentPage - delta > 2) {
-      range.unshift(-1);
-    }
-    if (currentPage + delta < totalPages - 1) {
-      range.push(-1);
-    }
+    if (currentPage - delta > 2) range.unshift(-1);
+    if (currentPage + delta < totalPages - 1) range.push(-1);
 
     range.unshift(1);
-    if (totalPages > 1) {
-      range.push(totalPages);
-    }
+    if (totalPages > 1) range.push(totalPages);
 
-    return range.filter((page, index, array) =>
-      page !== -1 || array[index - 1] !== -1
-    );
+    return range.filter((page, index, array) => page !== -1 || array[index - 1] !== -1);
   }
 
   cambiarPagina(pagina: number): void {
-    if (pagina > 0 && pagina <= this.totalPaginas) {
-      this.paginaActual = pagina;
-    }
+    if (pagina > 0 && pagina <= this.totalPaginas) this.paginaActual = pagina;
   }
 
   paginaAnterior(): void {
-    if (this.paginaActual > 1) {
-      this.paginaActual--;
-    }
+    if (this.paginaActual > 1) this.paginaActual--;
   }
 
   paginaSiguiente(): void {
-    if (this.paginaActual < this.totalPaginas) {
-      this.paginaActual++;
+    if (this.paginaActual < this.totalPaginas) this.paginaActual++;
+  }
+
+  // ── LÓGICA DEL MODAL (FILTRADO Y BÚSQUEDA) ─────────────────────────────
+  esModuloUsuario(identificador: string): boolean {
+    const idLimpio = (identificador || '').toLowerCase();
+    return idLimpio.includes('usuario') || idLimpio.includes('cliente');
+  }
+
+  get modulosModalFiltrados(): ModuloItem[] {
+    let lista = (this.modulos || []).filter(m => !m.padre_id);
+
+    // 1. Filtro por Ámbito
+    if (this.filtroAmbitoModal === 'usuario') {
+      lista = lista.filter(m => this.esModuloUsuario(m.identificador));
+    } else if (this.filtroAmbitoModal === 'sistema') {
+      lista = lista.filter(m => !this.esModuloUsuario(m.identificador));
+    }
+
+    // 2. Filtro por Texto en Buscador
+    if (this.filtroBusquedaModal.trim()) {
+      const q = this.filtroBusquedaModal.toLowerCase().trim();
+      lista = lista.filter(m => {
+        const coincidePadre = m.nombre.toLowerCase().includes(q) || m.identificador.toLowerCase().includes(q);
+        const coincideSub = this.getSubmodulos(m.id).some(s => 
+          s.nombre.toLowerCase().includes(q) || s.identificador.toLowerCase().includes(q)
+        );
+        return coincidePadre || coincideSub;
+      });
+    }
+
+    return lista;
+  }
+
+  get modulosModalPaginados(): ModuloItem[] {
+    const inicio = (this.paginaModal - 1) * this.itemsPorPaginaModal;
+    return this.modulosModalFiltrados.slice(inicio, inicio + this.itemsPorPaginaModal);
+  }
+
+  get totalPaginasModal(): number {
+    return Math.ceil(this.modulosModalFiltrados.length / this.itemsPorPaginaModal) || 1;
+  }
+
+  get totalUsuarioCount(): number {
+    return (this.modulos || []).filter(m => !m.padre_id && this.esModuloUsuario(m.identificador)).length;
+  }
+
+  get totalSistemaCount(): number {
+    return (this.modulos || []).filter(m => !m.padre_id && !this.esModuloUsuario(m.identificador)).length;
+  }
+
+  setFiltroAmbitoModal(tipo: 'todas' | 'usuario' | 'sistema'): void {
+    this.filtroAmbitoModal = tipo;
+    this.paginaModal = 1;
+  }
+
+  onBusquedaModalChange(): void {
+    this.paginaModal = 1;
+  }
+
+  cambiarItemsPorPaginaModal(cant: number): void {
+    this.itemsPorPaginaModal = cant;
+    this.paginaModal = 1;
+  }
+
+  cambiarPaginaModal(delta: number): void {
+    const nueva = this.paginaModal + delta;
+    if (nueva >= 1 && nueva <= this.totalPaginasModal) {
+      this.paginaModal = nueva;
     }
   }
 
-  // ── PIDE Y MANEJA DATOS DE ADMINISTRADORES ────────────────────────────────
+  cambiarPaginaDirectaModal(p: number): void {
+    if (p !== -1 && p >= 1 && p <= this.totalPaginasModal) {
+      this.paginaModal = p;
+    }
+  }
+
+  obtenerRangoPaginasModal(): number[] {
+    const total = this.totalPaginasModal;
+    const actual = this.paginaModal;
+    const delta = 2;
+    const range: number[] = [];
+
+    for (let i = Math.max(2, actual - delta); i <= Math.min(total - 1, actual + delta); i++) {
+      range.push(i);
+    }
+
+    if (actual - delta > 2) range.unshift(-1);
+    if (actual + delta < total - 1) range.push(-1);
+
+    range.unshift(1);
+    if (total > 1) range.push(total);
+
+    return range.filter((page, index, array) => page !== -1 || array[index - 1] !== -1);
+  }
+
+  tieneAlgunPermiso(moduloId: number): boolean {
+    const subIds = this.getSubmodulos(moduloId).map(s => s.id);
+    const todosIds = [moduloId, ...subIds];
+    return this.catalogoModulosAcciones.some(p => todosIds.includes(p.modulo_id) && p.asignado);
+  }
+
   cargarAdministradores(): void {
     this.cargando = true;
     this.adminService.getAdministradores().subscribe({
@@ -177,10 +272,6 @@ export class GestionClientesComponent implements OnInit {
     return this.modulosExpandidos.has(id);
   }
 
-  get modulosRaiz(): ModuloItem[] {
-    return (this.modulos || []).filter(m => !m.padre_id);
-  }
-
   getSubmodulos(padreId: number): ModuloItem[] {
     return (this.modulos || []).filter(m => m.padre_id === padreId);
   }
@@ -195,6 +286,9 @@ export class GestionClientesComponent implements OnInit {
   abrirModalBolsaDelegable(admin: AdminClienteItem): void {
     this.clienteSeleccionado = admin;
     this.modalBolsaVisible = true;
+    this.paginaModal = 1;
+    this.filtroAmbitoModal = 'todas';
+    this.filtroBusquedaModal = '';
     this.cargarPermisosDelegables(admin.id);
   }
 
@@ -204,22 +298,41 @@ export class GestionClientesComponent implements OnInit {
     this.catalogoModulosAcciones = [];
     this.modulos = [];
     this.estadoInicial = {};
+    this.filtroBusquedaModal = '';
     this.modulosExpandidos.clear();
   }
 
+  /**
+   * Carga estrictamente los módulos dados de alta en la base de datos (getModulos)
+   * garantizando que solo existan ítems con ID real y persistente.
+   */
   cargarPermisosDelegables(adminId: number): void {
     this.cargandoModal = true;
 
-    this.adminService.getModulos().subscribe({
-      next: (resModulos) => {
-        this.modulos = resModulos.modulos || [];
-        const listaPlana: PermisoDelegableFila[] = [];
+    forkJoin({
+      modulosRes: this.adminService.getModulos().pipe(catchError(() => of({ modulos: [] }))),
+      delegablesRes: this.adminService.getPermisosDelegables(adminId).pipe(catchError(() => of({ permisos_delegables: [] })))
+    }).subscribe({
+      next: ({ modulosRes, delegablesRes }: { modulosRes: any, delegablesRes: any }) => {
+        this.cargandoModal = false;
 
+        // Módulos reales y registrados en BD
+        const listaModulos: ModuloItem[] = (modulosRes.modulos || []).filter((m: any) => m && m.id);
+        this.modulos = listaModulos;
+
+        // Crear lista plana de permisos solo para módulos existentes
+        const listaPlana: PermisoDelegableFila[] = [];
         this.modulos.forEach(m => {
-          (m.acciones || []).forEach((a: AccionBase) => {
+          const acciones: AccionBase[] = (m.acciones && m.acciones.length > 0) 
+            ? m.acciones 
+            : [{ id: 1, nombre: 'Ver', identificador: 'ver', activo: 1 }];
+
+          acciones.forEach((a: AccionBase) => {
             listaPlana.push({
               modulo_id: m.id,
               modulo: m.nombre,
+              identificador: m.identificador,
+              tipo: this.esModuloUsuario(m.identificador) ? 'Usuario' : 'Sistema',
               accion_id: a.id,
               accion: a.nombre,
               asignado: false
@@ -227,31 +340,24 @@ export class GestionClientesComponent implements OnInit {
           });
         });
 
-        this.adminService.getPermisosDelegables(adminId).subscribe({
-          next: (resDelegables) => {
-            this.cargandoModal = false;
-            const asignados = resDelegables.permisos_delegables || [];
+        // Cruzar con los permisos delegables actuales del administrador
+        const asignados = delegablesRes.permisos_delegables || delegablesRes.permisos || [];
+        this.estadoInicial = {};
 
-            this.estadoInicial = {};
-            listaPlana.forEach(item => {
-              const estaAsignado = asignados.some(
-                d => d.modulo_id === item.modulo_id && d.accion_id === item.accion_id
-              );
-              item.asignado = estaAsignado;
-              this.estadoInicial[`${item.modulo_id}_${item.accion_id}`] = estaAsignado;
-            });
-
-            this.catalogoModulosAcciones = listaPlana;
-          },
-          error: () => {
-            this.cargandoModal = false;
-            this.mostrarAlerta('Error al cargar la bolsa de permisos asignada.', 'error');
-          }
+        listaPlana.forEach(item => {
+          const estaAsignado = asignados.some(
+            (d: any) => (d.modulo_id && d.modulo_id === item.modulo_id && d.accion_id === item.accion_id) ||
+                        (d.identificador && d.identificador === item.identificador)
+          );
+          item.asignado = estaAsignado;
+          this.estadoInicial[`${item.modulo_id}_${item.accion_id}`] = estaAsignado;
         });
+
+        this.catalogoModulosAcciones = listaPlana;
       },
       error: () => {
         this.cargandoModal = false;
-        this.mostrarAlerta('Error al obtener el catálogo de módulos.', 'error');
+        this.mostrarAlerta('Error al obtener la lista de permisos.', 'error');
       }
     });
   }
