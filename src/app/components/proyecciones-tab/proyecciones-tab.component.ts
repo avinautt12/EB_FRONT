@@ -60,6 +60,7 @@ export interface ForecastRow {
   color: string;
   talla: string;
   fuente?: string;
+  categ_path?: string;
   actualizado_en?: string;
   precio_publico?: number | null;
   mayo: number;
@@ -103,6 +104,7 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   @Input() clienteClave: string | null = null;
   @Input() idCliente: number | null = null;
   @Input() idGrupoOdoo: number | null = null;
+  @Input() ocultarBotonesImport = false;
   @Output() rowCountChange = new EventEmitter<number>();
 
   @ViewChild('tableScroll',  { read: ElementRef }) tableScroll!:  ElementRef<HTMLElement>;
@@ -234,7 +236,7 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
       if (this.filtroModelo && r.modelo !== this.filtroModelo) return false;
       // Ocultar bicicletas con 0 unidades fuera del modo edición.
       // Productos excel (apparel/Syncros) siempre se muestran para que el usuario pueda editarlos.
-      if (!this.modoEdicion && !r._nuevo && this.calcTotal(r) === 0 && r.fuente !== 'excel') return false;
+      if (!this.modoEdicion && !r._nuevo && this.calcTotal(r) === 0) return false;
       return true;
     });
   }
@@ -258,26 +260,42 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
              ProyeccionesTabComponent._PARTE_KW.some(kw => n.includes(kw));
     };
 
-    // Bicicletas: whitelist de Odoo (asumidas bici a menos que sean ropa/refacción)
-    // o legado con marca conocida
+    // Extrae la marca desde categ_path de Odoo (primer segmento): "SCOTT / BICICLETA / ..." → "SCOTT"
+    const _categBrand = (r: ForecastRow): string => {
+      const cat = (r.categ_path || '').toUpperCase().trim();
+      if (!cat || !cat.includes(' / ')) return '';
+      return cat.split(' / ')[0].trim();
+    };
+
+    // Detectar bicicleta usando categ_path de Odoo; fallback por nombre de producto
     const esBicicleta = (r: ForecastRow): boolean => {
-      // Productos de Odoo whitelist que no son ropa ni refacción → bicicleta
-      if (r.fuente === 'whitelist') return true;
-      // Filas legado: detectar por nombre
+      const cat = (r.categ_path || '').toUpperCase().trim();
+      if (cat) {
+        if (cat.includes('BICICLET') || cat === 'BICIS' || cat === 'BICICLETAS') return true;
+        if (cat.includes(' / ') && !cat.includes('BICICLET')) return false;
+      }
       const n = (r.producto || '').toUpperCase();
       return n.includes('BICICLET') || n.includes('E-BIKE') || n.includes('EBIKE');
     };
 
-    const esBici = (r: ForecastRow) =>
-      !r._nuevo && !esRopa(r) && !esSyncros(r) && esBicicleta(r) && (
-        r.fuente === 'whitelist' ||
-        (r.fuente !== 'excel' &&
-          !r.sku.toUpperCase().includes('-APP-') &&
-          ['MEGAMO', 'SCOTT'].includes((r.marca || '').toUpperCase()))
-      );
+    const esBici = (r: ForecastRow): boolean => {
+      if (r._nuevo || esRopa(r) || esSyncros(r) || !esBicicleta(r)) return false;
+      return true;
+    };
 
-    const megamo  = all.filter(r => esBici(r) && (r.marca || '').toUpperCase() === 'MEGAMO');
-    const scott   = all.filter(r => esBici(r) && (r.marca || '').toUpperCase() === 'SCOTT');
+    // Inferir marca: priorizar categ_path, luego campo marca, luego nombre de producto
+    const _marcaBici = (r: ForecastRow): string => {
+      const brand = _categBrand(r);
+      if (brand === 'MEGAMO' || brand === 'SCOTT') return brand;
+      const m = (r.marca || '').toUpperCase();
+      if (m === 'MEGAMO' || m === 'SCOTT') return m;
+      const n = (r.producto || '').toUpperCase();
+      if (n.includes('MEGAMO')) return 'MEGAMO';
+      if (n.includes('SCOTT')) return 'SCOTT';
+      return m;
+    };
+    const megamo  = all.filter(r => esBici(r) && _marcaBici(r) === 'MEGAMO');
+    const scott   = all.filter(r => esBici(r) && _marcaBici(r) === 'SCOTT');
     const syncros = all.filter(r => !r._nuevo && !esBici(r) && esSyncros(r));
 
     // Ropa/accesorios de vestir agrupados por marca (todo lo que no es bici ni Syncros)
@@ -369,7 +387,7 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   }
 
   totalMes(mes: keyof ForecastRow): number {
-    return this.rowsFiltrados.reduce((s, r) => s + (Number(r[mes]) || 0), 0);
+    return this.rowsFiltrados.reduce((s, r) => s + this.getMesDisplay(r, mes), 0);
   }
 
   totalPrecioMes(mes: keyof ForecastRow): number {
@@ -663,6 +681,17 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
       next: ({ forecast, avance }) => {
         this.avanceRows   = avance;
         this.rows         = forecast.map(r => ({ ...r, _editado: false, _nuevo: false, _eliminar: false }));
+        // Propagar precio_publico dentro del mismo grupo marca+modelo
+        // (Odoo pricelist puede tener entrada solo para algunas tallas)
+        const ppByModel = new Map<string, number>();
+        for (const r of this.rows) {
+          if (r.modelo && r.precio_publico) ppByModel.set(`${r.marca}|${r.modelo}`, r.precio_publico);
+        }
+        for (const r of this.rows) {
+          if (!r.precio_publico && r.modelo) {
+            r.precio_publico = ppByModel.get(`${r.marca}|${r.modelo}`) ?? undefined;
+          }
+        }
         this.rowsOriginal = JSON.parse(JSON.stringify(this.rows));
         this.cargando     = false;
         this.rowCountChange.emit(
@@ -690,6 +719,41 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
         this._nivelPrecioCatalogo = res.nivel_precio || '';
       },
       error: () => {}
+    });
+  }
+
+  // ─────────────────────────────────────────
+  // Data export (Excel)
+  // ─────────────────────────────────────────
+
+  exportarDatos(): void {
+    import('xlsx').then(XLSX => {
+      const rows = this.rowsFiltrados;
+      const data: any[][] = [];
+
+      // Header
+      data.push([
+        'SKU', 'Producto', 'Marca', 'Modelo', 'Color', 'Talla',
+        ...MESES_LABELS,
+        'Total Uds', 'Precio Dist', 'Precio Público', 'Total $'
+      ]);
+
+      for (const r of rows) {
+        const totalUds = this.calcTotal(r);
+        const precio   = Number(r.precio) || 0;
+        const pp       = Number(r.precio_publico) || 0;
+        data.push([
+          r.sku, r.producto, r.marca, r.modelo, r.color, r.talla,
+          ...MESES.map(m => Number(r[m]) || 0),
+          totalUds, precio, pp, totalUds * precio
+        ]);
+      }
+
+      const ws   = XLSX.utils.aoa_to_sheet(data);
+      const wb   = XLSX.utils.book_new();
+      const ident = this.clienteClave || `grupo_${this.idGrupoOdoo}`;
+      XLSX.utils.book_append_sheet(wb, ws, 'Proyecciones');
+      XLSX.writeFile(wb, `Proyecciones_${ident}_${this.periodoSeleccionado}.xlsx`);
     });
   }
 
@@ -836,25 +900,35 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
     this._cargarAvance();
   }
 
-  private _cargarAvance(): void {
+  avanceRefrescando = false;
+
+  refrescarAvance(): void {
+    this.avanceRefrescando = true;
+    this._cargarAvance(true);
+  }
+
+  private _cargarAvance(refresh = false): void {
     if (!this.clienteClave || !this.periodoSeleccionado) return;
     this.avanceCargando = true;
     this.avanceError = null;
     this.cdr.markForCheck();
 
-    const params = new HttpParams()
+    let params = new HttpParams()
       .set('clave', this.clienteClave)
       .set('periodo', this.periodoSeleccionado);
+    if (refresh) params = params.set('refresh', '1');
 
     this.http.get<AvanceRow[]>(`${this.apiUrl}/forecast/avance`, { params }).subscribe({
       next: data => {
         this.avanceRows = data;
         this.avanceCargando = false;
+        this.avanceRefrescando = false;
         this.cdr.markForCheck();
       },
       error: err => {
         this.avanceError = err?.error?.error || 'Error al cargar avance';
         this.avanceCargando = false;
+        this.avanceRefrescando = false;
         this.cdr.markForCheck();
       }
     });
@@ -1324,6 +1398,25 @@ export class ProyeccionesTabComponent implements OnChanges, OnInit, AfterViewIni
   /** Type-safe getter for month value on a row */
   getMes(row: ForecastRow, mes: keyof ForecastRow): number {
     return Number(row[mes]) || 0;
+  }
+
+  /**
+   * Valor del mes descontando lo ya pedido (FIFO: descuenta de los meses más tempranos primero).
+   * En modo edición devuelve el valor bruto para no confundir al usuario.
+   */
+  getMesDisplay(row: ForecastRow, mes: keyof ForecastRow): number {
+    if (this.modoEdicion) return this.getMes(row, mes);
+    const av = this._avanceMapCache.get(row.sku);
+    if (!av || av.pedido_total <= 0) return this.getMes(row, mes);
+    let restante = av.pedido_total;
+    for (const m of MESES) {
+      const qty = Number(row[m]) || 0;
+      const deducido = Math.min(restante, qty);
+      if (m === mes) return Math.max(0, qty - deducido);
+      restante -= deducido;
+      if (restante <= 0) break;
+    }
+    return this.getMes(row, mes);
   }
 
   /** Type-safe setter for month value on a row */

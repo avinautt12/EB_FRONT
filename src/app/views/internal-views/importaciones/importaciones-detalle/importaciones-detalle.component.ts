@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subscription, interval } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { HomeBarComponent } from '../../../../components/home-bar/home-bar.component';
 import { DatePickerComponent } from '../../../../components/date-picker/date-picker.component';
 import { ImportacionesService, Importacion } from '../../../../services/importaciones.service';
@@ -10,6 +12,36 @@ type Seccion = 'logistica' | 'importacion' | 'despacho' | 'odoo' | 'almacen' | '
 
 interface CampoValidar { campo: keyof Importacion; label: string; opcional?: boolean; }
 
+// Sección donde vive cada campo destino de un resaltado (?highlight=<campo> en la URL,
+// usado por el pipeline del dashboard para llevar al usuario directo al dato), y su
+// campo "proyectado" hermano -- ambos se resaltan juntos porque viven en la misma
+// sección y es contra lo que se compara el real.
+const SECCION_POR_CAMPO_RESALTADO: Record<string, Seccion> = {
+  log_fecha_entrega:           'logistica',
+  log_fecha_booking:           'logistica',
+  imp_llegada_contenedor_puerto: 'importacion',
+  des_fecha_cruce_real:        'despacho',
+  des_llegada_almacen:         'despacho',
+  alm_liberacion_uva:          'almacen',
+  alm_terminacion_etiquetado:  'almacen',
+  rec_recepcion_odoo:          'recepcion',
+  rec_liberacion_verificacion: 'recepcion',
+  rec_liberacion_final:        'recepcion',
+};
+
+const CAMPO_PROG_HERMANO: Record<string, string> = {
+  log_fecha_entrega:           'log_fecha_entrega_prog',
+  log_fecha_booking:           'log_fecha_booking_prog',
+  imp_llegada_contenedor_puerto: 'imp_llegada_contenedor_prog',
+  des_fecha_cruce_real:        'des_fecha_cruce_prog',
+  des_llegada_almacen:         'des_fecha_entrega_almacen_prog',
+  alm_liberacion_uva:          'alm_liberacion_uva_prog',
+  alm_terminacion_etiquetado:  'alm_terminacion_etiquetado_prog',
+  rec_recepcion_odoo:          'rec_recepcion_odoo_prog',
+  rec_liberacion_verificacion: 'rec_liberacion_verificacion_prog',
+  rec_liberacion_final:        'rec_liberacion_final_prog',
+};
+
 @Component({
   selector: 'app-importaciones-detalle',
   standalone: true,
@@ -17,7 +49,7 @@ interface CampoValidar { campo: keyof Importacion; label: string; opcional?: boo
   templateUrl: './importaciones-detalle.component.html',
   styleUrl: './importaciones-detalle.component.css',
 })
-export class ImportacionesDetalleComponent implements OnInit {
+export class ImportacionesDetalleComponent implements OnInit, OnDestroy {
   embarque: Importacion | null = null;
   cargando = true;
   guardando = false;
@@ -29,6 +61,16 @@ export class ImportacionesDetalleComponent implements OnInit {
   validacionError: string[] = [];
   camposConError = new Set<string>();
   camposNA = new Set<string>();
+
+  // Polling de actualizaciones concurrentes
+  hayActualizacionExterna = false;
+  private _pollSub?: Subscription;
+  private _embarqueId = 0;
+  private readonly POLL_INTERVAL_MS = 10_000;
+
+  // Auto-guardado silencioso
+  autoguardandoOk = false;
+  private _autoguardadoTimer?: ReturnType<typeof setTimeout>;
 
   readonly tabs: { key: Seccion; label: string; icon: string }[] = [
     { key: 'logistica',   label: 'Logística',   icon: 'fa-ship' },
@@ -56,7 +98,6 @@ export class ImportacionesDetalleComponent implements OnInit {
       { campo: 'log_fecha_shipping_instructions',  label: 'Envío shipping instructions' },
       { campo: 'log_confirmacion_booking',         label: 'Confirmación de booking' },
       { campo: 'log_fecha_booking',                label: 'Booking (fecha salida contenedor)' },
-      { campo: 'log_eta_puerto',                   label: 'ETA Puerto' },
       { campo: 'log_buque',                        label: 'Buque' },
       { campo: 'log_no_viaje',                     label: 'No. de Viaje' },
       { campo: 'log_puerto_salida',                label: 'Puerto de salida' },
@@ -201,24 +242,147 @@ export class ImportacionesDetalleComponent implements OnInit {
 
   private returnUrl = '/importaciones';
 
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(e: BeforeUnloadEvent): void {
+    if (Object.keys(this.cambiosPendientes).length > 0) {
+      e.preventDefault();
+    }
+  }
+
   ngOnInit(): void {
     if (this.route.snapshot.queryParamMap.get('from') === 'dashboard') {
       const tab = this.route.snapshot.queryParamMap.get('tab');
       this.returnUrl = '/importaciones/dashboard' + (tab ? `?tab=${tab}` : '');
     }
     const id = Number(this.route.snapshot.paramMap.get('id'));
+    this._embarqueId = id;
     this.svc.obtener(id).subscribe({
       next: (data) => {
         this.embarque = data;
-        // Restore authoritative N/A state first (from official saves)
         for (const campo of (this.embarque.campos_na || [])) {
           this.camposNA.add(campo);
         }
         this._aplicarBorradores();
+        this._cargarDraftLocal(id);
         this.cargando = false;
+        this._iniciarPolling(id);
+        this._resaltarCampoDesdeQuery();
       },
       error: () => { this.error = 'Embarque no encontrado'; this.cargando = false; },
     });
+  }
+
+  // Si venimos de un click en una etapa del pipeline del dashboard
+  // (?highlight=<campo>), cambia a la sección correspondiente y resalta el campo
+  // real Y su proyectado hermano -- ambos viven en la misma sección y es contra
+  // lo que se está comparando, así que tiene que verse el par completo.
+  private _resaltarCampoDesdeQuery(): void {
+    const campo = this.route.snapshot.queryParamMap.get('highlight');
+    if (!campo) return;
+    const seccion = SECCION_POR_CAMPO_RESALTADO[campo];
+    if (seccion) this.seccionActiva = seccion;
+    const campoProg = CAMPO_PROG_HERMANO[campo];
+    setTimeout(() => {
+      const elReal = document.getElementById(`campo-${campo}`);
+      const elProg = campoProg ? document.getElementById(`campo-${campoProg}`) : null;
+      const elAncla = elProg ?? elReal;
+      if (!elAncla) return;
+      elAncla.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      [elReal, elProg].forEach(el => el?.classList.add('campo-resaltado'));
+      setTimeout(() => {
+        [elReal, elProg].forEach(el => el?.classList.remove('campo-resaltado'));
+      }, 4200);
+    }, 120);
+  }
+
+  ngOnDestroy(): void {
+    this._pollSub?.unsubscribe();
+    if (this._autoguardadoTimer) clearTimeout(this._autoguardadoTimer);
+    if (!this.embarque) return;
+    const tieneCambios = Object.keys(this.cambiosPendientes).length > 0;
+    if (!tieneCambios) return;
+    const draft = {
+      seccion:  this.seccionActiva,
+      cambios:  this.cambiosPendientes,
+      na:       Array.from(this.camposNA),
+    };
+    localStorage.setItem(`imp_draft_${this.embarque.id}`, JSON.stringify(draft));
+  }
+
+  private _iniciarPolling(id: number): void {
+    this._pollSub = interval(this.POLL_INTERVAL_MS).pipe(
+      switchMap(() => this.svc.obtener(id))
+    ).subscribe({
+      next: (data) => {
+        if (!this.embarque) return;
+        // Merge inteligente: actualiza campos del servidor EXCEPTO los que el
+        // usuario está editando en este momento (que están en cambiosPendientes).
+        const camposEnEdicion = new Set(Object.keys(this.cambiosPendientes));
+        const merged: any = { ...data };
+        for (const campo of camposEnEdicion) {
+          merged[campo] = (this.embarque as any)[campo]; // preservar versión local
+        }
+        this.embarque = merged;
+        this._recalcularCamposLocales();
+        this.hayActualizacionExterna = false;
+      },
+      error: () => { /* silencioso — no interrumpir al usuario */ }
+    });
+  }
+
+  recargarDesdeServidor(): void {
+    this.svc.obtener(this._embarqueId).subscribe({
+      next: (data) => {
+        this.embarque = data;
+        this.cambiosPendientes = {};
+        this.camposNA.clear();
+        for (const campo of (this.embarque.campos_na || [])) {
+          this.camposNA.add(campo);
+        }
+        this._aplicarBorradores();
+        this._recalcularCamposLocales();
+        localStorage.removeItem(`imp_draft_${this._embarqueId}`);
+        this.hayActualizacionExterna = false;
+      }
+    });
+  }
+
+  private _cargarDraftLocal(id: number): void {
+    const raw = localStorage.getItem(`imp_draft_${id}`);
+    if (!raw) return;
+    try {
+      const draft = JSON.parse(raw);
+      let applied = false;
+      for (const [campo, valor] of Object.entries(draft.cambios || {})) {
+        const actual = (this.embarque as any)[campo];
+        // Comparar como string (primeros 10 chars para fechas ISO) para detectar si ya está guardado
+        const mismoValor = actual !== null && actual !== undefined && actual !== ''
+          && String(actual).slice(0, 10) === String(valor).slice(0, 10);
+        if (mismoValor) continue; // ya está guardado en DB con ese valor, no hay cambio pendiente
+        if (valor === '__NA__') {
+          this.camposNA.add(campo);
+        } else {
+          (this.embarque as any)[campo] = valor;
+        }
+        (this.cambiosPendientes as any)[campo] = valor;
+        applied = true;
+      }
+      for (const campo of (draft.na || [])) {
+        const actual = (this.embarque as any)[campo];
+        if (!this.camposNA.has(campo) && !actual) {
+          this.camposNA.add(campo);
+          (this.cambiosPendientes as any)[campo] = '__NA__';
+          applied = true;
+        }
+      }
+      if (applied && draft.seccion) this.seccionActiva = draft.seccion;
+      if (applied) {
+        this._recalcularCamposLocales();
+        // Persistir el borrador recuperado a columnas reales para que sea
+        // visible a otros usuarios en vivo (no depender del clic de guardar).
+        this._programarAutoguardado();
+      }
+    } catch {}
   }
 
   private _aplicarBorradores(): void {
@@ -289,6 +453,27 @@ export class ImportacionesDetalleComponent implements OnInit {
       if (this.camposConError.size === 0) this.validacionError = [];
     }
     this._recalcularCamposLocales();
+    this._programarAutoguardado();
+  }
+
+  private _programarAutoguardado(): void {
+    if (this._autoguardadoTimer) clearTimeout(this._autoguardadoTimer);
+    this._autoguardadoTimer = setTimeout(() => {
+      if (!this.embarque || !this.hayCambios() || this.guardando) return;
+      // Guardar directo a columnas reales (sin _borrador_seccion) para que
+      // otros usuarios vean los datos al instante vía polling.
+      const payload: any = { ...this.cambiosPendientes };
+      for (const campo of this.camposNA) { payload[campo] = '__NA__'; }
+      this.svc.actualizar(this.embarque.id, payload).subscribe({
+        next: () => {
+          this.autoguardandoOk = true;
+          // Actualizar updated_at local para que el polling no genere falsa alerta
+          if (this.embarque) this.embarque.updated_at = new Date().toISOString();
+          setTimeout(() => { this.autoguardandoOk = false; }, 2000);
+        },
+        error: () => {}
+      });
+    }, 1_000);
   }
 
   private _diffDias(a: string | null, b: string | null): number | null {
@@ -311,8 +496,8 @@ export class ImportacionesDetalleComponent implements OnInit {
     const dias2 = this._diffDias(e.imp_llegada_contenedor_puerto, e.des_fecha_cruce_real);
     if (dias2 !== null) e.imp_dias_despacho_aduanero = dias2;
 
-    // Fecha límite naviera = ETA puerto + días sin demoras
-    const eta = e.log_eta_puerto;
+    // Fecha límite naviera = Llegada contenedor a puerto + días sin demoras
+    const eta = e.imp_llegada_contenedor_puerto;
     const dias = e.des_dias_sin_demoras;
     if (eta && dias != null && dias !== '') {
       try {
@@ -403,6 +588,8 @@ export class ImportacionesDetalleComponent implements OnInit {
         this.guardadoOk = true;
         this.error = '';
         this.cambiosPendientes = {};
+        localStorage.removeItem(`imp_draft_${this.embarque!.id}`);
+        this.hayActualizacionExterna = false;
         this.svc.obtener(this.embarque!.id).subscribe((d) => {
           this.embarque = d;
           this.camposNA.clear();

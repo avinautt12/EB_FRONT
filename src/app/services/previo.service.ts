@@ -56,4 +56,19 @@ export class PrevioService {
   limpiarCachePrevio(): void {
     this.previoCache.next(null);
   }
+
+  getTemporadasDisponibles(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/temporadas_disponibles`);
+  }
+
+  getDatosPrevioHistorico(temporada: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/datos_previo_historico`, { params: { temporada } });
+  }
+
+  /** Recalcula (sin guardar) los montos de la temporada actual acotados a un rango [desde, hasta] (YYYY-MM-DD). */
+  obtenerPrevioRangoFechas(fechaDesde: string | null, fechaHasta: string): Observable<any[]> {
+    const params: any = { fecha_hasta: fechaHasta };
+    if (fechaDesde) params.fecha_desde = fechaDesde;
+    return this.http.get<any[]>(`${this.apiUrl}/obtener_previo_fecha`, { params });
+  }
 }

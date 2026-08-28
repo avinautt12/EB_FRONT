@@ -1,0 +1,304 @@
+<div class="gestor-page">
+
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-volver" [routerLink]="['/usuarios/solicitud-retroactivo']">
+        <i class="fas fa-arrow-left"></i> Volver
+      </button>
+      <h1>Gestor de Respuestas <span>Solicitud de Retroactivos</span></h1>
+    </div>
+  </div>
+
+  <div *ngIf="cargando" class="cargando-spinner">
+    <div class="spinner"></div>
+    <p>Cargando solicitudes...</p>
+  </div>
+
+  <div *ngIf="error" class="alert-error">{{ error }}</div>
+
+  <div class="gestor-layout" *ngIf="!cargando">
+
+    <!-- ── PANEL DE LISTA ── -->
+    <div class="list-panel">
+      <div class="filter-bar">
+        <input type="text" class="buscador" placeholder="Buscar cliente, correo o serie..." [(ngModel)]="busqueda">
+        <div class="filter-row">
+          <select class="filter-select" [(ngModel)]="filtroCampana">
+            <option value="">Todas las campañas</option>
+            <option *ngFor="let c of campanasDisponibles" [value]="c">{{ c }}</option>
+          </select>
+        </div>
+        <div class="chips">
+          <button class="chip" [class.active]="filtroEstatus === 'todos'" (click)="filtroEstatus = 'todos'">Todos</button>
+          <button class="chip chip-pendiente" [class.active]="filtroEstatus === 'pendiente'" (click)="filtroEstatus = 'pendiente'">Pendientes</button>
+          <button class="chip chip-validado" [class.active]="filtroEstatus === 'validado'" (click)="filtroEstatus = 'validado'">Validadas</button>
+          <button class="chip chip-rechazado" [class.active]="filtroEstatus === 'rechazado'" (click)="filtroEstatus = 'rechazado'">Rechazadas</button>
+        </div>
+
+        <!-- GUÍA: filtro aparte del estatus del ticket -- la NC es un flujo
+             de 2 roles distintos (BCYP captura, Auditoría valida), por eso
+             necesita su propio filtro para que cada quien encuentre rápido
+             lo que le toca. -->
+        <div class="chips-label">Nota de Crédito</div>
+        <div class="chips">
+          <button class="chip" [class.active]="filtroNotaCredito === 'todos'" (click)="filtroNotaCredito = 'todos'">Todas</button>
+          <button class="chip chip-nc-sin-capturar" [class.active]="filtroNotaCredito === 'sin_capturar'" (click)="filtroNotaCredito = 'sin_capturar'">Sin capturar</button>
+          <button class="chip chip-pendiente" [class.active]="filtroNotaCredito === 'pendiente'" (click)="filtroNotaCredito = 'pendiente'">Por validar</button>
+          <button class="chip chip-validado" [class.active]="filtroNotaCredito === 'validada'" (click)="filtroNotaCredito = 'validada'">Validadas</button>
+        </div>
+        <div class="estatus-conteo-row">
+          <span class="estatus-conteo-chip" *ngFor="let e of conteoNotaCredito"
+                [style.background]="e.color + '22'"
+                [style.color]="e.color"
+                [style.border-color]="e.color + '55'">
+            {{ e.label }}: {{ e.count }}
+          </span>
+        </div>
+
+        <div class="result-row">
+          <span class="result-count">{{ solicitudesFiltradas.length }} resultado{{ solicitudesFiltradas.length !== 1 ? 's' : '' }}</span>
+          <button class="sort-toggle-btn" (click)="toggleOrdenFecha()"
+                  [title]="ordenFecha === 'desc' ? 'Mostrando más recientes primero' : 'Mostrando más antiguas primero'">
+            <i class="fas" [class.fa-sort-amount-down]="ordenFecha === 'desc'" [class.fa-sort-amount-up]="ordenFecha === 'asc'"></i>
+            {{ ordenFecha === 'desc' ? 'Más recientes' : 'Más antiguas' }}
+          </button>
+        </div>
+        <div class="estatus-conteo-row" *ngIf="conteoPorEstatus.length > 0">
+          <span class="estatus-conteo-chip" *ngFor="let e of conteoPorEstatus"
+                [style.background]="e.color + '22'"
+                [style.color]="e.color"
+                [style.border-color]="e.color + '55'">
+            {{ e.estatus }}: {{ e.count }}
+          </span>
+        </div>
+      </div>
+
+      <div class="solicitud-list">
+        <div *ngIf="!solicitudesFiltradas.length" class="sin-datos-box">
+          <i class="fas fa-inbox fa-2x"></i>
+          <p>No hay solicitudes en este filtro.</p>
+        </div>
+
+        <div class="solicitud-card" *ngFor="let s of solicitudesFiltradas"
+             [class.active]="seleccionada?.id === s.id"
+             (click)="seleccionar(s)">
+          <div class="sc-top">
+            <span class="badge-estatus" [ngClass]="'badge-' + s.estatus">{{ s.estatus }}</span>
+            <span class="sc-monto">{{ s.monto_pagar | currency:'USD':'$':'1.2-2' }}</span>
+          </div>
+          <div class="sc-nombre">{{ s.nombre_completo }}</div>
+          <div class="sc-detalle">{{ s.modelo_bicicleta }} · {{ s.numero_serie }}</div>
+          <div class="sc-campana">{{ s.nombre_formulario }} · {{ s.anio_modelo }}</div>
+          <div class="sc-nc-row" *ngIf="s.nota_credito">
+            <span class="badge-nc-mini" [ngClass]="s.nota_credito_estatus === 'validada' ? 'badge-nc-validada' : 'badge-nc-pendiente'">
+              <i class="fas fa-file-invoice-dollar"></i>
+              NC {{ s.nota_credito_estatus === 'validada' ? 'validada' : 'pendiente' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PANEL DE DETALLE ── -->
+    <div class="detail-panel" *ngIf="seleccionada as s">
+      <div class="dp-header">
+        <div>
+          <span class="badge-estatus" [ngClass]="'badge-' + s.estatus">{{ s.estatus }}</span>
+          <h2>{{ s.nombre_completo }}</h2>
+          <span class="dp-correo">{{ s.correo_electronico }}</span>
+        </div>
+        <button class="btn-cerrar" (click)="cerrarDetalle()"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div class="dp-scroll">
+
+        <!-- INFORMACIÓN DE LA VENTA -->
+        <div class="dp-section">
+          <div class="dp-section-title">Información de la Venta</div>
+          <div class="dp-grid">
+            <div class="dp-field"><span class="dp-label">Campaña</span><span class="dp-value">{{ s.nombre_formulario }}</span></div>
+            <div class="dp-field"><span class="dp-label">Sucursal</span><span class="dp-value">{{ s.nombre_sucursal }}</span></div>
+            <div class="dp-field"><span class="dp-label">Fecha de Venta</span><span class="dp-value">{{ s.fecha_venta | date:'dd/MM/yyyy' }}</span></div>
+            <div class="dp-field"><span class="dp-label">Año Modelo</span><span class="dp-value">{{ s.anio_modelo }}</span></div>
+            <div class="dp-field"><span class="dp-label">Modelo</span><span class="dp-value">{{ s.modelo_bicicleta }}</span></div>
+            <div class="dp-field"><span class="dp-label">Número de Serie</span><span class="dp-value">{{ s.numero_serie }}</span></div>
+            <div class="dp-field"><span class="dp-label">Meses Sin Intereses</span><span class="dp-value">{{ s.plazo_meses }} meses</span></div>
+            <div class="dp-field"><span class="dp-label">% Retroactivo</span><span class="dp-value">{{ s.porcentaje }}%</span></div>
+          </div>
+        </div>
+
+        <!-- MONTO (editable por admin) -->
+        <div class="dp-section">
+          <div class="dp-section-title">Monto</div>
+          <div class="dp-monto-row" *ngIf="!editandoPrecio">
+            <div class="dp-field">
+              <span class="dp-label">Precio Público</span>
+              <span class="dp-value">{{ s.precio_publico | currency:'USD':'$':'1.2-2' }}</span>
+            </div>
+            <div class="dp-field">
+              <span class="dp-label">Monto de Retroactivo</span>
+              <span class="dp-value dp-value-monto">{{ s.monto_pagar | currency:'USD':'$':'1.2-2' }}</span>
+            </div>
+            <button class="btn-editar-precio" (click)="iniciarEdicionPrecio()">
+              <i class="fas fa-pen"></i> Corregir precio
+            </button>
+          </div>
+
+          <div class="dp-precio-edit" *ngIf="editandoPrecio">
+            <label class="dp-label">Precio Público correcto</label>
+            <div class="dp-precio-input-row">
+              <input type="number" min="0" step="0.01" [(ngModel)]="precioEditado" [disabled]="guardandoPrecio">
+              <button class="btn-guardar" [disabled]="guardandoPrecio" (click)="guardarPrecio()">
+                <i class="fas fa-check"></i> Guardar
+              </button>
+              <button class="btn-cancelar" [disabled]="guardandoPrecio" (click)="cancelarEdicionPrecio()">
+                Cancelar
+              </button>
+            </div>
+            <p class="dp-hint">El monto de retroactivo se recalcula automático con el % ya asignado.</p>
+            <p class="alert-error-inline" *ngIf="errorPrecio">{{ errorPrecio }}</p>
+          </div>
+        </div>
+
+        <!-- INFORMACIÓN DE LA NOTA DE CREDITO -->
+        <div class="dp-section">
+          <div class="dp-section-title-row">
+            <div class="dp-section-title">Nota de credito</div>
+            <span class="badge-nc" *ngIf="s.nota_credito" [ngClass]="s.nota_credito_estatus === 'validada' ? 'badge-nc-validada' : 'badge-nc-pendiente'">
+              {{ s.nota_credito_estatus === 'validada' ? 'Validada por Auditoría' : 'Pendiente de validar' }}
+            </span>
+          </div>
+
+          <div class="dp-monto-row" *ngIf="!editandoNotaCredito">
+            <div class="dp-field">
+              <span class="dp-value">{{ s.nota_credito || 'Sin capturar' }}</span>
+            </div>
+            <div class="dp-nc-actions">
+              <button class="btn-editar-precio" (click)="iniciarEdicionNotaCredito()">
+                <i class="fas fa-pen"></i> {{ tituloBotonNotaCredito(s) }}
+              </button>
+              <button class="btn-validar-nc" *ngIf="s.nota_credito && s.nota_credito_estatus !== 'validada'" (click)="abrirValidarNotaCredito()">
+                <i class="fas fa-shield-halved"></i> Validar (Auditoría)
+              </button>
+            </div>
+          </div>
+
+          <div class="dp-precio-edit" *ngIf="editandoNotaCredito">
+            <label class="dp-label">{{ s.nota_credito ? 'Nota de credito correcta' : 'Número de nota de crédito' }}</label>
+            <div class="dp-precio-input-row">
+              <input type="text" [(ngModel)]="notaCreditoEditada" [disabled]="guardandoNotaCredito">
+              <button class="btn-guardar" [disabled]="guardandoNotaCredito" (click)="guardarNotaCredito()">
+                <i class="fas fa-check"></i> Guardar
+              </button>
+              <button class="btn-cancelar" [disabled]="guardandoNotaCredito" (click)="cancelarEdicionNotaCredito()">
+                Cancelar
+              </button>
+            </div>
+            <p class="alert-error-inline" *ngIf="errorNotaCredito">{{ errorNotaCredito }}</p>
+          </div>
+        </div>
+
+        <!-- DOCUMENTOS -->
+        <div class="dp-section">
+          <div class="dp-section-title">Documentos</div>
+          <div class="docs-grid">
+            <div *ngFor="let doc of documentos(s)" class="doc-unit"
+                 [class.doc-valido]="doc.estatus === 'valido'"
+                 [class.doc-rechazado]="doc.estatus === 'rechazado'">
+              <a [href]="doc.url || undefined" target="_blank" class="doc-body" [class.doc-sin-url]="!doc.url">
+                <div class="doc-body-icon"><i class="fas fa-file"></i></div>
+                <div class="doc-body-info">
+                  <span class="doc-field-label">{{ doc.label }}</span>
+                  <span class="doc-open-hint" *ngIf="doc.url">Ver archivo <i class="fas fa-external-link-alt"></i></span>
+                  <span class="doc-open-hint" *ngIf="!doc.url">No disponible</span>
+                </div>
+                <span class="val-status-chip valid" *ngIf="doc.estatus === 'valido'"><i class="fas fa-check"></i></span>
+                <span class="val-status-chip rejected" *ngIf="doc.estatus === 'rechazado'"><i class="fas fa-times"></i></span>
+              </a>
+              <div class="doc-action-bar" *ngIf="doc.url; else sinArchivoBar">
+                <button class="val-action accept" [class.active]="doc.estatus === 'valido'"
+                        [disabled]="estaProcesando(doc.key)" (click)="validarDocumento(doc.key, 'valido')"
+                        [title]="doc.estatus === 'valido' ? 'Click para quitar la validación' : 'Marcar como válido'">
+                  <i class="fas fa-check"></i> Válido
+                </button>
+                <div class="val-sep"></div>
+                <button class="val-action reject" [class.active]="doc.estatus === 'rechazado'"
+                        [disabled]="estaProcesando(doc.key)" (click)="validarDocumento(doc.key, 'rechazado')"
+                        [title]="doc.estatus === 'rechazado' ? 'Click para quitar el rechazo' : 'Rechazar documento'">
+                  <i class="fas fa-times"></i> Rechazar
+                </button>
+              </div>
+              <ng-template #sinArchivoBar>
+                <!-- GUÍA: no se puede validar/rechazar un documento que el
+                     distribuidor nunca subió (ej. factura_xml, opcional) --
+                     el backend también lo bloquea, esto evita el click
+                     inútil desde la UI. -->
+                <div class="doc-action-bar doc-action-bar-disabled" title="No hay archivo que validar">
+                  <span class="doc-sin-archivo-msg">Sin archivo para validar</span>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+
+          <p class="nota-rechazo" *ngIf="s.estatus === 'rechazado'">
+            El cliente puede volver a cargar solo el/los archivo(s) rechazado(s) desde su portal.
+          </p>
+        </div>
+
+          <div class="dp-section">
+            <div class="dp-section-title">Historial de Cambios</div>
+            <div class="timeline" *ngIf="s.historial?.length">
+              <div class="timeline-item" *ngFor="let item of historialOrdenado(s.historial)">
+                <div class="tl-dot" [ngClass]="iconoHistorial(item).clase">
+                  <i class="fas" [ngClass]="iconoHistorial(item).icono"></i>
+                </div>
+                <div class="tl-content">
+                  <span class="tl-desc">{{ item.descripcion }}</span>
+                  <span class="tl-fecha">{{ item.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+                  <span class="tl-actor">por {{ item.usuario || usuarioActual }}</span>
+                </div>
+              </div>
+            </div>
+            <p class="sin-datos-inline" *ngIf="!s.historial?.length">Sin movimientos registrados.</p>
+          </div>
+
+      </div>
+    </div>
+
+    <div class="detail-placeholder" *ngIf="!seleccionada">
+      <i class="fas fa-hand-pointer fa-2x"></i>
+      <p>Selecciona una solicitud de la lista para ver el detalle.</p>
+    </div>
+
+  </div>
+
+  <!-- Código de Auditoría para validar la Nota de Crédito -->
+  <div class="nc-dialog-backdrop" *ngIf="codigoAuditoriaDialog.abierto" (click)="cancelarValidarNotaCredito()">
+    <div class="nc-dialog-card" (click)="$event.stopPropagation()">
+      <div class="nc-dialog-icon"><i class="fas fa-shield-halved"></i></div>
+      <h3>Validación de Auditoría</h3>
+      <p>Ingresa el código numérico de Auditoría para validar esta nota de crédito.</p>
+      <input
+        type="text"
+        inputmode="numeric"
+        maxlength="8"
+        class="nc-dialog-input"
+        [value]="codigoAuditoriaDialog.codigo"
+        (input)="onCodigoAuditoriaInput($event)"
+        [disabled]="codigoAuditoriaDialog.verificando"
+        (keydown.enter)="confirmarValidarNotaCredito()"
+        placeholder="Código"
+        autofocus>
+      <p class="alert-error-inline" *ngIf="codigoAuditoriaDialog.error">{{ codigoAuditoriaDialog.error }}</p>
+      <div class="nc-dialog-actions">
+        <button class="btn-cancelar" [disabled]="codigoAuditoriaDialog.verificando" (click)="cancelarValidarNotaCredito()">
+          Cancelar
+        </button>
+        <button class="btn-guardar" [disabled]="codigoAuditoriaDialog.verificando" (click)="confirmarValidarNotaCredito()">
+          <i class="fas" [class.fa-check]="!codigoAuditoriaDialog.verificando" [class.fa-spinner]="codigoAuditoriaDialog.verificando" [class.fa-spin]="codigoAuditoriaDialog.verificando"></i>
+          {{ codigoAuditoriaDialog.verificando ? 'Verificando...' : 'Validar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

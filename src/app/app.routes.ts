@@ -41,7 +41,6 @@ import { AuditoriaComponent } from './views/internal-views/auditoria/auditoria.c
 import { MonitorPedidosComponent } from './views/internal-views/monitor-pedidos/monitor-pedidos.component';
 
 import { DashboardRetroactivosComponent } from './views/internal-views/dashboard-retroactivos/dashboard-retroactivos.component';
-import { RetroactivosComponent } from './views/internal-views/retroactivos/retroactivos.component';
 import { CaratulaRetroactivosComponent } from './views/internal-views/caratula-retroactivos/caratula-retroactivos.component';
 import { VentasMonitorComponent } from './views/internal-views/ventas-monitor/ventas-monitor.component';
 import { CatalogoForecastComponent } from './views/internal-views/catalogo-forecast/catalogo-forecast.component';
@@ -66,6 +65,12 @@ import { loggedInGuard } from './guards/logged-in.guard';
 import { importacionesGuard } from './guards/importaciones.guard';
 
 import { CalculadoraRetroactivosComponent } from './views/internal-views/calculadora-retroactivos/calculadora-retroactivos.component';
+import { SolicitudRetroactivoComponent } from './views/usuarios/solicitud-retroactivo/solicitud-retroactivo.component';
+import { SolicitudRetroactivoLandingComponent } from './views/usuarios/solicitud-retroactivo-landing/solicitud-retroactivo-landing.component';
+import { SolicitudRetroactivoDashboardComponent } from './views/internal-views/solicitud-retroactivo-dashboard/solicitud-retroactivo-dashboard.component';
+import { SolicitudRetroactivoGestorComponent } from './views/internal-views/solicitud-retroactivo-gestor/solicitud-retroactivo-gestor.component';
+import { SolicitudRetroactivoSeguimientoComponent } from './views/usuarios/solicitud-retroactivo-seguimiento/solicitud-retroactivo-seguimiento.component';
+import { SolicitudRetroactivoCampaniasComponent } from './views/internal-views/solicitud-retroactivo-campanias/solicitud-retroactivo-campanias.component';
 
 //Imports modulo de Natalia
 import { InventarioItComponent } from './views/internal-views/inventario-it/inventario-it.component';
@@ -111,6 +116,13 @@ export const routes: Routes = [
   { path: 'usuarios/caratula-retroactivos', component: CaratulaRetroactivosUsuarioComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/caratula', component: CaratulaUsuariosComponent, canActivate: [usuarioGuard] },
   { path: 'usuarios/garantias', component: GarantiasUsuarioComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/solicitud-retroactivo', component: SolicitudRetroactivoLandingComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/solicitud-retroactivo/formulario', component: SolicitudRetroactivoComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/solicitud-retroactivo/seguimiento', component: SolicitudRetroactivoSeguimientoComponent, canActivate: [usuarioGuard] },
+  { path: 'usuarios/solicitud-retroactivo/gestor', component: SolicitudRetroactivoGestorComponent, canActivate: [adminGuard] },
+  { path: 'usuarios/solicitud-retroactivo/dashboard', component: SolicitudRetroactivoDashboardComponent, canActivate: [adminGuard] },
+  { path: 'solicitud-retroactivo-campanias', component: SolicitudRetroactivoCampaniasComponent, canActivate: [adminGuard]},
+  { path: 'usuarios/calculadora-retroactivos', component: CalculadoraRetroactivosComponent, canActivate: [usuarioGuard] },
   { path: 'flujo-dashboard', component: FlujoDashboardComponent, canActivate: [adminGuard] },
   { path: 'ordenes-compra', component: OrdenesCompraComponent, canActivate: [adminGuard] },
   { path: 'logistica', component: LogisticaComponent, canActivate: [adminGuard] },
@@ -123,7 +135,6 @@ export const routes: Routes = [
   { path: 'monitor-pedidos', component: MonitorPedidosComponent, canActivate: [adminGuard] },
   { path: 'dashboard-retroactivos', component: DashboardRetroactivosComponent, canActivate: [adminGuard] },
   { path: 'caratula-retroactivos', component: CaratulaRetroactivosComponent, canActivate: [adminGuard] },
-  { path: 'retroactivos', component: RetroactivosComponent, canActivate: [adminGuard] },
   { path: 'calculadora-retroactivos', component: CalculadoraRetroactivosComponent, canActivate: [adminGuard] },
   { path: 'ventas-monitor', component: VentasMonitorComponent, canActivate: [adminGuard] },
   { path: 'catalogo-forecast', component: CatalogoForecastComponent, canActivate: [adminGuard] },

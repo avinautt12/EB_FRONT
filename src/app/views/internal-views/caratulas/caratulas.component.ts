@@ -13,6 +13,8 @@ import html2canvas from 'html2canvas';
 
 import { EmailService, EmailData, EmailConfig } from '../../../services/email.service';
 import { FechaActualizacionComponent } from '../../../components/fecha-actualizacion/fecha-actualizacion.component';
+import { TemporadaSelectorComponent } from '../../../components/temporada-selector/temporada-selector.component';
+import { AvisoHistoricoComponent } from '../../../components/aviso-historico/aviso-historico.component';
 
 interface SugerenciaCliente {
   clave: string;
@@ -20,6 +22,9 @@ interface SugerenciaCliente {
   nombre_cliente?: string;
   evac?: string;
   nivel_firmado?: string;
+  grupo_integral?: number | null;
+  es_integral?: number;
+  id_grupo?: number | null;
 }
 
 interface DatosCliente {
@@ -27,6 +32,9 @@ interface DatosCliente {
   evac: string;
   nombre_cliente: string;
   nivel: string;
+  temporada_cerrada?: boolean;
+  fecha_cierre_temporada?: string | null;
+  fecha_cierre_apparel?: string | null;
   compra_minima_anual: number;
   compromiso_scott: number;
   avance_global_scott: number;
@@ -89,7 +97,7 @@ interface DatosCliente {
 @Component({
   selector: 'app-caratulas',
   standalone: true,
-  imports: [RouterModule, CommonModule, HomeBarComponent, FormsModule, FechaActualizacionComponent],
+  imports: [RouterModule, CommonModule, HomeBarComponent, FormsModule, FechaActualizacionComponent, TemporadaSelectorComponent, AvisoHistoricoComponent],
   templateUrl: './caratulas.component.html',
   styleUrls: ['./caratulas.component.css']
 })
@@ -127,6 +135,12 @@ export class CaratulasComponent implements OnInit {
 
   exportandoPDF = false;
 
+  etiquetaTemporadaActual = '';
+  temporadasDisponibles: string[] = [];
+  modoHistorico = false;
+  temporadaHistoricaSeleccionada: string | null = null;
+  datosClienteEnVivo: DatosCliente | null = null;
+
   constructor(
     private caratulasService: CaratulasService,
     private router: Router,
@@ -139,6 +153,8 @@ export class CaratulasComponent implements OnInit {
     this.initializeSearch();
     this.loadAllClientes();
     this.verificarConfiguracionEmail();
+    this.cargarTemporadaActual();
+    this.cargarTemporadasDisponibles();
 
     this.route.queryParams.subscribe(params => {
       const query = params['q'];
@@ -150,6 +166,58 @@ export class CaratulasComponent implements OnInit {
         }, 100);
       }
     });
+  }
+
+  cargarTemporadaActual(): void {
+    this.caratulasService.getTemporadas().subscribe({
+      next: (temporadas) => {
+        const abierta = temporadas.find(t => t.estado === 'abierta');
+        this.etiquetaTemporadaActual = abierta ? abierta.etiqueta : '';
+      },
+      error: (err) => console.error('Error cargando temporada actual:', err)
+    });
+  }
+
+  cargarTemporadasDisponibles(): void {
+    this.caratulasService.getTemporadasDisponibles().subscribe({
+      next: (temporadas) => this.temporadasDisponibles = temporadas,
+      error: (err) => console.error('Error cargando temporadas disponibles:', err)
+    });
+  }
+
+  verTemporadaPasada(temporada: string): void {
+    if (!temporada) {
+      this.volverATemporadaActual();
+      return;
+    }
+    if (!this.datosClienteEnVivo) {
+      this.mostrarError('Primero busca un cliente antes de ver una temporada pasada');
+      return;
+    }
+
+    const clave = this.datosClienteEnVivo.clave;
+    this.caratulasService.getDatosPrevioHistorico(temporada).subscribe({
+      next: (datos: any[]) => {
+        const fila = datos.find(d => (d.clave || '').toUpperCase() === clave.toUpperCase());
+        if (!fila) {
+          this.mostrarError(`No hay datos de ${clave} para la temporada ${temporada}`);
+          return;
+        }
+        this.modoHistorico = true;
+        this.temporadaHistoricaSeleccionada = temporada;
+        this.datosCliente = this.procesarDatosCliente(fila);
+      },
+      error: (err) => {
+        console.error('Error cargando temporada historica:', err);
+        this.mostrarError('Error al cargar la temporada histórica');
+      }
+    });
+  }
+
+  volverATemporadaActual(): void {
+    this.modoHistorico = false;
+    this.temporadaHistoricaSeleccionada = null;
+    this.datosCliente = this.datosClienteEnVivo;
   }
 
   abrirModalEmail() {
@@ -364,16 +432,38 @@ export class CaratulasComponent implements OnInit {
   private filtrarClientesLocalmente(termino: string): SugerenciaCliente[] {
     const terminoLower = termino.toLowerCase();
 
-    return this.allClientes.filter(cliente => {
-      const clave = (cliente.clave || '').toLowerCase();
-      const razonSocial = (cliente.razon_social || '').toLowerCase();
-      const nombreCliente = (cliente.nombre_cliente || '').toLowerCase();
+    // Coincidencias directas por clave o nombre
+    const directos = this.allClientes.filter(c => {
+      const clave = (c.clave || '').toLowerCase();
+      const nombre = (c.razon_social || c.nombre_cliente || '').toLowerCase();
+      return clave.includes(terminoLower) || nombre.includes(terminoLower);
+    });
 
-      // Buscar coincidencias en clave, razón social o nombre
-      return clave.includes(terminoLower) ||
-        razonSocial.includes(terminoLower) ||
-        nombreCliente.includes(terminoLower);
-    }).slice(0, 10); // Limitar a 10 resultados para mejor performance
+    // Recolectar id_grupo (campo unificado: individuales via clientes.id_grupo, integrales via previo.grupo_integral)
+    const gruposEncontrados = new Set<number>(
+      directos
+        .filter(c => c.id_grupo != null)
+        .map(c => c.id_grupo as number)
+    );
+
+    // Agregar todos los miembros y el row integral del mismo grupo
+    let ampliados: SugerenciaCliente[] = [...directos];
+    if (gruposEncontrados.size > 0) {
+      const extra = this.allClientes.filter(c =>
+        c.id_grupo != null &&
+        gruposEncontrados.has(c.id_grupo) &&
+        !directos.includes(c)
+      );
+      ampliados = [...directos, ...extra];
+    }
+
+    // Deduplicar y limitar
+    const vistos = new Set<string>();
+    return ampliados.filter(c => {
+      if (vistos.has(c.clave)) return false;
+      vistos.add(c.clave);
+      return true;
+    }).slice(0, 15);
   }
 
   private obtenerSugerencias(termino: string): Observable<SugerenciaCliente[]> {
@@ -460,9 +550,18 @@ export class CaratulasComponent implements OnInit {
   }
 
   seleccionarSugerencia(sugerencia: SugerenciaCliente) {
+    // Si es miembro individual de un grupo integral, mostrar la carátula del grupo
+    if (!sugerencia.es_integral && sugerencia.id_grupo != null) {
+      const integralRow = this.allClientes.find(
+        c => c.es_integral === 1 && c.id_grupo === sugerencia.id_grupo
+      );
+      if (integralRow) {
+        sugerencia = integralRow;
+      }
+    }
     this.terminoBusqueda = sugerencia.clave;
     this.mostrarSugerencias = false;
-    this.isSearchingDirectly = true; // Marcar como búsqueda directa
+    this.isSearchingDirectly = true;
     this.buscarDatosCliente(sugerencia.clave, sugerencia.nombre_cliente || sugerencia.razon_social);
   }
 
@@ -516,10 +615,15 @@ export class CaratulasComponent implements OnInit {
 
         if (datos && Object.keys(datos).length > 0) {
           this.datosCliente = this.procesarDatosCliente(datos);
+          this.datosClienteEnVivo = this.datosCliente;
+          this.modoHistorico = false;
+          this.temporadaHistoricaSeleccionada = null;
           this.caratulaSeleccionada = true;
+          this.periodoAbierto = this.getPeriodoActual();
           this.error = null;
         } else {
           this.datosCliente = null;
+          this.datosClienteEnVivo = null;
           this.caratulaSeleccionada = false;
           this.error = 'No se encontraron datos para este cliente';
         }
@@ -561,6 +665,9 @@ export class CaratulasComponent implements OnInit {
 
   private resetearBusqueda() {
     this.datosCliente = null;
+    this.datosClienteEnVivo = null;
+    this.modoHistorico = false;
+    this.temporadaHistoricaSeleccionada = null;
     this.sugerenciasFiltradas = [];
     this.mostrarSugerencias = false;
     this.caratulaSeleccionada = false;
@@ -615,6 +722,9 @@ export class CaratulasComponent implements OnInit {
       evac: datos.evac || '',
       nombre_cliente: datos.nombre_cliente || '',
       nivel: datos.nivel || '',
+      temporada_cerrada: !!datos.temporada_cerrada,
+      fecha_cierre_temporada: datos.fecha_cierre_temporada || null,
+      fecha_cierre_apparel: datos.fecha_cierre_apparel || null,
       compra_minima_anual: this.parseNumber(datos.compra_minima_anual || totalMeta || '0'),
       compromiso_scott: metaScott,
       avance_global_scott: avanceScott,
@@ -674,6 +784,24 @@ export class CaratulasComponent implements OnInit {
     };
   }
 
+  get temporadaCerrada(): boolean {
+    return !!this.datosCliente?.temporada_cerrada;
+  }
+
+  get fechaCierreFormateada(): string {
+    const f = this.datosCliente?.fecha_cierre_temporada;
+    if (!f) return '';
+    const [year, month, day] = f.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  get fechaCierreApparel(): string | null {
+    const f = this.datosCliente?.fecha_cierre_apparel;
+    if (!f) return null;
+    const [year, month, day] = f.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
   // Método auxiliar para parsear números de forma segura
   private parseNumber(value: any): number {
     if (typeof value === 'number') return value;
@@ -687,6 +815,9 @@ export class CaratulasComponent implements OnInit {
   limpiarBusqueda() {
     this.terminoBusqueda = '';
     this.datosCliente = null;
+    this.datosClienteEnVivo = null;
+    this.modoHistorico = false;
+    this.temporadaHistoricaSeleccionada = null;
     this.sugerenciasFiltradas = [];
     this.mostrarSugerencias = false;
     this.error = null;
@@ -935,25 +1066,8 @@ export class CaratulasComponent implements OnInit {
     return 'Cerrado';
   }
 
-  debeMostrarPeriodo(periodo: string): boolean {
-    const mesActual = this.getMesActual();
-
-    const periodos = {
-      'Jul-Ago': { inicio: 7 },
-      'Sep-Oct': { inicio: 9 },
-      'Nov-Dic': { inicio: 11 },
-      'Ene-Feb': { inicio: 1 },  // Nuevo
-      'Mar-Abr': { inicio: 3 },  // Nuevo
-      'May-Jun': { inicio: 5 }   // Nuevo
-    };
-
-    const data = periodos[periodo as keyof typeof periodos];
-    if (!data) return false;
-
-    // Lógica especial: Si el mes es 1-6 (2026), los periodos de 2025 siempre son true
-    if (mesActual <= 6 && ['Jul-Ago', 'Sep-Oct', 'Nov-Dic'].includes(periodo)) return true;
-
-    return mesActual >= data.inicio;
+  debeMostrarPeriodo(_periodo: string): boolean {
+    return true; // Siempre mostrar los 6 bimestres de la temporada completa
   }
 
   getEstadoPeriodo(periodo: string): string {
@@ -971,12 +1085,22 @@ export class CaratulasComponent implements OnInit {
     const data = periodos[periodo as keyof typeof periodos];
     if (!data) return 'Sin definir';
 
-    // Si estamos en 2026 (mes 1-6), los de 2025 ya cerraron
+    // Primer semestre de la temporada (Jul-Dic): los periodos del 2do semestre (Ene-Jun) aún no inician
+    if (mesActual >= 7 && data.inicio <= 6) return 'Sin iniciar';
+    // Segundo semestre de la temporada (Ene-Jun): los periodos del 1er semestre (Jul-Dic) ya cerraron
     if (mesActual <= 6 && data.inicio >= 7) return 'Cerrado';
 
     if (mesActual < data.inicio) return 'Sin iniciar';
     if (mesActual > data.fin) return 'Cerrado';
     return 'En curso';
+  }
+
+  etiquetaAMY(etiqueta: string | null): string {
+    if (!etiqueta) return '';
+    // "2025-2026" → "MY26", "2026-2027" → "MY27"
+    const partes = etiqueta.split('-');
+    if (partes.length === 2) return 'MY' + partes[1].slice(-2);
+    return etiqueta;
   }
 
   getCompromisoAcumuladoScott(): number {
@@ -1066,5 +1190,43 @@ export class CaratulasComponent implements OnInit {
   getSobranteAcumuladoApparel(): number {
     const diferencia = this.getCompromisoAcumuladoApparel() - this.getAvanceAcumuladoApparel();
     return diferencia < 0 ? Math.abs(diferencia) : 0;
+  }
+
+  periodoAbierto: string | null = null;
+
+  getPeriodoActual(): string | null {
+    const todos = ['Jul-Ago', 'Sep-Oct', 'Nov-Dic', 'Ene-Feb', 'Mar-Abr', 'May-Jun'];
+    return todos.find(p => this.getEstadoPeriodo(p) === 'En curso') ?? null;
+  }
+
+  togglePeriodo(periodo: string): void {
+    this.periodoAbierto = this.periodoAbierto === periodo ? null : periodo;
+  }
+
+  getPeriodoData(periodo: string) {
+    if (!this.datosCliente) return null;
+    const d = this.datosCliente as any;
+    const map: Record<string, { compBici: string; avBici: string; compApp: string; avApp: string }> = {
+      'Jul-Ago': { compBici: 'compromiso_jul_ago',  avBici: 'avance_jul_ago',  compApp: 'compromiso_jul_ago_app',  avApp: 'avance_jul_ago_app' },
+      'Sep-Oct': { compBici: 'compromiso_sep_oct',  avBici: 'avance_sep_oct',  compApp: 'compromiso_sep_oct_app',  avApp: 'avance_sep_oct_app' },
+      'Nov-Dic': { compBici: 'compromiso_nov_dic',  avBici: 'avance_nov_dic',  compApp: 'compromiso_nov_dic_app',  avApp: 'avance_nov_dic_app' },
+      'Ene-Feb': { compBici: 'compromiso_ene_feb',  avBici: 'avance_ene_feb',  compApp: 'compromiso_ene_feb_app',  avApp: 'avance_ene_feb_app' },
+      'Mar-Abr': { compBici: 'compromiso_mar_abr',  avBici: 'avance_mar_abr',  compApp: 'compromiso_mar_abr_app',  avApp: 'avance_mar_abr_app' },
+      'May-Jun': { compBici: 'compromiso_may_jun',  avBici: 'avance_may_jun',  compApp: 'compromiso_may_jun_app',  avApp: 'avance_may_jun_app' },
+    };
+    const fields = map[periodo];
+    if (!fields) return null;
+    const compBici = d[fields.compBici] || 0;
+    const avBici   = d[fields.avBici]   || 0;
+    const compApp  = d[fields.compApp]  || 0;
+    const avApp    = d[fields.avApp]    || 0;
+    return {
+      compBici, avBici,
+      pctBici:  compBici > 0 ? Math.round((avBici / compBici) * 100) : 0,
+      faltBici: Math.max(0, compBici - avBici),
+      compApp,  avApp,
+      pctApp:   compApp > 0 ? Math.round((avApp / compApp) * 100) : 0,
+      faltApp:  Math.max(0, compApp - avApp),
+    };
   }
 }

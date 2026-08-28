@@ -39,6 +39,19 @@ interface Cliente {
   expanded?: boolean;
 }
 
+interface ResumenEvacMy27 {
+  meta: number;
+  categoria: number;
+  distribuidor: number;
+  bicicletas: number;
+  apparel: number;
+  acumulado_general: number;
+  acumulado_bicicletas: number;
+  acumulado_apparel: number;
+  acumulado_otros: number;
+  acumulado_megamo: number;
+}
+
 interface CaratulaData {
   categoria: 'EB' | 'MY25' | 'MY25_2' | 'SCOTT' | 'APPAREL';
   meta: number;
@@ -61,6 +74,14 @@ export class CaratulaEvacAComponent implements OnInit {
   clientes: any[] = [];
   loading = false;
   error: string | null = null;
+
+  // Fuente maestra MY27: el detalle de clientes se conserva para la tabla,
+  // pero los totales agregados deben venir del mismo endpoint que Global/B.
+  private resumenEvacAMy27: ResumenEvacMy27 | null = null;
+  resumenMy27Cargado = false;
+  acumuladoGeneralMy27 = 0;
+  acumuladoOtrosMy27 = 0;
+  acumuladoMegamoMy27 = 0;
 
   my25_monto1 = 0;
   my25_monto2 = 0;
@@ -94,7 +115,6 @@ export class CaratulaEvacAComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarClientes();
-    this.calcularMontos();
     this.onInit.emit();
   }
 
@@ -218,9 +238,16 @@ export class CaratulaEvacAComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
+    // Reinicio controlado: mientras llega el resumen maestro usamos el detalle
+    // como fallback, pero en cuanto llega /resumen_caratulas_my27 deja de mandar.
+    this.resumenEvacAMy27 = null;
+    this.resumenMy27Cargado = false;
+    this.acumuladoGeneralMy27 = 0;
+    this.acumuladoOtrosMy27 = 0;
+    this.acumuladoMegamoMy27 = 0;
+
     this.caratulasService.getClientesEvacA().subscribe({
       next: (data) => {
-
         const ordenNiveles: { [key: string]: number } = {
           'Partner Elite Plus': 1,
           'Partner Elite': 2,
@@ -229,23 +256,113 @@ export class CaratulaEvacAComponent implements OnInit {
         };
 
         data.sort((a: Cliente, b: Cliente) => {
-          const nivelA = ordenNiveles[a.nivel] || 99; // Si un nivel no existe, se va al final
+          const nivelA = ordenNiveles[a.nivel] || 99;
           const nivelB = ordenNiveles[b.nivel] || 99;
           return nivelA - nivelB;
         });
 
         this.clientes = data;
-        this.loading = false;
-
         this.prepararOpcionesFiltros();
         this.filtrarClientes();
+
+        // Fallback temporal desde detalle.
         this.calcularMontos();
-        this.actualizarDatosCaratula();
+
+        // Fuente oficial para metas/totales/líneas MY27.
+        this.cargarResumenEvacAMy27();
       },
       error: (error) => {
         this.error = 'Error al cargar los clientes';
         this.loading = false;
         console.error('Error:', error);
+      }
+    });
+  }
+
+  private cargarResumenEvacAMy27(): void {
+    this.caratulasService.getResumenCaratulasMy27().subscribe({
+      next: (resumen: any) => {
+        const evacA = resumen?.evac_a as ResumenEvacMy27;
+
+        if (!evacA) {
+          console.error('El backend no devolvió resumen.evac_a');
+          this.resumenEvacAMy27 = null;
+          this.resumenMy27Cargado = false;
+          this.recalcularProyecciones();
+          this.loading = false;
+          return;
+        }
+
+        this.resumenEvacAMy27 = evacA;
+
+        // Metas oficiales.
+        this.my25_monto1 = this.redondear(Number(evacA.categoria) || 0);
+        this.my25_monto2 = this.redondear(Number(evacA.distribuidor) || 0);
+
+        // Acumulado General oficial.
+        this.acumuladoGeneralMy27 = this.redondear(
+          Number(evacA.acumulado_general) || 0
+        );
+
+        // Diagnóstico de composición.
+        this.acumuladoOtrosMy27 = this.redondear(
+          Number(evacA.acumulado_otros) || 0
+        );
+        this.acumuladoMegamoMy27 = this.redondear(
+          Number(evacA.acumulado_megamo) || 0
+        );
+
+        // Metas de línea.
+        this.montoCompromisoScott = this.redondear(
+          Number(evacA.bicicletas) || 0
+        );
+        this.montoCompromisoApparel = this.redondear(
+          Number(evacA.apparel) || 0
+        );
+
+        // Acumulados de línea.
+        this.avanceGlobalScott = this.redondear(
+          Number(evacA.acumulado_bicicletas) || 0
+        );
+        this.avanceGlobaApparel = this.redondear(
+          Number(evacA.acumulado_apparel) || 0
+        );
+
+        // Desde aquí los agregados ya no deben ser pisados por sumas locales.
+        this.resumenMy27Cargado = true;
+
+        // El resumen maestro no separa el acumulado por nivel comercial, así que
+        // Categoría/Distribuidor siguen saliendo del detalle de clientes.
+        this.calcularMonto3();
+        this.calcularMonto4();
+
+        this.recalcularProyecciones();
+
+        console.log('EVAC-A MY27 CARGADO:', {
+          metaGeneral: this.obtenerMetaTotalNumero(),
+          acumuladoGeneral: this.obtenerAcumuladoTotalNumero(),
+          categoria: { meta: this.my25_monto1, acumulado: this.my25_monto3 },
+          distribuidor: { meta: this.my25_monto2, acumulado: this.my25_monto4 },
+          bicicletas: { meta: this.montoCompromisoScott, acumulado: this.avanceGlobalScott },
+          apparel: { meta: this.montoCompromisoApparel, acumulado: this.avanceGlobaApparel },
+          otros: this.acumuladoOtrosMy27,
+          megamo: this.acumuladoMegamoMy27,
+          validacionLineas: this.redondear(
+            this.avanceGlobalScott +
+            this.avanceGlobaApparel +
+            this.acumuladoOtrosMy27
+          )
+        });
+
+        // Persistir carátula solo DESPUÉS de tener el resumen maestro.
+        this.actualizarDatosCaratula();
+      },
+      error: (err) => {
+        console.error('Error cargando resumen maestro EVAC-A MY27:', err);
+        this.resumenEvacAMy27 = null;
+        this.resumenMy27Cargado = false;
+        this.recalcularProyecciones();
+        this.loading = false;
       }
     });
   }
@@ -289,29 +406,31 @@ export class CaratulaEvacAComponent implements OnInit {
   actualizarDatosCaratula(): void {
     if (this.clientes.length === 0) {
       console.warn('No hay datos de clientes cargados');
+      this.loading = false;
       return;
     }
 
     this.loading = true;
     this.error = null;
 
-    this.calcularMontos();
+    // No llamamos calcularMontos() aquí porque, una vez cargado el resumen,
+    // volvería a pisar metas y líneas oficiales con sumas locales.
+    this.calcularMonto3();
+    this.calcularMonto4();
+    this.recalcularProyecciones();
 
-    // Calcular valores totales para EB
-    const metaEB = this.clientes.reduce((sum, cliente) => sum + (cliente.compra_minima_anual || 0), 0);
-    const acumuladoEB = this.clientes.reduce((sum, cliente) => sum + (cliente.acumulado_anticipado || 0), 0);
-    const avanceProyectadoEB = this.clientes.reduce((sum, cliente) => {
-      return sum + this.calcularAvanceProyectadoCliente(cliente.compra_minima_anual);
-    }, 0);
+    const metaEB = this.obtenerMetaTotalNumero();
+    const acumuladoEB = this.obtenerAcumuladoTotalNumero();
+    const avanceProyectadoEB = this.redondear(
+      (this.obtenerSemanasTranscurridas() / 52) * metaEB
+    );
 
-    // Calcular porcentajes
     const porcentajeEB = this.calcularPorcentajeEB();
     const porcentajeMY25_1 = this.calcularPorcentajeMonto1();
     const porcentajeMY25_2 = this.calcularPorcentajeMonto2();
     const porcentajeScott = this.calcularPorcentajeScott();
     const porcentajeApparel = this.calcularPorcentajeApparel();
 
-    // Preparar datos para enviar
     const datos = [
       {
         categoria: 'EB',
@@ -351,14 +470,22 @@ export class CaratulaEvacAComponent implements OnInit {
     ];
 
     this.caratulasService.actualizarCaratulaEvacA(datos).subscribe({
-      next: (response) => {
+      next: () => {
         this.loading = false;
       },
       error: (error) => {
         this.loading = false;
-        this.error = 'Error al actualizar los datos: ' + (error.error?.error || error.message);
+        this.error = 'Error al actualizar los datos: ' +
+          (error.error?.error || error.message);
       }
     });
+  }
+
+  private recalcularProyecciones(): void {
+    this.calcularAvanceProyectadoMonto1();
+    this.calcularAvanceProyectadoMonto2();
+    this.calcularAvanceProyectadoScott();
+    this.calcularAvanceProyectadoApparel();
   }
 
   obtenerSemanaISO(fecha: Date = new Date()): number {
@@ -376,14 +503,8 @@ export class CaratulaEvacAComponent implements OnInit {
   }
 
   obtenerSemanasTranscurridas(): number {
-    const semanaActual = this.obtenerSemanaISO();
-    const semanaInicioTemporada = 26;
-
-    if (semanaActual < semanaInicioTemporada) {
-      return (52 - semanaInicioTemporada) + semanaActual;
-    }
-
-    return semanaActual - semanaInicioTemporada;
+    // Semana visible = semana en curso; proyectado = semanas ya cerradas.
+    return Math.max(0, this.obtenerDiaTemporada() - 1);
   }
 
   calcularAvanceProyectadoMonto1(): void {
@@ -497,6 +618,7 @@ export class CaratulaEvacAComponent implements OnInit {
   }
 
   calcularCompromisoApparel(): void {
+    if (this.resumenMy27Cargado) return;
     this.montoCompromisoApparel = 0; // Asegúrate de definir esta variable en tu clase
 
     this.clientes.forEach(cliente => {
@@ -509,6 +631,7 @@ export class CaratulaEvacAComponent implements OnInit {
   }
 
   calcularAvanceGlobalScott(): void {
+    if (this.resumenMy27Cargado) return;
     this.avanceGlobalScott = 0; // Asegúrate de definir esta variable en tu clase
 
     this.clientes.forEach(cliente => {
@@ -521,6 +644,7 @@ export class CaratulaEvacAComponent implements OnInit {
   }
 
   calcularAvanceGlobalApparel(): void {
+    if (this.resumenMy27Cargado) return;
     this.avanceGlobaApparel = 0; // Asegúrate de definir esta variable en tu clase
 
     this.clientes.forEach(cliente => {
@@ -533,6 +657,7 @@ export class CaratulaEvacAComponent implements OnInit {
   }
 
   calcularCompromisoScott(): void {
+    if (this.resumenMy27Cargado) return;
     // Primero asegúrate que los otros montos están calculados
     this.calcularMonto1();
     this.calcularMonto2();
@@ -547,6 +672,7 @@ export class CaratulaEvacAComponent implements OnInit {
 
   // Método para calcular monto1 (Partner, Partner Elite, Partner Elite Plus)
   calcularMonto1(): void {
+    if (this.resumenMy27Cargado) return;
     this.my25_monto1 = 0;
     const nivelesPermitidos = ['Partner', 'Partner Elite', 'Partner Elite Plus'];
 
@@ -564,6 +690,7 @@ export class CaratulaEvacAComponent implements OnInit {
 
   // Método para calcular monto2 (solo Distribuidor)
   calcularMonto2(): void {
+    if (this.resumenMy27Cargado) return;
     this.my25_monto2 = 0;
 
     this.clientes.forEach(cliente => {
@@ -611,7 +738,7 @@ export class CaratulaEvacAComponent implements OnInit {
   }
 
   calcularAvanceProyectadoTotal(): void {
-    const metaTotal = this.my25_monto1 + this.my25_monto2;
+    const metaTotal = this.obtenerMetaTotalNumero();
 
     if (metaTotal === 0) return;
 
@@ -635,7 +762,7 @@ export class CaratulaEvacAComponent implements OnInit {
   }
 
   obtenerAvanceProyectadoTotalFormateado(): string {
-    const metaTotal = this.my25_monto1 + this.my25_monto2;
+    const metaTotal = this.obtenerMetaTotalNumero();
 
     if (metaTotal === 0) return this.formatearMoneda(0);
 
@@ -649,26 +776,17 @@ export class CaratulaEvacAComponent implements OnInit {
   }
 
   calcularPorcentajeEB(): string {
-    const acumuladoStr = this.obtenerAcumuladoTotal();
-    const proyectadoStr = this.obtenerAvanceProyectadoTotalFormateado();
+    const acumulado = this.obtenerAcumuladoTotalNumero();
+    const metaTotal = this.obtenerMetaTotalNumero();
+    const proyectado = (this.obtenerSemanasTranscurridas() / 52) * metaTotal;
 
-    // Extraer números de los strings formateados (quitar $ y ,)
-    const acumulado = parseFloat(acumuladoStr.replace(/[$,]/g, ''));
-    const proyectado = parseFloat(proyectadoStr.replace(/[$,]/g, ''));
-
-    if (proyectado === 0) return "0%";
+    if (!proyectado) return '0%';
 
     const resultado = (acumulado / proyectado) - 1;
-    const porcentaje = Math.round(resultado * 100);
-
-    return `${porcentaje}%`;
+    return `${Math.round(resultado * 100)}%`;
   }
 
   calcularPorcentajeMonto1(): string {
-    const acumuladoStr = this.calcularMonto1();
-    const proyectadoStr = this.calcularMonto3();
-
-    // Extraer números de los strings formateados (quitar $ y ,)
     const acumulado = this.my25_monto3;
     const proyectado = this.avance_proyectado_monto1;
 
@@ -682,10 +800,6 @@ export class CaratulaEvacAComponent implements OnInit {
 
   // Función para calcular porcentaje de monto2
   calcularPorcentajeMonto2(): string {
-    const acumuladoStr = this.calcularMonto2();
-    const proyectadoStr = this.calcularMonto4();
-
-    // Extraer números de los strings formateados (quitar $ y ,)
     const acumulado = this.my25_monto4;
     const proyectado = this.avance_proyectado_monto2;
 
@@ -709,7 +823,13 @@ export class CaratulaEvacAComponent implements OnInit {
   // Función para obtener el día de la temporada (semana ISO - 26)
   obtenerDiaTemporada(): number {
     const semanaISO = this.obtenerSemanaISO();
-    return semanaISO - 26;
+    const semanaInicioTemporada = 26;
+
+    if (semanaISO < semanaInicioTemporada) {
+      return (52 - semanaInicioTemporada) + semanaISO;
+    }
+
+    return semanaISO - semanaInicioTemporada;
   }
 
   calcularYFormatearAvanceProyectado(metaValor: number): string {
@@ -726,11 +846,31 @@ export class CaratulaEvacAComponent implements OnInit {
 
 
   obtenerMetaTotal(): string {
-    return this.formatearMoneda(this.my25_monto1 + this.my25_monto2);
+    return this.formatearMoneda(this.obtenerMetaTotalNumero());
+  }
+
+  private obtenerMetaTotalNumero(): number {
+    if (this.resumenMy27Cargado && this.resumenEvacAMy27) {
+      return this.redondear(Number(this.resumenEvacAMy27.meta) || 0);
+    }
+
+    return this.redondear(this.my25_monto1 + this.my25_monto2);
   }
 
   obtenerAcumuladoTotal(): string {
-    return this.formatearMoneda(this.my25_monto3 + this.my25_monto4);
+    return this.formatearMoneda(this.obtenerAcumuladoTotalNumero());
+  }
+
+  private obtenerAcumuladoTotalNumero(): number {
+    if (this.resumenMy27Cargado) {
+      return this.redondear(this.acumuladoGeneralMy27);
+    }
+
+    return this.redondear(this.my25_monto3 + this.my25_monto4);
+  }
+
+  private redondear(valor: number): number {
+    return Math.round((Number(valor) || 0) * 100) / 100;
   }
 
   formatearMoneda(valor: number): string {

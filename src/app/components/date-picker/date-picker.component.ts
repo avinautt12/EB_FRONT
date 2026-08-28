@@ -67,8 +67,12 @@ export class DatePickerComponent implements OnChanges {
     }
   }
 
-  toggleCalendario(e: MouseEvent): void {
-    e.stopPropagation();
+  toggleCalendario(): void {
+    // Sin stopPropagation a propósito: el click debe seguir subiendo hasta
+    // document para que OTRAS instancias de app-date-picker en la misma
+    // página (ej. Fecha Inicio / Fecha Fin) detecten "click afuera" en su
+    // propio HostListener y se cierren solas -- así solo queda un
+    // calendario abierto a la vez.
     if (!this.mostrarCalendario) this.calVista = 'dias';
     this.mostrarCalendario = !this.mostrarCalendario;
     this.cdr.markForCheck();

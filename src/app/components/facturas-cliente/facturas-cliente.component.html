@@ -1,7 +1,12 @@
 <div class="modal-overlay" [class.open]="isOpen" (click)="closeModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
         <div class="modal-header">
-            <h2>Detalles de Compra</h2>
+            <div class="modal-header-info">
+                <h2>Detalles de Compra</h2>
+                <span *ngIf="infoCliente?.nombre_cliente" class="modal-cliente-nombre">
+                    {{ infoCliente.nombre_cliente }}
+                </span>
+            </div>
             <button class="close-button" (click)="closeModal()">×</button>
         </div>
 
@@ -88,7 +93,7 @@
                 </div>
                 <div class="resumen-separador"></div>
                 <div class="resumen-item">
-                    <span class="resumen-temporada">Temporada MY26</span>
+                    <span class="resumen-temporada" *ngIf="etiquetaTemporadaMostrada">Temporada {{ etiquetaTemporadaMostrada }}</span>
                 </div>
             </div>
 
@@ -104,7 +109,21 @@
             </div>
 
             <!-- Proyecciones tab (embebido) — se crea al abrir el modal para pre-cargar datos -->
+            <!-- Botón refresh Odoo cuando pestaña Proyecciones está activa -->
+            <div *ngIf="tabActiva === 'Proyecciones'" class="acciones-monitor" style="margin-bottom:8px;">
+              <button (click)="proyeccionesTabRef?.refrescarAvance()"
+                      [disabled]="proyeccionesTabRef?.avanceRefrescando"
+                      title="Forzar recarga de órdenes desde Odoo (ignora caché de 25 min)">
+                <i class="fas"
+                   [class.fa-sync-alt]="!proyeccionesTabRef?.avanceRefrescando"
+                   [class.fa-spinner]="proyeccionesTabRef?.avanceRefrescando"
+                   [class.fa-spin]="proyeccionesTabRef?.avanceRefrescando"></i>
+                {{ proyeccionesTabRef?.avanceRefrescando ? 'Actualizando desde Odoo...' : 'Refrescar desde Odoo' }}
+              </button>
+            </div>
+
             <app-proyecciones-tab
+                #proyeccionesTabRef
                 *ngIf="(clienteClave && clienteClave !== '__sin_clave__') || idGrupoOdoo"
                 [hidden]="tabActiva !== 'Proyecciones'"
                 [clienteClave]="clienteClave"
@@ -163,6 +182,7 @@
                             <td>
                                 {{ factura.numero_factura }}
                                 <span *ngIf="factura.de_proyeccion" class="badge-proyeccion" title="Pedido de proyecciones">PROY</span>
+                                <span *ngFor="let tag of factura.etiquetas" class="badge-etiqueta" [title]="tag">{{ tag }}</span>
                             </td>
                             <td>{{ factura.referencia_interna }}</td>
                             <td>{{ factura.nombre_producto }}</td>

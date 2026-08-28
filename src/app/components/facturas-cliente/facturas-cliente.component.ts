@@ -46,6 +46,8 @@ interface Factura {
   po_name: string | null;
   /** Verdadero cuando el SKU de esta línea existe en forecast_proyecciones para este cliente. */
   de_proyeccion: boolean;
+  /** Etiquetas de la orden de venta en Odoo (ej. ["MY27 SEP"]). */
+  etiquetas: string[];
 }
 
 /**
@@ -67,6 +69,7 @@ interface Factura {
   styleUrls: ['./facturas-cliente.component.css']
 })
 export class FacturasClienteComponent implements OnInit, OnDestroy {
+  @ViewChild('proyeccionesTabRef') proyeccionesTabRef?: ProyeccionesTabComponent;
   /** Emite cuando el usuario cierra el modal. El padre debe poner isOpen = false. */
   @Output() onClose = new EventEmitter<void>();
   /** Controla la visibilidad del modal. Al pasar a true se dispara la carga de datos. */
@@ -89,6 +92,14 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
    * matches parciales por nombre o referencia parecida.
    */
   @Input() claveExacta = false;
+  /**
+   * Etiqueta de temporada histórica seleccionada en la carátula padre (ej. "2025-2026").
+   * Cuando está presente, el modal muestra los pedidos de esa temporada pasada
+   * (acotados a su rango fijo) en vez de la temporada actual del cliente.
+   */
+  @Input() temporadaSeleccionada: string | null = null;
+  /** Etiqueta de la temporada actualmente abierta (ej. "2026-2027"), para mostrar "Temporada MYxx" cuando no hay temporada histórica seleccionada. */
+  @Input() temporadaActualEtiqueta: string | null = null;
 
   /** Lista completa de líneas de orden recibidas del backend. */
   facturas: Factura[] = [];
@@ -121,8 +132,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
   /** Fecha de inicio de temporada devuelta por el backend (dynamic per client). */
   fechaInicioTemporada: string | null = null;
 
-  // ── Avance previo (total entregado según carátula) ────────────────────────
-  /** Suma de avance_global de la tabla previo para este cliente/grupo. Fuente de verdad del importe Entregado. */
+  /** acumulado_anticipado de previo (cargado del backend, reservado para usos futuros). */
   avancePrevio: number | null = null;
 
   // ── Buscador ───────────────────────────────────────────────────────────────
@@ -227,7 +237,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     // ── RUTA 0: Vista Global integral ← prioridad más alta ───────────────────────
     if (this.idGrupoOdoo) {
       this.clientesService.getDetalleComprasCliente(
-        undefined, undefined, undefined, undefined, false, this.idGrupoOdoo, forceRefresh
+        undefined, undefined, undefined, undefined, false, this.idGrupoOdoo, forceRefresh, this.temporadaSeleccionada
       ).subscribe({
         next: (response: any) => {
           if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
@@ -261,6 +271,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
           }));
           if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
           this.error = null;
+          this.refrescando = false;
           if (this.facturas.length > 0) {
             this.filtrarFacturas();
           }
@@ -274,6 +285,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
             this.error = error.error?.error || 'Error al conectar con el servidor';
           }
           if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
+          this.refrescando = false;
           this.cargando = false;
         }
       });
@@ -324,7 +336,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
       if (clienteParam) {
         this.infoCliente = { nombre_cliente: clienteParam };
         // Sin límite: traer todos los registros; la paginación local se encarga de mostrarlos por páginas
-        this.clientesService.getDetalleComprasCliente(undefined, undefined, undefined, clienteParam, this.claveExacta, undefined, forceRefresh).subscribe({
+        this.clientesService.getDetalleComprasCliente(undefined, undefined, undefined, clienteParam, this.claveExacta, undefined, forceRefresh, this.temporadaSeleccionada).subscribe({
             next: (response: any) => {
             if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
               this.fechaInicioTemporada = response.meta?.fecha_inicio_temporada ?? null;
@@ -358,11 +370,21 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
                 cantidad_entregada: Number(r.cantidad_entregada ?? 0) || 0,
                 fecha_esperada: r.fecha_esperada ?? null,
                 po_name: r.po_name ?? null,
-                de_proyeccion: r.de_proyeccion ?? false
+                de_proyeccion: r.de_proyeccion ?? false,
+                etiquetas: Array.isArray(r.etiquetas) ? r.etiquetas.filter((t: string) => t.includes('MY27')) : []
               }));
               if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
               this.error = null;
               this.refrescando = false;
+              // Nombre real: preferir campo cliente del response, si no leer del primer row
+              if (response?.cliente?.nombre_cliente) {
+                this.infoCliente = response.cliente;
+              } else {
+                const primeraFila = response?.data?.[0] ?? response?.rows?.[0];
+                if (primeraFila?.cliente) {
+                  this.infoCliente = { nombre_cliente: primeraFila.cliente, clave: clienteParam ?? '' };
+                }
+              }
               if (this.facturas.length > 0) {
                 this.filtrarFacturas();
               }
@@ -405,7 +427,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
               this.cargando = false;
               return;
             }
-            this.clientesService.getDetalleComprasCliente(undefined, undefined, undefined, clienteParam2, this.claveExacta).subscribe({
+            this.clientesService.getDetalleComprasCliente(undefined, undefined, undefined, clienteParam2, this.claveExacta, undefined, false, this.temporadaSeleccionada).subscribe({
               next: (response: any) => {
                 if (this.loadingTimer) { clearTimeout(this.loadingTimer); this.loadingTimer = null; }
                 this.error = null;
@@ -600,7 +622,7 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
   proyeccionesCount = 0;
 
   contarTab(tab: string): number {
-    if (tab === 'Total') return this.facturas.length;
+    if (tab === 'Total') return this.facturas.length + this.proyeccionesCount;
     if (tab === 'Proyecciones') return this.proyeccionesCount;
     return this.facturas.filter(f => f.estado_factura === tab).length;
   }
@@ -910,10 +932,24 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
 
   /** Formatea 'YYYY-MM-DD' a texto corto como '11 jun 2025' para mostrar en el resumen. */
   get fechaInicioFormateada(): string {
-    if (!this.fechaInicioTemporada) return 'MY26';
+    if (!this.fechaInicioTemporada) return '';
     const [y, m, d] = this.fechaInicioTemporada.split('-').map(Number);
     const fecha = new Date(y, m - 1, d);
     return fecha.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  /** Convierte una etiqueta de temporada ("2026-2027") a su nombre corto ("MY27"). */
+  private etiquetaAMY(etiqueta: string | null | undefined): string | null {
+    if (!etiqueta) return null;
+    const anioFin = etiqueta.split('-')[1];
+    return anioFin ? `MY${anioFin.slice(-2)}` : null;
+  }
+
+  /** Etiqueta de temporada a mostrar en el resumen: la histórica seleccionada, o la temporada actual. */
+  get etiquetaTemporadaMostrada(): string {
+    return this.etiquetaAMY(this.temporadaSeleccionada)
+      ?? this.etiquetaAMY(this.temporadaActualEtiqueta)
+      ?? '';
   }
 
   /** Suma total de piezas pedidas en la vista filtrada activa. */
@@ -926,37 +962,31 @@ export class FacturasClienteComponent implements OnInit, OnDestroy {
     return this.facturasFiltradas.reduce((acc, f) => acc + (f.cantidad_entregada || 0), 0);
   }
 
-  /** Suma total del importe en la vista filtrada activa.
-   * Para la pestaña "Entregado" usa avancePrevio (fuente de verdad de carátula) si está disponible.
-   * Para las demás tabs usa el total del pedido completo sumado de las filas. */
+  /** Suma total del importe en la vista filtrada activa, siempre basado en las filas visibles. */
   get totalMonto(): number {
-    const sinBusqueda = this.textoBusqueda === '';
-
-    // Pestaña Entregado: muestra el valor exacto de la carátula (acumulado_anticipado)
-    // Solo si avancePrevio > 0; si es 0 la carátula no tiene datos y calculamos de las líneas
-    if (this.tabActiva === 'Entregado' && this.avancePrevio != null && this.avancePrevio > 0 && sinBusqueda) {
-      return this.avancePrevio;
-    }
-
-    // Pestaña Todas: solo suma los mismos estados de las pestañas individuales visibles
-    // Cancelado no entra. Entregado usa avancePrevio si está disponible y es > 0.
+    // Pestaña Todas: suma todos los estados contables excepto Cancelado
     if (this.tabActiva === 'Total') {
       const ESTADOS_CONTABLES = new Set(['Almacén EB', 'En tránsito', 'Falta de confirmación']);
       const sumaResto = this.facturas
         .filter(f => ESTADOS_CONTABLES.has(f.estado_factura))
         .reduce((acc, f) => acc + (f.venta_total || 0), 0);
-
-      if (this.avancePrevio != null && this.avancePrevio > 0 && sinBusqueda) {
-        return sumaResto + this.avancePrevio;
-      }
-      // Sin avancePrevio: suma Entregado con total_entregado
-      const sumaEntregado = this.facturas
-        .filter(f => f.estado_factura === 'Entregado' || f.estado_factura === 'Entregado Parcial')
-        .reduce((acc, f) => acc + ((f.total_entregado ?? f.venta_total) || 0), 0);
+      const sumaEntregado = this.avancePrevio !== null
+        ? this.avancePrevio
+        : this.facturas
+            .filter(f => f.estado_factura === 'Entregado' || f.estado_factura === 'Entregado Parcial')
+            .reduce((acc, f) => acc + ((f.total_entregado ?? f.venta_total) || 0), 0);
       return sumaResto + sumaEntregado;
     }
 
-    // Resto de pestañas individuales
+    // Pestaña Entregado sin filtros activos: usa avancePrevio (mismo origen que carátula)
+    // para que el total coincida exactamente con el avance mostrado en la carátula.
+    const sinFiltros = !this.textoBusqueda && !this.filtroMarca && !this.filtroProyeccion
+      && Object.keys(this.columnFilters).length === 0;
+    if (this.tabActiva === 'Entregado' && this.avancePrevio !== null && sinFiltros) {
+      return this.avancePrevio;
+    }
+
+    // Resto de pestañas o Entregado con filtros activos: suma las filas filtradas de esa pestaña
     const useEntregado = this.tabActiva === 'Entregado' || this.tabActiva === 'Entregado Parcial';
     return this.facturasFiltradas.reduce((acc, f) =>
       acc + ((useEntregado ? (f.total_entregado ?? f.venta_total) : f.venta_total) || 0), 0);

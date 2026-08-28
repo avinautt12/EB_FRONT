@@ -31,7 +31,7 @@ export class CaratulaGlobalComponent implements OnInit {
 
   acumuladoGeneral: number = 0;
 
-  metaPrincipal = 185000000.00;
+  metaPrincipal = 0;
 
   porcentajeMonto1: number | null = null;
   porcentajeMonto2: number | null = null;
@@ -66,30 +66,15 @@ export class CaratulaGlobalComponent implements OnInit {
   ngOnInit(): void {
     this.semanasTranscurridas = this.obtenerSemanasTranscurridas();
 
-    this.calculateTotalMeta();
-    this.calculateTotalMeta2();
+    // MY27: todas las metas de Global salen del mismo resumen maestro del backend.
+    this.cargarMetasMy27();
+
+    // Partner→PEP y Distribuidor siguen tomando el universo MY27 depurado.
     this.calculateTotalAcumulado();
     this.calculateTotalAcumulado2();
-    this.calculateAcumuladoGeneral();
-    this.calculateAcumuladoScott();
-    this.calculateAcumuladoApparel();
 
-    this.calcularMetaVittoria();
-    this.calcularMetaSyncros();
-    this.calcularMetaApparel();
-    this.calcularMetaScott();
-
-    this.calcularProyectadoMonto3();
-    this.calcularPorcentajeMonto2();
-    this.calcularProyectadoVittoria();
-    this.calcularProyectadoSyncros();
-    this.calcularProyectadoApparel();
-    this.calcularProyectadoScott();
-    this.calcularPorcentajeScott();
-    this.calcularPorcentajeApparel();
-    this.calcularPorcentajeScott_2();
-    this.calcularPorcentajeApparel_2();
-    this.calcularDiferencia1();
+    // General, BICICLETAS y APPAREL/SYNCROS/VITTORIA ya llegan
+    // calculados por el mismo resumen maestro del backend.
   }
 
   get totalAcumuladoCategorias(): number {
@@ -124,27 +109,58 @@ export class CaratulaGlobalComponent implements OnInit {
 
   obtenerDiaTemporada(): number {
     const semanaISO = this.obtenerSemanaISO();
-    return semanaISO - 26;
+    const semanaInicioTemporada = 26;
+
+    if (semanaISO < semanaInicioTemporada) {
+      return (52 - semanaInicioTemporada) + semanaISO;
+    }
+
+    return semanaISO - semanaInicioTemporada;
   }
 
-  calculateTotalMeta(): void {
-    forkJoin([
-      this.caratulasService.getDatosEvacA(),
-      this.caratulasService.getDatosEvacB()
-    ]).subscribe({
-      next: ([datosA, datosB]) => {
-        const my25A = datosA.find((item: any) => item.categoria === 'MY25');
-        const my25B = datosB.find((item: any) => item.categoria === 'MY25');
+  cargarMetasMy27(): void {
+    this.caratulasService.getResumenCaratulasMy27().subscribe({
+      next: (resumen) => {
+        const global = resumen?.global;
 
-        if (my25A && my25B) {
-          this.totalMetaMY25 = my25A.meta + my25B.meta;
-          this.calcularProyectadoMonto1();
-        } else {
-          console.error('No se encontraron datos MY25 en uno o ambos conjuntos');
+        if (!global) {
+          console.error('El backend no devolvió el resumen Global MY27');
+          return;
         }
+
+        // METAS
+        this.metaPrincipal = Number(global.meta) || 0;
+        this.totalMetaMY25 = Number(global.categoria) || 0;
+        this.totalMetaMY25_2 = Number(global.distribuidor) || 0;
+        this.metaApparel = Number(global.apparel) || 0;
+        this.metaScott = Number(global.bicicletas) || 0;
+
+        // ACUMULADOS MAESTROS MY27
+        // BICICLETAS = SCOTT + BOLD + MEGAMO
+        this.acumuladoGeneral = Number(global.acumulado_general) || 0;
+        this.acumuladoScott = Number(global.acumulado_bicicletas) || 0;
+        this.acumuladoApparel = Number(global.acumulado_apparel) || 0;
+        this.diferencia1 = Number(global.acumulado_otros) || 0;
+
+        this.calcularProyectadoMonto1();
+        this.calcularProyectadoMonto2();
+        this.calcularProyectadoMonto3();
+        this.calcularProyectadoApparel();
+        this.calcularProyectadoScott();
+
+        this.calcularPorcentajeMonto1();
+        this.calcularPorcentajeMonto2();
+        this.calcularPorcentajeMonto3();
+        this.calcularPorcentajeApparel();
+        this.calcularPorcentajeScott();
+        this.calcularPorcentajeApparel_2();
+        this.calcularPorcentajeScott_2();
+
+        // No recalcular "Otros" en el front: usar el valor conciliado
+        // que ya entrega el backend.
       },
       error: (err) => {
-        console.error('Error al obtener los datos:', err);
+        console.error('Error cargando resumen MY27:', err);
       }
     });
   }
@@ -155,43 +171,6 @@ export class CaratulaGlobalComponent implements OnInit {
 
   calcularMetaSyncros(): void {
     this.metaSyncros = 4874083.92 * 1.8;
-  }
-
-  calcularMetaApparel(): void {
-    this.caratulasService.getDatosPrevio().subscribe({
-      next: (datosPrevio) => {
-        try {
-          this.metaApparel = datosPrevio.reduce((total: number, item: any) => {
-            return total + (Number(item.compromiso_apparel_syncros_vittoria) || 0);
-          }, 0);
-
-          this.calcularMetaScott();
-          this.calcularProyectadoApparel();
-          this.calcularPorcentajeApparel();
-          this.calcularPorcentajeApparel_2();
-
-        } catch (e) {
-          console.error('Error calculando meta apparel:', e);
-          this.metaApparel = 0;
-          this.calcularMetaScott();
-          this.calcularProyectadoApparel();
-        }
-      },
-      error: (err) => {
-        console.error('Error obteniendo datos previos:', err);
-        this.metaApparel = 0;
-      }
-    });
-  }
-
-  calcularMetaScott(): void {
-    const metaApparelValue = Number(this.metaApparel) || 0;
-
-    this.metaScott = this.metaPrincipal - metaApparelValue;
-
-    this.calcularProyectadoScott();
-    this.calcularPorcentajeScott();
-    this.calcularPorcentajeScott_2();
   }
 
   calcularProyectadoVittoria(): void {
@@ -222,68 +201,36 @@ export class CaratulaGlobalComponent implements OnInit {
     this.proyectadoScott = Math.round(this.proyectadoScott * 100) / 100;
   }
 
-  calculateTotalMeta2(): void {
-    forkJoin([
-      this.caratulasService.getDatosEvacA(),
-      this.caratulasService.getDatosEvacB()
-    ]).subscribe({
-      next: ([datosA, datosB]) => {
-        const my25A = datosA.find((item: any) => item.categoria === 'MY25_2');
-        const my25B = datosB.find((item: any) => item.categoria === 'MY25_2');
-
-        if (my25A && my25B) {
-          this.totalMetaMY25_2 = my25A.meta + my25B.meta;
-          this.calcularProyectadoMonto2();
-        } else {
-          console.error('No se encontraron datos MY25_2 en uno o ambos conjuntos');
-        }
-      },
-      error: (err) => {
-        console.error('Error al obtener los datos:', err);
-      }
-    });
-  }
-
   calculateTotalAcumulado(): void {
-    forkJoin([
-      this.caratulasService.getDatosEvacA(),
-      this.caratulasService.getDatosEvacB()
-    ]).subscribe({
-      next: ([datosA, datosB]) => {
-        const my25A = datosA.find((item: any) => item.categoria === 'MY25');
-        const my25B = datosB.find((item: any) => item.categoria === 'MY25');
+    const nivelesCategoria = ['Partner', 'Partner Elite', 'Partner Elite Plus'];
 
-        if (my25A && my25B) {
-          this.totalAcumulado = my25A.acumulado_real + my25B.acumulado_real;
-          this.calcularPorcentajeMonto2();
-        } else {
-          console.error('No se encontraron datos MY25 en uno o ambos conjuntos');
-        }
+    this.caratulasService.getDatosPrevio().subscribe({
+      next: (datosPrevio) => {
+        this.totalAcumulado = datosPrevio
+          .filter((item: any) => nivelesCategoria.includes(item.nivel))
+          .reduce((total: number, item: any) =>
+            total + (Number(item.acumulado_anticipado) || 0), 0);
+
+        this.calcularPorcentajeMonto2();
       },
       error: (err) => {
-        console.error('Error al obtener los datos:', err);
+        console.error('Error calculando acumulado Partner→PEP:', err);
       }
     });
   }
 
   calculateTotalAcumulado2(): void {
-    forkJoin([
-      this.caratulasService.getDatosEvacA(),
-      this.caratulasService.getDatosEvacB()
-    ]).subscribe({
-      next: ([datosA, datosB]) => {
-        const my25A = datosA.find((item: any) => item.categoria === 'MY25_2');
-        const my25B = datosB.find((item: any) => item.categoria === 'MY25_2');
+    this.caratulasService.getDatosPrevio().subscribe({
+      next: (datosPrevio) => {
+        this.totalAcumulado_2 = datosPrevio
+          .filter((item: any) => item.nivel === 'Distribuidor')
+          .reduce((total: number, item: any) =>
+            total + (Number(item.acumulado_anticipado) || 0), 0);
 
-        if (my25A && my25B) {
-          this.totalAcumulado_2 = my25A.acumulado_real + my25B.acumulado_real;
-          this.calcularPorcentajeMonto3();
-        } else {
-          console.error('No se encontraron datos MY25_2 en uno o ambos conjuntos');
-        }
+        this.calcularPorcentajeMonto3();
       },
       error: (err) => {
-        console.error('Error al obtener los datos:', err);
+        console.error('Error calculando acumulado Distribuidor:', err);
       }
     });
   }
@@ -297,13 +244,9 @@ export class CaratulaGlobalComponent implements OnInit {
   }
 
   obtenerSemanasTranscurridas(): number {
-    const semanaActual = this.obtenerSemanaISO();
-    const semanaInicioTemporada = 26;
-
-    if (semanaActual < semanaInicioTemporada) {
-      return (52 - semanaInicioTemporada) + semanaActual;
-    }
-    return semanaActual - semanaInicioTemporada;
+    // La pantalla muestra la semana en curso, pero el proyectado usa
+    // únicamente semanas cerradas. Ej.: Semana 9 => 8 semanas cerradas.
+    return Math.max(0, this.obtenerDiaTemporada() - 1);
   }
 
   calcularProyectadoMonto1(): void {

@@ -4,8 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
 import { FacturasClienteComponent } from '../../../components/facturas-cliente/facturas-cliente.component';
+import { TemporadaSelectorComponent } from '../../../components/temporada-selector/temporada-selector.component';
+import { AvisoHistoricoComponent } from '../../../components/aviso-historico/aviso-historico.component';
 import { UsuariosService } from '../../../services/usuarios.service';
 import { ClientesService } from '../../../services/clientes.service';
+import { CaratulasService } from '../../../services/caratulas.service';
 
 interface UsuarioMonitor {
   id: number | null;
@@ -28,13 +31,14 @@ interface GrupoIntegral {
 @Component({
   selector: 'app-monitor-pedidos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, HomeBarComponent, FacturasClienteComponent],
+  imports: [CommonModule, FormsModule, RouterModule, HomeBarComponent, FacturasClienteComponent, TemporadaSelectorComponent, AvisoHistoricoComponent],
   templateUrl: './monitor-pedidos.component.html',
   styleUrls: ['./monitor-pedidos.component.css']
 })
 export class MonitorPedidosComponent implements OnInit {
   private usuariosService  = inject(UsuariosService);
   private clientesService  = inject(ClientesService);
+  private caratsService    = inject(CaratulasService);
   private _prefetchTimer: any = null;
 
   // ── Modo de búsqueda ─────────────────────────────────────────────────────
@@ -80,16 +84,26 @@ export class MonitorPedidosComponent implements OnInit {
     this.usuariosService.syncClientesOdoo().subscribe({
       next: (res) => {
         this.sincronizando = false;
-        this.syncMensaje = res.agregados > 0
-          ? `${res.agregados} cliente(s) nuevos agregados desde Odoo.`
-          : `Sin cambios — todos los clientes ya estaban registrados (${res.ya_existian}).`;
-        if (res.agregados > 0) this.cargarDatos();
+        const total = res.total_monitor ?? 0;
+        const enlazados = res.enlazados ?? 0;
+        const sinMatch = res.sin_match ?? 0;
+        this.syncMensaje = sinMatch > 0
+          ? `${enlazados} de ${total} clientes enlazados con Odoo. ${sinMatch} sin clave en Odoo.`
+          : `${enlazados} de ${total} clientes verificados — todos enlazados con Odoo.`;
       },
       error: () => {
         this.sincronizando = false;
         this.syncMensaje = 'Error al sincronizar con Odoo.';
       }
     });
+  }
+
+  // ── Selector de temporada ─────────────────────────────────────────────────
+  temporadasDisponibles: string[] = [];
+  temporadaSeleccionada: string | null = null;
+
+  seleccionarTemporada(etiqueta: string): void {
+    this.temporadaSeleccionada = etiqueta || null;
   }
 
   // ── Modal FacturasCliente ─────────────────────────────────────────────────
@@ -102,6 +116,10 @@ export class MonitorPedidosComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarDatos();
+    this.caratsService.getTemporadasDisponibles().subscribe({
+      next: (data) => { this.temporadasDisponibles = data; },
+      error: () => {}
+    });
   }
 
   cargarDatos(): void {
@@ -161,7 +179,7 @@ export class MonitorPedidosComponent implements OnInit {
     if (!u.clave) return;
     this._prefetchTimer = setTimeout(() => {
       this.clientesService
-        .getDetalleComprasCliente(undefined, undefined, undefined, u.clave!, true)
+        .getDetalleComprasCliente(undefined, undefined, undefined, u.clave!, true, undefined, false, this.temporadaSeleccionada)
         .subscribe({ next: () => {}, error: () => {} });
     }, 150);
   }
@@ -170,7 +188,7 @@ export class MonitorPedidosComponent implements OnInit {
     clearTimeout(this._prefetchTimer);
     this._prefetchTimer = setTimeout(() => {
       this.clientesService
-        .getDetalleComprasCliente(undefined, undefined, undefined, undefined, false, g.id)
+        .getDetalleComprasCliente(undefined, undefined, undefined, undefined, false, g.id, false, this.temporadaSeleccionada)
         .subscribe({ next: () => {}, error: () => {} });
     }, 150);
   }

@@ -1,0 +1,128 @@
+<div class="modal-backdrop" *ngIf="visible">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3>Catálogo de productos</h3>
+      <button type="button" class="btn-close" (click)="cerrar()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Filtros de búsqueda -->
+      <div class="filters-grid">
+        <div class="field search-field">
+          <input
+            id="filtroQuery"
+            type="text"
+            [(ngModel)]="filtroQuery"
+            placeholder="🔍 Buscar por modelo, código o SKU..."
+            (keyup.enter)="buscarProductos(1)"
+          />
+        </div>
+
+        <div class="field">
+          <label for="filtroMarca">Marca</label>
+          <select id="filtroMarca" [(ngModel)]="filtroMarcaId" (change)="buscarProductos(1)">
+            <option [ngValue]="null">Todas</option>
+            <option *ngFor="let m of marcasList" [value]="m.id">{{ m.nombre }}</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="filtroSku">SKU</label>
+          <input
+            id="filtroSku"
+            type="text"
+            [(ngModel)]="filtroSku"
+            placeholder="SKU..."
+            (keyup.enter)="buscarProductos(1)"
+          />
+        </div>
+
+        <div class="field-actions">
+          <button type="button" class="btn-primary" (click)="buscarProductos(1)">Filtrar</button>
+          <button type="button" class="btn-secondary" (click)="limpiarFiltros()">Limpiar</button>
+        </div>
+      </div>
+
+      <!-- Tabla de resultados en Dark Mode -->
+      <div class="table-container">
+        <table *ngIf="!loading; else loadingState">
+          <thead>
+            <tr>
+              <th class="col-check"></th>
+              <th>Producto / Modelo</th>
+              <th>SKU</th>
+              <th>Talla</th>
+              <th>Color</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of productosList" [class.selected]="isSeleccionado(item.id)">
+              <td class="col-check">
+                <input
+                  type="checkbox"
+                  [checked]="isSeleccionado(item.id)"
+                  (change)="toggleSeleccion(item)"
+                />
+              </td>
+              <td><strong>{{ item.modelo || item.codigo || '-' }}</strong></td>
+              <td class="sku-cell">{{ item.sku }}</td>
+              <td>{{ item.talla }}</td>
+              <td>{{ item.color }}</td>
+            </tr>
+            <tr *ngIf="productosList.length === 0">
+              <td colspan="5" class="empty-msg">
+                <div class="empty-box">
+                  <span>📦</span>
+                  <p>No se encontraron productos coincidentes.</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <ng-template #loadingState>
+          <div class="spinner-container">
+            <div class="spinner"></div>
+            <p>Cargando productos...</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Paginación del modal -->
+      <div class="pagination-bar" *ngIf="totalRecords > 0">
+        <button
+          type="button"
+          class="btn-page"
+          [disabled]="currentPage === 1"
+          (click)="anteriorPagina()"
+        >
+          &laquo; Anterior
+        </button>
+        <span class="page-info">Página {{ currentPage }} de {{ totalPages }} ({{ totalRecords }} registros)</span>
+        <button
+          type="button"
+          class="btn-page"
+          [disabled]="currentPage >= totalPages"
+          (click)="siguientePagina()"
+        >
+          Siguiente &raquo;
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <span class="count-badge">{{ seleccionadosMap.size }} seleccionados</span>
+      <div class="actions">
+        <button type="button" class="btn-secondary" (click)="cerrar()">Cancelar</button>
+        <button
+          type="button"
+          class="btn-orange"
+          [disabled]="seleccionadosMap.size === 0"
+          (click)="confirmarSeleccion()"
+        >
+          Agregar ({{ seleccionadosMap.size }})
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

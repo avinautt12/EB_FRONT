@@ -1,0 +1,354 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+  /* Paleta idéntica a garantias-usuario.component.css, para que el hub del
+     cliente se sienta consistente entre ambos módulos. */
+  --bg: #121212;
+  --card: #1e1e1e;
+  --border: #2a2a2a;
+  --border2: #3a3a3a;
+  --orange: #EB5E28;
+  --orange-g: rgba(235, 94, 40, .10);
+  --orange-gl: rgba(235, 94, 40, .35);
+  --t1: #FFFCF2;
+  --t2: #CCC5B9;
+  --t3: #8a8077;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+
+.btn-volver {
+  background-color: transparent;
+  border-color: #666;
+  color: #bbb;
+  margin-bottom: 1rem;
+}
+
+.btn-volver:hover {
+  background-color: #333;
+  color: #fff;
+  border-color: #fff;
+}
+
+/* ── HUB DE CLIENTE (mismo patrón que garantias-usuario, vista='hub') ── */
+.hub-page {
+  flex: 1;
+  background: var(--bg);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  padding: 28px 32px 48px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hub-page .page-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+}
+.hub-page .header-left { display: flex; flex-direction: column; gap: 4px; }
+.hub-page .back-link {
+  color: var(--t3); text-decoration: none; font-size: 0.85rem;
+  display: flex; align-items: center; gap: 6px; transition: color .2s;
+}
+.hub-page .back-link:hover { color: var(--orange); }
+.hub-page .page-title {
+  margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--t1);
+  display: flex; align-items: center; gap: 10px;
+}
+.hub-page .title-icon {
+  width: 36px; height: 36px; border-radius: 9px;
+  background: var(--orange-g); border: 1px solid var(--orange-gl);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem; color: var(--orange); flex-shrink: 0;
+}
+
+.hub-page .hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  max-width: 780px;
+  margin: 0 auto;
+  flex: 1;
+  align-content: center;
+  width: 100%;
+}
+
+.hub-page .hub-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+  padding: 36px 32px; display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 14px; cursor: pointer;
+  text-decoration: none; color: inherit;
+  transition: border-color 220ms var(--ease-out), box-shadow 220ms var(--ease-out), transform 220ms var(--ease-out);
+  opacity: 0;
+  animation: hub-card-in 420ms var(--ease-out) forwards;
+}
+.hub-page .hub-card:nth-child(1) { animation-delay: 0ms; }
+.hub-page .hub-card:nth-child(2) { animation-delay: 70ms; }
+
+@keyframes hub-card-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hub-page .hub-card { animation: none; opacity: 1; transform: none; }
+}
+
+.hub-page .hub-card:hover { border-color: var(--orange-gl); box-shadow: 0 8px 28px rgba(235,94,40,0.18); transform: translateY(-4px); }
+.hub-page .hub-card:active { transform: translateY(-4px) scale(0.98); }
+.hub-page .hub-card-secondary { border-color: var(--border2); }
+.hub-page .hub-card-secondary:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.3); border-color: var(--border2); }
+.hub-page .hub-card-icon {
+  width: 64px; height: 64px; border-radius: 16px; background: var(--orange-g);
+  border: 1px solid var(--orange-gl); display: flex; align-items: center;
+  justify-content: center; font-size: 1.8rem; color: var(--orange);
+  transition: transform 220ms var(--ease-out);
+}
+.hub-page .hub-card:hover .hub-card-icon { transform: scale(1.08) rotate(-4deg); }
+.hub-page .hub-card-secondary .hub-card-icon { background: rgba(204,197,185,0.07); border-color: var(--border2); color: var(--t2); }
+.hub-page .hub-card h2 { margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--t1); }
+.hub-page .hub-card p { margin: 0; font-size: 0.9rem; color: var(--t3); line-height: 1.6; flex: 1; }
+.hub-page .hub-card-btn { margin-top: 8px; font-size: 0.88rem; font-weight: 600; color: var(--orange); display: flex; align-items: center; gap: 6px; transition: gap 220ms var(--ease-out); }
+.hub-page .hub-card:hover .hub-card-btn { gap: 11px; }
+.hub-page .hub-card-secondary .hub-card-btn { color: var(--t2); }
+
+@media (max-width: 700px) {
+  .hub-page .hub-grid { grid-template-columns: 1fr; }
+}
+
+.landing-page {
+  position: relative;
+  flex: 1;
+  background: #08070a;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 32px 48px;
+  min-height: 100vh;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ── Blobs ambientales de fondo: manchas de color muy difuminadas, igual
+   que el moodboard de referencia, pero en nuestra paleta naranja/crema en
+   vez de azul/púrpura. Puro CSS estático -- nada que dispare resize o
+   change detection, así que no hay riesgo de repetir el freeze del
+   dashboard. ── */
+.ambient-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+.blob-1 { width: 420px; height: 420px; top: -120px; left: -80px; background: radial-gradient(circle, rgba(235,94,40,0.22), transparent 70%); }
+.blob-2 { width: 380px; height: 380px; top: 120px; right: -100px; background: radial-gradient(circle, rgba(92,155,214,0.16), transparent 70%); }
+.blob-3 { width: 340px; height: 340px; bottom: -140px; left: 30%; background: radial-gradient(circle, rgba(76,175,80,0.12), transparent 70%); }
+
+.landing-header {
+  position: relative;
+  z-index: 1;
+  padding-bottom: 8px;
+}
+
+.greeting-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #EB5E28;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.greeting-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  background: linear-gradient(90deg, #FFFCF2 20%, #EB5E28 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Centrado vertical real: la grid solo ocupa lo que su contenido pide,
+   en vez de estirarse a la altura completa (eso dejaba las cards con un
+   hueco vacío enorme abajo del texto). */
+.landing-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin: auto 0;
+}
+
+.landing-card {
+  position: relative;
+  min-height: 220px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(24,22,24,0.55);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 220ms var(--ease-out), border-color 220ms var(--ease-out), box-shadow 220ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .landing-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  }
+  .landing-card:hover .card-blob { opacity: 0.55; transform: scale(1.12); }
+  .landing-card:hover .card-link { gap: 11px; }
+}
+
+/* Feedback de presión -- confirma que la interfaz "escuchó" el click,
+   incluso en la fracción de segundo antes de que cargue la ruta. */
+.landing-card:active {
+  transform: scale(0.98);
+  transition-duration: 100ms;
+}
+
+/* Entrada escalonada: cada card aparece un poco después que la anterior. */
+.landing-card {
+  opacity: 0;
+  animation: card-in 420ms var(--ease-out) forwards;
+}
+.landing-card:nth-child(1) { animation-delay: 0ms; }
+.landing-card:nth-child(2) { animation-delay: 60ms; }
+.landing-card:nth-child(3) { animation-delay: 120ms; }
+.landing-card:nth-child(4) { animation-delay: 180ms; }
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-card { animation: none; opacity: 1; }
+  .landing-card:hover { transform: none; }
+}
+
+/* ── Mancha de color detrás del contenido de cada tarjeta (eco del blob
+   ambiental de fondo, recortada por el overflow:hidden de la card) ── */
+.card-blob {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  bottom: -70px;
+  right: -50px;
+  filter: blur(50px);
+  opacity: 0.35;
+  pointer-events: none;
+  transition: opacity 260ms var(--ease-out), transform 320ms var(--ease-out);
+  z-index: 0;
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1;
+}
+
+.card-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 8px 20px -6px rgba(0,0,0,0.5);
+}
+
+.card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  z-index: 1;
+  padding: 18px 0;
+}
+
+.landing-card h2 {
+  margin: 0;
+  color: #FFFCF2;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.landing-card p {
+  margin: 0;
+  color: #8a8077;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  max-width: 92%;
+}
+
+.landing-card p strong {
+  color: #FFFCF2;
+  font-weight: 700;
+}
+
+.card-link {
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: gap 220ms var(--ease-out);
+  z-index: 1;
+  width: fit-content;
+}
+
+.card-gestor .card-link { color: #4caf50; }
+.card-gestor .card-icon-wrap { background: linear-gradient(135deg, #4caf50, color-mix(in srgb, #4caf50 55%, white)); }
+.card-gestor .card-blob { background: radial-gradient(circle, #4caf50, transparent 70%); }
+.card-gestor:hover { border-color: rgba(76, 175, 80, 0.35); }
+
+.card-dashboard .card-link { color: #5c9bd6; }
+.card-dashboard .card-icon-wrap { background: linear-gradient(135deg, #5c9bd6, color-mix(in srgb, #5c9bd6 55%, white)); }
+.card-dashboard .card-blob { background: radial-gradient(circle, #5c9bd6, transparent 70%); }
+.card-dashboard:hover { border-color: rgba(92, 155, 214, 0.35); }
+
+.card-formulario .card-link { color: #EB5E28; }
+.card-formulario .card-icon-wrap { background: linear-gradient(135deg, #EB5E28, color-mix(in srgb, #EB5E28 55%, white)); }
+.card-formulario .card-blob { background: radial-gradient(circle, #EB5E28, transparent 70%); }
+.card-formulario:hover { border-color: rgba(235, 94, 40, 0.35); }
+
+.card-campanias .card-link { color: #9b59b6; }
+.card-campanias .card-icon-wrap { background: linear-gradient(135deg, #9b59b6, color-mix(in srgb, #9b59b6 55%, white)); }
+.card-campanias .card-blob { background: radial-gradient(circle, #9b59b6, transparent 70%); }
+.card-campanias:hover { border-color: rgba(155, 89, 182, 0.35); }
+
+@media (max-width: 900px) {
+  .landing-grid { grid-template-columns: 1fr; }
+  .landing-card { min-height: 200px; }
+}

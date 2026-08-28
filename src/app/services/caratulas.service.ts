@@ -216,19 +216,65 @@ export class CaratulasService {
       .substring(0, 100); // Limitar longitud
   }
 
-  getClientesEvacA(): Observable<any> {
-    if (this.clientesEvacACache.value) return of(this.clientesEvacACache.value);
+  getClientesEvacA(
+    fechaDesde?: string,
+    fechaHasta?: string
+  ): Observable<any> {
+    const usaRango = !!fechaDesde && !!fechaHasta;
 
-    return this.http.get<any>(`${this.apiUrl}/clientes_a`).pipe(
-      tap(data => this.clientesEvacACache.next(data))
+    if (!usaRango && this.clientesEvacACache.value) {
+      return of(this.clientesEvacACache.value);
+    }
+
+    let params = new HttpParams();
+
+    if (usaRango) {
+      params = params
+        .set('fecha_desde', fechaDesde!)
+        .set('fecha_hasta', fechaHasta!);
+    }
+
+    return this.http.get<any>(
+      `${this.apiUrl}/clientes_a`,
+      { params }
+    ).pipe(
+      tap(data => {
+        // El cache solo representa la vista MY27 por defecto.
+        // Nunca guardamos una respuesta de rango personalizado.
+        if (!usaRango) {
+          this.clientesEvacACache.next(data);
+        }
+      })
     );
   }
 
-  getClientesEvacB(): Observable<any> {
-    if (this.clientesEvacBCache.value) return of(this.clientesEvacBCache.value);
+  getClientesEvacB(
+    fechaDesde?: string,
+    fechaHasta?: string
+  ): Observable<any> {
+    const usaRango = !!fechaDesde && !!fechaHasta;
 
-    return this.http.get<any>(`${this.apiUrl}/clientes_b`).pipe(
-      tap(data => this.clientesEvacBCache.next(data))
+    if (!usaRango && this.clientesEvacBCache.value) {
+      return of(this.clientesEvacBCache.value);
+    }
+
+    let params = new HttpParams();
+
+    if (usaRango) {
+      params = params
+        .set('fecha_desde', fechaDesde!)
+        .set('fecha_hasta', fechaHasta!);
+    }
+
+    return this.http.get<any>(
+      `${this.apiUrl}/clientes_b`,
+      { params }
+    ).pipe(
+      tap(data => {
+        if (!usaRango) {
+          this.clientesEvacBCache.next(data);
+        }
+      })
     );
   }
 
@@ -260,6 +306,24 @@ export class CaratulasService {
 
   getDatosPrevio(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/datos_previo`);
+  }
+
+  getResumenCaratulasMy27(
+    fechaDesde?: string,
+    fechaHasta?: string
+  ): Observable<any> {
+    let params = new HttpParams();
+
+    if (fechaDesde && fechaHasta) {
+      params = params
+        .set('fecha_desde', fechaDesde)
+        .set('fecha_hasta', fechaHasta);
+    }
+
+    return this.http.get<any>(
+      `${this.apiUrl}/resumen_caratulas_my27`,
+      { params }
+    );
   }
 
   private getAuthHeaders(): HttpHeaders {
@@ -294,5 +358,48 @@ export class CaratulasService {
 
   verificarGrupoCliente(clave: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/verificar_grupo_cliente`, { params: { clave } });
+  }
+
+
+  getTemporadasDisponibles(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/temporadas_disponibles`);
+  }
+
+  getTemporadas(): Observable<{ etiqueta: string; fecha_inicio: string; fecha_fin: string; estado: string }[]> {
+    return this.http.get<{ etiqueta: string; fecha_inicio: string; fecha_fin: string; estado: string }[]>(
+      `${this.apiUrl}/temporadas`
+    );
+  }
+
+  getDatosPrevioHistorico(temporada: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/datos_previo_historico`, {
+      params: { temporada }
+    });
+  }
+
+  getDatosEvacAHistorico(temporada: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/datos_evac_a_historico`, {
+      params: { temporada }
+    });
+  }
+
+  getDatosEvacBHistorico(temporada: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/datos_evac_b_historico`, {
+      params: { temporada }
+    });
+  }
+
+  getVentasNoRegistradas(fechaDesde?: string, fechaHasta?: string): Observable<any> {
+    let params = new HttpParams();
+
+    if (fechaDesde) {
+      params = params.set('fecha_desde', fechaDesde);
+    }
+
+    if (fechaHasta) {
+      params = params.set('fecha_hasta', fechaHasta);
+    }
+
+    return this.http.get<any>(`${this.apiUrl}/ventas_no_registradas`, { params });
   }
 }

@@ -76,6 +76,7 @@
 
     <!-- ════════════════════════════════ TAB: RESUMEN ══════════════════════════ -->
     <ng-container *ngIf="activeTab === 'resumen'">
+    <div class="tab-panel">
 
       <div class="kpi-row">
 
@@ -103,22 +104,25 @@
           </div>
         </div>
 
-        <div class="kpi-card kpi-card--clickable" (click)="abrirModalResumen('transito')" title="Ver embarques marítimos">
+        <div class="kpi-card kpi-card--clickable" (click)="abrirModalResumen('transito')" title="Ver embarques marítimos · entrega → liberación final">
           <div class="kpi-icon kpi-cyan"><i class="fas fa-ship"></i></div>
           <div class="kpi-info">
-            <span class="kpi-num">{{ data.kpis.transito_maritimo_promedio_dias || '—' }}<small> días</small></span>
+            <span class="kpi-num">
+              {{ data.kpis.transito_maritimo_promedio_dias != null ? data.kpis.transito_maritimo_promedio_dias : '—' }}<small *ngIf="data.kpis.transito_maritimo_promedio_dias != null"> días</small>
+            </span>
             <span class="kpi-lbl">Tránsito Marítimo</span>
+            <span class="kpi-sub">Entrega → Liberado<span *ngIf="data.kpis.transito_maritimo_n"> · n={{ data.kpis.transito_maritimo_n }}</span></span>
           </div>
         </div>
 
-        <div class="kpi-card kpi-card--clickable" (click)="abrirModalResumen('transito_aereo')" title="Ver embarques aéreos · booking → almacén">
+        <div class="kpi-card kpi-card--clickable" (click)="abrirModalResumen('transito_aereo')" title="Ver embarques aéreos · entrega → liberación final">
           <div class="kpi-icon kpi-purple"><i class="fas fa-plane"></i></div>
           <div class="kpi-info">
             <span class="kpi-num">
               {{ data.kpis.transito_aereo_promedio_dias != null ? data.kpis.transito_aereo_promedio_dias : '—' }}<small *ngIf="data.kpis.transito_aereo_promedio_dias != null"> días</small>
             </span>
             <span class="kpi-lbl">Tránsito Aéreo</span>
-            <span class="kpi-sub" *ngIf="data.kpis.transito_aereo_n">n={{ data.kpis.transito_aereo_n }}</span>
+            <span class="kpi-sub">Entrega → Liberado<span *ngIf="data.kpis.transito_aereo_n"> · n={{ data.kpis.transito_aereo_n }}</span></span>
           </div>
         </div>
 
@@ -202,10 +206,12 @@
         <canvas #chartMes *ngIf="data.por_mes.length > 0"></canvas>
       </div>
 
+    </div>
     </ng-container>
 
     <!-- ════════════════════════════════ TAB: LATENCIAS ═══════════════════════ -->
     <ng-container *ngIf="activeTab === 'latencias'">
+    <div class="tab-panel">
 
       <div class="kpi-row">
 
@@ -347,10 +353,12 @@
 
       </div><!-- /charts-row r2 embarque+etiquetado -->
 
+    </div>
     </ng-container>
 
     <!-- ════════════════════════════════ TAB: COSTOS ══════════════════════════ -->
     <ng-container *ngIf="activeTab === 'costos'">
+    <div class="tab-panel">
 
       <div class="kpi-row">
 
@@ -429,19 +437,33 @@
         <canvas #chartCostoPaq *ngIf="costoPaqConDatos.length > 0"></canvas>
       </div>
 
+    </div>
     </ng-container>
 
     <!-- ════════════════════════════════ TAB: EMBARQUES ══════════════════════ -->
     <ng-container *ngIf="activeTab === 'embarques'">
+    <div class="tab-panel">
 
       <div class="table-card">
         <div class="table-head">
           <div class="table-title"><i class="fas fa-list-alt"></i> Resumen por Embarque</div>
-          <div class="table-order">
-            <span>Ordenar:</span>
-            <button [class.active]="ordenTabla === 'llegada'" (click)="ordenTabla = 'llegada'">Llegada</button>
-            <button [class.active]="ordenTabla === 'costo'"   (click)="ordenTabla = 'costo'">Costo Total</button>
-            <button [class.active]="ordenTabla === 'bici'"    (click)="ordenTabla = 'bici'">Costo/Bici</button>
+          <div class="table-head-right">
+            <div class="temporada-wrap">
+              <span class="temporada-lbl"><i class="fas fa-calendar-week"></i> Temporada:</span>
+              <app-temporada-selector
+                [temporadas]="temporadasCerradas"
+                [seleccionada]="temporadaSelValor"
+                [incluirHistorico]="true"
+                labelActual="MY27 · actual"
+                (cambio)="onTemporadaCambio($event)">
+              </app-temporada-selector>
+            </div>
+            <div class="table-order">
+              <span>Ordenar:</span>
+              <button [class.active]="ordenTabla === 'llegada'" (click)="ordenTabla = 'llegada'">Llegada</button>
+              <button [class.active]="ordenTabla === 'costo'"   (click)="ordenTabla = 'costo'">Costo Total</button>
+              <button [class.active]="ordenTabla === 'bici'"    (click)="ordenTabla = 'bici'">Costo/Bici</button>
+            </div>
           </div>
         </div>
         <div class="table-search">
@@ -451,139 +473,174 @@
             <i class="fas fa-times"></i>
           </button>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>ID Interno</th>
-                <th>Vía</th>
-                <th>Origen</th>
-                <th>Contenido</th>
-                <th>Estatus</th>
-                <th>Almacén</th>
-                <th>Proyectado / Real</th>
-                <th class="th-bici">Costo / Bici</th>
-                <th>Notas</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let e of embarquesOrdenados" class="emb-row" (click)="irDetalle(e.id)">
+        <div class="table-fecha-filtro" [class.disabled]="fechaFiltroDeshabilitado">
+          <span class="table-fecha-lbl">
+            <i class="fas fa-calendar-day"></i> Filtrar por: <strong>{{ fechaFiltroLabel }}</strong>
+          </span>
+          <app-date-picker
+              mode="range"
+              placeholder="Rango de fechas"
+              [desde]="filtroFechaDesde"
+              [hasta]="filtroFechaHasta"
+              (rangeChange)="onRangoFechaEmbarques($event)">
+          </app-date-picker>
+          <button *ngIf="filtroFechaDesde || filtroFechaHasta" class="table-fecha-clear" (click)="filtroFechaDesde = ''; filtroFechaHasta = ''">
+            <i class="fas fa-times"></i> Limpiar
+          </button>
+          <span *ngIf="fechaFiltroDeshabilitado" class="table-fecha-hint">No aplica para "Pendiente" (sin fecha registrada)</span>
+        </div>
+        <div class="pipeline-legend">
+          <span class="leg-sep">Días:</span>
+          <span class="leg-item leg-ok"><span class="leg-dot"></span>Adelantado / A tiempo</span>
+          <span class="leg-item leg-late"><span class="leg-dot"></span>Atrasado</span>
+          <span class="leg-divider"></span>
+          <span class="leg-item"><span class="rk rk-p">P</span>Proyectado</span>
+          <span class="leg-item"><span class="rk rk-r">R</span>Real</span>
+          <span class="leg-item leg-realcell"><span class="leg-cell-sw"></span>Fecha real registrada</span>
+          <span class="leg-divider"></span>
+          <span class="leg-sep">Filtrar por etapa:</span>
+          <button class="etapa-pill etapa-all"
+                  [class.active]="!filtroEtapa && !soloPendientes"
+                  (click)="seleccionarTodas()">
+            Todas <span class="etapa-count">{{ embarquesTemporada.length }}</span>
+          </button>
+          <button class="etapa-pill pill-pendientes"
+                  [class.active]="soloPendientes"
+                  (click)="toggleSinLiberar()"
+                  title="Todo lo que sigue en proceso (aún no Liberado)">
+            <i class="fas fa-hourglass-half"></i> Sin liberar <span class="etapa-count">{{ countPendientes }}</span>
+          </button>
+          <span class="etapa-divider"></span>
+          <button *ngFor="let et of ETAPAS"
+                  class="etapa-pill"
+                  [class.active]="filtroEtapa === et.key"
+                  [style.--ec]="et.color"
+                  [style.--eb]="et.bg"
+                  (click)="seleccionarEtapa(et.key)">
+            {{ et.key }} <span class="etapa-count">{{ countEtapa(et.key) }}</span>
+          </button>
+        </div>
+        <div class="cards-wrap pipeline-wrap">
 
-                <td class="td-ref">
+          <div *ngFor="let e of embarquesOrdenados" class="emb-card" (click)="irDetalle(e.id)">
+
+            <!-- ══ Banda superior: identidad + costos + notas ══ -->
+            <div class="ec-top">
+
+              <!-- Identidad -->
+              <div class="ec-ident">
+                <div class="ec-ref-row">
                   <span class="ref-badge">{{ e.referencia }}</span>
-                </td>
-
-                <td>
                   <span class="via-pill"
                     [style.background]="colorVia(e.via_transporte) + '1a'"
                     [style.color]="colorVia(e.via_transporte)">
                     <i class="fas" [ngClass]="e.via_transporte === 'AEREO' ? 'fa-plane' : 'fa-ship'"></i>
-                    {{ e.via_transporte === 'AEREO' ? 'Aéreo' : 'Mar.' }}
+                    {{ e.via_transporte === 'AEREO' ? 'Aéreo' : 'Marítimo' }}
                   </span>
-                </td>
-
-                <td class="td-gray td-origen">{{ e.log_origen || '—' }}</td>
-
-                <td>
-                  <span class="contenido-chip" [title]="e.log_tipo_productos">
-                    {{ abrevContenido(e.log_tipo_productos) }}
+                  <span class="ref-estado" [ngStyle]="estadoStyle(e.estado_actual)">{{ e.estado_actual }}</span>
+                </div>
+                <span class="ec-nombre" [title]="e.nombre">{{ e.nombre || abrevContenido(e.log_tipo_productos) }}</span>
+                <div class="ec-meta">
+                  <span class="ec-chip ec-chip-origen" [title]="origenBonito(e.log_origen)">
+                    <i class="fas fa-map-marker-alt"></i> {{ origenBonito(e.log_origen) }}
                   </span>
-                </td>
-
-                <td>
-                  <span class="estatus-badge"
-                    [style.color]="colorEstado(e.estado)"
-                    [style.border-color]="colorEstado(e.estado) + '44'"
-                    [style.background]="colorEstado(e.estado) + '12'">
-                    <i class="fas fa-circle" style="font-size:.4rem"></i>
-                    {{ e.estado | titlecase }}
+                  <span class="ec-chip ec-chip-contenido" [title]="e.log_tipo_productos">
+                    <i class="fas fa-box-open"></i> {{ abrevContenido(e.log_tipo_productos) }}
                   </span>
-                </td>
+                </div>
+              </div>
 
-                <td class="td-llegada">
-                  <div class="llegada-dual">
-                    <div class="llegada-row">
-                      <span class="llegada-label llegada-label-proy">PROY</span>
-                      <span class="llegada-fecha">{{ e.des_fecha_entrega_almacen_prog ? (e.des_fecha_entrega_almacen_prog | date:'dd/MMM/yy') : '—' }}</span>
-                    </div>
-                    <div class="llegada-row">
-                      <span class="llegada-label llegada-label-real">REAL</span>
-                      <span class="llegada-fecha"
-                        [class.llegada-tarde]="e.des_fecha_entrega_almacen_prog && e.des_llegada_almacen && e.des_llegada_almacen > e.des_fecha_entrega_almacen_prog"
-                        [class.llegada-tiempo]="e.des_fecha_entrega_almacen_prog && e.des_llegada_almacen && e.des_llegada_almacen <= e.des_fecha_entrega_almacen_prog">
-                        {{ e.des_llegada_almacen ? (e.des_llegada_almacen | date:'dd/MMM/yy') : '—' }}
-                      </span>
-                    </div>
-                    <span class="llegada-rel" *ngIf="e.des_llegada_almacen">{{ llegadaRelativa(e.des_llegada_almacen) }}</span>
-                  </div>
-                </td>
+              <!-- Proy/Real (costo) -->
+              <div class="ec-costos">
+                <span class="ec-block-lbl">Costo Proy / Real</span>
+                <div class="costo-line">
+                  <span class="ctag ctag-proy">PROY</span>
+                  <span class="cval" [class.cval-sin-dato]="!e.costo_proyectado_pesos">
+                    {{ e.costo_proyectado_pesos ? formatPesos(e.costo_proyectado_pesos) : '—' }}
+                  </span>
+                </div>
+                <div class="costo-line">
+                  <span class="ctag ctag-real">REAL</span>
+                  <span class="cval cval-real" [class.cval-sin-dato]="!e.costo_real_pesos">
+                    {{ e.costo_real_pesos ? formatPesos(e.costo_real_pesos) : '—' }}
+                  </span>
+                </div>
+              </div>
 
-                <td class="td-costo">
-                  <div class="costo-stack">
-                    <div class="costo-line" *ngIf="e.costo_proyectado_pesos; else sinProy">
-                      <span class="ctag ctag-proy">PROY</span>
-                      <span class="cval">{{ formatPesos(e.costo_proyectado_pesos) }}</span>
-                    </div>
-                    <ng-template #sinProy>
-                      <div class="costo-line">
-                        <span class="ctag ctag-proy">PROY</span>
-                        <span class="cval cval-sin-dato">—</span>
-                      </div>
-                    </ng-template>
-                    <div class="costo-line" *ngIf="e.costo_real_pesos; else sinReal">
-                      <span class="ctag ctag-real">REAL</span>
-                      <span class="cval cval-real">{{ formatPesos(e.costo_real_pesos) }}</span>
-                    </div>
-                    <ng-template #sinReal>
-                      <div class="costo-line">
-                        <span class="ctag ctag-real">REAL</span>
-                        <span class="cval cval-sin-dato">—</span>
-                      </div>
-                    </ng-template>
-                  </div>
-                </td>
+              <!-- Costo / Bici -->
+              <div class="ec-bici">
+                <span class="ec-block-lbl">Costo / Bici</span>
+                <ng-container *ngIf="e.costo_por_bicicleta; else sinBici">
+                  <span class="bici-num">${{ e.costo_por_bicicleta | number:'1.2-2' }} <span class="bici-cur">USD</span></span>
+                  <span class="bici-sub" *ngIf="e.cos_cantidad_bicicletas">{{ e.cos_cantidad_bicicletas }} uds</span>
+                </ng-container>
+                <ng-template #sinBici><span class="td-gray">—</span></ng-template>
+              </div>
 
-                <td class="td-bici-val">
-                  <ng-container *ngIf="e.costo_por_bicicleta; else sinBici">
-                    <i class="fas fa-bicycle" style="color:#64748b;font-size:.7rem;margin-right:4px"></i>
-                    <span class="bici-num">${{ e.costo_por_bicicleta | number:'1.2-2' }} USD</span>
-                    <span class="bici-sub" *ngIf="e.cos_cantidad_bicicletas"> / {{ e.cos_cantidad_bicicletas }} uds</span>
-                  </ng-container>
-                  <ng-template #sinBici><span class="td-gray">—</span></ng-template>
-                </td>
-
-                <td class="td-notas" (click)="abrirNotasEdit(e, $event)">
-                  <!-- Modo edición -->
-                  <div class="notas-editor" *ngIf="notasEditId === e.id" (click)="$event.stopPropagation()">
-                    <input class="notas-input"
-                      [(ngModel)]="notasEditVal"
-                      (keyup.enter)="confirmarNotas(e)"
-                      (keyup.escape)="cancelarNotas()"
-                      placeholder="Escribe una nota..."
-                      autofocus>
+              <!-- Notas -->
+              <div class="ec-notas" (click)="abrirNotasEdit(e, $event)">
+                <span class="ec-block-lbl">Notas <i class="fas fa-pen notas-edit-icon"></i></span>
+                <div class="notas-editor" *ngIf="notasEditId === e.id" (click)="$event.stopPropagation()">
+                  <textarea class="notas-input"
+                    [(ngModel)]="notasEditVal"
+                    (keydown.escape)="cancelarNotas()"
+                    (keydown.control.enter)="confirmarNotas(e)"
+                    placeholder="Escribe una nota..."
+                    rows="3"></textarea>
+                  <div class="notas-actions-row">
+                    <span class="notas-hint">Ctrl+Enter guarda · Esc cancela</span>
                     <div class="notas-actions">
                       <button class="notas-save" (click)="$event.stopPropagation(); confirmarNotas(e)" title="Guardar"><i class="fas fa-check"></i></button>
                       <button class="notas-cancel" (click)="$event.stopPropagation(); cancelarNotas()" title="Cancelar"><i class="fas fa-times"></i></button>
                     </div>
                   </div>
-                  <!-- Modo vista -->
-                  <div class="notas-view" *ngIf="notasEditId !== e.id">
-                    <span class="notas-text" [class.notas-empty]="!e.notas">
-                      {{ e.notas ? (e.notas.length > 45 ? (e.notas | slice:0:45) + '…' : e.notas) : '—' }}
-                    </span>
-                    <i class="fas fa-pen notas-edit-icon"></i>
+                </div>
+                <ng-container *ngIf="notasEditId !== e.id">
+                  <div class="ec-notas-lista" *ngIf="e.notas; else sinNotas" [title]="e.notas">
+                    <div class="ec-nota-linea" *ngFor="let linea of notasLineas(e.notas)">{{ linea }}</div>
                   </div>
-                </td>
+                  <ng-template #sinNotas>
+                    <span class="ec-notas-text notas-empty">Sin notas — clic para agregar</span>
+                  </ng-template>
+                </ng-container>
+              </div>
+            </div>
 
-              </tr>
-              <tr *ngIf="embarquesOrdenados.length === 0">
-                <td colspan="9" class="sin-datos"><i class="fas fa-inbox"></i> Sin embarques con los filtros seleccionados</td>
-              </tr>
-            </tbody>
-          </table>
+            <!-- ══ Banda inferior: tira de etapas (proyectado vs real) ══ -->
+            <div class="ec-pipeline">
+              <div *ngFor="let st of PIPELINE_STAGES" class="ec-stage ec-stage-click" [ngClass]="stageCls(stage(e, st.key))"
+                   (click)="irEtapa(e, st.key, $event)" title="Ver este dato en el detalle">
+                <span class="ec-stage-lbl">{{ st.label }}</span>
+                <span class="ec-stage-p">
+                  <span class="rk rk-p" [title]="st.pTitle || 'Proyectado'">{{ st.pLabel || 'P' }}</span>{{ fmtD(stage(e, st.key)?.proy) }}
+                </span>
+                <span class="ec-stage-r">
+                  <span class="rk rk-r" title="Real">R</span>{{ fmtD(stage(e, st.key)?.real) }}
+                </span>
+                <span class="ec-stage-d" *ngIf="stage(e, st.key)?.delta != null"
+                      [ngClass]="deltaClass(stage(e, st.key)!.delta)">
+                  {{ absDelta(stage(e, st.key)!.delta!) }}d
+                </span>
+              </div>
+              <!-- Latencia total -->
+              <div class="ec-stage ec-stage-lat">
+                <span class="ec-stage-lbl">Lat. Total</span>
+                <span class="lat-total-badge" *ngIf="e.lat_total != null" [style.color]="latTotalColor(e.lat_total)">
+                  {{ e.lat_total }}d
+                </span>
+                <span class="td-gray" *ngIf="e.lat_total == null">—</span>
+              </div>
+            </div>
+
+          </div>
+
+          <div *ngIf="embarquesOrdenados.length === 0" class="sin-datos">
+            <i class="fas fa-inbox"></i> Sin embarques con los filtros seleccionados
+          </div>
         </div>
       </div>
 
+    </div>
     </ng-container>
 
   </ng-container>
