@@ -1,4 +1,4 @@
-<app-top-bar-usuarios></app-top-bar-usuarios>
+<app-home-bar></app-home-bar>
 
 <div class="retroactivos-layout">
   <!-- ALERTA INLINE LOCAL -->
@@ -24,7 +24,7 @@
           <i class="fas fa-sitemap"></i> Módulos y Submódulos
         </button>
         <button class="tab-btn" [class.active]="pestanaActiva === 'acciones'" (click)="pestanaActiva = 'acciones'">
-          <i class="fas fa-bolt"></i> Acciones Base
+          <i class="fas fa-bolt"></i> Acciones
         </button>
         <button class="tab-btn" [class.active]="pestanaActiva === 'rutas'" (click)="pestanaActiva = 'rutas'">
           <i class="fas fa-shield-alt"></i> Permisos Generales
@@ -99,12 +99,14 @@
                   {{ m.activo ? 'Activo' : 'Inactivo' }}
                 </span>
               </td>
-              <td class="td-actions col-acciones-btns">
-                <button class="btn-action" (click)="abrirModalModulo(m)">Editar</button>
-                <button class="btn-action" (click)="toggleEstadoModulo(m)">
-                  {{ m.activo ? 'Desactivar' : 'Activar' }}
-                </button>
-                <button class="btn-action delete" (click)="eliminarModulo(m)">Eliminar</button>
+              <td class="col-acciones-btns">
+                <div class="container-actions">
+                  <button class="btn-action" (click)="abrirModalModulo(m)">Editar</button>
+                  <button class="btn-action" (click)="toggleEstadoModulo(m)">
+                    {{ m.activo ? 'Desactivar' : 'Activar' }}
+                  </button>
+                  <button class="btn-action delete" (click)="eliminarModulo(m)">Eliminar</button>
+                </div>
               </td>
             </tr>
 
@@ -136,7 +138,7 @@
                     {{ sub.activo ? 'Activo' : 'Inactivo' }}
                   </span>
                 </td>
-                <td class="td-actions col-acciones-btns">
+                <td class="container-actions col-acciones-btns">
                   <button class="btn-action" (click)="abrirModalModulo(sub)">Editar</button>
                   <button class="btn-action" (click)="toggleEstadoModulo(sub)">
                     {{ sub.activo ? 'Desactivar' : 'Activar' }}
@@ -214,7 +216,7 @@
               <span *ngIf="a.activo === 0" class="badge badge-inactive">Inactiva</span>
             </td>
             <td>
-              <div class="td-actions">
+              <div class="container-actions">
                 <button *ngIf="a.activo === 1" class="btn btn-action" (click)="cambiarEstadoAccion(a, 0)">Desactivar</button>
                 <button *ngIf="a.activo === 0" class="btn btn-action" (click)="cambiarEstadoAccion(a, 1)">Activar</button>
                 <button class="btn btn-action delete" (click)="eliminarAccion(a)">Eliminar</button>
@@ -319,7 +321,7 @@
               <span *ngIf="!r.registrado" class="badge badge-inactive">No Registrado</span>
             </td>
             <td>
-              <div class="td-actions">
+              <div class="container-actions">
                 <button *ngIf="!r.registrado" class="btn-action" (click)="registrarModuloDesdeRuta(r)">
                   Registrar
                 </button>

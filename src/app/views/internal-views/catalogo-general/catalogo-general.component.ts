@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminSistemaService, ModuloItem, AccionBase, ModuloPayload } from '../../../services/admin-sistema.service';
-import { TopBarUsuariosComponent } from '../../../components/top-bar-usuarios/top-bar-usuarios.component';
+import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
 import { routes } from '../../../app.routes';
 
 export interface RutaDetectada {
@@ -17,7 +17,7 @@ export interface RutaDetectada {
 @Component({
   selector: 'app-catalogo-general',
   standalone: true,
-  imports: [CommonModule, FormsModule, TopBarUsuariosComponent],
+  imports: [CommonModule, FormsModule, HomeBarComponent],
   templateUrl: './catalogo-general.component.html',
   styleUrl: './catalogo-general.component.css'
 })

@@ -1,124 +1,126 @@
 <app-home-bar></app-home-bar>
 
-<!-- ALERTA INLINE LOCAL -->
-<div *ngIf="alertMsj" [ngClass]="alertTipo === 'success' ? 'inline-alert success' : 'inline-alert error'">
-  <span>{{ alertMsj }}</span>
-  <button class="close-btn" (click)="alertMsj = null">&times;</button>
-</div>
-
-<div class="header-section">
-  <div class="header-title">
-    <button class="btn-volver" (click)="goBack()">
-      <i class="fas fa-arrow-left"></i> Volver
-    </button>
-    <h2 class="main-title">Gestión de clientes</h2>
+<div class="gestion-clientes-layout">
+  <!-- ALERTA INLINE LOCAL -->
+  <div *ngIf="alertMsj" [ngClass]="alertTipo === 'success' ? 'inline-alert success' : 'inline-alert error'">
+    <span>{{ alertMsj }}</span>
+    <button class="close-btn" (click)="alertMsj = null">&times;</button>
   </div>
 
-  <!-- BARRA DE FILTROS Y BOTÓN RECARGAR LISTADO -->
-  <div class="filtros-bar">
-    <div class="search-box">
-      <input type="text" placeholder="Buscar por nombre, usuario o correo..." [(ngModel)]="filtroTexto" (input)="paginaActual = 1">
-    </div>
-    <button class="btn btn-info" (click)="cargarAdministradores()" [disabled]="cargando">
-      <i class="fas fa-sync-alt"></i> Recargar Listado
-    </button>
-  </div>
-</div>
-
-<!-- ESTADO CARGANDO -->
-<div *ngIf="cargando" class="empty-state">
-  <p>Cargando información de administradores...</p>
-</div>
-
-<!-- TABLA DE CLIENTES -->
-<div *ngIf="!cargando" class="table-wrap">
-  <div class="table-responsive">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Usuario / Correo</th>
-          <th>Cupo Máximo</th>
-          <th>Estado</th>
-          <th style="text-align: right;">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let admin of administradoresPaginados()">
-          <td>{{ admin.id }}</td>
-          <td><strong>{{ admin.nombre }}</strong></td>
-          <td>
-            {{ admin.usuario }} <br>
-            <small style="color: var(--t3);">{{ admin.correo }}</small>
-          </td>
-          <td>
-            <div class="form-group-inline">
-              <input type="number" class="input-cupo" [(ngModel)]="admin.max_hijos" min="0">
-              <button class="btn btn-primary" (click)="actualizarCupo(admin, admin.max_hijos)">Guardar</button>
-            </div>
-          </td>
-          <td>
-            <span *ngIf="admin.activo === 1" class="badge badge-active">Activo</span>
-            <span *ngIf="admin.activo === 0" class="badge badge-inactive">Inactivo</span>
-          </td>
-          <td>
-            <div class="td-actions">
-              <button *ngIf="admin.activo === 1" class="btn btn-action delete" (click)="cambiarEstadoUsuario(admin, 0)">
-                Desactivar
-              </button>
-              <button *ngIf="admin.activo === 0" class="btn btn-action" (click)="cambiarEstadoUsuario(admin, 1)">
-                Activar
-              </button>
-              <button class="btn btn-primary" (click)="abrirModalBolsaDelegable(admin)">
-                Permisos
-              </button>
-            </div>
-          </td>
-        </tr>
-        <tr *ngIf="administradoresFiltrados.length === 0">
-          <td colspan="6" class="empty-state">No se encontraron administradores cliente.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="paginacion-container" *ngIf="administradoresFiltrados.length > 0">
-    <div class="paginador-selector-wrap">
-      <span class="selector-label">Mostrar:</span>
-      <div class="selector-pills">
-        <button 
-          *ngFor="let cant of opcionesPorPagina" 
-          class="btn-pill" 
-          [class.activa]="elementosPorPagina === cant" 
-          (click)="cambiarElementosPorPagina(cant)">
-          {{ cant }}
-        </button>
-      </div>
-      <span class="paginador-info">
-        Mostrando {{ administradoresPaginados().length }} de {{ administradoresFiltrados.length }} registros
-      </span>
+  <div class="header-section">
+    <div class="header-title">
+      <button class="btn-volver" (click)="goBack()">
+        <i class="fas fa-arrow-left"></i> Volver
+      </button>
+      <h2 class="main-title">Gestión de clientes</h2>
     </div>
 
-    <div class="paginador-controles">
-      <button class="btn btn-action" (click)="paginaAnterior()" [disabled]="paginaActual === 1">
-        Anterior
+    <!-- BARRA DE FILTROS Y BOTÓN RECARGAR LISTADO -->
+    <div class="filtros-bar">
+      <div class="search-box">
+        <input type="text" placeholder="Buscar por nombre, usuario o correo..." [(ngModel)]="filtroTexto" (input)="paginaActual = 1">
+      </div>
+      <button class="btn btn-info" (click)="cargarAdministradores()" [disabled]="cargando">
+        <i class="fas fa-sync-alt"></i> Actualizar
       </button>
+    </div>
+  </div>
 
-      <div class="paginas-numeros">
-        <button 
-          *ngFor="let pagina of obtenerRangoPaginas()" 
-          class="btn-page" 
-          [class.activa]="pagina === paginaActual" 
-          [disabled]="pagina === -1"
-          (click)="pagina !== -1 && cambiarPagina(pagina)">
-          {{ pagina === -1 ? '...' : pagina }}
-        </button>
+  <!-- ESTADO CARGANDO -->
+  <div *ngIf="cargando" class="empty-state">
+    <p>Cargando información de administradores...</p>
+  </div>
+
+  <!-- TABLA DE CLIENTES -->
+  <div *ngIf="!cargando" class="table-wrap">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Usuario / Correo</th>
+            <th>Cupo Máximo</th>
+            <th>Estado</th>
+            <th style="text-align: right;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let admin of administradoresPaginados()">
+            <td>{{ admin.id }}</td>
+            <td><strong>{{ admin.nombre }}</strong></td>
+            <td>
+              {{ admin.usuario }} <br>
+              <small style="color: var(--t3);">{{ admin.correo }}</small>
+            </td>
+            <td>
+              <div class="form-group-inline">
+                <input type="number" class="input-cupo" [(ngModel)]="admin.max_hijos" min="0">
+                <button class="btn btn-primary" (click)="actualizarCupo(admin, admin.max_hijos)">Guardar</button>
+              </div>
+            </td>
+            <td>
+              <span *ngIf="admin.activo === 1" class="badge badge-active">Activo</span>
+              <span *ngIf="admin.activo === 0" class="badge badge-inactive">Inactivo</span>
+            </td>
+            <td>
+              <div class="td-actions">
+                <button *ngIf="admin.activo === 1" class="btn btn-action delete" (click)="cambiarEstadoUsuario(admin, 0)">
+                  Desactivar
+                </button>
+                <button *ngIf="admin.activo === 0" class="btn btn-action" (click)="cambiarEstadoUsuario(admin, 1)">
+                  Activar
+                </button>
+                <button class="btn btn-primary" (click)="abrirModalBolsaDelegable(admin)">
+                  Permisos
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="administradoresFiltrados.length === 0">
+            <td colspan="6" class="empty-state">No se encontraron administradores cliente.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="paginacion-container" *ngIf="administradoresFiltrados.length > 0">
+      <div class="paginador-selector-wrap">
+        <span class="selector-label">Mostrar:</span>
+        <div class="selector-pills">
+          <button 
+            *ngFor="let cant of opcionesPorPagina" 
+            class="btn-pill" 
+            [class.activa]="elementosPorPagina === cant" 
+            (click)="cambiarElementosPorPagina(cant)">
+            {{ cant }}
+          </button>
+        </div>
+        <span class="paginador-info">
+          Mostrando {{ administradoresPaginados().length }} de {{ administradoresFiltrados.length }} registros
+        </span>
       </div>
 
-      <button class="btn btn-action" (click)="paginaSiguiente()" [disabled]="paginaActual === totalPaginas">
-        Siguiente
-      </button>
+      <div class="paginador-controles">
+        <button class="btn btn-action" (click)="paginaAnterior()" [disabled]="paginaActual === 1">
+          Anterior
+        </button>
+
+        <div class="paginas-numeros">
+          <button 
+            *ngFor="let pagina of obtenerRangoPaginas()" 
+            class="btn-page" 
+            [class.activa]="pagina === paginaActual" 
+            [disabled]="pagina === -1"
+            (click)="pagina !== -1 && cambiarPagina(pagina)">
+            {{ pagina === -1 ? '...' : pagina }}
+          </button>
+        </div>
+
+        <button class="btn btn-action" (click)="paginaSiguiente()" [disabled]="paginaActual === totalPaginas">
+          Siguiente
+        </button>
+      </div>
     </div>
   </div>
 </div>

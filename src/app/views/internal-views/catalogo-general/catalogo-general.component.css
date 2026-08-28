@@ -16,7 +16,6 @@
 }
 
 .retroactivos-layout {
-  background-color: var(--bg);
   color: var(--t2);
   font-size: 0.88rem;
   padding: 1.5rem 1rem 3rem;
@@ -372,7 +371,7 @@
   text-align: right !important;
 }
 
-.td-actions {
+.container-actions {
   display: flex;
   gap: 6px;
   align-items: center;
