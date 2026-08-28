@@ -222,4 +222,8 @@ export class CatalogoPermisosComponent implements OnInit {
     this.alertTipo = tipo;
     setTimeout(() => (this.alertMsj = null), 4000);
   }
+
+  regresar(): void {
+    window.history.back();
+  }
 }

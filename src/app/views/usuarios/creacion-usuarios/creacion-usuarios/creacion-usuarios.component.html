@@ -11,7 +11,7 @@
     <!-- HEADER PRINCIPAL -->
     <div class="page-header">
       <div>
-        <h2>Administración de Usuarios Hijos</h2>
+        <h2>Administración de Usuarios</h2>
         <div class="cupo-summary" *ngIf="cupo">
           Cupos utilizados: <strong>{{ cupo.hijos_activos }}</strong> de <strong>{{ cupo.max_hijos }}</strong> | 
           Disponibles: 
@@ -21,6 +21,9 @@
         </div>
       </div>
       <div class="header-actions">
+        <button class="btn btn-secondary" (click)="regresar()">
+          <i class="fas fa-arrow-left"></i> Regresar
+        </button>
         <button class="btn btn-info" (click)="cargarDatos()" [disabled]="cargando">
           <i class="fas fa-sync-alt"></i> Refrescar
         </button>
