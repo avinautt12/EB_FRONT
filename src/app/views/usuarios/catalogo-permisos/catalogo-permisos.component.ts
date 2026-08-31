@@ -2,9 +2,9 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, Observable } from 'rxjs';
-import { AdminSistemaService, UsuarioHijoItem } from '../../../../services/admin-sistema.service';
-import { AuthService } from '../../../../services/auth.service';
-import { TopBarUsuariosComponent } from '../../../../components/top-bar-usuarios/top-bar-usuarios.component';
+import { AdminSistemaService, UsuarioHijoItem } from '../../../services/admin-sistema.service';
+import { AuthService } from '../../../services/auth.service';
+import { TopBarUsuariosComponent } from '../../../components/top-bar-usuarios/top-bar-usuarios.component';
 
 export interface AccionNodo {
   accion_id: number;

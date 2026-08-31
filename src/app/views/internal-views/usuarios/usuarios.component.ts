@@ -8,7 +8,7 @@ import { AlertaService } from '../../../services/alerta.service';
 import { ClientesService } from '../../../services/clientes.service';
 import { AlertaComponent } from '../../../components/alerta/alerta.component';
 import { FiltroComponent } from '../../../components/filtro/filtro.component';
-import { GestionClientesComponent } from '../gestion-clientes/gestion-clientes/gestion-clientes.component';
+import { GestionClientesComponent } from '../gestion-clientes/gestion-clientes.component';
 
 interface Usuario {
   id: number | null;

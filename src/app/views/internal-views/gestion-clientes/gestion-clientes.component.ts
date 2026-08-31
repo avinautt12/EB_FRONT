@@ -3,8 +3,8 @@ import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { AdminSistemaService, AdminClienteItem, AccionBase, ModuloItem } from '../../../../services/admin-sistema.service';
-import { HomeBarComponent } from '../../../../components/home-bar/home-bar.component';
+import { AdminSistemaService, AdminClienteItem, AccionBase, ModuloItem } from '../../../services/admin-sistema.service';
+import { HomeBarComponent } from '../../../components/home-bar/home-bar.component';
 
 export interface PermisoDelegableFila {
   modulo_id: number;

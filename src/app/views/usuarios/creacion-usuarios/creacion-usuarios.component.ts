@@ -2,10 +2,10 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, Observable } from 'rxjs';
-import { AdminSistemaService, UsuarioHijoItem, CupoResponse } from '../../../../services/admin-sistema.service';
-import { AuthService } from '../../../../services/auth.service';
-import { TopBarUsuariosComponent } from '../../../../components/top-bar-usuarios/top-bar-usuarios.component';
-import { AccesoRestringidoComponent } from '../../../../components/acceso-restringido/acceso-restringido.component';
+import { AdminSistemaService, UsuarioHijoItem, CupoResponse } from '../../../services/admin-sistema.service';
+import { AuthService } from '../../../services/auth.service';
+import { TopBarUsuariosComponent } from '../../../components/top-bar-usuarios/top-bar-usuarios.component';
+import { AccesoRestringidoComponent } from '../../../components/acceso-restringido/acceso-restringido.component';
 
 export interface AccionNodo {
   accion_id: number;
@@ -140,7 +140,7 @@ export class CreacionUsuariosComponent implements OnInit {
       this.mostrarAlerta('Has alcanzado el límite máximo de usuarios permitidos o no tienes cupos asignados.', 'error');
       return;
     }
-    
+
     this.formNombre = '';
     this.formUsuario = '';
     this.formContrasena = '';

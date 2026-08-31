@@ -77,10 +77,10 @@ import { SolicitudRetroactivoSeguimientoComponent } from './views/usuarios/solic
 import { SolicitudRetroactivoCampaniasComponent } from './views/internal-views/solicitud-retroactivo-campanias/solicitud-retroactivo-campanias.component';
 
 // --- NUEVOS COMPONENTES DE GESTIÓN Y PERMISOS ---
-import { GestionClientesComponent } from './views/internal-views/gestion-clientes/gestion-clientes/gestion-clientes.component';
+import { GestionClientesComponent } from './views/internal-views/gestion-clientes/gestion-clientes.component';
 import { CatalogoGeneralComponent } from './views/internal-views/catalogo-general/catalogo-general.component';
-import { CreacionUsuariosComponent } from './views/usuarios/creacion-usuarios/creacion-usuarios/creacion-usuarios.component';
-import { CatalogoPermisosComponent } from './views/usuarios/catalogo-permisos/catalogo-permisos/catalogo-permisos.component';
+import { CreacionUsuariosComponent } from './views/usuarios/creacion-usuarios/creacion-usuarios.component';
+import { CatalogoPermisosComponent } from './views/usuarios/catalogo-permisos/catalogo-permisos.component';
 
 /** Sincroniza permisos en vivo desde BD */
 export const refrescarPermisosGuard: CanActivateFn = () => {
